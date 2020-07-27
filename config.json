@@ -9,5 +9,6 @@
 	"regenerateReadings": false,
 	"pronunciationHiragana": false,
 	"useMecab": true,
+	"generateOnNoteFlush": false,
 	"lookupShortcut": ""
 }

@@ -566,8 +566,6 @@ def regeneratePronunciations(nids):
     for nid in nids:
         note = mw.col.getNote(nid)
 
-        # Check if this is a supported note type. If it is not, skip.
-        # If no note type has been specified, we always continue the lookup proces.
         if not should_be_modified(note):
             continue
 
@@ -589,6 +587,32 @@ def regeneratePronunciations(nids):
         note.flush()
     mw.progress.finish()
     mw.reset()
+
+
+def on_note_will_flush(note):
+
+    if not (should_be_modified(note) and config["generateOnNoteFlush"]):
+        return note
+
+    src, srcIdx, dst, dstIdx = get_src_dst_fields(note)
+
+    if src is None or dst is None:
+        return note
+
+    if note[dst] and not config["regenerateReadings"]:
+        # already contains data, skip
+        return note
+
+    srcTxt = mw.col.media.strip(note[src])
+    if not srcTxt.strip():
+        return note
+
+    note[dst] = getFormattedPronunciations(srcTxt)
+
+    with open("C:/Users/99jac/Documents/pronun_log.txt", "w") as f:
+        f.write("here")
+
+    return note
 
 
 # ************************************************
@@ -619,6 +643,7 @@ else:
 createMenu()
 
 from anki.hooks import addHook
+from anki import hooks
 
 addHook("mungeFields", add_pronunciation_once)
 
@@ -626,3 +651,5 @@ addHook('editFocusLost', add_pronunciation_focusLost)
 
 # Bulk add
 addHook("browser.setupMenus", setupBrowserMenu)
+
+hooks.note_will_flush.append(on_note_will_flush)
