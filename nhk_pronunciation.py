@@ -121,6 +121,10 @@ def strip_html_markup(html, recursive=False):
     return new_text
 
 
+def should_be_modified(note):
+    return not config["noteTypes"] or any(nt.lower() in note.model()['name'].lower() for nt in config["noteTypes"])
+
+
 # Ref: https://stackoverflow.com/questions/15033196/using-javascript-to-check-whether-a-string-contains-japanese-characters-includi/15034560#15034560
 non_jap_regex = re.compile(u'[^\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\uff66-\uff9f\u4e00-\u9fff\u3400-\u4dbf]+', re.U)
 jp_sep_regex = re.compile(u'[・、※【】「」〒◎×〃゜『』《》〜〽。〄〇〈〉〓〔〕〖〗〘 〙〚〛〝 〞〟〠〡〢〣〥〦〧〨〫  〬  〭  〮〯〶〷〸〹〺〻〼〾〿]', re.U)
@@ -509,9 +513,7 @@ def get_src_dst_fields(fields):
 def add_pronunciation_once(fields, model, data, n):
     """ When possible, temporarily set the pronunciation to a field """
 
-    # Check if this is a supported note type. If it is not, return.
-    # If no note type has been specified, we always continue the lookup proces.
-    if config["noteTypes"] and not any(nt.lower() in model['name'].lower() for nt in config["noteTypes"]):
+    if not should_be_modified(n):
         return fields
 
     src, srcIdx, dst, dstIdx = get_src_dst_fields(fields)
@@ -526,9 +528,7 @@ def add_pronunciation_once(fields, model, data, n):
     return fields
 
 def add_pronunciation_focusLost(flag, n, fidx):
-    # Check if this is a supported note type. If it is not, return.
-    # If no note type has been specified, we always continue the lookup proces.
-    if config["noteTypes"] and not any(nt.lower() in n.model()['name'].lower() for nt in config["noteTypes"]):
+    if not should_be_modified(n):
         return flag
 
     from aqt import mw
@@ -568,7 +568,7 @@ def regeneratePronunciations(nids):
 
         # Check if this is a supported note type. If it is not, skip.
         # If no note type has been specified, we always continue the lookup proces.
-        if config["noteTypes"] and not any(nt.lower() in note.model()['name'].lower() for nt in config["noteTypes"]):
+        if not should_be_modified(note):
             continue
 
         src, srcIdx, dst, dstIdx = get_src_dst_fields(note)
