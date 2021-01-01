@@ -504,22 +504,7 @@ def get_src_dst_fields(fields):
 
     return src, srcIdx, dst, dstIdx
 
-def add_pronunciation_once(fields, model, data, n):
-    """ When possible, temporarily set the pronunciation to a field """
 
-    if not is_supported_notetype(n):
-        return fields
-
-    src, srcIdx, dst, dstIdx = get_src_dst_fields(fields)
-
-    if src is None or dst is None:
-        return fields
-
-    # Only add the pronunciation if there's not already one in the pronunciation field
-    if not fields[dst]:
-        fields[dst] = getFormattedPronunciations(fields[src])
-
-    return fields
 
 def add_pronunciation_focusLost(flag, n, fidx):
     if not is_supported_notetype(n):
@@ -635,11 +620,6 @@ else:
 
 # Create the manual look-up menu entry
 createMenu()
-
-from anki.hooks import addHook
-from anki import hooks
-
-addHook("mungeFields", add_pronunciation_once)
 
 addHook('editFocusLost', add_pronunciation_focusLost)
 
