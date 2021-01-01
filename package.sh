@@ -1,2 +1,5 @@
 #!/usr/bin/env sh
-zip -r nhk_pronunciation ./*.py ./config.* ./ACCDB_unicode.csv
+zip -r JaPitch \
+	./*.py \
+	./config.* \
+	./accent_dict/ACCDB_unicode.csv \
