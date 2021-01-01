@@ -10,6 +10,8 @@ import subprocess
 import sys
 import time
 
+from anki.notes import Note
+
 if sys.version_info.major == 3:
     from PyQt5.QtWidgets import *
     import pickle
@@ -121,8 +123,16 @@ def strip_html_markup(html, recursive=False):
     return new_text
 
 
-def should_be_modified(note):
-    return not config["noteTypes"] or any(nt.lower() in note.model()['name'].lower() for nt in config["noteTypes"])
+def is_supported_notetype(note: Note):
+    # Check if this is a supported note type.
+
+    if not config["noteTypes"]:
+        # supported note types weren't specified by the user.
+        # treat all note types as supported
+        return True
+
+    this_notetype = note.model()['name']
+    return any(notetype.lower() in this_notetype.lower() for notetype in config["noteTypes"])
 
 
 # Ref: https://stackoverflow.com/questions/15033196/using-javascript-to-check-whether-a-string-contains-japanese-characters-includi/15034560#15034560
@@ -513,7 +523,7 @@ def get_src_dst_fields(fields):
 def add_pronunciation_once(fields, model, data, n):
     """ When possible, temporarily set the pronunciation to a field """
 
-    if not should_be_modified(n):
+    if not is_supported_notetype(n):
         return fields
 
     src, srcIdx, dst, dstIdx = get_src_dst_fields(fields)
@@ -528,7 +538,7 @@ def add_pronunciation_once(fields, model, data, n):
     return fields
 
 def add_pronunciation_focusLost(flag, n, fidx):
-    if not should_be_modified(n):
+    if not is_supported_notetype(n):
         return flag
 
     from aqt import mw
@@ -566,7 +576,7 @@ def regeneratePronunciations(nids):
     for nid in nids:
         note = mw.col.getNote(nid)
 
-        if not should_be_modified(note):
+        if not is_supported_notetype(note):
             continue
 
         src, srcIdx, dst, dstIdx = get_src_dst_fields(note)
@@ -591,7 +601,7 @@ def regeneratePronunciations(nids):
 
 def on_note_will_flush(note):
 
-    if not (should_be_modified(note) and config["generateOnNoteFlush"]):
+    if not (is_supported_notetype(note) and config["generateOnNoteFlush"]):
         return note
 
     src, srcIdx, dst, dstIdx = get_src_dst_fields(note)
