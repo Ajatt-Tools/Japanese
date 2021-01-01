@@ -2,3 +2,4 @@
 __pycache__
 .idea
 meta.json
+accent_dict/nhk_pronunciation.*
