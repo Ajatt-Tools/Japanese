@@ -294,15 +294,15 @@ def build_database():
     tempdict = {}
     entries = []
 
-    f = io.open(accent_database, 'r', encoding="utf-8")
-    for line in f:
+    file_handle = io.open(accent_database, 'r', encoding="utf-8")
+    for line in file_handle:
         line = line.strip()
         substrs = re.findall(r'(\{.*?,.*?\})', line)
         substrs.extend(re.findall(r'(\(.*?,.*?\))', line))
         for s in substrs:
             line = line.replace(s, s.replace(',', ';'))
         entries.append(AccentEntry._make(line.split(",")))
-    f.close()
+    file_handle.close()
 
     for e in entries:
         textentry = format_entry(e)
@@ -329,9 +329,9 @@ def build_database():
 
 def read_derivative():
     """ Read the derivative file to memory """
-    f = io.open(derivative_database, 'r', encoding="utf-8")
+    file_handle = io.open(derivative_database, 'r', encoding="utf-8")
 
-    for line in f:
+    for line in file_handle:
         key, kana, pron = line.strip().split("\t")
         kanapron = (kana, pron)
         if key in thedict:
@@ -340,7 +340,7 @@ def read_derivative():
         else:
             thedict[key] = [kanapron]
 
-    f.close()
+    file_handle.close()
 
 
 # ************************************************
@@ -390,7 +390,7 @@ def getPronunciations(expr, sanitize=True, recurse=True):
                 ret.update(getPronunciations(expr, sanitize))
 
         # Only if lookups were not succesful, we try splitting with Mecab
-        if not ret and lookup_mecab:
+        if not ret and mecab_reader:
             for sub_expr in mecab_reader.reading(expr).split():
                 # Avoid infinite recursion by saying that we should not try
                 # Mecab again if we do not find any matches for this sub-
@@ -487,33 +487,33 @@ def onRegenerate(browser):
 def get_src_dst_fields(fields):
     """ Set source and destination fieldnames """
     src = None
-    srcIdx = None
+    src_idx = None
     dst = None
-    dstIdx = None
+    dst_idx = None
 
-    for i, f in enumerate(config["srcFields"]):
-        if f in fields:
-            src = f
-            srcIdx = i
+    for index, field in enumerate(config["srcFields"]):
+        if field in fields:
+            src = field
+            src_idx = index
             break
 
-    for i, f in enumerate(config["dstFields"]):
-        if f in fields:
-            dst = f
-            dstIdx = i
+    for index, field in enumerate(config["dstFields"]):
+        if field in fields:
+            dst = field
+            dst_idx = index
             break
 
-    return src, srcIdx, dst, dstIdx
+    return src, src_idx, dst, dst_idx
 
 
-def add_pronunciation_focusLost(flag, n: Note, fidx):
+def add_pronunciation_focusLost(flag, n: Note, f_inx):
     if not is_supported_notetype(n):
         return flag
 
     from aqt import mw
     fields = mw.col.models.fieldNames(n.model())
 
-    src, srcIdx, dst, dstIdx = get_src_dst_fields(fields)
+    src, src_idx, dst, dst_idx = get_src_dst_fields(fields)
 
     if not src or not dst:
         return flag
@@ -523,18 +523,18 @@ def add_pronunciation_focusLost(flag, n: Note, fidx):
         return flag
 
     # event coming from src field?
-    if fidx != srcIdx:
+    if f_inx != src_idx:
         return flag
 
     # grab source text
-    srcTxt = mw.col.media.strip(n[src])
-    if not srcTxt:
+    src_txt = mw.col.media.strip(n[src])
+    if not src_txt:
         return flag
 
     # update field
     try:
-        n[dst] = getFormattedPronunciations(srcTxt)
-    except Exception as e:
+        n[dst] = getFormattedPronunciations(src_txt)
+    except Exception:
         raise
     return True
 
@@ -548,7 +548,7 @@ def regeneratePronunciations(nids):
         if not is_supported_notetype(note):
             continue
 
-        src, srcIdx, dst, dstIdx = get_src_dst_fields(note)
+        src, src_idx, dst, dst_idx = get_src_dst_fields(note)
 
         if src is None or dst is None:
             continue
@@ -557,11 +557,11 @@ def regeneratePronunciations(nids):
             # already contains data, skip
             continue
 
-        srcTxt = mw.col.media.strip(note[src])
-        if not srcTxt.strip():
+        src_txt = mw.col.media.strip(note[src])
+        if not src_txt.strip():
             continue
 
-        note[dst] = getFormattedPronunciations(srcTxt)
+        note[dst] = getFormattedPronunciations(src_txt)
 
         note.flush()
     mw.progress.finish()
@@ -577,7 +577,7 @@ def on_note_will_flush(note):
     if not (is_supported_notetype(note) is True and config["generateOnNoteFlush"] is True):
         return note
 
-    src, srcIdx, dst, dstIdx = get_src_dst_fields(note)
+    src, src_idx, dst, dst_idx = get_src_dst_fields(note)
 
     if src is None or dst is None:
         return note
@@ -587,11 +587,11 @@ def on_note_will_flush(note):
         # but yomichan adds `No pitch accent data` to the field when there's no pitch available.
         return note
 
-    srcTxt = mw.col.media.strip(note[src])
-    if not srcTxt.strip():
+    src_txt = mw.col.media.strip(note[src])
+    if not src_txt.strip():
         return note
 
-    note[dst] = getFormattedPronunciations(srcTxt)
+    note[dst] = getFormattedPronunciations(src_txt)
 
     return note
 
