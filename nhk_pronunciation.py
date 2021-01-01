@@ -31,9 +31,11 @@ from aqt.utils import isMac, isWin, showInfo, showText
 # Paths to the database files and this particular file
 dir_path = os.path.dirname(os.path.normpath(__file__))
 thisfile = os.path.join(dir_path, "nhk_pronunciation.py")
-derivative_database = os.path.join(dir_path, "nhk_pronunciation.csv")
-derivative_pickle = os.path.join(dir_path, "nhk_pronunciation.pickle")
-accent_database = os.path.join(dir_path, "ACCDB_unicode.csv")
+
+db_dir_path = os.path.join(dir_path, "accent_dict")
+derivative_database = os.path.join(db_dir_path, "nhk_pronunciation.csv")
+derivative_pickle = os.path.join(db_dir_path, "nhk_pronunciation.pickle")
+accent_database = os.path.join(db_dir_path, "ACCDB_unicode.csv")
 
 # "Class" declaration
 AccentEntry = namedtuple('AccentEntry', ['NID','ID','WAVname','K_FLD','ACT','midashigo','nhk','kanjiexpr','NHKexpr','numberchars','nopronouncepos','nasalsoundpos','majiri','kaisi','KWAV','midashigo1','akusentosuu','bunshou','ac'])
