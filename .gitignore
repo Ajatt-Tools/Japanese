@@ -1,2 +1,4 @@
 # Ignored files
-*.sh
+__pycache__
+.idea
+meta.json
