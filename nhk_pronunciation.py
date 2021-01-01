@@ -21,16 +21,19 @@ from aqt.utils import isMac, isWin, showInfo, showText
 # ************************************************
 
 # Paths to the database files and this particular file
-dir_path = os.path.dirname(os.path.normpath(__file__))
-thisfile = os.path.join(dir_path, "nhk_pronunciation.py")
+this_addon_path = os.path.dirname(os.path.normpath(__file__))
+thisfile = os.path.join(this_addon_path, "nhk_pronunciation.py")
 
-db_dir_path = os.path.join(dir_path, "accent_dict")
+db_dir_path = os.path.join(this_addon_path, "accent_dict")
 derivative_database = os.path.join(db_dir_path, "nhk_pronunciation.csv")
 derivative_pickle = os.path.join(db_dir_path, "nhk_pronunciation.pickle")
 accent_database = os.path.join(db_dir_path, "ACCDB_unicode.csv")
 
 # "Class" declaration
-AccentEntry = namedtuple('AccentEntry', ['NID','ID','WAVname','K_FLD','ACT','midashigo','nhk','kanjiexpr','NHKexpr','numberchars','nopronouncepos','nasalsoundpos','majiri','kaisi','KWAV','midashigo1','akusentosuu','bunshou','ac'])
+AccentEntry = namedtuple('AccentEntry',
+                         ['NID', 'ID', 'WAVname', 'K_FLD', 'ACT', 'midashigo', 'nhk', 'kanjiexpr', 'NHKexpr',
+                          'numberchars', 'nopronouncepos', 'nasalsoundpos', 'majiri', 'kaisi', 'KWAV', 'midashigo1',
+                          'akusentosuu', 'bunshou', 'ac'])
 
 # The main dict used to store all entries
 thedict = {}
@@ -49,7 +52,7 @@ mecab_search = glob.glob(
     os.path.join(this_addon_path, os.pardir + os.sep + '**' + os.sep + 'support' + os.sep + 'mecab.exe'))
 mecab_exists = len(mecab_search) > 0
 if mecab_exists:
-    mecab_base_path = os.path.dirname(os.path.normpath(mecab_search[0]))
+    mecab_dir_path = os.path.dirname(os.path.normpath(mecab_search[0]))
 
 if lookup_mecab and not mecab_exists:
     showInfo("NHK-Pronunciation: Mecab use requested, but Japanese add-on with Mecab not found.")
@@ -74,18 +77,18 @@ def katakana_to_hiragana(to_translate):
 
 
 class HTMLTextExtractor(HTMLParser):
-        def __init__(self):
-            if issubclass(self.__class__, object):
-                super(HTMLTextExtractor, self).__init__()
-            else:
-                HTMLParser.__init__(self)
-            self.result = []
+    def __init__(self):
+        if issubclass(self.__class__, object):
+            super(HTMLTextExtractor, self).__init__()
+        else:
+            HTMLParser.__init__(self)
+        self.result = []
 
-        def handle_data(self, d):
-            self.result.append(d)
+    def handle_data(self, d):
+        self.result.append(d)
 
-        def get_text(self):
-            return ''.join(self.result)
+    def get_text(self):
+        return ''.join(self.result)
 
 
 def strip_html_markup(html, recursive=False):
@@ -210,13 +213,13 @@ class MecabController():
             self.mecab.stdin.flush()
             expr = self.mecab.stdout.readline().rstrip(b'\r\n').decode('utf-8')
         except UnicodeDecodeError as e:
-           raise Exception(str(e) + ": Please ensure you have updated to the most recent Japanese Support add-on.")
+            raise Exception(str(e) + ": Please ensure you have updated to the most recent Japanese Support add-on.")
 
         return expr
 
 
 if lookup_mecab:
-    mecab_reader = MecabController(mecab_base_path)
+    mecab_reader = MecabController(mecab_dir_path)
 
 
 # ************************************************
@@ -227,7 +230,7 @@ def format_entry(e):
     txt = e.midashigo1
     strlen = len(txt)
     acclen = len(e.ac)
-    accent = "0"*(strlen-acclen) + e.ac
+    accent = "0" * (strlen - acclen) + e.ac
 
     # Get the nasal positions
     nasal = []
@@ -264,16 +267,16 @@ def format_entry(e):
             outstr = outstr + '</span>'
             overline = False
 
-        if (i+1) in nopron:
+        if (i + 1) in nopron:
             outstr = outstr + '<span class="nopron">'
 
         # Add the character stuff
         outstr = outstr + txt[i]
 
         # Add the pronunciation stuff
-        if (i+1) in nopron:
+        if (i + 1) in nopron:
             outstr = outstr + "</span>"
-        if (i+1) in nasal:
+        if (i + 1) in nasal:
             outstr = outstr + '<span class="nasal">&#176;</span>'
 
         # If we go down in pitch, add the downfall
@@ -505,8 +508,7 @@ def get_src_dst_fields(fields):
     return src, srcIdx, dst, dstIdx
 
 
-
-def add_pronunciation_focusLost(flag, n, fidx):
+def add_pronunciation_focusLost(flag, n: Note, fidx):
     if not is_supported_notetype(n):
         return flag
 
@@ -569,8 +571,7 @@ def regeneratePronunciations(nids):
 
 
 def on_note_will_flush(note):
-
-    if not (is_supported_notetype(note) and config["generateOnNoteFlush"]):
+    if not (is_supported_notetype(note) is True and config["generateOnNoteFlush"] is True):
         return note
 
     src, srcIdx, dst, dstIdx = get_src_dst_fields(note)
@@ -589,9 +590,6 @@ def on_note_will_flush(note):
 
     note[dst] = getFormattedPronunciations(srcTxt)
 
-    with open("C:/Users/99jac/Documents/pronun_log.txt", "w") as f:
-        f.write("here")
-
     return note
 
 
@@ -599,17 +597,21 @@ def on_note_will_flush(note):
 #                   Main                         *
 # ************************************************
 
+if not os.path.isdir(db_dir_path):
+    raise IOError("Accent database folder is missing!")
+
 # First check that either the original database, or the derivative text file are present:
 if not os.path.exists(derivative_database) and not os.path.exists(accent_database):
     raise IOError("Could not locate the original base or the derivative database!")
 
 # Generate the derivative database if it does not exist yet
-if (os.path.exists(accent_database) and not os.path.exists(derivative_database)) or (os.path.exists(accent_database) and os.stat(thisfile).st_mtime > os.stat(derivative_database).st_mtime):
+if (os.path.exists(accent_database) and not os.path.exists(derivative_database)) or (
+        os.path.exists(accent_database) and os.stat(thisfile).st_mtime > os.stat(derivative_database).st_mtime):
     build_database()
 
 # If a pickle exists of the derivative file, use that. Otherwise, read from the derivative file and generate a pickle.
-if  (os.path.exists(derivative_pickle) and
-    os.stat(derivative_pickle).st_mtime > os.stat(derivative_database).st_mtime):
+if (os.path.exists(derivative_pickle) and
+        os.stat(derivative_pickle).st_mtime > os.stat(derivative_database).st_mtime):
     f = io.open(derivative_pickle, 'rb')
     thedict = pickle.load(f)
     f.close()
@@ -622,9 +624,11 @@ else:
 # Create the manual look-up menu entry
 createMenu()
 
+# Generate when editing a note
 addHook('editFocusLost', add_pronunciation_focusLost)
 
 # Bulk add
 addHook("browser.setupMenus", setupBrowserMenu)
 
+# Generate when AnkiConnect adds a new note
 hooks.note_will_flush.append(on_note_will_flush)
