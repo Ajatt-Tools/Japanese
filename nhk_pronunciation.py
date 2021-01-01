@@ -5,8 +5,10 @@ import io
 import pickle
 import re
 import subprocess
+from abc import ABC
 from collections import namedtuple, OrderedDict
 from html.parser import HTMLParser
+from typing import Optional
 
 from anki import hooks
 from anki.hooks import addHook
@@ -40,24 +42,6 @@ thedict = {}
 
 config = mw.addonManager.getConfig(__name__)
 
-# Check if Mecab is available and/or if the user wants it to be used
-if config['useMecab']:
-    lookup_mecab = True
-else:
-    lookup_mecab = False
-
-# Note that there are no guarantees on the folder name of the Japanese
-# add-on. We therefore have to look recursively in our parent folder.
-mecab_search = glob.glob(
-    os.path.join(this_addon_path, os.pardir + os.sep + '**' + os.sep + 'support' + os.sep + 'mecab.exe'))
-mecab_exists = len(mecab_search) > 0
-if mecab_exists:
-    mecab_dir_path = os.path.dirname(os.path.normpath(mecab_search[0]))
-
-if lookup_mecab and not mecab_exists:
-    showInfo("NHK-Pronunciation: Mecab use requested, but Japanese add-on with Mecab not found.")
-    lookup_mecab = False
-
 
 # ************************************************
 #                  Helper functions              *
@@ -76,7 +60,7 @@ def katakana_to_hiragana(to_translate):
     return to_translate.translate(translate_table)
 
 
-class HTMLTextExtractor(HTMLParser):
+class HTMLTextExtractor(HTMLParser, ABC):
     def __init__(self):
         if issubclass(self.__class__, object):
             super(HTMLTextExtractor, self).__init__()
@@ -147,11 +131,17 @@ def split_separators(expr):
 #  Copied from Japanese add-on by Damien Elmes with minor changes. *
 # ******************************************************************
 
-class MecabController():
+class MecabController:
 
-    def __init__(self, base_path):
+    def __init__(self, mecab_dir_path):
+        if mecab_dir_path is None:
+            raise ValueError("mecab not found")
+
+        self.mecab_dir_path = os.path.normpath(mecab_dir_path)
+        self.mecabCmd = self.mungeForPlatform(
+            [os.path.join(self.mecab_dir_path, "mecab")] + self.mecabArgs() + [
+                '-d', self.mecab_dir_path, '-r', os.path.join(self.mecab_dir_path, "mecabrc")])
         self.mecab = None
-        self.base_path = os.path.normpath(base_path)
 
         if sys.platform == "win32":
             self._si = subprocess.STARTUPINFO()
@@ -171,16 +161,13 @@ class MecabController():
             popen[0] += ".lin"
         return popen
 
+    @staticmethod
+    def mecabArgs():
+        return ['--node-format=%f[6] ', '--eos-format=\n', '--unk-format=%m[] ']
+
     def setup(self):
-        mecabArgs = ['--node-format=%f[6] ', '--eos-format=\n',
-                     '--unk-format=%m[] ']
-
-        self.mecabCmd = self.mungeForPlatform(
-            [os.path.join(self.base_path, "mecab")] + mecabArgs + [
-                '-d', self.base_path, '-r', os.path.join(self.base_path, "mecabrc")])
-
-        os.environ['DYLD_LIBRARY_PATH'] = self.base_path
-        os.environ['LD_LIBRARY_PATH'] = self.base_path
+        os.environ['DYLD_LIBRARY_PATH'] = self.mecab_dir_path
+        os.environ['LD_LIBRARY_PATH'] = self.mecab_dir_path
         if not isWin:
             os.chmod(self.mecabCmd[0], 0o755)
 
@@ -218,8 +205,19 @@ class MecabController():
         return expr
 
 
-if lookup_mecab:
-    mecab_reader = MecabController(mecab_dir_path)
+def find_mecab_dir() -> Optional[str]:
+    # Check if Mecab is available and/or if the user wants it to be used
+    if config['useMecab']:
+        # Note that there are no guarantees on the folder name of the Japanese
+        # add-on. We therefore have to look recursively in our parent folder.
+        mecab_search = glob.glob(
+            os.path.join(this_addon_path, os.pardir + os.sep + '**' + os.sep + 'support' + os.sep + 'mecab.exe')
+        )
+        mecab_exists = len(mecab_search) > 0
+        if mecab_exists:
+            return os.path.dirname(os.path.normpath(mecab_search[0]))
+        else:
+            showInfo("NHK-Pronunciation: Mecab use requested, but Japanese add-on with Mecab not found.")
 
 
 # ************************************************
@@ -625,6 +623,11 @@ else:
     f = io.open(derivative_pickle, 'wb')
     pickle.dump(thedict, f, pickle.HIGHEST_PROTOCOL)
     f.close()
+
+try:
+    mecab_reader = MecabController(find_mecab_dir())
+except ValueError:
+    mecab_reader = None
 
 # Create the manual look-up menu entry
 createMenu()
