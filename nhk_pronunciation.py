@@ -399,7 +399,7 @@ def getPronunciations(expr, sanitize=True, recurse=True):
     return ret
 
 
-def getFormattedPronunciations(expr, sep_single=" *** ", sep_multi="<br/>\n", expr_sep=None, sanitize=True):
+def getFormattedPronunciations(expr, sep_single="・", sep_multi="、", expr_sep=None, sanitize=True):
     prons = getPronunciations(expr, sanitize)
 
     single_merge = OrderedDict()
