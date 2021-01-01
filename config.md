@@ -1,18 +1,31 @@
-*Anki needs to be restarted for changes to applied*
+## JaPitch - config
 
-*noteTypes*: By default, the add-on considers a note type Japanese if it finds
-the text "japanese" or "kanji" in the note type name. Case is ignored.
+*Anki needs to be restarted for changes to be applied.*
 
-*srcFields*: Fields to generate the reading for.
+*Default field names are set to match the
+[mpvacious cards](https://ankiweb.net/shared/info/1557722832)
+note type.*
 
-*dstFields*: Fields where the reading should be placed.
+****
 
-*regenerateReadings*: If a card is shown, should readings for the card be regenerated if the dstField is already filled? Note that these regenerated readings are *not stored, only shown*.
+* `noteTypes` - By default, the add-on considers a note type Japanese
+if it finds the text "japanese" in the note type name. Case is ignored.
 
-*pronunciationHiragana*: Use hiragana instead of katakana for the readings.
+* `srcFields` - Fields to generate the reading for.
 
-*styles*: Style mappings. Edit this if you want different colors, etc.
+* `dstFields` - Fields where the reading should be placed.
 
-*useMecab*: Whether or not to try and use Mecab to split a sentence/conjugation when performing lookups. The Japanese add-on is required for this to work.
+* `regenerateReadings` - If a card is shown, should readings for the card be regenerated
+if the dstField is already filled? Note that these regenerated readings are *not stored, only shown*.
 
-*lookupShortcut*: The shortcut to perform pronuncation lookup on the selected text (Tools -> Lookup -> ...pronunciation). Example shortcut value could be something like "Ctrl+8". Empty/disabled by default.
+* `pronunciationHiragana` - Use hiragana instead of katakana for the readings.
+
+* `styles` - Style mappings. Edit this if you want different colors, etc.
+
+* `useMecab` - Whether or not to try and use Mecab to split a sentence/conjugation when performing lookups. The Japanese add-on is required for this to work.
+
+* `lookupShortcut` - The shortcut to perform pronunciation lookup on the selected text
+(Tools -> Lookup -> ...pronunciation).
+Example shortcut value could be something like "Ctrl+8". Empty/disabled by default.
+
+* `generateOnNoteFlush` - Automatically add pronunciations to cards created by AnkiConnect with Yomichan.
