@@ -571,6 +571,11 @@ def regeneratePronunciations(nids):
 
 
 def on_note_will_flush(note):
+    if mw.app.activeWindow() is not None:
+        # only accept calls when add cards dialog or anki browser are not open.
+        # otherwise this function conflicts with add_pronunciation_focusLost which is called on 'editFocusLost'
+        return note
+
     if not (is_supported_notetype(note) is True and config["generateOnNoteFlush"] is True):
         return note
 
