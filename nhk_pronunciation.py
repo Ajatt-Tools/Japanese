@@ -1,25 +1,17 @@
 # -*- coding: utf-8 -*-
 
-from collections import namedtuple, OrderedDict
-
+import glob
 import io
+import pickle
 import re
-import os
-import platform
 import subprocess
-import sys
-import time
+from collections import namedtuple, OrderedDict
+from html.parser import HTMLParser
 
+from anki import hooks
+from anki.hooks import addHook
+from anki.lang import _
 from anki.notes import Note
-
-if sys.version_info.major == 3:
-    from PyQt5.QtWidgets import *
-    import pickle
-    from html.parser import HTMLParser
-else:
-    import cPickle as pickle
-    from HTMLParser import HTMLParser
-
 from aqt import mw
 from aqt.qt import *
 from aqt.utils import isMac, isWin, showInfo, showText
@@ -43,12 +35,7 @@ AccentEntry = namedtuple('AccentEntry', ['NID','ID','WAVname','K_FLD','ACT','mid
 # The main dict used to store all entries
 thedict = {}
 
-
-if sys.version_info.major == 2:
-    import json
-    config = json.load(io.open(os.path.join(dir_path, 'nhk_pronunciation_config.json'), 'r', encoding="utf-8"))
-else:
-    config = mw.addonManager.getConfig(__name__)
+config = mw.addonManager.getConfig(__name__)
 
 # Check if Mecab is available and/or if the user wants it to be used
 if config['useMecab']:
@@ -56,18 +43,13 @@ if config['useMecab']:
 else:
     lookup_mecab = False
 
-if sys.version_info.major == 3:
-    import glob
-    # Note that there are no guarantees on the folder name of the Japanese
-    # add-on. We therefore have to look recursively in our parent folder.
-    mecab_search = glob.glob(os.path.join(dir_path,  os.pardir + os.sep + '**' + os.sep + 'support' + os.sep + 'mecab.exe'))
-    mecab_exists = len(mecab_search) > 0
-    if mecab_exists:
-        mecab_base_path = os.path.dirname(os.path.normpath(mecab_search[0]))
-else:
-    mecab_exists = os.path.exists(os.path.join(dir_path, 'japanese' + os.sep + 'support' + os.sep + 'mecab.exe'))
-    if mecab_exists:
-        mecab_base_path = os.path.join(dir_path, 'japanese' + os.sep + 'support')
+# Note that there are no guarantees on the folder name of the Japanese
+# add-on. We therefore have to look recursively in our parent folder.
+mecab_search = glob.glob(
+    os.path.join(this_addon_path, os.pardir + os.sep + '**' + os.sep + 'support' + os.sep + 'mecab.exe'))
+mecab_exists = len(mecab_search) > 0
+if mecab_exists:
+    mecab_base_path = os.path.dirname(os.path.normpath(mecab_search[0]))
 
 if lookup_mecab and not mecab_exists:
     showInfo("NHK-Pronunciation: Mecab use requested, but Japanese add-on with Mecab not found.")
