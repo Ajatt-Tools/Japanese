@@ -22,10 +22,12 @@ if the dstField is already filled? Note that these regenerated readings are *not
 
 * `styles` - Style mappings. Edit this if you want different colors, etc.
 
-* `useMecab` - Whether or not to try and use Mecab to split a sentence/conjugation when performing lookups. The Japanese add-on is required for this to work.
+* `useMecab` - Whether or not to try and use Mecab
+to split a sentence/conjugation when performing lookups.
+The [Japanese add-on](https://ankiweb.net/shared/info/3918629684)
+is required for this to work.
 
-* `lookupShortcut` - The shortcut to perform pronunciation lookup on the selected text
-(Tools -> Lookup -> ...pronunciation).
-Example shortcut value could be something like "Ctrl+8". Empty/disabled by default.
+* `lookupShortcut` - The shortcut to perform pronunciation lookup
+on the selected text (Tools > Lookup > ...NHK pitch accent).
 
 * `generateOnNoteFlush` - Automatically add pronunciations to cards created by AnkiConnect with Yomichan.

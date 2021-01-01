@@ -465,7 +465,7 @@ def createMenu():
     ml = mw.form.menuLookup
     # add action
     a = QAction(mw)
-    a.setText("...pronunciation")
+    a.setText("...NHK pitch accent")
     if config["lookupShortcut"]:
         a.setShortcut(config["lookupShortcut"])
     ml.addAction(a)
