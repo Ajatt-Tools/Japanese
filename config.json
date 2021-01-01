@@ -3,12 +3,12 @@
 			   "class=\"nopron\"": "style=\"color: royalblue;\"",
 			   "class=\"nasal\"": "style=\"color: red;\"",
 			   "&#42780;": "&#42780;"},
-	"noteTypes": [],
-	"srcFields": ["Expression", "Kanji Word"],
-	"dstFields": ["Pronunciation"],
+	"noteTypes": ["japanese"],
+	"srcFields": ["VocabKanji"],
+	"dstFields": ["VocabPitchPattern"],
 	"regenerateReadings": false,
 	"pronunciationHiragana": false,
 	"useMecab": true,
-	"generateOnNoteFlush": false,
-	"lookupShortcut": ""
+	"generateOnNoteFlush": true,
+	"lookupShortcut": "Ctrl+8"
 }
