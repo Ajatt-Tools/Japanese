@@ -578,8 +578,9 @@ def on_note_will_flush(note):
     if src is None or dst is None:
         return note
 
-    if note[dst] and not config["regenerateReadings"]:
+    if config["regenerateReadings"] is False and note[dst] and note[dst] != "No pitch accent data":
         # already contains data, skip
+        # but yomichan adds `No pitch accent data` to the field when there's no pitch available.
         return note
 
     srcTxt = mw.col.media.strip(note[src])
