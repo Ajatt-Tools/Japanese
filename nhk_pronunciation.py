@@ -454,22 +454,13 @@ def onLookupPronunciation():
 #              Interface                         *
 # ************************************************
 
-def createMenu():
+def createMenu() -> QAction:
     """ Add a hotkey and menu entry """
-    if not getattr(mw.form, "menuLookup", None):
-        ml = QMenu()
-        ml.setTitle("Lookup")
-        mw.form.menuTools.addAction(ml.menuAction())
-        mw.form.menuLookup = ml
-
-    ml = mw.form.menuLookup
-    # add action
-    a = QAction(mw)
-    a.setText("...NHK pitch accent")
+    lookup_action = QAction("NHK pitch accent lookup", mw)
+    qconnect(lookup_action.triggered, onLookupPronunciation)
     if config["lookupShortcut"]:
-        a.setShortcut(config["lookupShortcut"])
-    ml.addAction(a)
-    a.triggered.connect(onLookupPronunciation)
+        lookup_action.setShortcut(config["lookupShortcut"])
+    return lookup_action
 
 
 def setupBrowserMenu(browser):
@@ -577,21 +568,21 @@ def on_note_will_flush(note):
     if not (is_supported_notetype(note) is True and config["generateOnNoteFlush"] is True):
         return note
 
-    src, src_idx, dst, dst_idx = get_src_dst_fields(note)
+    src_field, src_idx, dst_field, dst_idx = get_src_dst_fields(note)
 
-    if src is None or dst is None:
+    if src_field is None or dst_field is None:
         return note
 
-    if config["regenerateReadings"] is False and note[dst] and note[dst] != "No pitch accent data":
+    if config["regenerateReadings"] is False and note[dst_field] and note[dst_field] != "No pitch accent data":
         # already contains data, skip
         # but yomichan adds `No pitch accent data` to the field when there's no pitch available.
         return note
 
-    src_txt = mw.col.media.strip(note[src])
+    src_txt = mw.col.media.strip(note[src_field])
     if not src_txt.strip():
         return note
 
-    note[dst] = getFormattedPronunciations(src_txt)
+    note[dst_field] = getFormattedPronunciations(src_txt)
 
     return note
 
@@ -630,7 +621,7 @@ except ValueError:
     mecab_reader = None
 
 # Create the manual look-up menu entry
-createMenu()
+mw.form.menuTools.addAction(createMenu())
 
 # Generate when editing a note
 addHook('editFocusLost', add_pronunciation_focusLost)
