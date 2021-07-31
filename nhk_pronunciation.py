@@ -111,7 +111,7 @@ def is_supported_notetype(note: Note):
 
 # Ref: https://stackoverflow.com/questions/15033196/using-javascript-to-check-whether-a-string-contains-japanese-characters-includi/15034560#15034560
 non_jap_regex = re.compile(u'[^\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\uff66-\uff9f\u4e00-\u9fff\u3400-\u4dbf]+', re.U)
-jp_sep_regex = re.compile(u'[・、※【】「」〒◎×〃゜『』《》〜〽。〄〇〈〉〓〔〕〖〗〘 〙〚〛〝 〞〟〠〡〢〣〥〦〧〨〫  〬  〭  〮〯〶〷〸〹〺〻〼〾〿]', re.U)
+jp_sep_regex = re.compile(u'[・、※【】「」〒◎×〃゜『』《》〜〽。〄〇〈〉〓〔〕〖〗〘 〙〚〛〝〞〟〠〡〢〣〥〦〧〨〭〮〯〫〬〶〷〸〹〺〻〼〾〿]', re.U)
 
 
 def split_separators(expr):
@@ -141,8 +141,8 @@ class MecabController:
             raise ValueError("mecab not found")
 
         self.mecab_dir_path = os.path.normpath(mecab_dir_path)
-        self.mecabCmd = self.mungeForPlatform(
-            [os.path.join(self.mecab_dir_path, "mecab")] + self.mecabArgs() + [
+        self.mecabCmd = self.munge_for_platform(
+            [os.path.join(self.mecab_dir_path, "mecab")] + self.mecab_args() + [
                 '-d', self.mecab_dir_path, '-r', os.path.join(self.mecab_dir_path, "mecabrc")])
         self.mecab = None
 
@@ -156,7 +156,7 @@ class MecabController:
             self._si = None
 
     @staticmethod
-    def mungeForPlatform(popen):
+    def munge_for_platform(popen):
         if isWin:
             # popen = [os.path.normpath(x) for x in popen]
             popen[0] += ".exe"
@@ -165,7 +165,7 @@ class MecabController:
         return popen
 
     @staticmethod
-    def mecabArgs():
+    def mecab_args():
         return ['--node-format=%f[6] ', '--eos-format=\n', '--unk-format=%m[] ']
 
     def setup(self):
@@ -174,7 +174,7 @@ class MecabController:
         if not isWin:
             os.chmod(self.mecabCmd[0], 0o755)
 
-    def ensureOpen(self):
+    def ensure_open(self):
         if not self.mecab:
             self.setup()
             try:
@@ -186,7 +186,7 @@ class MecabController:
                 raise Exception(str(e) + ": Please ensure your Linux system has 64 bit binary support.")
 
     @staticmethod
-    def _escapeText(text):
+    def _escape_text(text):
         # strip characters that trip up kakasi/mecab
         text = text.replace("\n", " ")
         text = text.replace(u'\uff5e', "~")
@@ -196,8 +196,8 @@ class MecabController:
         return text
 
     def reading(self, expr):
-        self.ensureOpen()
-        expr = self._escapeText(expr)
+        self.ensure_open()
+        expr = self._escape_text(expr)
         try:
             self.mecab.stdin.write(expr.encode("utf-8", "ignore") + b'\n')
             self.mecab.stdin.flush()
@@ -300,7 +300,7 @@ def build_database():
     file_handle = io.open(accent_database, 'r', encoding="utf-8")
     for line in file_handle:
         line = line.strip()
-        substrs = re.findall(r'(\{.*?,.*?\})', line)
+        substrs = re.findall(r'({.*?,.*?})', line)
         substrs.extend(re.findall(r'(\(.*?,.*?\))', line))
         for s in substrs:
             line = line.replace(s, s.replace(',', ';'))
@@ -358,7 +358,7 @@ def inline_style(txt):
     return txt
 
 
-def getPronunciations(expr, sanitize=True, recurse=True):
+def get_pronunciations(expr, sanitize=True, recurse=True):
     """
     Search pronuncations for a particular expression
 
@@ -390,7 +390,7 @@ def getPronunciations(expr, sanitize=True, recurse=True):
 
         if len(split_expr) > 1:
             for expr in split_expr:
-                ret.update(getPronunciations(expr, sanitize))
+                ret.update(get_pronunciations(expr, sanitize))
 
         # Only if lookups were not succesful, we try splitting with Mecab
         if not ret and mecab_reader:
@@ -398,13 +398,13 @@ def getPronunciations(expr, sanitize=True, recurse=True):
                 # Avoid infinite recursion by saying that we should not try
                 # Mecab again if we do not find any matches for this sub-
                 # expression.
-                ret.update(getPronunciations(sub_expr, sanitize, False))
+                ret.update(get_pronunciations(sub_expr, sanitize, False))
 
     return ret
 
 
-def getFormattedPronunciations(expr, sep_single="・", sep_multi="、", expr_sep=None, sanitize=True):
-    prons = getPronunciations(expr, sanitize)
+def get_formatted_pronunciations(expr, sep_single="・", sep_multi="、", expr_sep=None, sanitize=True):
+    prons = get_pronunciations(expr, sanitize)
 
     single_merge = OrderedDict()
     for k, v in prons.items():
@@ -418,9 +418,9 @@ def getFormattedPronunciations(expr, sep_single="・", sep_multi="、", expr_sep
     return txt
 
 
-def lookupPronunciation(expr):
+def lookup_pronunciation(expr):
     """ Show the pronunciation when the user does a manual lookup """
-    txt = getFormattedPronunciations(expr, "<br/>\n", "<br/><br/>\n", ":<br/>\n")
+    txt = get_formatted_pronunciations(expr, "<br/>\n", "<br/><br/>\n", ":<br/>\n")
 
     thehtml = """
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
@@ -443,39 +443,39 @@ font-size: 30px;
     showText(thehtml, type="html")
 
 
-def onLookupPronunciation():
+def on_lookup_pronunciation():
     """ Do a lookup on the selection """
     text = mw.web.selectedText()
     text = text.strip()
     if not text:
         showInfo(_("Empty selection."))
         return
-    lookupPronunciation(text)
+    lookup_pronunciation(text)
 
 
 # ************************************************
 #              Interface                         *
 # ************************************************
 
-def createMenu() -> QAction:
+def create_menu() -> QAction:
     """ Add a hotkey and menu entry """
     lookup_action = QAction("NHK pitch accent lookup", mw)
-    qconnect(lookup_action.triggered, onLookupPronunciation)
+    qconnect(lookup_action.triggered, on_lookup_pronunciation)
     if config["lookupShortcut"]:
         lookup_action.setShortcut(config["lookupShortcut"])
     return lookup_action
 
 
-def setupBrowserMenu(browser):
+def setup_browser_menu(browser):
     """ Add menu entry to browser window """
     a = QAction("Bulk-add Pronunciations", browser)
-    a.triggered.connect(lambda: onRegenerate(browser))
+    a.triggered.connect(lambda: on_regenerate(browser))
     browser.form.menuEdit.addSeparator()
     browser.form.menuEdit.addAction(a)
 
 
-def onRegenerate(browser):
-    regeneratePronunciations(browser.selectedNotes())
+def on_regenerate(browser):
+    regenerate_pronunciations(browser.selectedNotes())
 
 
 def get_src_dst_fields(fields):
@@ -500,7 +500,7 @@ def get_src_dst_fields(fields):
     return src, src_idx, dst, dst_idx
 
 
-def add_pronunciation_focusLost(flag, note: Note, f_inx):
+def add_pronunciation_on_focus_lost(flag, note: Note, f_inx):
     if not is_supported_notetype(note):
         return flag
 
@@ -527,13 +527,13 @@ def add_pronunciation_focusLost(flag, note: Note, f_inx):
 
     # update field
     try:
-        note[dst] = getFormattedPronunciations(src_txt)
+        note[dst] = get_formatted_pronunciations(src_txt)
     except Exception:
         raise
     return True
 
 
-def regeneratePronunciations(nids):
+def regenerate_pronunciations(nids):
     mw.checkpoint("Bulk-add Pronunciations")
     mw.progress.start()
     for nid in nids:
@@ -555,7 +555,7 @@ def regeneratePronunciations(nids):
         if not src_txt.strip():
             continue
 
-        note[dst] = getFormattedPronunciations(src_txt)
+        note[dst] = get_formatted_pronunciations(src_txt)
 
         note.flush()
     mw.progress.finish()
@@ -585,7 +585,7 @@ def on_note_will_flush(note):
     if not src_txt.strip():
         return note
 
-    note[dst_field] = getFormattedPronunciations(src_txt)
+    note[dst_field] = get_formatted_pronunciations(src_txt)
 
     return note
 
@@ -624,13 +624,13 @@ except ValueError:
     mecab_reader = None
 
 # Create the manual look-up menu entry
-mw.form.menuTools.addAction(createMenu())
+mw.form.menuTools.addAction(create_menu())
 
 # Generate when editing a note
-addHook('editFocusLost', add_pronunciation_focusLost)
+addHook('editFocusLost', add_pronunciation_on_focus_lost)
 
 # Bulk add
-addHook("browser.setupMenus", setupBrowserMenu)
+addHook("browser.setupMenus", setup_browser_menu)
 
 # Generate when AnkiConnect adds a new note
 hooks.note_will_flush.append(on_note_will_flush)
