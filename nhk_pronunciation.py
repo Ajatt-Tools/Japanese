@@ -7,22 +7,25 @@ import re
 import subprocess
 from abc import ABC
 from collections import namedtuple, OrderedDict
+from gettext import gettext as _
 from html.parser import HTMLParser
 from typing import Optional
 
 from anki import hooks
 from anki.hooks import addHook
-from anki.lang import _
 from anki.notes import Note
 from aqt import mw
 from aqt.qt import *
 from aqt.utils import isMac, isWin, showInfo, showText
+
+from .helpers import get_notetype
 
 # ************************************************
 #                Global Variables                *
 # ************************************************
 
 # Paths to the database files and this particular file
+
 this_addon_path = os.path.dirname(os.path.normpath(__file__))
 thisfile = os.path.join(this_addon_path, "nhk_pronunciation.py")
 
@@ -102,7 +105,7 @@ def is_supported_notetype(note: Note):
         # treat all note types as supported
         return True
 
-    this_notetype = note.model()['name']
+    this_notetype = get_notetype(note)['name']
     return any(notetype.lower() in this_notetype.lower() for notetype in config["noteTypes"])
 
 
@@ -497,12 +500,12 @@ def get_src_dst_fields(fields):
     return src, src_idx, dst, dst_idx
 
 
-def add_pronunciation_focusLost(flag, n: Note, f_inx):
-    if not is_supported_notetype(n):
+def add_pronunciation_focusLost(flag, note: Note, f_inx):
+    if not is_supported_notetype(note):
         return flag
 
     from aqt import mw
-    fields = mw.col.models.fieldNames(n.model())
+    fields = mw.col.models.field_names(get_notetype(note))
 
     src, src_idx, dst, dst_idx = get_src_dst_fields(fields)
 
@@ -510,7 +513,7 @@ def add_pronunciation_focusLost(flag, n: Note, f_inx):
         return flag
 
     # dst field already filled?
-    if n[dst]:
+    if note[dst]:
         return flag
 
     # event coming from src field?
@@ -518,13 +521,13 @@ def add_pronunciation_focusLost(flag, n: Note, f_inx):
         return flag
 
     # grab source text
-    src_txt = mw.col.media.strip(n[src])
+    src_txt = mw.col.media.strip(note[src])
     if not src_txt:
         return flag
 
     # update field
     try:
-        n[dst] = getFormattedPronunciations(src_txt)
+        note[dst] = getFormattedPronunciations(src_txt)
     except Exception:
         raise
     return True
