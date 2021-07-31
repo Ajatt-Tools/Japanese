@@ -46,7 +46,7 @@ config = mw.addonManager.getConfig(__name__)
 # ************************************************
 #                  Helper functions              *
 # ************************************************
-def katakana_to_hiragana(to_translate):
+def katakana_to_hiragana(katakana_expression: str):
     hiragana = u'がぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽ' \
                u'あいうえおかきくけこさしすせそたちつてと' \
                u'なにぬねのはひふへほまみむめもやゆよらりるれろ' \
@@ -57,7 +57,7 @@ def katakana_to_hiragana(to_translate):
                u'ワヲンァィゥェォャュョッ'
     katakana = [ord(char) for char in katakana]
     translate_table = dict(zip(katakana, hiragana))
-    return to_translate.translate(translate_table)
+    return katakana_expression.translate(translate_table)
 
 
 class HTMLTextExtractor(HTMLParser, ABC):
