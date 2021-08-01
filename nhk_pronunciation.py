@@ -205,6 +205,8 @@ class MecabController:
             expr = self.mecab.stdout.readline().rstrip(b'\r\n').decode('utf-8')
         except UnicodeDecodeError as e:
             raise Exception(str(e) + ": Please ensure you have updated to the most recent Japanese Support add-on.")
+        except BrokenPipeError:
+            self.mecab = None
 
         return expr
 
