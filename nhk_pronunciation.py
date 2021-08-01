@@ -14,7 +14,8 @@ from typing import Optional
 from anki import hooks
 from anki.hooks import addHook
 from anki.notes import Note
-from aqt import mw
+from aqt import mw, gui_hooks
+from aqt.browser import Browser
 from aqt.qt import *
 from aqt.utils import isMac, isWin, showInfo, showText
 
@@ -466,7 +467,7 @@ def create_menu() -> QAction:
     return lookup_action
 
 
-def setup_browser_menu(browser):
+def setup_browser_menu(browser: Browser):
     """ Add menu entry to browser window """
     a = QAction("Bulk-add Pronunciations", browser)
     a.triggered.connect(lambda: on_regenerate(browser))
@@ -504,8 +505,7 @@ def add_pronunciation_on_focus_lost(flag, note: Note, f_inx):
     if not is_supported_notetype(note):
         return flag
 
-    from aqt import mw
-    fields = mw.col.models.field_names(get_notetype(note))
+    fields = note.keys()
 
     src, src_idx, dst, dst_idx = get_src_dst_fields(fields)
 
@@ -630,7 +630,7 @@ mw.form.menuTools.addAction(create_menu())
 addHook('editFocusLost', add_pronunciation_on_focus_lost)
 
 # Bulk add
-addHook("browser.setupMenus", setup_browser_menu)
+gui_hooks.browser_menus_did_init.append(setup_browser_menu)
 
 # Generate when AnkiConnect adds a new note
 hooks.note_will_flush.append(on_note_will_flush)
