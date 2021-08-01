@@ -630,6 +630,8 @@ mw.form.menuTools.addAction(create_menu())
 
 # Generate when editing a note
 addHook('editFocusLost', add_pronunciation_on_focus_lost)
+# the new hook often fails:
+# gui_hooks.editor_did_unfocus_field.append(add_pronunciation_on_focus_lost)
 
 # Bulk add
 gui_hooks.browser_menus_did_init.append(setup_browser_menu)
