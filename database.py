@@ -63,30 +63,26 @@ def format_entry(e: AccentEntry) -> str:
     result_str = ""
     overline_flag = False
 
-    for i in range(len(kana)):
-        a = int(acc_pattern[i])
+    for idx, acc in ((i, int(acc_pattern[i])) for i in range(len(kana))):
         # Start or end overline when necessary
-        if not overline_flag and a > 0:
+        if not overline_flag and acc > 0:
             result_str += '<span class="overline">'
             overline_flag = True
-        if overline_flag and a == 0:
+        if overline_flag and acc == 0:
             result_str += '</span>'
             overline_flag = False
 
-        if (i + 1) in devoiced:
-            result_str += '<span class="nopron">'
+        # Wrap character if it's devoiced, else add as is.
+        if (idx + 1) in devoiced:
+            result_str += f'<span class="nopron">{kana[idx]}</span>'
+        else:
+            result_str += kana[idx]
 
-        # Add the character stuff
-        result_str += kana[i]
-
-        # Add the pronunciation stuff
-        if (i + 1) in devoiced:
-            result_str += "</span>"
-        if (i + 1) in nasal:
+        if (idx + 1) in nasal:
             result_str += '<span class="nasal">&#176;</span>'
 
         # If we go down in pitch, add the downfall
-        if a == 2:
+        if acc == 2:
             result_str += '</span>&#42780;'
             overline_flag = False
 
