@@ -42,7 +42,7 @@ def convert_to_inline_style(txt: str) -> str:
     return txt
 
 
-def get_pronunciations(expr: str, sanitize=True, recurse=True):
+def get_pronunciations(expr: str, sanitize=True, recurse=True) -> OrderedDict[str, List[str]]:
     """
     Search pronuncations for a particular expression
 
@@ -66,6 +66,7 @@ def get_pronunciations(expr: str, sanitize=True, recurse=True):
 
             if inline_pron not in styled_prons:
                 styled_prons.append(inline_pron)
+
         ret[expr] = styled_prons
     elif recurse:
         # Try to split the expression in various ways, and check if any of those results
@@ -86,14 +87,15 @@ def get_pronunciations(expr: str, sanitize=True, recurse=True):
 
 
 def get_formatted_pronunciations(expr: str, sep_single="・", sep_multi="、", expr_sep=None, sanitize=True):
-    prons = get_pronunciations(expr, sanitize)
+    pronunciations = get_pronunciations(expr, sanitize)
 
     single_merge = OrderedDict()
-    for k, v in prons.items():
+    for k, v in pronunciations.items():
         single_merge[k] = sep_single.join(v)
 
+    # expr_sep is used to separate entries on lookup
     if expr_sep:
-        txt = sep_multi.join([u"{}{}{}".format(k, expr_sep, v) for k, v in single_merge.items()])
+        txt = sep_multi.join([f"{k}{expr_sep}{v}" for k, v in single_merge.items()])
     else:
         txt = sep_multi.join(single_merge.values())
 
