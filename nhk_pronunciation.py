@@ -8,6 +8,7 @@ from anki import hooks
 from .database import init as database_init
 from .helpers import *
 from .mecab_controller import BasicMecabController
+from .mecab_controller import to_hiragana
 
 
 # Mecab controller
@@ -62,7 +63,7 @@ def get_pronunciations(expr: str, sanitize=True, recurse=True) -> OrderedDict[st
             inline_pron = convert_to_inline_style(pron)
 
             if config["pronunciationHiragana"]:
-                inline_pron = katakana_to_hiragana(inline_pron)
+                inline_pron = to_hiragana(inline_pron)
 
             if inline_pron not in styled_prons:
                 styled_prons.append(inline_pron)

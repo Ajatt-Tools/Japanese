@@ -29,24 +29,6 @@ def is_supported_notetype(note: Note):
     return any(notetype.lower() in this_notetype.lower() for notetype in config["noteTypes"])
 
 
-def _katakana_to_hiragana():
-    hiragana = u'がぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽ' \
-               u'あいうえおかきくけこさしすせそたちつてと' \
-               u'なにぬねのはひふへほまみむめもやゆよらりるれろ' \
-               u'わをんぁぃぅぇぉゃゅょっ'
-    katakana = u'ガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポ' \
-               u'アイウエオカキクケコサシスセソタチツテト' \
-               u'ナニヌネノハヒフヘホマミムメモヤユヨラリルレロ' \
-               u'ワヲンァィゥェォャュョッ'
-    katakana = [ord(char) for char in katakana]
-    translate_table = dict(zip(katakana, hiragana))
-
-    def func(katakana_expression: str):
-        return katakana_expression.translate(translate_table)
-
-    return func
-
-
 def escape_text(text):
     # strip characters that trip up kakasi/mecab
     text = text.replace("\n", " ")
@@ -85,4 +67,3 @@ def _split_separators():
 config = mw.addonManager.getConfig(__name__)
 iter_fields = functools.partial(zip, config['srcFields'], config['dstFields'])
 split_separators = _split_separators()
-katakana_to_hiragana = _katakana_to_hiragana()
