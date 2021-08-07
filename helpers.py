@@ -1,3 +1,4 @@
+import functools
 import re
 from typing import Dict, Any, List
 
@@ -78,6 +79,7 @@ def _split_separators():
     return func
 
 
+config = mw.addonManager.getConfig(__name__)
+iter_fields = functools.partial(zip, config['srcFields'], config['dstFields'])
 split_separators = _split_separators()
 katakana_to_hiragana = _katakana_to_hiragana()
-config = mw.addonManager.getConfig(__name__)

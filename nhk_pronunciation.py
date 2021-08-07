@@ -3,15 +3,12 @@
 import glob
 import subprocess
 from collections import OrderedDict
-from gettext import gettext as _
 from typing import Optional
 
 from anki import hooks
 from anki.hooks import addHook
-from aqt import gui_hooks
-from aqt.browser import Browser
 from aqt.qt import *
-from aqt.utils import isMac, isWin, showInfo, showText
+from aqt.utils import isMac, isWin, showInfo
 
 from .database import init as database_init
 from .helpers import *
@@ -172,135 +169,79 @@ def get_formatted_pronunciations(expr: str, sep_single="・", sep_multi="、", e
     return txt
 
 
-
 # ************************************************
-#              Interface                         *
+#              Pitch generation                  *
 # ************************************************
 
+def find_dest_field_name(src_field_name: str) -> Optional[str]:
+    for src, dest in iter_fields():
+        if src_field_name == src:
+            return dest
+    else:
+        return None
 
 
+def can_fill_destination(note: Note, src_field: str, dst_field: str) -> bool:
+    # Field names are empty or None
+    if not src_field or not dst_field:
+        return False
 
-def setup_browser_menu(browser: Browser):
-    """ Add menu entry to browser window """
-    a = QAction("Bulk-add Pronunciations", browser)
-    a.triggered.connect(lambda: on_regenerate(browser))
-    browser.form.menuEdit.addSeparator()
-    browser.form.menuEdit.addAction(a)
+    # The note doesn't have fields with these names
+    if src_field not in note or dst_field not in note:
+        return False
 
+    # Yomichan added `No pitch accent data` to the field when creating the note
+    if "No pitch accent data".lower() in note[dst_field].lower():
+        return True
 
-def on_regenerate(browser):
-    regenerate_pronunciations(browser.selectedNotes())
+    # Field is empty
+    if len(htmlToTextLine(note[dst_field])) == 0:
+        return True
 
+    # Allowed to regenerate regardless
+    if config["regenerateReadings"] is True:
+        return True
 
-def get_src_dst_fields(fields):
-    """ Set source and destination fieldnames """
-    src = None
-    src_idx = None
-    dst = None
-    dst_idx = None
-
-    for index, field in enumerate(config["srcFields"]):
-        if field in fields:
-            src = field
-            src_idx = index
-            break
-
-    for index, field in enumerate(config["dstFields"]):
-        if field in fields:
-            dst = field
-            dst_idx = index
-            break
-
-    return src, src_idx, dst, dst_idx
+    return False
 
 
-def add_pronunciation_on_focus_lost(flag, note: Note, f_inx):
+def fill_destination(note: Note, src_field: str, dst_field: str) -> bool:
+    if not can_fill_destination(note, src_field, dst_field):
+        return False
+
+    # grab source text and update note
+    if src_text := mw.col.media.strip(note[src_field]).strip():
+        note[dst_field] = get_formatted_pronunciations(src_text)
+        return True
+
+    return False
+
+
+def add_pronunciation_on_focus_lost(changed: bool, note: Note, field_idx: int) -> bool:
+    # This notetype name is not included in the config file
     if not is_supported_notetype(note):
-        return flag
+        return changed
 
-    fields = note.keys()
+    src_field = note.keys()[field_idx]
+    dst_field = find_dest_field_name(src_field)
 
-    src, src_idx, dst, dst_idx = get_src_dst_fields(fields)
-
-    if not src or not dst:
-        return flag
-
-    # dst field already filled?
-    if note[dst]:
-        return flag
-
-    # event coming from src field?
-    if f_inx != src_idx:
-        return flag
-
-    # grab source text
-    src_txt = mw.col.media.strip(note[src])
-    if not src_txt:
-        return flag
-
-    # update field
-    try:
-        note[dst] = get_formatted_pronunciations(src_txt)
-    except Exception:
-        raise
-    return True
+    return True if fill_destination(note, src_field, dst_field) else changed
 
 
-def regenerate_pronunciations(nids):
-    mw.checkpoint("Bulk-add Pronunciations")
-    mw.progress.start()
-    for nid in nids:
-        note = mw.col.getNote(nid)
+def on_note_will_flush(note: Note) -> None:
+    if config["generateOnNoteFlush"] is False:
+        return
 
-        if not is_supported_notetype(note):
-            continue
-
-        src, src_idx, dst, dst_idx = get_src_dst_fields(note)
-
-        if src is None or dst is None:
-            continue
-
-        if note[dst] and not config["regenerateReadings"]:
-            # already contains data, skip
-            continue
-
-        src_txt = mw.col.media.strip(note[src])
-        if not src_txt.strip():
-            continue
-
-        note[dst] = get_formatted_pronunciations(src_txt)
-
-        note.flush()
-    mw.progress.finish()
-    mw.reset()
-
-
-def on_note_will_flush(note):
+    # only accept calls when add cards dialog or anki browser are not open.
+    # otherwise this function conflicts with add_pronunciation_focusLost which is called on 'editFocusLost'
     if mw.app.activeWindow() is not None:
-        # only accept calls when add cards dialog or anki browser are not open.
-        # otherwise this function conflicts with add_pronunciation_focusLost which is called on 'editFocusLost'
-        return note
+        return
 
-    if not (is_supported_notetype(note) is True and config["generateOnNoteFlush"] is True):
-        return note
+    if not is_supported_notetype(note):
+        return
 
-    src_field, src_idx, dst_field, dst_idx = get_src_dst_fields(note)
-
-    if src_field is None or dst_field is None:
-        return note
-
-    if config["regenerateReadings"] is False and note[dst_field] and note[dst_field] != "No pitch accent data":
-        # already contains data, skip
-        # but yomichan adds `No pitch accent data` to the field when there's no pitch available.
-        return note
-
-    src_txt = mw.col.media.strip(note[src_field])
-    if not src_txt.strip():
-        return note
-
-    note[dst_field] = get_formatted_pronunciations(src_txt)
-
-    return note
+    for src_field, dst_field in iter_fields():
+        fill_destination(note, src_field, dst_field)
 
 
 # ************************************************
@@ -316,14 +257,10 @@ acc_dict = database_init()
 
 
 def init():
-
     # Generate when editing a note
     addHook('editFocusLost', add_pronunciation_on_focus_lost)
     # the new hook often fails:
     # gui_hooks.editor_did_unfocus_field.append(add_pronunciation_on_focus_lost)
-
-    # Bulk add
-    gui_hooks.browser_menus_did_init.append(setup_browser_menu)
 
     # Generate when AnkiConnect adds a new note
     hooks.note_will_flush.append(on_note_will_flush)

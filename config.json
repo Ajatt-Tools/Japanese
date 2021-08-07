@@ -3,7 +3,7 @@
 			   "class=\"nopron\"": "style=\"color: royalblue;\"",
 			   "class=\"nasal\"": "style=\"color: red;\"",
 			   "&#42780;": "&#42780;"},
-	"noteTypes": ["japanese"],
+	"noteTypes": ["japanese", "subs2srs", "ajt"],
 	"srcFields": ["VocabKanji"],
 	"dstFields": ["VocabPitchPattern"],
 	"regenerateReadings": false,
