@@ -35,7 +35,7 @@ class MecabController(BasicMecabController):
 
 
 def convert_to_inline_style(txt: str) -> str:
-    """ Map style classes to their inline version """
+    """ Map style classes to their user-configured inline versions. """
 
     for k, v in config["styles"].items():
         txt = txt.replace(k, v)
@@ -45,10 +45,10 @@ def convert_to_inline_style(txt: str) -> str:
 
 def get_pronunciations(expr: str, sanitize=True, recurse=True) -> OrderedDict[str, List[str]]:
     """
-    Search pronuncations for a particular expression
+    Search pronunciations for a particular expression.
 
-    Returns a dictionary mapping the expression (or sub-expressions contained
-    in the expression) to a list of html-styled pronunciations.
+    Returns a dictionary mapping the expression (or sub-expressions contained in the expression)
+    to a list of html-styled pronunciations.
     """
 
     # Sanitize input
