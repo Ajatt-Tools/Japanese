@@ -1,10 +1,13 @@
 import functools
 import re
+from importlib.metadata import version
 from typing import Dict, Any, List
 
 from anki.notes import Note
 from anki.utils import htmlToTextLine
 from aqt import mw
+
+ANKI21_VERSION = int(version('aqt').split('.')[-1])
 
 
 def get_notetype(note: Note) -> Dict[str, Any]:

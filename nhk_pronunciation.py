@@ -258,9 +258,14 @@ acc_dict = database_init()
 
 def init():
     # Generate when editing a note
-    addHook('editFocusLost', add_pronunciation_on_focus_lost)
-    # the new hook often fails:
-    # gui_hooks.editor_did_unfocus_field.append(add_pronunciation_on_focus_lost)
+
+    if ANKI21_VERSION < 45:
+        from anki.hooks import addHook
+        addHook('editFocusLost', on_focus_lost)
+    else:
+        from aqt import gui_hooks
+
+        gui_hooks.editor_did_unfocus_field.append(on_focus_lost)
 
     # Generate when AnkiConnect adds a new note
     hooks.note_will_flush.append(on_note_will_flush)
