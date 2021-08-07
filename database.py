@@ -128,8 +128,9 @@ def read_derivative() -> Dict[str, List[Tuple[str, str]]]:
     with open(derivative_database, 'r', encoding="utf-8") as f:
         for line in f:
             key, kana, pron = line.strip().split('\t')
+            entry = (kana, pron)
             if key in acc_dict:
-                if (entry := (kana, pron)) not in acc_dict[key]:
+                if entry not in acc_dict[key]:
                     acc_dict[key].append(entry)
             else:
                 acc_dict[key] = [entry, ]
