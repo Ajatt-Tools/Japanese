@@ -32,5 +32,4 @@ def setup_browser_menu(browser: Browser):
 
 
 def init():
-    # Bulk add
     gui_hooks.browser_menus_did_init.append(setup_browser_menu)

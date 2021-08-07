@@ -1,105 +1,36 @@
 # -*- coding: utf-8 -*-
 
-import glob
-import subprocess
 from collections import OrderedDict
 from typing import Optional
 
 from anki import hooks
-from anki.hooks import addHook
-from aqt.qt import *
-from aqt.utils import isMac, isWin, showInfo
 
 from .database import init as database_init
 from .helpers import *
+from .mecab_controller import BasicMecabController
 
 
-# ******************************************************************
-#                               Mecab                              *
-#  Copied from Japanese add-on by Damien Elmes with minor changes. *
-# ******************************************************************
-
-class MecabController:
-
-    def __init__(self, mecab_dir_path):
-        if mecab_dir_path is None:
-            raise ValueError("mecab not found")
-
-        self.mecab_dir_path = os.path.normpath(mecab_dir_path)
-        self.mecabCmd = self.munge_for_platform(
-            [os.path.join(self.mecab_dir_path, "mecab")] + self.mecab_args() + [
-                '-d', self.mecab_dir_path, '-r', os.path.join(self.mecab_dir_path, "mecabrc")])
-        self.mecab = None
-
-        if sys.platform == "win32":
-            self._si = subprocess.STARTUPINFO()
-            try:
-                self._si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-            except:
-                self._si.dwFlags |= subprocess._subprocess.STARTF_USESHOWWINDOW
-        else:
-            self._si = None
-
-        os.environ['DYLD_LIBRARY_PATH'] = self.mecab_dir_path
-        os.environ['LD_LIBRARY_PATH'] = self.mecab_dir_path
-        print("Japitch cmd", self.mecabCmd)
-
-    @staticmethod
-    def munge_for_platform(popen):
-        if isWin:
-            # popen = [os.path.normpath(x) for x in popen]
-            popen[0] += ".exe"
-        elif not isMac:
-            popen[0] += ".lin"
-        return popen
-
-    @staticmethod
-    def mecab_args():
-        return ['--node-format=%f[6] ', '--unk-format=%m ', '--eos-format=\n']
-
-    def ensure_open(self):
-        if not self.mecab:
-            try:
-                self.mecab = subprocess.Popen(
-                    self.mecabCmd, bufsize=-1, stdin=subprocess.PIPE,
-                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                    startupinfo=self._si)
-            except OSError as e:
-                raise Exception(str(e) + ": Please ensure your Linux system has 64 bit binary support.")
-
-    def reading(self, expr):
-        self.ensure_open()
-        expr = escape_text(expr)
-        try:
-            self.mecab.stdin.write(expr.encode("utf-8", "ignore") + b'\n')
-            self.mecab.stdin.flush()
-            expr = self.mecab.stdout.readline().rstrip(b'\r\n').decode('utf-8')
-        except UnicodeDecodeError as e:
-            raise Exception(str(e) + ": Please ensure you have updated to the most recent Japanese Support add-on.")
-        except BrokenPipeError:
-            self.mecab = None
-
-        return expr
+# Mecab controller
+##########################################################################
 
 
-def find_mecab_dir() -> Optional[str]:
-    # Check if Mecab is available and/or if the user wants it to be used
-    if config['useMecab']:
-        # Note that there are no guarantees on the folder name of the Japanese
-        # add-on. We therefore have to look recursively in our parent folder.
-        mecab_search = glob.glob(
-            os.path.join(this_addon_path, os.pardir + os.sep + '**' + os.sep + 'support' + os.sep + 'mecab.exe')
-        )
-        mecab_exists = len(mecab_search) > 0
-        if mecab_exists:
-            return os.path.dirname(os.path.normpath(mecab_search[0]))
-        else:
-            showInfo("NHK-Pronunciation: Mecab use requested, but Japanese add-on with Mecab not found.")
+class MecabController(BasicMecabController):
+    _add_mecab_args = [
+        '--node-format=%f[6] ',
+        '--unk-format=%m ',
+        '--eos-format=\n',
+    ]
+
+    def __init__(self):
+        super().__init__(mecab_args=self._add_mecab_args)
+
+    def dict_form(self, expr: str):
+        return self.run(escape_text(expr))
 
 
-# ************************************************
-#              Lookup Functions                  *
-# ************************************************
+# Lookup
+##########################################################################
+
 
 def convert_to_inline_style(txt: str) -> str:
     """ Map style classes to their inline version """
@@ -144,8 +75,8 @@ def get_pronunciations(expr: str, sanitize=True, recurse=True):
                 ret.update(get_pronunciations(expr, sanitize))
 
         # Only if lookups were not succesful, we try splitting with Mecab
-        if not ret and mecab_reader:
-            for sub_expr in mecab_reader.reading(expr).split():
+        if not ret and mecab:
+            for sub_expr in mecab.dict_form(expr).split():
                 # Avoid infinite recursion by saying that we should not try
                 # Mecab again if we do not find any matches for this sub-
                 # expression.
@@ -169,9 +100,8 @@ def get_formatted_pronunciations(expr: str, sep_single="・", sep_multi="、", e
     return txt
 
 
-# ************************************************
-#              Pitch generation                  *
-# ************************************************
+# Pitch generation
+##########################################################################
 
 def find_dest_field_name(src_field_name: str) -> Optional[str]:
     for src, dest in iter_fields():
@@ -217,7 +147,7 @@ def fill_destination(note: Note, src_field: str, dst_field: str) -> bool:
     return False
 
 
-def add_pronunciation_on_focus_lost(changed: bool, note: Note, field_idx: int) -> bool:
+def on_focus_lost(changed: bool, note: Note, field_idx: int) -> bool:
     # This notetype name is not included in the config file
     if not is_supported_notetype(note):
         return changed
@@ -244,15 +174,10 @@ def on_note_will_flush(note: Note) -> None:
         fill_destination(note, src_field, dst_field)
 
 
-# ************************************************
-#                   Main                         *
-# ************************************************
+# Entry point
+##########################################################################
 
-try:
-    mecab_reader = MecabController(find_mecab_dir())
-except ValueError:
-    mecab_reader = None
-
+mecab = MecabController()
 acc_dict = database_init()
 
 
