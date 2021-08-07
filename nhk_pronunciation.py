@@ -24,8 +24,9 @@ class MecabController(BasicMecabController):
     def __init__(self):
         super().__init__(mecab_args=self._add_mecab_args)
 
-    def dict_form(self, expr: str):
-        return self.run(escape_text(expr))
+    def dict_forms(self, expr: str) -> List[str]:
+        """ Returns dictionary form for each word in expr. """
+        return self.run(escape_text(expr)).split()
 
 
 # Lookup
@@ -74,12 +75,11 @@ def get_pronunciations(expr: str, sanitize=True, recurse=True):
             for expr in split_expr:
                 ret.update(get_pronunciations(expr, sanitize))
 
-        # Only if lookups were not succesful, we try splitting with Mecab
-        if not ret and mecab:
-            for sub_expr in mecab.dict_form(expr).split():
+        # Only if lookups were not successful, we try splitting with Mecab
+        if not ret:
+            for sub_expr in mecab.dict_forms(expr):
                 # Avoid infinite recursion by saying that we should not try
-                # Mecab again if we do not find any matches for this sub-
-                # expression.
+                # Mecab again if we do not find any matches for this sub-expression.
                 ret.update(get_pronunciations(sub_expr, sanitize, False))
 
     return ret
