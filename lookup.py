@@ -11,7 +11,7 @@ from .nhk_pronunciation import get_formatted_pronunciations
 HTML = """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
 <html>
 <head>
-<style> body { font-size: 30px; } </style>
+<style> body { font-size: 24px; } </style>
 <title>Pronunciations</title>
 <meta charset="UTF-8" />
 </head>
@@ -24,7 +24,7 @@ def on_lookup_pronunciation():
     """ Do a lookup on the selection """
     if len(text := mw.web.selectedText().strip()) > 0:
         showText(
-            HTML % get_formatted_pronunciations(text, "<br/>\n", "<br/><br/>\n", ":<br/>\n"),
+            HTML % get_formatted_pronunciations(text, "・", "<br/><br/>\n", ": "),
             type="html"
         )
     else:
