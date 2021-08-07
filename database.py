@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
-
+import os
 import pickle
+import re
+import subprocess
 from collections import namedtuple
-from typing import Tuple
-
-from aqt.qt import *
-
-from .helpers import *
+from typing import Tuple, Dict, List
 
 # Paths to the database files and this particular file
 
@@ -19,39 +17,48 @@ derivative_pickle = os.path.join(db_dir_path, "nhk_pronunciation.pickle")
 AccentEntry = namedtuple(
     'AccentEntry',
     [
-        'NID', 'ID', 'WAVname', 'K_FLD', 'ACT', 'kana_reading', 'nhk', 'kanjiexpr', 'NHKexpr',
-        'numberchars', 'nopronouncepos', 'nasalsoundpos', 'majiri', 'kaisi', 'KWAV', 'kana_reading_alt',
-        'akusentosuu', 'bunshou', 'accent'
+        'NID', 'ID', 'WAVname', 'K_FLD', 'ACT',
+        'kana_reading', 'nhk', 'kanjiexpr', 'NHKexpr', 'numberchars',
+        'devoiced_pos', 'nasalsoundpos', 'majiri', 'kaisi', 'KWAV',
+        'kana_reading_alt', 'akusentosuu', 'bunshou', 'accent',
     ]
 )
+
+
+def make_accent_entry(csv_line: str) -> AccentEntry:
+    csv_line = csv_line.strip()
+    # Special entries in the CSV file that have to be escaped
+    # to prevent them from being treated as multiple fields.
+    sub_entries = re.findall(r'({.*?,.*?})', csv_line) + re.findall(r'(\(.*?,.*?\))', csv_line)
+    for s in sub_entries:
+        csv_line = csv_line.replace(s, s.replace(',', ';'))
+
+    return AccentEntry(*csv_line.split(','))
+
+
+def format_nasal_or_devoiced_positions(expr: str):
+    # Sometimes the expr ends with 10
+    if expr.endswith('10'):
+        expr = expr[:-2]
+        result = [10]
+    else:
+        result = []
+
+    return result + [int(pos) for pos in expr.split('0') if pos]
 
 
 def format_entry(e: AccentEntry) -> str:
     """ Format an entry from the data in the original database to something that uses html """
     kana = e.kana_reading_alt
+
+    # Fix accent notation by prepending zeros for moraes where accent info is missing in the CSV.
     acc_pattern = "0" * (len(kana) - len(e.accent)) + e.accent
 
     # Get the nasal positions
-    nasal = []
-    if e.nasalsoundpos:
-        positions = e.nasalsoundpos.split('0')
-        for p in positions:
-            if p:
-                nasal.append(int(p))
-            if not p:
-                # e.g. "20" would result in ['2', '']
-                nasal[-1] = nasal[-1] * 10
+    nasal = format_nasal_or_devoiced_positions(e.nasalsoundpos)
 
-    # Get the no pronounce positions
-    nopron = []
-    if e.nopronouncepos:
-        positions = e.nopronouncepos.split('0')
-        for p in positions:
-            if p:
-                nopron.append(int(p))
-            if not p:
-                # e.g. "20" would result in ['2', '']
-                nopron[-1] = nopron[-1] * 10
+    # Get the devoiced positions
+    devoiced = format_nasal_or_devoiced_positions(e.devoiced_pos)
 
     result_str = ""
     overline_flag = False
@@ -60,63 +67,56 @@ def format_entry(e: AccentEntry) -> str:
         a = int(acc_pattern[i])
         # Start or end overline when necessary
         if not overline_flag and a > 0:
-            result_str = result_str + '<span class="overline">'
+            result_str += '<span class="overline">'
             overline_flag = True
         if overline_flag and a == 0:
-            result_str = result_str + '</span>'
+            result_str += '</span>'
             overline_flag = False
 
-        if (i + 1) in nopron:
-            result_str = result_str + '<span class="nopron">'
+        if (i + 1) in devoiced:
+            result_str += '<span class="nopron">'
 
         # Add the character stuff
-        result_str = result_str + kana[i]
+        result_str += kana[i]
 
         # Add the pronunciation stuff
-        if (i + 1) in nopron:
-            result_str = result_str + "</span>"
+        if (i + 1) in devoiced:
+            result_str += "</span>"
         if (i + 1) in nasal:
-            result_str = result_str + '<span class="nasal">&#176;</span>'
+            result_str += '<span class="nasal">&#176;</span>'
 
         # If we go down in pitch, add the downfall
         if a == 2:
-            result_str = result_str + '</span>&#42780;'
+            result_str += '</span>&#42780;'
             overline_flag = False
 
     # Close the overline if it's still open
     if overline_flag:
-        result_str = result_str + "</span>"
+        result_str += "</span>"
 
     return result_str
 
 
-def build_database() -> None:
+def build_database(dest_path: str = derivative_database) -> None:
     """ Build the derived database from the original database """
     temp_dict = {}
-    entries = []
 
-    with open(accent_database, 'r', encoding="utf-8") as file_handle:
-        for line in file_handle:
-            line = line.strip()
-            substrs = re.findall(r'({.*?,.*?})', line)
-            substrs.extend(re.findall(r'(\(.*?,.*?\))', line))
-            for s in substrs:
-                line = line.replace(s, s.replace(',', ';'))
-            entries.append(AccentEntry(*line.split(',')))
+    with open(accent_database, 'r', encoding="utf-8") as f:
+        entries = [make_accent_entry(line) for line in f]
 
-    for e in entries:
+    for entry in entries:
         # A tuple holding both the spelling in katakana, and the katakana with pitch/accent markup
-        kana_pron = (e.kana_reading, format_entry(e))
+        kana_pron = (entry.kana_reading, format_entry(entry))
 
         # Add expressions for both
-        for key in [e.nhk, e.kanjiexpr]:
+        for key in [entry.nhk, entry.kanjiexpr]:
             if key in temp_dict:
                 if kana_pron not in temp_dict[key]:
                     temp_dict[key].append(kana_pron)
             else:
                 temp_dict[key] = [kana_pron]
 
-    with open(derivative_database, 'w', encoding="utf-8") as o:
+    with open(dest_path, 'w', encoding="utf-8") as o:
         for key in temp_dict.keys():
             for kana, pron in temp_dict[key]:
                 o.write("%s\t%s\t%s\n" % (key, kana, pron))
@@ -160,3 +160,21 @@ def init() -> Dict[str, List[Tuple[str, str]]]:
             # Pickle the 'data' dictionary using the highest protocol available.
             pickle.dump(derivative := read_derivative(), f, pickle.HIGHEST_PROTOCOL)
         return derivative
+
+
+def test():
+    test_path = os.path.join(db_dir_path, "test.csv")
+    build_database(dest_path=test_path)
+    proc = subprocess.run(
+        ['diff', '-u', derivative_database, test_path],
+        check=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    print(f'Return code: {proc.returncode}.')
+    print((proc.stdout + proc.stderr).decode())
+    print('Done.')
+
+
+if __name__ == '__main__':
+    test()
