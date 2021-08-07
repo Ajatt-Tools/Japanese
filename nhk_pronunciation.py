@@ -76,7 +76,7 @@ def get_pronunciations(expr: str, sanitize=True, recurse=True):
                 ret.update(get_pronunciations(expr, sanitize))
 
         # Only if lookups were not successful, we try splitting with Mecab
-        if not ret:
+        if not ret and config.get('useMecab') is True:
             for sub_expr in mecab.dict_forms(expr):
                 # Avoid infinite recursion by saying that we should not try
                 # Mecab again if we do not find any matches for this sub-expression.
