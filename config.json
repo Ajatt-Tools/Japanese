@@ -1,14 +1,24 @@
 {
-	"styles": {"class=\"overline\"": "style=\"text-decoration:overline;\"",
-			   "class=\"nopron\"": "style=\"color: royalblue;\"",
-			   "class=\"nasal\"": "style=\"color: red;\"",
-			   "&#42780;": "&#42780;"},
-	"noteTypes": ["japanese", "subs2srs", "ajt"],
-	"srcFields": ["VocabKanji"],
-	"dstFields": ["VocabPitchPattern"],
-	"regenerateReadings": false,
-	"pronunciationHiragana": false,
-	"useMecab": true,
-	"generateOnNoteFlush": true,
-	"lookupShortcut": "Ctrl+8"
+  "styles": {
+    "class=\"overline\"": "style=\"text-decoration:overline;\"",
+    "class=\"nopron\"": "style=\"color: royalblue;\"",
+    "class=\"nasal\"": "style=\"color: red;\"",
+    "&#42780;": "&#42780;"
+  },
+  "noteTypes": [
+    "japanese",
+    "subs2srs",
+    "ajt"
+  ],
+  "srcFields": [
+    "VocabKanji"
+  ],
+  "dstFields": [
+    "VocabPitchPattern"
+  ],
+  "regenerateReadings": false,
+  "pronunciationHiragana": false,
+  "useMecab": true,
+  "generateOnNoteFlush": true,
+  "lookupShortcut": "Ctrl+8"
 }
