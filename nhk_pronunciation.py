@@ -172,52 +172,12 @@ def get_formatted_pronunciations(expr: str, sep_single="・", sep_multi="、", e
     return txt
 
 
-def lookup_pronunciation(expr):
-    """ Show the pronunciation when the user does a manual lookup """
-    txt = get_formatted_pronunciations(expr, "<br/>\n", "<br/><br/>\n", ":<br/>\n")
-
-    thehtml = """
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML>
-<HEAD>
-<style>
-body {
-font-size: 30px;
-}
-</style>
-<TITLE>Pronunciations</TITLE>
-<meta charset="UTF-8" />
-</HEAD>
-<BODY>
-%s
-</BODY>
-</HTML>
-""" % txt
-
-    showText(thehtml, type="html")
-
-
-def on_lookup_pronunciation():
-    """ Do a lookup on the selection """
-    text = mw.web.selectedText()
-    text = text.strip()
-    if not text:
-        showInfo(_("Empty selection."))
-        return
-    lookup_pronunciation(text)
-
 
 # ************************************************
 #              Interface                         *
 # ************************************************
 
-def create_menu() -> QAction:
-    """ Add a hotkey and menu entry """
-    lookup_action = QAction("NHK pitch accent lookup", mw)
-    qconnect(lookup_action.triggered, on_lookup_pronunciation)
-    if config["lookupShortcut"]:
-        lookup_action.setShortcut(config["lookupShortcut"])
-    return lookup_action
+
 
 
 def setup_browser_menu(browser: Browser):
@@ -356,8 +316,6 @@ acc_dict = database_init()
 
 
 def init():
-    # Create the manual look-up menu entry
-    mw.form.menuTools.addAction(create_menu())
 
     # Generate when editing a note
     addHook('editFocusLost', add_pronunciation_on_focus_lost)
