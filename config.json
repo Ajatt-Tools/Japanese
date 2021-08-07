@@ -20,5 +20,6 @@
   "pronunciationHiragana": false,
   "useMecab": true,
   "generateOnNoteFlush": true,
+  "kanaLookups": true,
   "lookupShortcut": "Ctrl+8"
 }

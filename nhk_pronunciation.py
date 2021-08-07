@@ -17,7 +17,7 @@ from .mecab_controller import to_hiragana
 
 class MecabController(BasicMecabController):
     _add_mecab_args = [
-        '--node-format=%f[6] ',
+        '--node-format=%f[6],%f[7] ',
         '--unk-format=%m ',
         '--eos-format=\n',
     ]
@@ -80,9 +80,13 @@ def get_pronunciations(expr: str, sanitize=True, recurse=True) -> OrderedDict[st
         # Only if lookups were not successful, we try splitting with Mecab
         if not ret and config.get('useMecab') is True:
             for sub_expr in mecab.dict_forms(expr):
+                kanji, katakana = sub_expr.split(',')
+
                 # Avoid infinite recursion by saying that we should not try
                 # Mecab again if we do not find any matches for this sub-expression.
-                ret.update(get_pronunciations(sub_expr, sanitize, False))
+                ret.update(get_pronunciations(kanji, sanitize, False))
+                if not ret and config.get('kanaLookups') is True:
+                    ret.update(get_pronunciations(to_hiragana(katakana), sanitize, False))
 
     return ret
 
