@@ -1,133 +1,20 @@
 # -*- coding: utf-8 -*-
 
 import glob
-import io
-import pickle
-import re
 import subprocess
-from abc import ABC
-from collections import namedtuple, OrderedDict
+from collections import OrderedDict
 from gettext import gettext as _
-from html.parser import HTMLParser
 from typing import Optional
 
 from anki import hooks
 from anki.hooks import addHook
-from anki.notes import Note
-from aqt import mw, gui_hooks
+from aqt import gui_hooks
 from aqt.browser import Browser
 from aqt.qt import *
 from aqt.utils import isMac, isWin, showInfo, showText
 
-from .helpers import get_notetype
-
-# ************************************************
-#                Global Variables                *
-# ************************************************
-
-# Paths to the database files and this particular file
-
-this_addon_path = os.path.dirname(os.path.normpath(__file__))
-thisfile = os.path.join(this_addon_path, "nhk_pronunciation.py")
-
-db_dir_path = os.path.join(this_addon_path, "accent_dict")
-derivative_database = os.path.join(db_dir_path, "nhk_pronunciation.csv")
-derivative_pickle = os.path.join(db_dir_path, "nhk_pronunciation.pickle")
-accent_database = os.path.join(db_dir_path, "ACCDB_unicode.csv")
-
-# "Class" declaration
-AccentEntry = namedtuple('AccentEntry',
-                         ['NID', 'ID', 'WAVname', 'K_FLD', 'ACT', 'midashigo', 'nhk', 'kanjiexpr', 'NHKexpr',
-                          'numberchars', 'nopronouncepos', 'nasalsoundpos', 'majiri', 'kaisi', 'KWAV', 'midashigo1',
-                          'akusentosuu', 'bunshou', 'ac'])
-
-# The main dict used to store all entries
-thedict = {}
-
-config = mw.addonManager.getConfig(__name__)
-
-
-# ************************************************
-#                  Helper functions              *
-# ************************************************
-def katakana_to_hiragana(katakana_expression: str):
-    hiragana = u'がぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽ' \
-               u'あいうえおかきくけこさしすせそたちつてと' \
-               u'なにぬねのはひふへほまみむめもやゆよらりるれろ' \
-               u'わをんぁぃぅぇぉゃゅょっ'
-    katakana = u'ガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポ' \
-               u'アイウエオカキクケコサシスセソタチツテト' \
-               u'ナニヌネノハヒフヘホマミムメモヤユヨラリルレロ' \
-               u'ワヲンァィゥェォャュョッ'
-    katakana = [ord(char) for char in katakana]
-    translate_table = dict(zip(katakana, hiragana))
-    return katakana_expression.translate(translate_table)
-
-
-class HTMLTextExtractor(HTMLParser, ABC):
-    def __init__(self):
-        if issubclass(self.__class__, object):
-            super(HTMLTextExtractor, self).__init__()
-        else:
-            HTMLParser.__init__(self)
-        self.result = []
-
-    def handle_data(self, d):
-        self.result.append(d)
-
-    def get_text(self):
-        return ''.join(self.result)
-
-
-def strip_html_markup(html, recursive=False):
-    """
-    Strip html markup. If the html contains escaped html markup itself, one
-    can use the recursive option to also strip this.
-    """
-    old_text = None
-    new_text = html
-    while new_text != old_text:
-        old_text = new_text
-        s = HTMLTextExtractor()
-        s.feed(new_text)
-        new_text = s.get_text()
-
-        if not recursive:
-            break
-
-    return new_text
-
-
-def is_supported_notetype(note: Note):
-    # Check if this is a supported note type.
-
-    if not config["noteTypes"]:
-        # supported note types weren't specified by the user.
-        # treat all note types as supported
-        return True
-
-    this_notetype = get_notetype(note)['name']
-    return any(notetype.lower() in this_notetype.lower() for notetype in config["noteTypes"])
-
-
-# Ref: https://stackoverflow.com/questions/15033196/using-javascript-to-check-whether-a-string-contains-japanese-characters-includi/15034560#15034560
-non_jap_regex = re.compile(u'[^\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\uff66-\uff9f\u4e00-\u9fff\u3400-\u4dbf]+', re.U)
-jp_sep_regex = re.compile(u'[・、※【】「」〒◎×〃゜『』《》〜〽。〄〇〈〉〓〔〕〖〗〘 〙〚〛〝〞〟〠〡〢〣〥〦〧〨〭〮〯〫〬〶〷〸〹〺〻〼〾〿]', re.U)
-
-
-def split_separators(expr):
-    """
-    Split text by common separators (like / or ・) into separate words that can
-    be looked up.
-    """
-    expr = strip_html_markup(expr).strip()
-
-    # Replace all typical separators with a space
-    expr = re.sub(non_jap_regex, ' ', expr)  # Remove non-Japanese characters
-    expr = re.sub(jp_sep_regex, ' ', expr)  # Remove Japanese punctuation
-    expr_all = expr.split(' ')
-
-    return expr_all
+from .database import init as database_init
+from .helpers import *
 
 
 # ******************************************************************
@@ -156,6 +43,10 @@ class MecabController:
         else:
             self._si = None
 
+        os.environ['DYLD_LIBRARY_PATH'] = self.mecab_dir_path
+        os.environ['LD_LIBRARY_PATH'] = self.mecab_dir_path
+        print("Japitch cmd", self.mecabCmd)
+
     @staticmethod
     def munge_for_platform(popen):
         if isWin:
@@ -167,17 +58,10 @@ class MecabController:
 
     @staticmethod
     def mecab_args():
-        return ['--node-format=%f[6] ', '--eos-format=\n', '--unk-format=%m[] ']
-
-    def setup(self):
-        os.environ['DYLD_LIBRARY_PATH'] = self.mecab_dir_path
-        os.environ['LD_LIBRARY_PATH'] = self.mecab_dir_path
-        if not isWin:
-            os.chmod(self.mecabCmd[0], 0o755)
+        return ['--node-format=%f[6] ', '--unk-format=%m ', '--eos-format=\n']
 
     def ensure_open(self):
         if not self.mecab:
-            self.setup()
             try:
                 self.mecab = subprocess.Popen(
                     self.mecabCmd, bufsize=-1, stdin=subprocess.PIPE,
@@ -186,19 +70,9 @@ class MecabController:
             except OSError as e:
                 raise Exception(str(e) + ": Please ensure your Linux system has 64 bit binary support.")
 
-    @staticmethod
-    def _escape_text(text):
-        # strip characters that trip up kakasi/mecab
-        text = text.replace("\n", " ")
-        text = text.replace(u'\uff5e', "~")
-        text = re.sub("<br( /)?>", "---newline---", text)
-        text = strip_html_markup(text, True)
-        text = text.replace("---newline---", "<br>")
-        return text
-
     def reading(self, expr):
         self.ensure_open()
-        expr = self._escape_text(expr)
+        expr = escape_text(expr)
         try:
             self.mecab.stdin.write(expr.encode("utf-8", "ignore") + b'\n')
             self.mecab.stdin.flush()
@@ -227,132 +101,10 @@ def find_mecab_dir() -> Optional[str]:
 
 
 # ************************************************
-#           Database generation functions        *
-# ************************************************
-def format_entry(e):
-    """ Format an entry from the data in the original database to something that uses html """
-    txt = e.midashigo1
-    strlen = len(txt)
-    acclen = len(e.ac)
-    accent = "0" * (strlen - acclen) + e.ac
-
-    # Get the nasal positions
-    nasal = []
-    if e.nasalsoundpos:
-        positions = e.nasalsoundpos.split('0')
-        for p in positions:
-            if p:
-                nasal.append(int(p))
-            if not p:
-                # e.g. "20" would result in ['2', '']
-                nasal[-1] = nasal[-1] * 10
-
-    # Get the no pronounce positions
-    nopron = []
-    if e.nopronouncepos:
-        positions = e.nopronouncepos.split('0')
-        for p in positions:
-            if p:
-                nopron.append(int(p))
-            if not p:
-                # e.g. "20" would result in ['2', '']
-                nopron[-1] = nopron[-1] * 10
-
-    outstr = ""
-    overline = False
-
-    for i in range(strlen):
-        a = int(accent[i])
-        # Start or end overline when necessary
-        if not overline and a > 0:
-            outstr = outstr + '<span class="overline">'
-            overline = True
-        if overline and a == 0:
-            outstr = outstr + '</span>'
-            overline = False
-
-        if (i + 1) in nopron:
-            outstr = outstr + '<span class="nopron">'
-
-        # Add the character stuff
-        outstr = outstr + txt[i]
-
-        # Add the pronunciation stuff
-        if (i + 1) in nopron:
-            outstr = outstr + "</span>"
-        if (i + 1) in nasal:
-            outstr = outstr + '<span class="nasal">&#176;</span>'
-
-        # If we go down in pitch, add the downfall
-        if a == 2:
-            outstr = outstr + '</span>&#42780;'
-            overline = False
-
-    # Close the overline if it's still open
-    if overline:
-        outstr = outstr + "</span>"
-
-    return outstr
-
-
-def build_database():
-    """ Build the derived database from the original database """
-    tempdict = {}
-    entries = []
-
-    file_handle = io.open(accent_database, 'r', encoding="utf-8")
-    for line in file_handle:
-        line = line.strip()
-        substrs = re.findall(r'({.*?,.*?})', line)
-        substrs.extend(re.findall(r'(\(.*?,.*?\))', line))
-        for s in substrs:
-            line = line.replace(s, s.replace(',', ';'))
-        entries.append(AccentEntry._make(line.split(",")))
-    file_handle.close()
-
-    for e in entries:
-        textentry = format_entry(e)
-
-        # A tuple holding both the spelling in katakana, and the katakana with pitch/accent markup
-        kanapron = (e.midashigo, textentry)
-
-        # Add expressions for both
-        for key in [e.nhk, e.kanjiexpr]:
-            if key in tempdict:
-                if kanapron not in tempdict[key]:
-                    tempdict[key].append(kanapron)
-            else:
-                tempdict[key] = [kanapron]
-
-    o = io.open(derivative_database, 'w', encoding="utf-8")
-
-    for key in tempdict.keys():
-        for kana, pron in tempdict[key]:
-            o.write("%s\t%s\t%s\n" % (key, kana, pron))
-
-    o.close()
-
-
-def read_derivative():
-    """ Read the derivative file to memory """
-    file_handle = io.open(derivative_database, 'r', encoding="utf-8")
-
-    for line in file_handle:
-        key, kana, pron = line.strip().split("\t")
-        kanapron = (kana, pron)
-        if key in thedict:
-            if kanapron not in thedict[key]:
-                thedict[key].append(kanapron)
-        else:
-            thedict[key] = [kanapron]
-
-    file_handle.close()
-
-
-# ************************************************
 #              Lookup Functions                  *
 # ************************************************
-def inline_style(txt):
+
+def convert_to_inline_style(txt: str) -> str:
     """ Map style classes to their inline version """
 
     for k, v in config["styles"].items():
@@ -361,7 +113,7 @@ def inline_style(txt):
     return txt
 
 
-def get_pronunciations(expr, sanitize=True, recurse=True):
+def get_pronunciations(expr: str, sanitize=True, recurse=True):
     """
     Search pronuncations for a particular expression
 
@@ -371,21 +123,20 @@ def get_pronunciations(expr, sanitize=True, recurse=True):
 
     # Sanitize input
     if sanitize:
-        expr = strip_html_markup(expr)
-        expr = expr.strip()
+        expr = htmlToTextLine(expr)
 
     ret = OrderedDict()
-    if expr in thedict:
+    if expr in acc_dict:
         styled_prons = []
 
-        for kana, pron in thedict[expr]:
-            inlinepron = inline_style(pron)
+        for kana, pron in acc_dict[expr]:
+            inline_pron = convert_to_inline_style(pron)
 
             if config["pronunciationHiragana"]:
-                inlinepron = katakana_to_hiragana(inlinepron)
+                inline_pron = katakana_to_hiragana(inline_pron)
 
-            if inlinepron not in styled_prons:
-                styled_prons.append(inlinepron)
+            if inline_pron not in styled_prons:
+                styled_prons.append(inline_pron)
         ret[expr] = styled_prons
     elif recurse:
         # Try to split the expression in various ways, and check if any of those results
@@ -406,7 +157,7 @@ def get_pronunciations(expr, sanitize=True, recurse=True):
     return ret
 
 
-def get_formatted_pronunciations(expr, sep_single="・", sep_multi="、", expr_sep=None, sanitize=True):
+def get_formatted_pronunciations(expr: str, sep_single="・", sep_multi="、", expr_sep=None, sanitize=True):
     prons = get_pronunciations(expr, sanitize)
 
     single_merge = OrderedDict()
@@ -596,45 +347,25 @@ def on_note_will_flush(note):
 #                   Main                         *
 # ************************************************
 
-if not os.path.isdir(db_dir_path):
-    raise IOError("Accent database folder is missing!")
-
-# First check that either the original database, or the derivative text file are present:
-if not os.path.exists(derivative_database) and not os.path.exists(accent_database):
-    raise IOError("Could not locate the original base or the derivative database!")
-
-# Generate the derivative database if it does not exist yet
-if (os.path.exists(accent_database) and not os.path.exists(derivative_database)) or (
-        os.path.exists(accent_database) and os.stat(thisfile).st_mtime > os.stat(derivative_database).st_mtime):
-    build_database()
-
-# If a pickle exists of the derivative file, use that. Otherwise, read from the derivative file and generate a pickle.
-if (os.path.exists(derivative_pickle) and
-        os.stat(derivative_pickle).st_mtime > os.stat(derivative_database).st_mtime):
-    f = io.open(derivative_pickle, 'rb')
-    thedict = pickle.load(f)
-    f.close()
-else:
-    read_derivative()
-    f = io.open(derivative_pickle, 'wb')
-    pickle.dump(thedict, f, pickle.HIGHEST_PROTOCOL)
-    f.close()
-
 try:
     mecab_reader = MecabController(find_mecab_dir())
 except ValueError:
     mecab_reader = None
 
-# Create the manual look-up menu entry
-mw.form.menuTools.addAction(create_menu())
+acc_dict = database_init()
 
-# Generate when editing a note
-addHook('editFocusLost', add_pronunciation_on_focus_lost)
-# the new hook often fails:
-# gui_hooks.editor_did_unfocus_field.append(add_pronunciation_on_focus_lost)
 
-# Bulk add
-gui_hooks.browser_menus_did_init.append(setup_browser_menu)
+def init():
+    # Create the manual look-up menu entry
+    mw.form.menuTools.addAction(create_menu())
 
-# Generate when AnkiConnect adds a new note
-hooks.note_will_flush.append(on_note_will_flush)
+    # Generate when editing a note
+    addHook('editFocusLost', add_pronunciation_on_focus_lost)
+    # the new hook often fails:
+    # gui_hooks.editor_did_unfocus_field.append(add_pronunciation_on_focus_lost)
+
+    # Bulk add
+    gui_hooks.browser_menus_did_init.append(setup_browser_menu)
+
+    # Generate when AnkiConnect adds a new note
+    hooks.note_will_flush.append(on_note_will_flush)
