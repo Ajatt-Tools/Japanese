@@ -7,6 +7,7 @@ and lookups will be done on the `VocabKanji` field.
 You can change both these field names (or add more source fields) in the config.
 
 ## Installation
+
 Install from [AnkiWeb](https://ankiweb.net/shared/info/1225470483),
 or manually with `git`:
 
@@ -15,6 +16,7 @@ git clone 'https://github.com/Ajatt-Tools/PitchAccent.git' ~/.local/share/Anki2/
 ```
 
 ## Configuration
+
 To configure the add-on, open the Anki Add-on Menu
 via `Tools > Add-ons` and select `AJT Pitch Accent`.
 Then click the `Config` button on the right-side of the screen.
@@ -24,8 +26,10 @@ Then click the `Config` button on the right-side of the screen.
 When adding cards, the pronunciation is automatically looked-up
 and added to its field (similar to the Japanese support add-on).
 
-A lookup on a selection. Select the expression you would like to look up,
-and go to "Tools" > "NHK pitch accent lookup".
+There's a context menu item.
+Select the expression you would like to look up,
+then right-click and choose "NHK pitch accent lookup".
+Alternatively, go ot "Tools" > "NHK pitch accent lookup".
 
 By opening the Anki Browser, you can mass-generate pitch accents in bulk.
 To do this, select some notes first,

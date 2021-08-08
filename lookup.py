@@ -126,6 +126,12 @@ def create_menu() -> QAction:
     return lookup_action
 
 
+def add_context_menu_item(webview: AnkiWebView, menu: QMenu):
+    menu.addAction(CONTEXT_MENU_ITEM_NAME, lambda: on_lookup_pronunciation(webview.selectedText()))
+
+
 def init():
     # Create the manual look-up menu entry
     mw.form.menuTools.addAction(create_menu())
+    gui_hooks.editor_will_show_context_menu.append(add_context_menu_item)
+    gui_hooks.webview_will_show_context_menu.append(add_context_menu_item)
