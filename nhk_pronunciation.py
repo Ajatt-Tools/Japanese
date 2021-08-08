@@ -118,20 +118,32 @@ def get_pronunciations(expr: str, sanitize=True, recurse=True) -> OrderedDict[st
     return ret
 
 
-def get_formatted_pronunciations(expr: str, sep_single="・", sep_multi="、", expr_sep=None, sanitize=True):
-    pronunciations = get_pronunciations(expr, sanitize)
-
-    single_merge = OrderedDict()
+def format_pronunciations(
+        pronunciations: Dict[str, List[str]],
+        sep_single: str,
+        sep_multi: str,
+        expr_sep: str = None
+) -> str:
+    ordered_dict = OrderedDict()
     for k, v in pronunciations.items():
-        single_merge[k] = sep_single.join(v)
+        ordered_dict[k] = sep_single.join(v)
 
     # expr_sep is used to separate entries on lookup
     if expr_sep:
-        txt = sep_multi.join([f"{k}{expr_sep}{v}" for k, v in single_merge.items()])
+        txt = sep_multi.join(f"{k}{expr_sep}{v}" for k, v in ordered_dict.items())
     else:
-        txt = sep_multi.join(single_merge.values())
+        txt = sep_multi.join(ordered_dict.values())
 
     return txt
+
+
+def get_formatted_pronunciations(expr: str, sep_single="・", sep_multi="、", expr_sep=None, sanitize=True):
+    return format_pronunciations(
+        get_pronunciations(expr, sanitize=sanitize),
+        sep_single=sep_single,
+        sep_multi=sep_multi,
+        expr_sep=expr_sep
+    )
 
 
 # Pitch generation
