@@ -94,7 +94,7 @@ def format_entry(e: AccentEntry) -> str:
 
 
 def build_database(dest_path: str = derivative_database) -> None:
-    """ Build the derived database from the original database """
+    """ Build the derived database from the original database and save it as *.csv """
     temp_dict = {}
 
     with open(accent_database, 'r', encoding="utf-8") as f:
@@ -110,10 +110,10 @@ def build_database(dest_path: str = derivative_database) -> None:
             if value not in temp_dict[key]:
                 temp_dict[key].append(value)
 
-    with open(dest_path, 'w', encoding="utf-8") as o:
-        for key in temp_dict.keys():
-            for kana, pron in temp_dict[key]:
-                o.write("%s\t%s\t%s\n" % (key, kana, pron))
+    with open(dest_path, 'w', encoding="utf-8") as of:
+        for word in temp_dict.keys():
+            for katakana, pitch_html in temp_dict[word]:
+                of.write(f"{word}\t{katakana}\t{pitch_html}\n")
 
 
 def read_derivative() -> Dict[str, List[str]]:
