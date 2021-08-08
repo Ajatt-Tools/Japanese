@@ -1,10 +1,18 @@
 # AJT Pitch Accent
 
-This add-on allows you to look up the Japanese pitch accent of a particular expression.
-For this to work,
-you have to add a `VocabPitchPattern` field to your notes,
-and lookups will be done on the `VocabKanji` field.
-You can change both these field names (or add more source fields) in the config.
+[![Rate on AnkiWeb](https://glutanimate.com/logos/ankiweb-rate.svg)](https://ankiweb.net/shared/info/1225470483)
+[![Chat](https://img.shields.io/badge/chat-join-green)](https://tatsumoto-ren.github.io/blog/join-our-community.html)
+[![Channel](https://shields.io/badge/channel-subscribe-blue?logo=telegram&color=3faee8)](https://t.me/ajatt_tools)
+[![Patreon](https://img.shields.io/badge/patreon-support-orange)](https://www.patreon.com/bePatron?u=43555128)
+![GitHub](https://img.shields.io/github/license/Ajatt-Tools/PitchAccent)
+
+This add-on allows you to look up Japanese pitch accents of a particular expression.
+For this to work, you have to add fields named `VocabKanji` and `VocabPitchPattern` to your notes.
+The lookups will be performed on the `VocabKanji` field,
+and the accents will be added to the `VocabPitchPattern` field.
+To generate pitch accents, focus the `VocabKanji` field and press "Tab" or switch focus away from the field.
+
+You can change both of these field names or add more source fields in the config.
 
 ## Installation
 
@@ -23,19 +31,19 @@ Then click the `Config` button on the right-side of the screen.
 
 ## Usage
 
-When adding cards, the pronunciation is automatically looked-up
-and added to its field (similar to the Japanese support add-on).
+When adding cards with Yomichan, the pronunciation is automatically looked-up and added to the cards.
+When adding cards manually, fill the `VocabKanji` field and press "Tab" to trigger generation.
 
 There's a context menu item.
 Select the expression you would like to look up,
 then right-click and choose "NHK pitch accent lookup".
 Alternatively, go ot "Tools" > "NHK pitch accent lookup".
 
-By opening the Anki Browser, you can mass-generate pitch accents in bulk.
-To do this, select some notes first,
-and then choose "Edit" > "Bulk-add pitch accents" from the menu.
+When using the Anki Browser, you can mass-generate pitch accents in bulk.
+To do this, select several notes first,
+and then choose "Edit" > "Bulk-add pitch accents".
 By default, the "bulk-add" feature will not overwrite the `VocabPitchPattern` field if its already filled,
-but you can change this by setting "regenerateReadings" to `True` in the config.
+but you can change this by setting `regenerateReadings` to `True` in the config.
 
 ## Pitch accent, what is that?
 
@@ -68,9 +76,11 @@ This add-on is a completely remastered version of
 The changes include:
 
 * Significantly refactored 99% of the codebase.
-* Completely removed annoying features.
-* Preconfigured the default config file for use with
-[mpvacious cards](https://ankiweb.net/shared/info/1557722832).
+* Removed all annoying features.
+* Preset the default config file to match
+the [mpvacious cards](https://ankiweb.net/shared/info/1557722832)
+note type.
+If you're using mpvacious cards, you don't have to configure the add-on before using it.
 * Added kana lookups.
 * Fixed a great number of bugs.
 * Bundled [Mecab controller](https://github.com/Ajatt-Tools/mecab_controller) with the add-on.
