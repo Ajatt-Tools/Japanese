@@ -38,6 +38,8 @@ Automatically add pronunciations to cards created by AnkiConnect with
 If failed to find pitch accent for a word,
 make an attempt to look it up using its kana reading.
 Requires `useMecab` set to `true`.
+* `skipWords`.
+A comma-separated list of words that you don't want to look up.
 
 ****
 

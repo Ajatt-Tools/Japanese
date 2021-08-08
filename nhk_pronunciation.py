@@ -8,7 +8,7 @@ from anki import hooks
 from .database import init as database_init
 from .helpers import *
 from .mecab_controller import BasicMecabController
-from .mecab_controller import to_hiragana
+from .mecab_controller import to_hiragana, to_katakana
 
 
 # Mecab controller
@@ -43,6 +43,16 @@ def convert_to_inline_style(txt: str) -> str:
     return txt
 
 
+def get_skip_words() -> List[str]:
+    """Returns a user-defined list of blocklisted words."""
+    return re.split(r'[、, ]+', config.get('skipWords', ''), flags=re.IGNORECASE)
+
+
+def should_skip(word: str) -> bool:
+    """Returns True if the user specified that the word should not be looked up."""
+    return to_katakana(word) in map(to_katakana, get_skip_words())
+
+
 def get_pronunciations(expr: str, sanitize=True, recurse=True) -> OrderedDict[str, List[str]]:
     """
     Search pronunciations for a particular expression.
@@ -51,11 +61,16 @@ def get_pronunciations(expr: str, sanitize=True, recurse=True) -> OrderedDict[st
     to a list of html-styled pronunciations.
     """
 
+    ret = OrderedDict()
+
     # Sanitize input
     if sanitize:
         expr = htmlToTextLine(expr)
 
-    ret = OrderedDict()
+    # Skip user-specified words
+    if should_skip(expr):
+        return ret
+
     if expr in acc_dict:
         styled_prons = []
 
@@ -89,8 +104,15 @@ def get_pronunciations(expr: str, sanitize=True, recurse=True) -> OrderedDict[st
                 # Mecab again if we do not find any matches for this sub-expression.
                 ret.update(get_pronunciations(kanji, sanitize, False))
 
+                # If everything failed, try katakana lookups.
                 # Katakana lookups are possible because of the additional key in the database.
-                if not ret and katakana and config.get('kanaLookups') is True:
+                if (
+                        not ret.get(kanji)
+                        and katakana
+                        and config.get('kanaLookups') is True
+                        and not should_skip(katakana)
+                        and not should_skip(kanji)
+                ):
                     ret.update(get_pronunciations(katakana, sanitize, False))
 
     return ret

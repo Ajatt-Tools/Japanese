@@ -21,5 +21,6 @@
   "useMecab": true,
   "generateOnNoteFlush": true,
   "kanaLookups": true,
-  "lookupShortcut": "Ctrl+8"
+  "lookupShortcut": "Ctrl+8",
+  "skipWords": "ね,ば,て,と,た,が,に,な,は,の,も,ます,から,いる,たち,てる,う,ましょ"
 }
