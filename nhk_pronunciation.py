@@ -53,7 +53,7 @@ def should_skip(word: str) -> bool:
     return to_katakana(word) in map(to_katakana, get_skip_words())
 
 
-def get_pronunciations(expr: str, sanitize=True, recurse=True) -> OrderedDict[str, List[str]]:
+def get_pronunciations(expr: str, sanitize=True, recurse=True) -> Dict[str, List[str]]:
     """
     Search pronunciations for a particular expression.
 
