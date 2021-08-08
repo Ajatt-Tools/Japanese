@@ -130,6 +130,11 @@ def read_derivative() -> Dict[str, List[str]]:
     return acc_dict
 
 
+def should_regenerate(file: str) -> bool:
+    return any(
+        os.path.getmtime(os.path.join(this_addon_path, f)) > os.path.getmtime(file)
+        for f in os.listdir(this_addon_path) if f.endswith('.py')
+    )
 
 
 def init() -> Dict[str, List[str]]:
@@ -139,6 +144,10 @@ def init() -> Dict[str, List[str]]:
     # First check that either the original database, or the derivative text file are present:
     if not os.path.exists(accent_database) and not os.path.exists(derivative_database):
         raise IOError("Could not locate the original base or the derivative database!")
+
+    for file in (derivative_database, derivative_pickle):
+        if os.path.exists(file) and should_regenerate(file):
+            os.remove(file)
 
     # Generate the derivative database if it does not exist yet
     if not os.path.exists(derivative_database):
