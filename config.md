@@ -2,32 +2,45 @@
 
 *Anki needs to be restarted for changes to be applied.*
 
-*Default field names are set to match the
+*Default field names match the
 [mpvacious cards](https://ankiweb.net/shared/info/1557722832)
 note type.*
 
 ****
 
-* `noteTypes` - By default, the add-on considers a note type Japanese
-if it finds the text "japanese" in the note type name. Case is ignored.
+* `noteTypes`.
+Constrain the add-on's operation to certain note types.
+By default, the add-on considers a note type Japanese
+if it finds the text "japanese" in the note type name.
+Case is ignored.
+* `srcFields`.
+Fields to generate readings for.
+* `dstFields`.
+Fields where the readings should be placed.
+* `regenerateReadings`.
+When you run "Edit" > "Bulk-add pitch accents"
+in the Anki Browser,
+readings for each card will be regenerated
+even if `dstField` is already filled.
+* `pronunciationHiragana`.
+Use hiragana instead of katakana for the readings.
+* `styles`.
+Style mappings. Edit this if you want different colors, etc.
+* `useMecab`.
+Use Mecab to split a sentence/conjugation when performing lookups.
+* `lookupShortcut`.
+The shortcut to perform pronunciation lookup
+on the selected text ("Tools" > "NHK pitch accent lookup").
+* `generateOnNoteFlush`.
+Automatically add pronunciations to cards created by AnkiConnect with
+[Yomichan](https://foosoft.net/projects/yomichan/).
+* `kanaLookups`.
+If failed to find pitch accent for a word,
+make an attempt to look it up using its kana reading.
+Requires `useMecab` set to `true`.
 
-* `srcFields` - Fields to generate the reading for.
+****
 
-* `dstFields` - Fields where the reading should be placed.
-
-* `regenerateReadings` - If a card is shown, should readings for the card be regenerated
-if the dstField is already filled? Note that these regenerated readings are *not stored, only shown*.
-
-* `pronunciationHiragana` - Use hiragana instead of katakana for the readings.
-
-* `styles` - Style mappings. Edit this if you want different colors, etc.
-
-* `useMecab` - Whether or not to try and use Mecab
-to split a sentence/conjugation when performing lookups.
-The [Japanese add-on](https://ankiweb.net/shared/info/3918629684)
-is required for this to work.
-
-* `lookupShortcut` - The shortcut to perform pronunciation lookup
-on the selected text (Tools > Lookup > ...NHK pitch accent).
-
-* `generateOnNoteFlush` - Automatically add pronunciations to cards created by AnkiConnect with Yomichan.
+If you enjoy this add-on, please consider supporting my work by
+**[pledging your support on Patreon](https://www.patreon.com/bePatron?u=43555128)**.
+Thank you so much!
