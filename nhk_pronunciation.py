@@ -80,7 +80,10 @@ def get_pronunciations(expr: str, sanitize=True, recurse=True) -> OrderedDict[st
         # Only if lookups were not successful, we try splitting with Mecab
         if not ret and config.get('useMecab') is True:
             for sub_expr in mecab.dict_forms(expr):
-                kanji, katakana = sub_expr.split(',')
+                if len(split := sub_expr.split(',')) > 1:
+                    kanji, katakana = split
+                else:
+                    kanji, katakana = split[0], None
 
                 # Avoid infinite recursion by saying that we should not try
                 # Mecab again if we do not find any matches for this sub-expression.
