@@ -4,7 +4,7 @@ import pickle
 import re
 import subprocess
 from collections import namedtuple
-from typing import Tuple, Dict, List
+from typing import Dict, List
 
 # Paths to the database files and this particular file
 
@@ -116,23 +116,23 @@ def build_database(dest_path: str = derivative_database) -> None:
                 o.write("%s\t%s\t%s\n" % (key, kana, pron))
 
 
-def read_derivative() -> Dict[str, List[Tuple[str, str]]]:
+def read_derivative() -> Dict[str, List[str]]:
     """ Read the derivative file to memory """
     acc_dict = {}
     with open(derivative_database, 'r', encoding="utf-8") as f:
         for line in f:
-            key, kana, pron = line.strip().split('\t')
-            value = (kana, pron)
-
-            acc_dict[key] = acc_dict.get(key, [])
-
-            if value not in acc_dict[key]:
-                acc_dict[key].append(value)
+            word, kana, pitch_html = line.strip().split('\t')
+            for key in (word, kana):
+                acc_dict[key] = acc_dict.get(key, [])
+                if pitch_html not in acc_dict[key]:
+                    acc_dict[key].append(pitch_html)
 
     return acc_dict
 
 
-def init() -> Dict[str, List[Tuple[str, str]]]:
+
+
+def init() -> Dict[str, List[str]]:
     if not os.path.isdir(db_dir_path):
         raise IOError("Accent database folder is missing!")
 

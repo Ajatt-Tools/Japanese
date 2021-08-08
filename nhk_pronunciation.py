@@ -59,7 +59,7 @@ def get_pronunciations(expr: str, sanitize=True, recurse=True) -> OrderedDict[st
     if expr in acc_dict:
         styled_prons = []
 
-        for kana, pron in acc_dict[expr]:
+        for pron in acc_dict[expr]:
             inline_pron = convert_to_inline_style(pron)
 
             if config["pronunciationHiragana"]:
@@ -88,8 +88,10 @@ def get_pronunciations(expr: str, sanitize=True, recurse=True) -> OrderedDict[st
                 # Avoid infinite recursion by saying that we should not try
                 # Mecab again if we do not find any matches for this sub-expression.
                 ret.update(get_pronunciations(kanji, sanitize, False))
-                if not ret and config.get('kanaLookups') is True:
-                    ret.update(get_pronunciations(to_hiragana(katakana), sanitize, False))
+
+                # Katakana lookups are possible because of the additional key in the database.
+                if not ret and katakana and config.get('kanaLookups') is True:
+                    ret.update(get_pronunciations(katakana, sanitize, False))
 
     return ret
 
