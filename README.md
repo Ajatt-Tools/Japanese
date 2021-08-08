@@ -11,7 +11,7 @@ Install from [AnkiWeb](https://ankiweb.net/shared/info/1225470483),
 or manually with `git`:
 
 ```
-git clone 'https://github.com/Ajatt-Tools/JaPitch.git' ~/.local/share/Anki2/addons21/JaPitch
+git clone 'https://github.com/Ajatt-Tools/PitchAccent.git' ~/.local/share/Anki2/addons21/pitch_accent
 ```
 
 ## Configuration
