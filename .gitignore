@@ -1,5 +1,8 @@
 # Ignored files
 __pycache__
 .idea
-meta.json
-accent_dict/nhk_pronunciation.*
+/meta.json
+/manifest.json
+/*.ankiaddon
+/accent_dict/*
+!/accent_dict/*.csv
