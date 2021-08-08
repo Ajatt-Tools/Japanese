@@ -18,9 +18,9 @@ AccentEntry = namedtuple(
     'AccentEntry',
     [
         'NID', 'ID', 'WAVname', 'K_FLD', 'ACT',
-        'kana_reading', 'nhk', 'kanjiexpr', 'NHKexpr', 'numberchars',
+        'katakana_reading', 'nhk', 'kanjiexpr', 'NHKexpr', 'numberchars',
         'devoiced_pos', 'nasalsoundpos', 'majiri', 'kaisi', 'KWAV',
-        'kana_reading_alt', 'akusentosuu', 'bunshou', 'accent',
+        'katakana_reading_alt', 'akusentosuu', 'bunshou', 'accent',
     ]
 )
 
@@ -49,7 +49,7 @@ def format_nasal_or_devoiced_positions(expr: str):
 
 def format_entry(e: AccentEntry) -> str:
     """ Format an entry from the data in the original database to something that uses html """
-    kana = e.kana_reading_alt
+    kana = e.katakana_reading_alt
 
     # Fix accent notation by prepending zeros for moraes where accent info is missing in the CSV.
     acc_pattern = "0" * (len(kana) - len(e.accent)) + e.accent
@@ -102,15 +102,13 @@ def build_database(dest_path: str = derivative_database) -> None:
 
     for entry in entries:
         # A tuple holding both the spelling in katakana, and the katakana with pitch/accent markup
-        kana_pron = (entry.kana_reading, format_entry(entry))
+        value = (entry.katakana_reading, format_entry(entry))
 
         # Add expressions for both
-        for key in [entry.nhk, entry.kanjiexpr]:
-            if key in temp_dict:
-                if kana_pron not in temp_dict[key]:
-                    temp_dict[key].append(kana_pron)
-            else:
-                temp_dict[key] = [kana_pron]
+        for key in (entry.nhk, entry.kanjiexpr):
+            temp_dict[key] = temp_dict.get(key, [])
+            if value not in temp_dict[key]:
+                temp_dict[key].append(value)
 
     with open(dest_path, 'w', encoding="utf-8") as o:
         for key in temp_dict.keys():
@@ -124,12 +122,12 @@ def read_derivative() -> Dict[str, List[Tuple[str, str]]]:
     with open(derivative_database, 'r', encoding="utf-8") as f:
         for line in f:
             key, kana, pron = line.strip().split('\t')
-            entry = (kana, pron)
-            if key in acc_dict:
-                if entry not in acc_dict[key]:
-                    acc_dict[key].append(entry)
-            else:
-                acc_dict[key] = [entry, ]
+            value = (kana, pron)
+
+            acc_dict[key] = acc_dict.get(key, [])
+
+            if value not in acc_dict[key]:
+                acc_dict[key].append(value)
 
     return acc_dict
 
