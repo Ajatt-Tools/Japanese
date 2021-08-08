@@ -147,6 +147,7 @@ def init() -> Dict[str, List[str]]:
 
     for file in (derivative_database, derivative_pickle):
         if os.path.exists(file) and should_regenerate(file):
+            print("Will be rebuilt: ", os.path.basename(file))
             os.remove(file)
 
     # Generate the derivative database if it does not exist yet
