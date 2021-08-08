@@ -4,6 +4,7 @@ from collections import OrderedDict
 from typing import Optional
 
 from anki import hooks
+from aqt import mw
 
 from .database import init as database_init
 from .helpers import *
