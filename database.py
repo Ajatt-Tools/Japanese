@@ -49,10 +49,10 @@ def format_nasal_or_devoiced_positions(expr: str):
 
 def format_entry(e: AccentEntry) -> str:
     """ Format an entry from the data in the original database to something that uses html """
-    kana = e.katakana_reading_alt
+    kana_reading, acc_pattern = e.katakana_reading_alt, e.accent
 
-    # Fix accent notation by prepending zeros for moraes where accent info is missing in the CSV.
-    acc_pattern = "0" * (len(kana) - len(e.accent)) + e.accent
+    # Fix accent notation by prepending zeros for moraes where accent info is omitted in the CSV.
+    acc_pattern = "0" * (len(kana_reading) - len(acc_pattern)) + acc_pattern
 
     # Get the nasal positions
     nasal = format_nasal_or_devoiced_positions(e.nasalsoundpos)
@@ -74,9 +74,9 @@ def format_entry(e: AccentEntry) -> str:
 
         # Wrap character if it's devoiced, else add as is.
         if (idx + 1) in devoiced:
-            result_str += f'<span class="nopron">{kana[idx]}</span>'
+            result_str += f'<span class="nopron">{kana_reading[idx]}</span>'
         else:
-            result_str += kana[idx]
+            result_str += kana_reading[idx]
 
         if (idx + 1) in nasal:
             result_str += '<span class="nasal">&#176;</span>'
@@ -98,7 +98,7 @@ def build_database(dest_path: str = derivative_database) -> None:
     temp_dict = {}
 
     with open(accent_database, 'r', encoding="utf-8") as f:
-        entries = [make_accent_entry(line) for line in f]
+        entries: List[AccentEntry] = [make_accent_entry(line) for line in f]
 
     for entry in entries:
         # A tuple holding both the spelling in katakana, and the katakana with pitch/accent markup
