@@ -63,7 +63,7 @@ def format_entry(e: AccentEntry) -> str:
     result_str = ""
     overline_flag = False
 
-    for idx, acc in ((i, int(acc_pattern[i])) for i in range(len(kana))):
+    for idx, acc in enumerate(int(pos) for pos in acc_pattern):
         # Start or end overline when necessary
         if not overline_flag and acc > 0:
             result_str += '<span class="overline">'
