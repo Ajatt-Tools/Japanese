@@ -14,9 +14,9 @@ By default, the add-on considers a note type Japanese
 if it finds the text "japanese" in the note type name.
 Case is ignored.
 * `srcFields`.
-Fields to generate readings for.
+Fields to generate pitch accents for.
 * `dstFields`.
-Fields where the readings should be placed.
+Fields where the pitch accents should be placed.
 * `regenerateReadings`.
 When you run "Edit" > "Bulk-add pitch accents"
 in the Anki Browser,
