@@ -74,7 +74,7 @@ def get_pronunciations(expr: str, sanitize=True, recurse=True) -> Dict[str, List
         expr = htmlToTextLine(expr)
 
     # If the expression contains furigana, split it.
-    expr, kana_reading = split_furigana(expr)
+    expr, expr_reading = split_furigana(expr)
 
     # Skip empty strings and user-specified blocklisted words
     if not expr or should_skip(expr):
@@ -83,16 +83,20 @@ def get_pronunciations(expr: str, sanitize=True, recurse=True) -> Dict[str, List
     if expr in acc_dict:
         styled_prons = []
 
-        for pron in acc_dict[expr]:
-            inline_pron = convert_to_inline_style(pron)
+        for reading, pitch_html in acc_dict[expr]:
+            if expr_reading and to_katakana(reading) != to_katakana(expr_reading):
+                continue
+
+            inline_html = convert_to_inline_style(pitch_html)
 
             if config["pronunciationHiragana"]:
-                inline_pron = to_hiragana(inline_pron)
+                inline_html = to_hiragana(inline_html)
 
-            if inline_pron not in styled_prons:
-                styled_prons.append(inline_pron)
+            if inline_html not in styled_prons:
+                styled_prons.append(inline_html)
 
         ret[expr] = styled_prons
+
     elif recurse:
         # Try to split the expression in various ways, and check if any of those results
         if len(split_expr := split_separators(expr)) > 1:
