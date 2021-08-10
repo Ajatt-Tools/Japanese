@@ -68,6 +68,9 @@ def get_pronunciations(expr: str, sanitize=True, recurse=True) -> Dict[str, List
     if sanitize:
         expr = htmlToTextLine(expr)
 
+    # If the expression contains furigana, split it.
+    expr, kana_reading = split_furigana(expr)
+
     # Skip empty strings and user-specified blocklisted words
     if not expr or should_skip(expr):
         return ret

@@ -1,6 +1,6 @@
 import functools
 import re
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Tuple, Optional
 
 import aqt
 from anki.notes import Note
@@ -65,4 +65,16 @@ def split_separators(expr: str) -> List[str]:
 
 
 config = mw.addonManager.getConfig(__name__)
+def split_furigana(expr: str) -> Tuple[str, Optional[str]]:
+    """
+    Parses expr.
+    Outputs (word, reading) if the expr is formatted as word[reading].
+    If not, outputs (expr, None).
+    """
+    if match := re.search(r'^\s*(?P<word>[^\s\[\]]+)\[(?P<reading>[^\s\[\]]+)](?P<suffix>[^\s\[\]]*)\s*$', expr):
+        return match.group('word') + match.group('suffix'), match.group('reading') + match.group('suffix')
+    else:
+        return expr, None
+
+
 iter_fields = functools.partial(zip, config['srcFields'], config['dstFields'])
