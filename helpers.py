@@ -9,6 +9,18 @@ from aqt import mw
 
 ANKI21_VERSION = int(aqt.appVersion.split('.')[-1])
 
+NON_JP_REGEX = re.compile(
+    # Reference: https://stackoverflow.com/questions/15033196/
+    # Here I added `[` and `]` at the end to keep furigana notation.
+    # Furigana notation is going to be parsed separately.
+    r'[^\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\uff66-\uff9f\u4e00-\u9fff\u3400-\u4dbf\[\]]+',
+    re.U
+)
+JP_SEP_REGEX = re.compile(
+    r'[・、※【】「」〒◎×〃゜『』《》〜〽。〄〇〈〉〓〔〕〖〗〘 〙〚〛〝〞〟〠〡〢〣〥〦〧〨〭〮〯〫〬〶〷〸〹〺〻〼〾〿]',
+    re.U
+)
+
 
 def get_notetype(note: Note) -> Dict[str, Any]:
     if hasattr(note, 'note_type'):
@@ -39,31 +51,18 @@ def escape_text(text: str) -> str:
     return text
 
 
-def _split_separators():
+def split_separators(expr: str) -> List[str]:
     """
     Split text by common separators (like / or ・) into separate words that can
     be looked up.
     """
-    # Ref: https://stackoverflow.com/questions/15033196/using-javascript-to-check-whether-a-string-contains-japanese-characters-includi/15034560#15034560
-    non_jap_regex = re.compile(
-        u'[^\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\uff66-\uff9f\u4e00-\u9fff\u3400-\u4dbf]+',
-        re.U
-    )
-    jp_sep_regex = re.compile(
-        u'[・、※【】「」〒◎×〃゜『』《》〜〽。〄〇〈〉〓〔〕〖〗〘 〙〚〛〝〞〟〠〡〢〣〥〦〧〨〭〮〯〫〬〶〷〸〹〺〻〼〾〿]',
-        re.U
-    )
 
-    def func(expr: str) -> List[str]:
-        expr = htmlToTextLine(expr)
-        # Replace all typical separators with a space
-        expr = re.sub(non_jap_regex, ' ', expr)  # Remove non-Japanese characters
-        expr = re.sub(jp_sep_regex, ' ', expr)  # Remove Japanese punctuation
-        return expr.split(' ')
-
-    return func
+    expr = htmlToTextLine(expr)
+    # Replace all typical separators with a space
+    expr = re.sub(NON_JP_REGEX, ' ', expr)  # Remove non-Japanese characters
+    expr = re.sub(JP_SEP_REGEX, ' ', expr)  # Remove Japanese punctuation
+    return expr.split(' ')
 
 
 config = mw.addonManager.getConfig(__name__)
 iter_fields = functools.partial(zip, config['srcFields'], config['dstFields'])
-split_separators = _split_separators()
