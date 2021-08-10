@@ -68,8 +68,8 @@ def get_pronunciations(expr: str, sanitize=True, recurse=True) -> Dict[str, List
     if sanitize:
         expr = htmlToTextLine(expr)
 
-    # Skip user-specified words
-    if should_skip(expr):
+    # Skip empty strings and user-specified blocklisted words
+    if not expr or should_skip(expr):
         return ret
 
     if expr in acc_dict:
