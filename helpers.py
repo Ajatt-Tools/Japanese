@@ -29,8 +29,8 @@ def is_supported_notetype(note: Note):
     return any(notetype.lower() in this_notetype.lower() for notetype in config["noteTypes"])
 
 
-def escape_text(text):
-    # strip characters that trip up kakasi/mecab
+def escape_text(text: str) -> str:
+    """Strip characters that trip up mecab."""
     text = text.replace("\n", " ")
     text = text.replace(u'\uff5e', "~")
     text = re.sub("<br( /)?>", "---newline---", text)
