@@ -87,11 +87,9 @@ def get_pronunciations(expr: str, sanitize=True, recurse=True) -> Dict[str, List
         ret[expr] = styled_prons
     elif recurse:
         # Try to split the expression in various ways, and check if any of those results
-        split_expr = split_separators(expr)
-
-        if len(split_expr) > 1:
-            for expr in split_expr:
-                ret.update(get_pronunciations(expr, sanitize))
+        if len(split_expr := split_separators(expr)) > 1:
+            for section in split_expr:
+                ret.update(get_pronunciations(section, sanitize))
 
         # Only if lookups were not successful, we try splitting with Mecab
         if not ret and config.get('useMecab') is True:
