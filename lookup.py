@@ -2,7 +2,7 @@
 from collections import OrderedDict
 from gettext import gettext as _
 
-from aqt import gui_hooks
+from aqt import gui_hooks, mw
 from aqt.qt import *
 from aqt.utils import showInfo
 from aqt.webview import AnkiWebView

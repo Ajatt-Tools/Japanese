@@ -5,7 +5,6 @@ from typing import Dict, Any, List, Tuple, Optional
 import aqt
 from anki.notes import Note
 from anki.utils import htmlToTextLine
-from aqt import mw
 
 ANKI21_VERSION = int(aqt.appVersion.split('.')[-1])
 
@@ -64,7 +63,6 @@ def split_separators(expr: str) -> List[str]:
     return expr.split(' ')
 
 
-config = mw.addonManager.getConfig(__name__)
 def split_furigana(expr: str) -> Tuple[str, Optional[str]]:
     """
     Parses expr.
@@ -77,4 +75,5 @@ def split_furigana(expr: str) -> Tuple[str, Optional[str]]:
         return expr, None
 
 
+config = aqt.mw.addonManager.getConfig(__name__)
 iter_fields = functools.partial(zip, config['srcFields'], config['dstFields'])

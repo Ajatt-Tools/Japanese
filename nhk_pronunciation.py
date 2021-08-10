@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-
 from collections import OrderedDict
-from typing import Optional
 
 from anki import hooks
 from aqt import mw
