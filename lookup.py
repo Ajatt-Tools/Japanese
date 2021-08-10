@@ -51,7 +51,6 @@ HTML = """
             margin-top: 0px;
             margin-bottom: 0px;
         }
-
     </style>
 </head>
 
@@ -73,10 +72,10 @@ def format_pronunciations_rich(pronunciations: Dict[str, List[str]]):
     return HTML % ''.join(entries)
 
 
-def create_webview_dialog(selected_text: str) -> QDialog:
+def create_webview_dialog(selected_text: str, parent: QWidget = None) -> QDialog:
     pronunciations = get_pronunciations(selected_text)
 
-    dialog = QDialog(parent=mw)
+    dialog = QDialog(parent=parent if parent else mw)
     dialog.setWindowTitle(CONTEXT_MENU_ITEM_NAME)
     dialog.setMinimumSize(480, 480)
 
@@ -109,10 +108,10 @@ def create_webview_dialog(selected_text: str) -> QDialog:
     return dialog
 
 
-def on_lookup_pronunciation(text: str = None):
+def on_lookup_pronunciation(text: str = None, parent: QWidget = None):
     """ Do a lookup on the selection """
     if text or len(text := mw.web.selectedText().strip()) > 0:
-        create_webview_dialog(text).exec_()
+        create_webview_dialog(text, parent).exec_()
     else:
         showInfo(_("Empty selection."))
 
@@ -127,7 +126,7 @@ def create_menu() -> QAction:
 
 
 def add_context_menu_item(webview: AnkiWebView, menu: QMenu):
-    menu.addAction(CONTEXT_MENU_ITEM_NAME, lambda: on_lookup_pronunciation(webview.selectedText()))
+    menu.addAction(CONTEXT_MENU_ITEM_NAME, lambda: on_lookup_pronunciation(webview.selectedText(), webview))
 
 
 def init():
