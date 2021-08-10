@@ -26,9 +26,16 @@ class MecabController(BasicMecabController):
     def __init__(self):
         super().__init__(mecab_args=self._add_mecab_args)
 
-    def dict_forms(self, expr: str) -> List[str]:
-        """ Returns dictionary form for each word in expr. """
-        return self.run(escape_text(expr)).split()
+    def translate(self, expr: str) -> List[Tuple[str, Optional[str]]]:
+        """ Returns dictionary form and its reading for each word in expr. """
+        ret = []
+        for section in self.run(escape_text(expr)).split():
+            if len(split := section.split(',')) > 1:
+                word, katakana = split
+            else:
+                word, katakana = split[0], None
+            ret.append((word, katakana))
+        return ret
 
 
 # Lookup
@@ -96,24 +103,19 @@ def get_pronunciations(expr: str, sanitize=True, recurse=True) -> Dict[str, List
 
         # Only if lookups were not successful, we try splitting with Mecab
         if not ret and config.get('useMecab') is True:
-            for sub_expr in mecab.dict_forms(expr):
-                if len(split := sub_expr.split(',')) > 1:
-                    kanji, katakana = split
-                else:
-                    kanji, katakana = split[0], None
-
+            for word, katakana in mecab.translate(expr):
                 # Avoid infinite recursion by saying that we should not try
                 # Mecab again if we do not find any matches for this sub-expression.
-                ret.update(get_pronunciations(kanji, sanitize, False))
+                ret.update(get_pronunciations(word, sanitize, False))
 
                 # If everything failed, try katakana lookups.
                 # Katakana lookups are possible because of the additional key in the database.
                 if (
-                        not ret.get(kanji)
+                        not ret.get(word)
                         and katakana
                         and config.get('kanaLookups') is True
                         and not should_skip(katakana)
-                        and not should_skip(kanji)
+                        and not should_skip(word)
                 ):
                     ret.update(get_pronunciations(katakana, sanitize, False))
 
