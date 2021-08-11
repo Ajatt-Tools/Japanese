@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import functools
 import re
 from typing import Dict, Any, List, Tuple, Optional
