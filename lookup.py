@@ -11,7 +11,7 @@ from aqt.webview import AnkiWebView
 from .helpers import *
 from .nhk_pronunciation import get_pronunciations, format_pronunciations
 
-CONTEXT_MENU_ITEM_NAME = "NHK pitch accent lookup"
+CONTEXT_MENU_ITEM_NAME = "Pitch accent lookup"
 
 HTML = """
 <!DOCTYPE html>
