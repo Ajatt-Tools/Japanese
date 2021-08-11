@@ -216,7 +216,7 @@ def on_note_will_flush(note: Note) -> None:
         return
 
     # only accept calls when add cards dialog or anki browser are not open.
-    # otherwise this function conflicts with add_pronunciation_focusLost which is called on 'editFocusLost'
+    # otherwise this function conflicts with the editor_did_unfocus_field event.
     if mw.app.activeWindow() is not None:
         return
 

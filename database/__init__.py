@@ -35,12 +35,13 @@ def ensure_derivatives() -> None:
     NhkDb.self_check()
     KanjiumDb.self_check()
 
-    if os.path.isfile(p := DERIVATIVE_PICKLE) and should_regenerate(p):
-        os.remove(p)
-
 
 def init() -> Dict[str, List[Tuple[str, str]]]:
     ensure_derivatives()
+
+    # If the pickle exists and needs updating, remove it.
+    if os.path.isfile(p := DERIVATIVE_PICKLE) and should_regenerate(p):
+        os.remove(p)
 
     # If a pickle exists of the derivative file, use that.
     # Otherwise, read from the derivative file and generate a pickle.

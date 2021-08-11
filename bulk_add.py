@@ -2,7 +2,7 @@
 
 from typing import Sequence
 
-from aqt import gui_hooks
+from aqt import gui_hooks, mw
 from aqt.browser import Browser
 from aqt.qt import *
 
