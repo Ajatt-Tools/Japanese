@@ -34,7 +34,7 @@ def kana_to_moraes(kana: str) -> List[str]:
 
 
 class AccentEntry:
-    """ Represents an entry in accents.txt """
+    """ Represents an entry in kanjium_data.tsv """
 
     def __init__(self, keyword: str, reading: str, accents: str):
         self._keyword = keyword
