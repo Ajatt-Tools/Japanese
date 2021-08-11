@@ -1,8 +1,7 @@
 # Ignored files
 __pycache__
 .idea
+*.pickle
 /meta.json
 /manifest.json
 /*.ankiaddon
-/accent_dict/*
-!/accent_dict/*.csv

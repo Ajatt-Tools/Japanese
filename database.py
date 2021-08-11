@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
+
 import os
 import pickle
 import re
-import subprocess
 from collections import namedtuple
 from typing import Dict, List, Tuple
 
 # Paths to the database files and this particular file
 
-this_addon_path = os.path.dirname(os.path.normpath(__file__))
-db_dir_path = os.path.join(this_addon_path, "accent_dict")
-accent_database = os.path.join(db_dir_path, "ACCDB_unicode.csv")
+addon_dir_path = os.path.dirname(os.path.normpath(__file__))
+db_dir_path = os.path.join(addon_dir_path, "accent_dict")
+accent_database = os.path.join(db_dir_path, "nhk_data.csv")
 derivative_database = os.path.join(db_dir_path, "nhk_pronunciation.csv")
 derivative_pickle = os.path.join(db_dir_path, "nhk_pronunciation.pickle")
 
@@ -60,7 +60,7 @@ def format_entry(e: AccentEntry) -> str:
     # Get the devoiced positions
     devoiced = format_nasal_or_devoiced_positions(e.devoiced_pos)
 
-    result_str = ""
+    result_str = []
     overline_flag = False
 
     for idx, acc in enumerate(int(pos) for pos in acc_pattern):
@@ -90,10 +90,10 @@ def format_entry(e: AccentEntry) -> str:
     if overline_flag:
         result_str += "</span>"
 
-    return result_str
+    return ''.join(result_str)
 
 
-def build_database(dest_path: str = derivative_database) -> None:
+def build_derivative(dest_path: str = derivative_database) -> None:
     """ Build the derived database from the original database and save it as *.csv """
     temp_dict = {}
 
@@ -132,8 +132,8 @@ def read_derivative() -> Dict[str, List[Tuple[str, str]]]:
 
 def should_regenerate(file: str) -> bool:
     return any(
-        os.path.getmtime(os.path.join(this_addon_path, f)) > os.path.getmtime(file)
-        for f in os.listdir(this_addon_path) if f.endswith('.py')
+        os.path.getmtime(os.path.join(addon_dir_path, f)) > os.path.getmtime(file)
+        for f in os.listdir(addon_dir_path) if f.endswith('.py')
     )
 
 
@@ -152,7 +152,7 @@ def init() -> Dict[str, List[Tuple[str, str]]]:
 
     # Generate the derivative database if it does not exist yet
     if not os.path.exists(derivative_database):
-        build_database()
+        build_derivative()
 
     # If a pickle exists of the derivative file, use that.
     # Otherwise, read from the derivative file and generate a pickle.
@@ -167,17 +167,10 @@ def init() -> Dict[str, List[Tuple[str, str]]]:
 
 
 def test():
-    test_path = os.path.join(db_dir_path, "test.csv")
-    build_database(dest_path=test_path)
-    proc = subprocess.run(
-        ['diff', '-u', derivative_database, test_path],
-        check=False,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
-    print(f'Return code: {proc.returncode}.')
-    print((proc.stdout + proc.stderr).decode())
-    print('Done.')
+    import filecmp
+    test_database = os.path.join(db_dir_path, "test.csv")
+    build_derivative(dest_path=test_database)
+    print('Equal.' if filecmp.cmp(derivative_database, test_database, shallow=False) else 'Not equal!')
 
 
 if __name__ == '__main__':
