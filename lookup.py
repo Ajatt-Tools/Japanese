@@ -5,13 +5,13 @@ from gettext import gettext as _
 
 from aqt import gui_hooks, mw
 from aqt.qt import *
-from aqt.utils import showInfo
+from aqt.utils import showInfo, disable_help_button, restoreGeom, saveGeom
 from aqt.webview import AnkiWebView
 
 from .helpers import *
 from .nhk_pronunciation import get_pronunciations, format_pronunciations
 
-CONTEXT_MENU_ITEM_NAME = "Pitch accent lookup"
+ACTION_NAME = "Pitch accent lookup"
 
 HTML = """
 <!DOCTYPE html>
@@ -73,24 +73,42 @@ def format_pronunciations_rich(pronunciations: Dict[str, List[str]]):
     return HTML % ''.join(entries)
 
 
-def create_webview_dialog(selected_text: str, parent: QWidget = None) -> QDialog:
-    pronunciations = get_pronunciations(selected_text)
+class ViewPitchAccentsDialog(QDialog):
+    def __init__(self, parent: QWidget, selected_text: str):
+        QDialog.__init__(self, parent)
+        self.webview = AnkiWebView(parent=self, title=ACTION_NAME)
+        self.pronunciations = get_pronunciations(selected_text)
+        self._setup_ui()
 
-    dialog = QDialog(parent=parent if parent else mw)
-    dialog.setWindowTitle(CONTEXT_MENU_ITEM_NAME)
-    dialog.setMinimumSize(480, 480)
+    def _setup_ui(self):
+        mw.garbage_collect_on_dialog_finish(self)
+        disable_help_button(self)
+        self.setWindowModality(Qt.ApplicationModal)
+        self.setWindowTitle(ACTION_NAME)
+        self.setMinimumSize(420, 240)
 
-    webview = AnkiWebView(parent=dialog, title=CONTEXT_MENU_ITEM_NAME)
-    webview.setHtml(format_pronunciations_rich(pronunciations))
+        self.webview.setHtml(format_pronunciations_rich(self.pronunciations))
+        layout = QVBoxLayout()
+        layout.addWidget(self.webview)
+        layout.addLayout(self.make_buttons())
+        self.setLayout(layout)
+        restoreGeom(self, ACTION_NAME)
 
-    layout = QVBoxLayout()
-    layout.addWidget(webview)
+    def reject(self) -> None:
+        self.webview = None
+        saveGeom(self, ACTION_NAME)
+        QDialog.reject(self)
 
-    def make_buttons():
+    def accept(self) -> None:
+        self.webview = None
+        saveGeom(self, ACTION_NAME)
+        QDialog.accept(self)
+
+    def make_buttons(self):
         buttons = (
-            ('Ok', dialog.accept),
+            ('Ok', self.accept),
             ('Copy HTML to Clipboard', lambda: QApplication.clipboard().setText(format_pronunciations(
-                pronunciations,
+                self.pronunciations,
                 sep_single='、',
                 sep_multi='<br>',
                 expr_sep='：'
@@ -104,30 +122,26 @@ def create_webview_dialog(selected_text: str, parent: QWidget = None) -> QDialog
         hbox.addStretch()
         return hbox
 
-    layout.addLayout(make_buttons())
-    dialog.setLayout(layout)
-    return dialog
 
-
-def on_lookup_pronunciation(text: str = None, parent: QWidget = None):
+def on_lookup_pronunciation(parent: QWidget, text: str):
     """ Do a lookup on the selection """
-    if text or len(text := mw.web.selectedText().strip()) > 0:
-        create_webview_dialog(text, parent).exec_()
+    if text := text.strip():
+        ViewPitchAccentsDialog(parent, text).exec_()
     else:
         showInfo(_("Empty selection."))
 
 
 def create_menu() -> QAction:
     """ Add a hotkey and menu entry """
-    lookup_action = QAction(CONTEXT_MENU_ITEM_NAME, mw)
-    qconnect(lookup_action.triggered, on_lookup_pronunciation)
+    lookup_action = QAction(ACTION_NAME, mw)
+    qconnect(lookup_action.triggered, lambda: on_lookup_pronunciation(mw, mw.web.selectedText()))
     if config["lookupShortcut"]:
         lookup_action.setShortcut(config["lookupShortcut"])
     return lookup_action
 
 
 def add_context_menu_item(webview: AnkiWebView, menu: QMenu):
-    menu.addAction(CONTEXT_MENU_ITEM_NAME, lambda: on_lookup_pronunciation(webview.selectedText(), webview))
+    menu.addAction(ACTION_NAME, lambda: on_lookup_pronunciation(webview, webview.selectedText()))
 
 
 def init():
