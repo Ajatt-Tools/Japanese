@@ -18,22 +18,15 @@
 #
 # Any modifications to this file must keep this entire header intact.
 
-# Data source:
-# https://raw.githubusercontent.com/mifunetoshiro/kanjium/master/data/source_files/raw/accents.txt
-
-import os
 import re
-from typing import List, Iterable
+from typing import Iterable
+
 try:
-    from .mecab_controller import to_katakana
+    from .common import *
+    from ..mecab_controller import to_katakana
 except ImportError:
+    from common import *
     from mecab_controller import to_katakana
-
-
-addon_dir_path = os.path.dirname(os.path.normpath(__file__))
-db_dir_path = os.path.join(addon_dir_path, "accent_dict")
-accent_database = os.path.join(db_dir_path, "kanjium_data.tsv")
-derivative_database = os.path.join(db_dir_path, "kanjium_pronunciation.csv")
 
 
 def kana_to_moraes(kana: str) -> List[str]:
@@ -42,6 +35,7 @@ def kana_to_moraes(kana: str) -> List[str]:
 
 class AccentEntry:
     """ Represents an entry in accents.txt """
+
     def __init__(self, keyword: str, reading: str, accents: str):
         self._keyword = keyword
         self._reading = kana_to_moraes(to_katakana(reading or keyword))
@@ -84,28 +78,33 @@ def format_entry(moraes: List[str], accent: int) -> str:
     return ''.join(result)
 
 
-def build_derivative(dest_path: str = derivative_database) -> None:
-    """ Build the derived database from the original database and save it as *.csv """
-    temp_dict = {}
+class KanjiumDb(AccDbManager):
+    accent_database = os.path.join(DB_DIR_PATH, "kanjium_data.tsv")
+    derivative_database = os.path.join(DB_DIR_PATH, "kanjium_pronunciation.csv")
 
-    with open(accent_database, 'r', encoding="utf-8") as f:
-        entries = [AccentEntry(*line.split('\t')) for line in f]
+    @classmethod
+    def build_derivative(cls, dest_path: str = derivative_database) -> None:
+        """ Build the derived database from the original database and save it as *.csv """
+        temp_dict = {}
 
-    for entry in entries:
-        for accent in entry.accents:
-            # A tuple holding both the spelling in katakana, and the katakana with pitch/accent markup
-            value = (''.join(entry.moraes), format_entry(entry.moraes, accent))
+        with open(cls.accent_database, 'r', encoding="utf-8") as f:
+            entries = [AccentEntry(*line.split('\t')) for line in f]
 
-            # Add expressions to dict
-            temp_dict[entry.keyword] = temp_dict.get(entry.keyword, [])
-            if value not in temp_dict[entry.keyword]:
-                temp_dict[entry.keyword].append(value)
+        for entry in entries:
+            for accent in entry.accents:
+                # A tuple holding both the spelling in katakana, and the katakana with pitch/accent markup
+                value = (''.join(entry.moraes), format_entry(entry.moraes, accent))
 
-    with open(dest_path, 'w', encoding="utf-8") as of:
-        for word in temp_dict.keys():
-            for katakana, pitch_html in temp_dict[word]:
-                of.write(f"{word}\t{katakana}\t{pitch_html}\n")
+                # Add expressions to dict
+                temp_dict[entry.keyword] = temp_dict.get(entry.keyword, [])
+                if value not in temp_dict[entry.keyword]:
+                    temp_dict[entry.keyword].append(value)
+
+        with open(dest_path, 'w', encoding="utf-8") as of:
+            for word in temp_dict.keys():
+                for katakana, pitch_html in temp_dict[word]:
+                    of.write(f"{word}\t{katakana}\t{pitch_html}\n")
 
 
 if __name__ == '__main__':
-    build_derivative()
+    KanjiumDb.test()
