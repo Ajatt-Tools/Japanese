@@ -33,13 +33,13 @@ def get_notetype(note: Note) -> Dict[str, Any]:
 def is_supported_notetype(note: Note):
     # Check if this is a supported note type.
 
-    if not config["noteTypes"]:
-        # supported note types weren't specified by the user.
-        # treat all note types as supported
+    if not (supported_note_types := config['note_types']):
+        # Supported note types weren't specified by the user.
+        # Treat all note types as supported.
         return True
-
-    this_notetype = get_notetype(note)['name']
-    return any(notetype.lower() in this_notetype.lower() for notetype in config["noteTypes"])
+    else:
+        note_type_name = get_notetype(note)['name']
+        return any(supported.lower() in note_type_name.lower() for supported in supported_note_types)
 
 
 def escape_text(text: str) -> str:

@@ -1,4 +1,4 @@
-## JaPitch - config
+## AJT Pitch Accent - config
 
 *Anki needs to be restarted for changes to be applied.*
 
@@ -8,7 +8,7 @@ note type.*
 
 ****
 
-* `noteTypes`.
+* `note_types`.
 Constrain the add-on's operation to certain note types.
 By default, the add-on considers a note type Japanese
 if it finds the text "japanese" in the note type name.
