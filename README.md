@@ -43,7 +43,7 @@ When using the Anki Browser, you can mass-generate pitch accents in bulk.
 To do this, select several notes first,
 and then choose "Edit" > "Bulk-add pitch accents".
 By default, the "bulk-add" feature will not overwrite the `VocabPitchPattern` field if its already filled,
-but you can change this by setting `regenerateReadings` to `True` in the config.
+but you can change this by setting `regenerate_readings` to `True` in the config.
 
 ## Pitch accent, what is that?
 

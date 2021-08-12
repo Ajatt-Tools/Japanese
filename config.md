@@ -17,27 +17,27 @@ Case is ignored.
 Fields to generate pitch accents for.
 * `dst_fields`.
 Fields where the pitch accents should be placed.
-* `regenerateReadings`.
+* `regenerate_readings`.
 When you run "Edit" > "Bulk-add pitch accents"
 in the Anki Browser,
 readings for each card will be regenerated
 even if `dstField` is already filled.
-* `pronunciationHiragana`.
+* `pronunciation_hiragana`.
 Use hiragana instead of katakana for the readings.
 * `styles`.
 Style mappings. Edit this if you want different colors, etc.
-* `useMecab`.
+* `use_mecab`.
 Use Mecab to split a sentence/conjugation when performing lookups.
 * `lookupShortcut`.
 The shortcut to perform pronunciation lookup
 on the selected text ("Tools" > "NHK pitch accent lookup").
-* `generateOnNoteFlush`.
+* `generate_on_flush`.
 Automatically add pronunciations to cards created by AnkiConnect with
 [Yomichan](https://foosoft.net/projects/yomichan/).
-* `kanaLookups`.
+* `kana_lookups`.
 If failed to find pitch accent for a word,
 make an attempt to look it up using its kana reading.
-Requires `useMecab` set to `true`.
+Requires `use_mecab` set to `true`.
 * `skipWords`.
 A comma-separated list of words that you don't want to look up.
 

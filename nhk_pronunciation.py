@@ -90,7 +90,7 @@ def get_pronunciations(expr: str, sanitize=True, recurse=True) -> Dict[str, List
 
             inline_html = convert_to_inline_style(pitch_html)
 
-            if config["pronunciationHiragana"]:
+            if config["pronunciation_hiragana"]:
                 inline_html = to_hiragana(inline_html)
 
             if inline_html not in styled_prons:
@@ -105,7 +105,7 @@ def get_pronunciations(expr: str, sanitize=True, recurse=True) -> Dict[str, List
                 ret.update(get_pronunciations(section, sanitize))
 
         # Only if lookups were not successful, we try splitting with Mecab
-        if not ret and config.get('useMecab') is True:
+        if not ret and config.get('use_mecab') is True:
             for word, katakana in mecab.translate(expr):
                 # Avoid infinite recursion by saying that we should not try
                 # Mecab again if we do not find any matches for this sub-expression.
@@ -116,7 +116,7 @@ def get_pronunciations(expr: str, sanitize=True, recurse=True) -> Dict[str, List
                 if (
                         not ret.get(word)
                         and katakana
-                        and config.get('kanaLookups') is True
+                        and config.get('kana_lookups') is True
                         and not should_skip(katakana)
                         and not should_skip(word)
                 ):
@@ -182,7 +182,7 @@ def can_fill_destination(note: Note, src_field: str, dst_field: str) -> bool:
         return True
 
     # Allowed to regenerate regardless
-    if config["regenerateReadings"] is True:
+    if config["regenerate_readings"] is True:
         return True
 
     return False
@@ -212,7 +212,7 @@ def on_focus_lost(changed: bool, note: Note, field_idx: int) -> bool:
 
 
 def on_note_will_flush(note: Note) -> None:
-    if config["generateOnNoteFlush"] is False:
+    if config["generate_on_flush"] is False:
         return
 
     # only accept calls when add cards dialog or anki browser are not open.

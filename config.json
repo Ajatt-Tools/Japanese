@@ -16,11 +16,11 @@
   "dst_fields": [
     "VocabPitchPattern"
   ],
-  "regenerateReadings": false,
-  "pronunciationHiragana": false,
-  "useMecab": true,
-  "generateOnNoteFlush": true,
-  "kanaLookups": true,
+  "regenerate_readings": false,
+  "pronunciation_hiragana": false,
+  "use_mecab": true,
+  "generate_on_flush": true,
+  "kana_lookups": true,
   "lookupShortcut": "Ctrl+8",
   "skipWords": "か,よ,ん,だ,び,の,や,ね,ば,て,と,た,が,に,な,は,も,ます,から,いる,たち,てる,う,ましょ,たい,です"
 }
