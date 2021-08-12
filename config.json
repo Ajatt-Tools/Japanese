@@ -10,10 +10,10 @@
     "subs2srs",
     "ajt"
   ],
-  "srcFields": [
+  "src_fields": [
     "VocabKanji"
   ],
-  "dstFields": [
+  "dst_fields": [
     "VocabPitchPattern"
   ],
   "regenerateReadings": false,
