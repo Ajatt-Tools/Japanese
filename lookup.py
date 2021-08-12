@@ -13,11 +13,9 @@ from .nhk_pronunciation import get_pronunciations, format_pronunciations
 
 ACTION_NAME = "Pitch accent lookup"
 
-HTML = """
-<!DOCTYPE html>
-<html>
 
-<head>
+def html_page(body_content: str):
+    head_content = """
     <meta charset="UTF-8" />
     <title>Pronunciations</title>
     <style>
@@ -53,12 +51,9 @@ HTML = """
             margin-bottom: 0px;
         }
     </style>
-</head>
+    """
 
-<body>%s</body>
-
-</html>
-"""
+    return f'<!DOCTYPE html><html><head>{head_content}</head><body>{body_content}</body></html>'
 
 
 def format_pronunciations_rich(pronunciations: Dict[str, List[str]]):
@@ -70,7 +65,7 @@ def format_pronunciations_rich(pronunciations: Dict[str, List[str]]):
     for k, v in ordered_dict.items():
         entries.append(f'<div class="key">{k}</div><ol class="value">{v}</ol>')
 
-    return HTML % ''.join(entries)
+    return html_page(''.join(entries))
 
 
 class ViewPitchAccentsDialog(QDialog):
