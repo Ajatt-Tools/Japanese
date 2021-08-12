@@ -11,7 +11,7 @@ from aqt.webview import AnkiWebView
 from .helpers import *
 from .nhk_pronunciation import get_pronunciations, format_pronunciations
 
-ACTION_NAME = "Pitch accent lookup"
+ACTION_NAME = "Pitch Accent lookup"
 
 
 def html_page(body_content: str):
@@ -69,8 +69,8 @@ def format_pronunciations_rich(pronunciations: Dict[str, List[str]]):
 
 
 class ViewPitchAccentsDialog(QDialog):
-    def __init__(self, parent: QWidget, selected_text: str):
-        QDialog.__init__(self, parent)
+    def __init__(self, parent: QWidget, selected_text: str, *args, **kwargs):
+        QDialog.__init__(self, parent=parent, *args, **kwargs)
         self.webview = AnkiWebView(parent=self, title=ACTION_NAME)
         self.pronunciations = get_pronunciations(selected_text)
         self._setup_ui()
@@ -126,13 +126,13 @@ def on_lookup_pronunciation(parent: QWidget, text: str):
         showInfo(_("Empty selection."))
 
 
-def create_menu() -> QAction:
+def create_lookup_action(parent: QWidget) -> QAction:
     """ Add a hotkey and menu entry """
-    lookup_action = QAction(ACTION_NAME, mw)
-    qconnect(lookup_action.triggered, lambda: on_lookup_pronunciation(mw, mw.web.selectedText()))
+    action = QAction(ACTION_NAME, parent)
+    qconnect(action.triggered, lambda: on_lookup_pronunciation(mw, mw.web.selectedText()))
     if shortcut := config["lookup_shortcut"]:
-        lookup_action.setShortcut(shortcut)
-    return lookup_action
+        action.setShortcut(shortcut)
+    return action
 
 
 def add_context_menu_item(webview: AnkiWebView, menu: QMenu):
@@ -141,6 +141,5 @@ def add_context_menu_item(webview: AnkiWebView, menu: QMenu):
 
 def init():
     # Create the manual look-up menu entry
-    mw.form.menuTools.addAction(create_menu())
     gui_hooks.editor_will_show_context_menu.append(add_context_menu_item)
     gui_hooks.webview_will_show_context_menu.append(add_context_menu_item)
