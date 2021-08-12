@@ -130,8 +130,8 @@ def create_menu() -> QAction:
     """ Add a hotkey and menu entry """
     lookup_action = QAction(ACTION_NAME, mw)
     qconnect(lookup_action.triggered, lambda: on_lookup_pronunciation(mw, mw.web.selectedText()))
-    if config["lookupShortcut"]:
-        lookup_action.setShortcut(config["lookupShortcut"])
+    if shortcut := config["lookup_shortcut"]:
+        lookup_action.setShortcut(shortcut)
     return lookup_action
 
 

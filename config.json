@@ -21,6 +21,6 @@
   "use_mecab": true,
   "generate_on_flush": true,
   "kana_lookups": true,
-  "lookupShortcut": "Ctrl+8",
-  "skipWords": "か,よ,ん,だ,び,の,や,ね,ば,て,と,た,が,に,な,は,も,ます,から,いる,たち,てる,う,ましょ,たい,です"
+  "lookup_shortcut": "Ctrl+8",
+  "skip_words": "か,よ,ん,だ,び,の,や,ね,ば,て,と,た,が,に,な,は,も,ます,から,いる,たち,てる,う,ましょ,たい,です"
 }

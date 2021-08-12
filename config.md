@@ -28,7 +28,7 @@ Use hiragana instead of katakana for the readings.
 Style mappings. Edit this if you want different colors, etc.
 * `use_mecab`.
 Use Mecab to split a sentence/conjugation when performing lookups.
-* `lookupShortcut`.
+* `lookup_shortcut`.
 The shortcut to perform pronunciation lookup
 on the selected text ("Tools" > "NHK pitch accent lookup").
 * `generate_on_flush`.
@@ -38,7 +38,7 @@ Automatically add pronunciations to cards created by AnkiConnect with
 If failed to find pitch accent for a word,
 make an attempt to look it up using its kana reading.
 Requires `use_mecab` set to `true`.
-* `skipWords`.
+* `skip_words`.
 A comma-separated list of words that you don't want to look up.
 
 ****

@@ -52,7 +52,7 @@ def convert_to_inline_style(txt: str) -> str:
 
 def get_skip_words() -> List[str]:
     """Returns a user-defined list of blocklisted words."""
-    return re.split(r'[、, ]+', config.get('skipWords', ''), flags=re.IGNORECASE)
+    return re.split(r'[、, ]+', config.get('skip_words', ''), flags=re.IGNORECASE)
 
 
 def should_skip(word: str) -> bool:
