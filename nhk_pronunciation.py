@@ -90,7 +90,7 @@ def get_pronunciations(expr: str, sanitize=True, recurse=True) -> Dict[str, List
 
             inline_html = convert_to_inline_style(pitch_html)
 
-            if config["pronunciation_hiragana"]:
+            if config["use_hiragana"]:
                 inline_html = to_hiragana(inline_html)
 
             if inline_html not in styled_prons:

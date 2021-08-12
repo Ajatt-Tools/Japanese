@@ -17,7 +17,7 @@
     "VocabPitchPattern"
   ],
   "regenerate_readings": false,
-  "pronunciation_hiragana": false,
+  "use_hiragana": false,
   "use_mecab": true,
   "generate_on_flush": true,
   "kana_lookups": true,

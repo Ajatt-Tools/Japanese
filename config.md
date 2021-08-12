@@ -22,7 +22,7 @@ When you run "Edit" > "Bulk-add pitch accents"
 in the Anki Browser,
 readings for each card will be regenerated
 even if `dstField` is already filled.
-* `pronunciation_hiragana`.
+* `use_hiragana`.
 Use hiragana instead of katakana for the readings.
 * `styles`.
 Style mappings. Edit this if you want different colors, etc.
