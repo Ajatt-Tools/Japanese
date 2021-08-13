@@ -1,3 +1,6 @@
 [submodule "mecab_controller"]
 	path = mecab_controller
 	url = https://github.com/Ajatt-Tools/mecab_controller.git
+[submodule "ajt_common"]
+	path = ajt_common
+	url = https://github.com/Ajatt-Tools/ajt_common.git
