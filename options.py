@@ -28,11 +28,11 @@ class ItemSelectionDialog(QDialog):
         root_layout.addWidget(self.create_button_box())
         return root_layout
 
-    @staticmethod
-    def create_list_widget(items: Iterable):
+    def create_list_widget(self, items: Iterable):
         list_widget = QListWidget()
         list_widget.addItems(items)
         list_widget.setSizeAdjustPolicy(QListWidget.AdjustToContents)
+        qconnect(list_widget.itemDoubleClicked, self.accept_if_selected)
         return list_widget
 
     def create_button_box(self):
