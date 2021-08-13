@@ -13,9 +13,9 @@ Constrain the add-on's operation to certain note types.
 By default, the add-on considers a note type Japanese
 if it finds the text "japanese" in the note type name.
 Case is ignored.
-* `src_fields`.
+* `source_fields`.
 Fields to generate pitch accents for.
-* `dst_fields`.
+* `destination_fields`.
 Fields where the pitch accents should be placed.
 * `regenerate_readings`.
 When you run "Edit" > "Bulk-add pitch accents"

@@ -92,4 +92,4 @@ def split_furigana(expr: str) -> Tuple[str, Optional[str]]:
 
 config = aqt.mw.addonManager.getConfig(__name__)
 write_config = functools.partial(aqt.mw.addonManager.writeConfig, __name__, config)
-iter_fields = functools.partial(zip, config['src_fields'], config['dst_fields'])
+iter_fields = functools.partial(zip, config['source_fields'], config['destination_fields'])

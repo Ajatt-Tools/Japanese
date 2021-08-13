@@ -140,7 +140,7 @@ class SrcFieldsListEdit(ListEdit):
     def __init__(self, parent: QWidget):
         super(SrcFieldsListEdit, self).__init__(
             parent=parent,
-            items=config['src_fields'],
+            items=config['source_fields'],
             available_items=all_note_type_field_names(),
             available_items_title="Select Source Field",
         )
@@ -150,7 +150,7 @@ class DstFieldsListEdit(ListEdit):
     def __init__(self, parent: QWidget):
         super(DstFieldsListEdit, self).__init__(
             parent=parent,
-            items=config['dst_fields'],
+            items=config['destination_fields'],
             available_items=all_note_type_field_names(),
             available_items_title="Select Destination Field",
         )
@@ -178,8 +178,8 @@ class SettingsDialog(QDialog):
         self.checkboxes = make_checkboxes()
         self.list_edits = {
             'note_types': NoteTypesListEdit(self),
-            'src_fields': SrcFieldsListEdit(self),
-            'dst_fields': DstFieldsListEdit(self),
+            'source_fields': SrcFieldsListEdit(self),
+            'destination_fields': DstFieldsListEdit(self),
         }
         self.setLayout(self.create_main_layout())
         self.load_config_values()
@@ -195,8 +195,8 @@ class SettingsDialog(QDialog):
     def create_note_settings_layout(self):
         tabs_widget = QTabWidget()
         tabs_widget.addTab(self.list_edits['note_types'], "Note types")
-        tabs_widget.addTab(self.list_edits['src_fields'], "Source fields")
-        tabs_widget.addTab(self.list_edits['dst_fields'], "Destination fields")
+        tabs_widget.addTab(self.list_edits['source_fields'], "Source fields")
+        tabs_widget.addTab(self.list_edits['destination_fields'], "Destination fields")
         return tabs_widget
 
     def create_checkboxes_layout(self) -> QLayout:

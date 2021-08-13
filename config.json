@@ -10,11 +10,11 @@
     "subs2srs",
     "ajt"
   ],
-  "src_fields": [
+  "source_fields": [
     "VocabFurigana",
     "VocabKanji"
   ],
-  "dst_fields": [
+  "destination_fields": [
     "VocabPitchPattern",
     "VocabPitchPattern"
   ],
