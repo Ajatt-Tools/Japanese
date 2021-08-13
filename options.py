@@ -8,9 +8,8 @@ from typing import Iterable
 
 from aqt import mw
 from aqt.qt import *
-from aqt.utils import disable_help_button
 
-from .ajt_common import menu_root_entry, ADDON_SERIES
+from .ajt_common import menu_root_entry, tweak_window, ADDON_SERIES
 from .helpers import *
 
 
@@ -163,8 +162,7 @@ class SettingsDialog(QDialog):
 
     def __init__(self, parent: QWidget):
         super(SettingsDialog, self).__init__(parent=parent or mw)
-        disable_help_button(self)
-        mw.garbage_collect_on_dialog_finish(self)
+        tweak_window(self)
         self.setWindowModality(Qt.ApplicationModal)
         self.setWindowTitle(f'{ADDON_SERIES} {self.NAME}')
         self.setMinimumSize(420, 240)

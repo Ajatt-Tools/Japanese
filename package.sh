@@ -10,6 +10,6 @@ export ROOT_DIR BRANCH
 
 git archive HEAD --format=zip --output "$ZIP_NAME"
 # shellcheck disable=SC2016
-git submodule foreach 'git archive "$BRANCH" --prefix=$path/ --format=zip --output "$ROOT_DIR/${path}_${BRANCH}.zip"'
+git submodule foreach 'git archive main --prefix=$path/ --format=zip --output "$ROOT_DIR/${path}_${BRANCH}.zip"'
 zipmerge "$ZIP_NAME" ./*.zip
 rm -- ./*.zip

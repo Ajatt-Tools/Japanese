@@ -5,10 +5,10 @@ from gettext import gettext as _
 
 from aqt import gui_hooks, mw
 from aqt.qt import *
-from aqt.utils import showInfo, disable_help_button, restoreGeom, saveGeom
+from aqt.utils import showInfo, restoreGeom, saveGeom
 from aqt.webview import AnkiWebView
 
-from .ajt_common import menu_root_entry
+from .ajt_common import menu_root_entry, tweak_window
 from .helpers import *
 from .nhk_pronunciation import get_pronunciations, format_pronunciations
 
@@ -72,13 +72,12 @@ def format_pronunciations_rich(pronunciations: Dict[str, List[str]]):
 class ViewPitchAccentsDialog(QDialog):
     def __init__(self, parent: QWidget, selected_text: str, *args, **kwargs):
         QDialog.__init__(self, parent=parent, *args, **kwargs)
+        tweak_window(self)
         self.webview = AnkiWebView(parent=self, title=ACTION_NAME)
         self.pronunciations = get_pronunciations(selected_text)
         self._setup_ui()
 
     def _setup_ui(self):
-        mw.garbage_collect_on_dialog_finish(self)
-        disable_help_button(self)
         self.setWindowModality(Qt.ApplicationModal)
         self.setWindowTitle(ACTION_NAME)
         self.setMinimumSize(420, 240)
