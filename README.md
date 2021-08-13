@@ -25,9 +25,11 @@ git clone 'https://github.com/Ajatt-Tools/PitchAccent.git' ~/.local/share/Anki2/
 
 ## Configuration
 
-To configure the add-on, open the Anki Add-on Menu
-via `Tools > Add-ons` and select `AJT Pitch Accent`.
-Then click the `Config` button on the right-side of the screen.
+To configure the add-on select "AJT" > "Pitch Accent Options...".
+
+To edit the config file, open the Anki Add-on Menu
+via "Tools" > "Add-ons" and select "AJT Pitch Accent".
+Then click the "Config" button on the right-side of the screen.
 
 ## Usage
 
