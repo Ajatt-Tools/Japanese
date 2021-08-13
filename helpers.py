@@ -2,12 +2,13 @@
 
 import functools
 import re
-from typing import Dict, Any, List, Tuple, Optional
+from typing import Dict, Any, List, Tuple, Optional, Set
 
 import aqt
 from anki.notes import Note
 from anki.utils import htmlToTextLine
 
+ADDON_SERIES = 'AJT'
 ANKI21_VERSION = int(aqt.appVersion.split('.')[-1])
 
 NON_JP_REGEX = re.compile(
@@ -28,6 +29,18 @@ def get_notetype(note: Note) -> Dict[str, Any]:
         return note.note_type()
     else:
         return note.model()
+
+
+def all_note_type_names():
+    return (note_type.name for note_type in aqt.mw.col.models.all_names_and_ids())
+
+
+def all_note_type_field_names() -> Set[str]:
+    fields = set()
+    for model in aqt.mw.col.models.all():
+        fields.update(field['name'] for field in model.get('flds'))
+
+    return fields
 
 
 def is_supported_notetype(note: Note):
