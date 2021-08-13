@@ -8,7 +8,6 @@ import aqt
 from anki.notes import Note
 from anki.utils import htmlToTextLine
 
-ADDON_SERIES = 'AJT'
 ANKI21_VERSION = int(aqt.appVersion.split('.')[-1])
 
 NON_JP_REGEX = re.compile(
@@ -22,6 +21,10 @@ JP_SEP_REGEX = re.compile(
     r'[・、※【】「」〒◎×〃゜『』《》〜〽。〄〇〈〉〓〔〕〖〗〘 〙〚〛〝〞〟〠〡〢〣〥〦〧〨〭〮〯〫〬〶〷〸〹〺〻〼〾〿]',
     re.U
 )
+
+
+def ui_translate(key: str) -> str:
+    return key.capitalize().replace('_', ' ')
 
 
 def get_notetype(note: Note) -> Dict[str, Any]:

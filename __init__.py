@@ -1,6 +1,6 @@
-from . import nhk_pronunciation, lookup, bulk_add, menu
+from . import nhk_pronunciation, lookup, bulk_add, options
 
 nhk_pronunciation.init()
 lookup.init()
 bulk_add.init()
-menu.init()
+options.init()

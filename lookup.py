@@ -8,6 +8,7 @@ from aqt.qt import *
 from aqt.utils import showInfo, disable_help_button, restoreGeom, saveGeom
 from aqt.webview import AnkiWebView
 
+from .ajt_common import menu_root_entry
 from .helpers import *
 from .nhk_pronunciation import get_pronunciations, format_pronunciations
 
@@ -141,5 +142,8 @@ def add_context_menu_item(webview: AnkiWebView, menu: QMenu):
 
 def init():
     # Create the manual look-up menu entry
+    root_menu = menu_root_entry()
+    root_menu.addAction(create_lookup_action(root_menu))
+    # Hook to context menu events
     gui_hooks.editor_will_show_context_menu.append(add_context_menu_item)
     gui_hooks.webview_will_show_context_menu.append(add_context_menu_item)

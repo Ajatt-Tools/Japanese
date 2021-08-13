@@ -8,7 +8,9 @@ from typing import Iterable
 
 from aqt import mw
 from aqt.qt import *
+from aqt.utils import disable_help_button
 
+from .ajt_common import menu_root_entry, ADDON_SERIES
 from .helpers import *
 
 
@@ -156,33 +158,38 @@ class DstFieldsListEdit(ListEdit):
         )
 
 
-def make_checkboxes() -> Dict[str, QCheckBox]:
-    keys = (
-        "regenerate_readings",
-        "use_hiragana",
-        "use_mecab",
-        "generate_on_flush",
-        "kana_lookups",
-    )
-    return {key: QCheckBox(key.capitalize().replace('_', ' ')) for key in keys}
-
-
 class SettingsDialog(QDialog):
     NAME = 'Pitch Accent Options'
 
     def __init__(self, parent: QWidget):
         super(SettingsDialog, self).__init__(parent=parent or mw)
+        disable_help_button(self)
+        mw.garbage_collect_on_dialog_finish(self)
         self.setWindowModality(Qt.ApplicationModal)
         self.setWindowTitle(f'{ADDON_SERIES} {self.NAME}')
         self.setMinimumSize(420, 240)
-        self.checkboxes = make_checkboxes()
-        self.list_edits = {
+        self.checkboxes = self.create_checkboxes()
+        self.list_edits = self.create_list_edits()
+        self.setLayout(self.create_main_layout())
+        self.load_config_values()
+
+    def create_list_edits(self):
+        return {
             'note_types': NoteTypesListEdit(self),
             'source_fields': SrcFieldsListEdit(self),
             'destination_fields': DstFieldsListEdit(self),
         }
-        self.setLayout(self.create_main_layout())
-        self.load_config_values()
+
+    @staticmethod
+    def create_checkboxes() -> Dict[str, QCheckBox]:
+        keys = (
+            "regenerate_readings",
+            "use_hiragana",
+            "use_mecab",
+            "generate_on_flush",
+            "kana_lookups",
+        )
+        return {key: QCheckBox(ui_translate(key)) for key in keys}
 
     def create_main_layout(self) -> QLayout:
         main = QVBoxLayout()
@@ -194,9 +201,8 @@ class SettingsDialog(QDialog):
 
     def create_note_settings_layout(self):
         tabs_widget = QTabWidget()
-        tabs_widget.addTab(self.list_edits['note_types'], "Note types")
-        tabs_widget.addTab(self.list_edits['source_fields'], "Source fields")
-        tabs_widget.addTab(self.list_edits['destination_fields'], "Destination fields")
+        for key, widget in self.list_edits.items():
+            tabs_widget.addTab(widget, ui_translate(key))
         return tabs_widget
 
     def create_checkboxes_layout(self) -> QLayout:
@@ -239,3 +245,8 @@ def create_options_action(parent: QWidget) -> QAction:
     action = QAction(f'{SettingsDialog.NAME}...', parent)
     qconnect(action.triggered, open_options)
     return action
+
+
+def init():
+    root_menu = menu_root_entry()
+    root_menu.addAction(create_options_action(root_menu))
