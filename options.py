@@ -41,10 +41,10 @@ class ItemSelectionDialog(QDialog):
         return button_box
 
     def accept_if_selected(self) -> None:
-        if self.list_widget.currentItem().isSelected() is False:
-            self.reject()
-        else:
+        if (current := self.list_widget.currentItem()) and current.isSelected():
             self.accept()
+        else:
+            self.reject()
 
     def selected_text(self):
         return self.list_widget.currentItem().text()
@@ -58,9 +58,9 @@ class ListEdit(QWidget):
             available_items: Iterable[str],
             available_items_title: str
     ):
-        super(ListEdit, self).__init__(parent)
+        super(ListEdit, self).__init__(parent=parent)
         self.parent = parent
-        self.available_items = available_items
+        self.available_items = list(available_items)
         self.available_items_title = available_items_title
         self.list_widget = self.create_list_widget(items)
         self.setLayout(self.create_root_layout())
@@ -86,11 +86,11 @@ class ListEdit(QWidget):
         self.items()
 
     def on_remove(self):
-        if self.list_widget.currentItem().isSelected():
+        if (current := self.list_widget.currentItem()) and current.isSelected():
             self.list_widget.takeItem(self.list_widget.currentRow())
 
     def on_edit(self):
-        if (current := self.list_widget.currentItem()).isSelected():
+        if (current := self.list_widget.currentItem()) and current.isSelected():
             new_text, ok = QInputDialog.getText(
                 self.parent,
                 'Edit',
