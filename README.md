@@ -86,6 +86,8 @@ This add-on uses two databases to generate pronunciations from:
 2) Kanjium data. The repository can be found
 [here](https://github.com/mifunetoshiro/kanjium/).
 
+The two databases produce 229798 entries total.
+
 ## Acknowledgements
 
 This add-on is a completely remastered version of
