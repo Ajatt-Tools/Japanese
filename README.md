@@ -47,6 +47,14 @@ and then choose "Edit" > "Bulk-add pitch accents".
 By default, the "bulk-add" feature will not overwrite the `VocabPitchPattern` field if its already filled,
 but you can change this by setting `regenerate_readings` to `True` in the config.
 
+If the add-on can't find any pitch accent data for the word spelled in kanji,
+it tries searching using the kana reading of the word.
+This behavior can be toggled off in settings.
+
+If the add-on detects furigana reading in the source field,
+it will add pitch accents for the specified reading and skip other readings
+if they're present in the pitch accent database.
+
 ## Pitch accent, what is that?
 
 For more information on the Japanese pitch accent,
@@ -69,6 +77,14 @@ There are some tricky words like はし and じどう,
 where different pronunciations have wildly varying meanings.
 Aside from that, knowing about these rules might help you
 avoid speaking with a distinct foreign accent.
+
+## Pitch accent data
+
+This add-on uses two databases to generate pronunciations from:
+
+1) NHK data from `NHK日本語発音アクセント辞典`.
+2) Kanjium data. The repository can be found
+[here](https://github.com/mifunetoshiro/kanjium/).
 
 ## Acknowledgements
 
