@@ -11,11 +11,9 @@
     "ajt"
   ],
   "source_fields": [
-    "VocabFurigana",
     "VocabKanji"
   ],
   "destination_fields": [
-    "VocabPitchPattern",
     "VocabPitchPattern"
   ],
   "regenerate_readings": false,
