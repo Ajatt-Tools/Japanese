@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 
-import functools
 import re
-from typing import Dict, Any, List, Tuple, Optional, Set
+from typing import Dict, Any, List, Tuple, Optional, Set, Iterator
 
 import aqt
 from anki.notes import Note
@@ -21,6 +20,16 @@ JP_SEP_REGEX = re.compile(
     r'[・、※【】「」〒◎×〃゜『』《》〜〽。〄〇〈〉〓〔〕〖〗〘 〙〚〛〝〞〟〠〡〢〣〥〦〧〨〭〮〯〫〬〶〷〸〹〺〻〼〾〿]',
     re.U
 )
+
+config = aqt.mw.addonManager.getConfig(__name__)
+
+
+def write_config():
+    return aqt.mw.addonManager.writeConfig(__name__, config)
+
+
+def iter_fields() -> Iterator[Tuple[str, str]]:
+    return zip(config['source_fields'], config['destination_fields'])
 
 
 def ui_translate(key: str) -> str:
@@ -91,8 +100,3 @@ def split_furigana(expr: str) -> Tuple[str, Optional[str]]:
         return match.group('word') + match.group('suffix'), match.group('reading') + match.group('suffix')
     else:
         return expr, None
-
-
-config = aqt.mw.addonManager.getConfig(__name__)
-write_config = functools.partial(aqt.mw.addonManager.writeConfig, __name__, config)
-iter_fields = functools.partial(zip, config['source_fields'], config['destination_fields'])
