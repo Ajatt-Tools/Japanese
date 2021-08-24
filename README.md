@@ -12,6 +12,8 @@ The lookups will be performed on the `VocabKanji` field,
 and the accents will be added to the `VocabPitchPattern` field.
 To generate pitch accents, focus the `VocabKanji` field and press "Tab" or switch focus away from the field.
 
+![demo](img/pitch_accent_demo.webp)
+
 You can change both of these field names or add more source fields in the config.
 
 ## Installation
