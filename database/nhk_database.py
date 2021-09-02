@@ -19,22 +19,34 @@
 # Any modifications to this file must keep this entire header intact.
 
 import re
-from collections import namedtuple
+from typing import NamedTuple
 
 try:
     from .common import *
 except ImportError:
     from common import *
 
-AccentEntry = namedtuple(
-    'AccentEntry',
-    [
-        'NID', 'ID', 'WAVname', 'K_FLD', 'ACT',
-        'katakana_reading', 'nhk', 'kanjiexpr', 'NHKexpr', 'numberchars',
-        'devoiced_pos', 'nasalsoundpos', 'majiri', 'kaisi', 'KWAV',
-        'katakana_reading_alt', 'akusentosuu', 'bunshou', 'accent',
-    ]
-)
+
+class AccentEntry(NamedTuple):
+    NID: str
+    ID: str
+    WAVname: str
+    K_FLD: str
+    ACT: str
+    katakana_reading: str
+    nhk: str
+    kanjiexpr: str
+    NHKexpr: str
+    numberchars: str
+    devoiced_pos: str
+    nasalsoundpos: str
+    majiri: str
+    kaisi: str
+    KWAV: str
+    katakana_reading_alt: str
+    akusentosuu: str
+    bunshou: str
+    accent: str
 
 
 def make_accent_entry(csv_line: str) -> AccentEntry:
