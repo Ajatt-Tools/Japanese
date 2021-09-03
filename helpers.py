@@ -55,7 +55,7 @@ def all_note_type_field_names() -> Set[str]:
     return fields
 
 
-def is_supported_notetype(note: Note):
+def is_supported_notetype(note: Note) -> bool:
     # Check if this is a supported note type.
 
     if not (supported_note_types := config['note_types']):
