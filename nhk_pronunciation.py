@@ -215,9 +215,8 @@ def on_note_will_flush(note: Note) -> None:
     if config["generate_on_flush"] is False:
         return
 
-    # only accept calls when add cards dialog or anki browser are not open.
-    # otherwise this function conflicts with the editor_did_unfocus_field event.
-    if mw.app.activeWindow() is not None:
+    if mw.app.activeWindow() or note.id:
+        # ensures the callback only executes when a new note is being created.
         return
 
     if not is_supported_notetype(note):
