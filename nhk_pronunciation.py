@@ -2,7 +2,8 @@
 
 from collections import OrderedDict
 
-from anki import hooks
+import anki.collection
+from anki.hooks import wrap
 from aqt import mw
 
 from .database import init as database_init
@@ -211,15 +212,17 @@ def on_focus_lost(changed: bool, note: Note, field_idx: int) -> bool:
     return True if fill_destination(note, src_field, dst_field) else changed
 
 
-def on_note_will_flush(note: Note) -> None:
-    if config["generate_on_flush"] is False:
-        return
+def should_add_pitch_accents(note: Note) -> bool:
+    return all((
+        config.get('generate_on_note_add') is True,
+        mw.app.activeWindow() is None,
+        note.id == 0,
+        is_supported_notetype(note),
+    ))
 
-    if mw.app.activeWindow() or note.id:
-        # ensures the callback only executes when a new note is being created.
-        return
 
-    if not is_supported_notetype(note):
+def on_add_note(_col, note: Note, _did) -> None:
+    if not should_add_pitch_accents(note):
         return
 
     for src_field, dst_field in iter_fields():
@@ -245,4 +248,4 @@ def init():
         gui_hooks.editor_did_unfocus_field.append(on_focus_lost)
 
     # Generate when AnkiConnect adds a new note
-    hooks.note_will_flush.append(on_note_will_flush)
+    anki.collection.Collection.add_note = wrap(anki.collection.Collection.add_note, on_add_note, 'before')

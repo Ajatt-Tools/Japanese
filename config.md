@@ -31,7 +31,7 @@ Use Mecab to split a sentence/conjugation when performing lookups.
 * `lookup_shortcut`.
 The shortcut to perform pronunciation lookup
 on the selected text ("Tools" > "NHK pitch accent lookup").
-* `generate_on_flush`.
+* `generate_on_note_add`.
 Automatically add pronunciations to cards created by AnkiConnect with
 [Yomichan](https://foosoft.net/projects/yomichan/).
 * `kana_lookups`.

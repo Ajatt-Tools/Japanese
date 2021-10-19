@@ -184,7 +184,7 @@ class SettingsDialog(QDialog):
             "regenerate_readings",
             "use_hiragana",
             "use_mecab",
-            "generate_on_flush",
+            "generate_on_note_add",
             "kana_lookups",
         )
         return {key: QCheckBox(ui_translate(key)) for key in keys}
