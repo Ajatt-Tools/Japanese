@@ -4,13 +4,19 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/copyleft/gpl.html
 #
 
-from typing import Iterable
-
 from aqt import mw
 from aqt.qt import *
+from typing import Iterable
 
 from .ajt_common import menu_root_entry, tweak_window, ADDON_SERIES
 from .helpers import *
+
+
+def adjust_to_contents(widget: QListWidget):
+    try:
+        widget.setSizeAdjustPolicy(QListWidget.AdjustToContents)
+    except AttributeError:
+        pass
 
 
 class ItemSelectionDialog(QDialog):
@@ -30,7 +36,7 @@ class ItemSelectionDialog(QDialog):
     def create_list_widget(self, items: Iterable):
         list_widget = QListWidget()
         list_widget.addItems(items)
-        list_widget.setSizeAdjustPolicy(QListWidget.AdjustToContents)
+        adjust_to_contents(list_widget)
         qconnect(list_widget.itemDoubleClicked, self.accept_if_selected)
         return list_widget
 
@@ -68,7 +74,7 @@ class ListEdit(QWidget):
     def create_list_widget(self, items: Iterable):
         list_widget = QListWidget()
         list_widget.addItems(items)
-        list_widget.setSizeAdjustPolicy(QListWidget.AdjustToContents)
+        adjust_to_contents(list_widget)
         qconnect(list_widget.itemDoubleClicked, self.on_edit)
         return list_widget
 
