@@ -213,12 +213,12 @@ def on_focus_lost(changed: bool, note: Note, field_idx: int) -> bool:
 
 
 def should_add_pitch_accents(note: Note) -> bool:
-    return all((
-        config.get('generate_on_note_add') is True,
-        mw.app.activeWindow() is None,
-        note.id == 0,
-        is_supported_notetype(note),
-    ))
+    return (
+            config.get('generate_on_note_add') is True
+            and mw.app.activeWindow() is None
+            and note.id == 0
+            and is_supported_notetype(note)
+    )
 
 
 def on_add_note(_col, note: Note, _did) -> None:
