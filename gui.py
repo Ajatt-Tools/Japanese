@@ -77,11 +77,13 @@ def relevant_field_names(note_type_name_fuzzy: Optional[str]) -> Iterable[str]:
                 yield field['name']
 
 
-class NoteTypeSelector(QComboBox):
+class EditableSelector(QComboBox):
     def __init__(self):
         super().__init__()
         self.setEditable(True)
 
+
+class NoteTypeSelector(EditableSelector):
     def repopulate(self, current_profile_name: Optional[str]):
         self.clear()
         self.addItems([n.name for n in mw.col.models.all_names_and_ids()])
@@ -100,8 +102,8 @@ class ProfileEditForm(QGroupBox):
         self._form = {
             "name": QLineEdit(),
             "note_type": NoteTypeSelector(),
-            "source": QComboBox(),
-            "destination": QComboBox(),
+            "source": EditableSelector(),
+            "destination": EditableSelector(),
         }
         self.setLayout(self.make_layout())
         qconnect(self._note_type.currentIndexChanged, self.repopulate_fields)
