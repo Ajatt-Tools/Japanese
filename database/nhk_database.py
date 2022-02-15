@@ -88,29 +88,29 @@ def format_entry(e: AccentEntry) -> str:
     for idx, acc in enumerate(int(pos) for pos in acc_pattern):
         # Start or end overline when necessary
         if not overline_flag and acc > 0:
-            result_str += '<span class="overline">'
+            result_str.append('<span class="overline">')
             overline_flag = True
         if overline_flag and acc == 0:
-            result_str += '</span>'
+            result_str.append('</span>')
             overline_flag = False
 
         # Wrap character if it's devoiced, else add as is.
         if (idx + 1) in devoiced:
-            result_str += f'<span class="nopron">{kana_reading[idx]}</span>'
+            result_str.append(f'<span class="nopron">{kana_reading[idx]}</span>')
         else:
-            result_str += kana_reading[idx]
+            result_str.append(kana_reading[idx])
 
         if (idx + 1) in nasal:
-            result_str += '<span class="nasal">&#176;</span>'
+            result_str.append('<span class="nasal">&#176;</span>')
 
         # If we go down in pitch, add the downfall
         if acc == 2:
-            result_str += '</span>&#42780;'
+            result_str.append('</span>&#42780;')
             overline_flag = False
 
     # Close the overline if it's still open
     if overline_flag:
-        result_str += "</span>"
+        result_str.append('</span>')
 
     return ''.join(result_str)
 

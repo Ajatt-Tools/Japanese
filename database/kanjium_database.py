@@ -61,18 +61,18 @@ def format_entry(moraes: List[str], accent: int) -> str:
     for idx, morae in enumerate(moraes):
         # Start or end overline when necessary
         if not overline_flag and ((idx == 1 and (accent == 0 or accent > 1)) or (idx == 0 and accent == 1)):
-            result += '<span class="overline">'
+            result.append('<span class="overline">')
             overline_flag = True
 
-        result += morae
+        result.append(morae)
 
         if overline_flag and idx == accent - 1:
-            result += '</span>&#42780;'
+            result.append('</span>&#42780;')
             overline_flag = False
 
     # Close the overline if it's still open
     if overline_flag:
-        result += "</span>"
+        result.append("</span>")
 
     return ''.join(result)
 
