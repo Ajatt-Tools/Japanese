@@ -36,6 +36,7 @@ def should_regenerate(file_path: str) -> bool:
 class FormattedEntry(NamedTuple):
     katakana_reading: str
     html_notation: str
+    pitch_number: int
 
 
 class AccDbManager(abc.ABC):
@@ -77,10 +78,10 @@ class AccDbManager(abc.ABC):
         acc_dict = {}
         with open(self.derivative_database, encoding="utf-8") as f:
             for line in f:
-                word, kana, pitch_html = line.strip().split('\t')
+                word, kana, *pitch_data = line.strip().split('\t')
                 for key in (word, kana):
                     acc_dict.setdefault(key, [])
-                    entry = FormattedEntry(kana, pitch_html)
+                    entry = FormattedEntry(kana, *pitch_data)
                     if entry not in acc_dict[key]:
                         acc_dict[key].append(entry)
 

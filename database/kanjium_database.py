@@ -87,8 +87,8 @@ class KanjiumDb(AccDbManager):
             entries = [AccentEntry(*line.split('\t')) for line in f]
 
         for entry in entries:
-            for accent in entry.accents:
-                value = FormattedEntry(''.join(entry.moraes), format_entry(entry.moraes, accent))
+            for pitch_num in entry.accents:
+                value = FormattedEntry(''.join(entry.moraes), format_entry(entry.moraes, pitch_num), pitch_num)
                 self._temp_dict.setdefault(entry.keyword, [])
                 if value not in self._temp_dict[entry.keyword]:
                     self._temp_dict[entry.keyword].append(value)

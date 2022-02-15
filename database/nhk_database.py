@@ -125,7 +125,7 @@ class NhkDb(AccDbManager):
             entries: List[AccentEntry] = [make_accent_entry(line) for line in f]
 
         for entry in entries:
-            value = FormattedEntry(entry.katakana_reading, format_entry(entry))
+            value = FormattedEntry(entry.katakana_reading, format_entry(entry), None)
 
             # Add expressions for both
             for key in (entry.nhk, entry.kanjiexpr):
