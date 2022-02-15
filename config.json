@@ -5,17 +5,6 @@
     "class=\"nasal\"": "style=\"color: red;\"",
     "&#42780;": "&#42780;"
   },
-  "note_types": [
-    "japanese",
-    "subs2srs",
-    "ajt"
-  ],
-  "source_fields": [
-    "VocabKanji"
-  ],
-  "destination_fields": [
-    "VocabPitchPattern"
-  ],
   "profiles": [
     {
       "name": "Add pitch accent",

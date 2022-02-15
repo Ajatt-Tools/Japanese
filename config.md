@@ -8,15 +8,14 @@ note type.*
 
 ****
 
-* `note_types`.
-Constrain the add-on's operation to certain note types.
-By default, the add-on considers a note type Japanese
+* `profiles`.
+Each profile defines
+Note Type constraints,
+fields to generate pitch accents for
+and fields where the pitch accents should be placed.
+By default, the add-on matches a note type
 if it finds the text "japanese" in the note type name.
 Case is ignored.
-* `source_fields`.
-Fields to generate pitch accents for.
-* `destination_fields`.
-Fields where the pitch accents should be placed.
 * `regenerate_readings`.
 When you run "Edit" > "Bulk-add pitch accents"
 in the Anki Browser,

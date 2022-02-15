@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from collections import OrderedDict
+from typing import Iterable
 
 import anki.collection
 from anki.hooks import wrap
@@ -157,13 +158,6 @@ def get_formatted_pronunciations(expr: str, sep_single="・", sep_multi="、", e
 # Pitch generation
 ##########################################################################
 
-def find_dest_field_name(src_field_name: str) -> Optional[str]:
-    for src, dest in iter_fields():
-        if src_field_name == src:
-            return dest
-    else:
-        return None
-
 
 def can_fill_destination(note: Note, src_field: str, dst_field: str) -> bool:
     # Field names are empty or None
@@ -201,15 +195,18 @@ def fill_destination(note: Note, src_field: str, dst_field: str) -> bool:
     return False
 
 
+def find_dest_fields(note: Note, src_field_name: str) -> Iterable[str]:
+    note_type = get_notetype(note)
+    for profile in config['profiles']:
+        if profile_matches(note_type, profile) and profile['source'] == src_field_name:
+            yield profile['destination']
+
+
 def on_focus_lost(changed: bool, note: Note, field_idx: int) -> bool:
-    # This notetype name is not included in the config file
-    if not is_supported_notetype(note):
-        return changed
-
     src_field = note.keys()[field_idx]
-    dst_field = find_dest_field_name(src_field)
-
-    return True if fill_destination(note, src_field, dst_field) else changed
+    for dst_field in find_dest_fields(note, src_field):
+        changed = changed or fill_destination(note, src_field, dst_field)
+    return changed
 
 
 def should_add_pitch_accents(note: Note) -> bool:
@@ -217,16 +214,13 @@ def should_add_pitch_accents(note: Note) -> bool:
             config.get('generate_on_note_add') is True
             and mw.app.activeWindow() is None
             and note.id == 0
-            and is_supported_notetype(note)
     )
 
 
 def on_add_note(_col, note: Note, _did) -> None:
-    if not should_add_pitch_accents(note):
-        return
-
-    for src_field, dst_field in iter_fields():
-        fill_destination(note, src_field, dst_field)
+    if should_add_pitch_accents(note):
+        for src_field, dst_field in iter_fields(note):
+            fill_destination(note, src_field, dst_field)
 
 
 # Entry point

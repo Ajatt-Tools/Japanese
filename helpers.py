@@ -28,8 +28,15 @@ def write_config():
     return aqt.mw.addonManager.writeConfig(__name__, config)
 
 
-def iter_fields() -> Iterator[Tuple[str, str]]:
-    return zip(config['source_fields'], config['destination_fields'])
+def profile_matches(note_type: Dict[str, Any], profile: Dict[str, str]) -> bool:
+    return profile['note_type'].lower() in note_type['name'].lower()
+
+
+def iter_fields(note: Note) -> Iterator[Tuple[str, str]]:
+    note_type = get_notetype(note)
+    for profile in config['profiles']:
+        if profile_matches(note_type, profile):
+            yield profile['source'], profile['destination']
 
 
 def ui_translate(key: str) -> str:
@@ -53,18 +60,6 @@ def all_note_type_field_names() -> Set[str]:
         fields.update(field['name'] for field in model.get('flds'))
 
     return fields
-
-
-def is_supported_notetype(note: Note) -> bool:
-    # Check if this is a supported note type.
-
-    if not (supported_note_types := config['note_types']):
-        # Supported note types weren't specified by the user.
-        # Treat all note types as supported.
-        return True
-    else:
-        note_type_name = get_notetype(note)['name']
-        return any(supported.lower() in note_type_name.lower() for supported in supported_note_types)
 
 
 def escape_text(text: str) -> str:
