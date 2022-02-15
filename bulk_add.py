@@ -10,12 +10,16 @@ from .nhk_pronunciation import fill_destination
 ACTION_NAME = "Bulk-add pitch accents"
 
 
-def bulk_add_pitch_accents(nids: Sequence):
+def bulk_add_pitch_accents(nids: Sequence[NoteId]):
     mw.checkpoint(ACTION_NAME)
     mw.progress.start()
+    changed = False
 
-    for note in (note for nid in nids if is_supported_notetype(note := mw.col.getNote(nid))):
-        if any([fill_destination(note, src_field, dst_field) for src_field, dst_field in iter_fields()]):
+    for nid in nids:
+        note = mw.col.getNote(nid)
+        for src_field, dst_field in iter_fields(note):
+            changed = changed or fill_destination(note, src_field, dst_field)
+        if changed:
             note.flush()
 
     mw.progress.finish()

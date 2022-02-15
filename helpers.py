@@ -1,9 +1,14 @@
 import re
-from typing import Dict, Any, List, Tuple, Optional, Set, Iterator
+from typing import Dict, Any, List, Tuple, Optional, Set, Iterator, NewType
 
 import aqt
 from anki.notes import Note
 from anki.utils import htmlToTextLine
+
+try:
+    from anki.notes import NoteId
+except ImportError:
+    NoteId = NewType("NoteId", int)
 
 ANKI21_VERSION = int(aqt.appVersion.split('.')[-1])
 
