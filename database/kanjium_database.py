@@ -63,11 +63,12 @@ def format_entry(moraes: List[str], accent: int) -> str:
         if not overline_flag and ((idx == 1 and (accent == 0 or accent > 1)) or (idx == 0 and accent == 1)):
             result += '<span class="overline">'
             overline_flag = True
-        if overline_flag and idx == accent:
-            result += '</span>&#42780;'
-            overline_flag = False
 
         result += morae
+
+        if overline_flag and idx == accent - 1:
+            result += '</span>&#42780;'
+            overline_flag = False
 
     # Close the overline if it's still open
     if overline_flag:
