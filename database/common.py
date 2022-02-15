@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # Pitch Accent add-on for Anki 2.1
 # Copyright (C) 2021  Ren Tatsumoto. <tatsu at autistici.org>
 #
@@ -19,7 +17,7 @@
 # Any modifications to this file must keep this entire header intact.
 
 import os
-from typing import Dict, List, Tuple
+from typing import Dict, List, NamedTuple
 
 # Paths to the database files and this particular file
 THIS_DIR_PATH = os.path.dirname(os.path.normpath(__file__))
@@ -32,6 +30,11 @@ def should_regenerate(file_path: str) -> bool:
         os.path.getmtime(os.path.join(THIS_DIR_PATH, f)) > os.path.getmtime(file_path)
         for f in os.listdir(THIS_DIR_PATH) if f.endswith('.py')
     )
+
+
+class FormattedEntry(NamedTuple):
+    katakana_reading: str
+    html_notation: str
 
 
 class AccDbManager:
@@ -55,7 +58,7 @@ class AccDbManager:
     def self_check(cls):
         # First check that the original database is present.
         if not os.path.isfile(cls.accent_database):
-            raise IOError("Could not locate the source database!")
+            raise OSError("Could not locate the source database!")
 
         # Generate the derivative database if it does not exist yet or needs updating.
         if not os.path.isfile(db := cls.derivative_database) or should_regenerate(db):
@@ -63,15 +66,23 @@ class AccDbManager:
             cls.build_derivative()
 
     @classmethod
-    def read_derivative(cls) -> Dict[str, List[Tuple[str, str]]]:
+    def read_derivative(cls) -> Dict[str, List[FormattedEntry]]:
         """ Read the derivative file to memory """
         acc_dict = {}
-        with open(cls.derivative_database, 'r', encoding="utf-8") as f:
+        with open(cls.derivative_database, encoding="utf-8") as f:
             for line in f:
                 word, kana, pitch_html = line.strip().split('\t')
                 for key in (word, kana):
-                    acc_dict[key] = acc_dict.get(key, [])
-                    if (entry := (kana, pitch_html)) not in acc_dict[key]:
+                    acc_dict.setdefault(key, [])
+                    entry = FormattedEntry(kana, pitch_html)
+                    if entry not in acc_dict[key]:
                         acc_dict[key].append(entry)
 
         return acc_dict
+
+    @classmethod
+    def save_derivative(cls, temp_dict: Dict[str, List[FormattedEntry]], dest_path: str) -> None:
+        with open(dest_path, 'w', encoding="utf-8") as of:
+            for word, entries in temp_dict.items():
+                for entry in entries:
+                    of.write(f"{word}\t{entry.katakana_reading}\t{entry.html_notation}\n")

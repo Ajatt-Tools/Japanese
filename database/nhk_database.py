@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # Pitch Accent add-on for Anki 2.1
 # Copyright (C) 2021  Ren Tatsumoto. <tatsu at autistici.org>
 #
@@ -124,25 +122,21 @@ class NhkDb(AccDbManager):
     @classmethod
     def build_derivative(cls, dest_path: str = derivative_database) -> None:
         """ Build the derived database from the original database and save it as *.csv """
-        temp_dict = {}
+        temp_dict: Dict[str, List[FormattedEntry]] = {}
 
-        with open(cls.accent_database, 'r', encoding="utf-8") as f:
+        with open(cls.accent_database, encoding="utf-8") as f:
             entries: List[AccentEntry] = [make_accent_entry(line) for line in f]
 
         for entry in entries:
-            # A tuple holding both the spelling in katakana, and the katakana with pitch/accent markup
-            value = (entry.katakana_reading, format_entry(entry))
+            value = FormattedEntry(entry.katakana_reading, format_entry(entry))
 
             # Add expressions for both
             for key in (entry.nhk, entry.kanjiexpr):
-                temp_dict[key] = temp_dict.get(key, [])
+                temp_dict.setdefault(key, [])
                 if value not in temp_dict[key]:
                     temp_dict[key].append(value)
 
-        with open(dest_path, 'w', encoding="utf-8") as of:
-            for word in temp_dict.keys():
-                for katakana, pitch_html in temp_dict[word]:
-                    of.write(f"{word}\t{katakana}\t{pitch_html}\n")
+        cls.save_derivative(temp_dict, dest_path)
 
 
 if __name__ == '__main__':

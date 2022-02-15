@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # Pitch Accent add-on for Anki 2.1
 # Copyright (C) 2021  Ren Tatsumoto. <tatsu at autistici.org>
 #
@@ -85,25 +83,19 @@ class KanjiumDb(AccDbManager):
     @classmethod
     def build_derivative(cls, dest_path: str = derivative_database) -> None:
         """ Build the derived database from the original database and save it as *.csv """
-        temp_dict = {}
+        temp_dict: Dict[str, List[FormattedEntry]] = {}
 
-        with open(cls.accent_database, 'r', encoding="utf-8") as f:
+        with open(cls.accent_database, encoding="utf-8") as f:
             entries = [AccentEntry(*line.split('\t')) for line in f]
 
         for entry in entries:
             for accent in entry.accents:
-                # A tuple holding both the spelling in katakana, and the katakana with pitch/accent markup
-                value = (''.join(entry.moraes), format_entry(entry.moraes, accent))
-
-                # Add expressions to dict
-                temp_dict[entry.keyword] = temp_dict.get(entry.keyword, [])
+                value = FormattedEntry(''.join(entry.moraes), format_entry(entry.moraes, accent))
+                temp_dict.setdefault(entry.keyword, [])
                 if value not in temp_dict[entry.keyword]:
                     temp_dict[entry.keyword].append(value)
 
-        with open(dest_path, 'w', encoding="utf-8") as of:
-            for word in temp_dict.keys():
-                for katakana, pitch_html in temp_dict[word]:
-                    of.write(f"{word}\t{katakana}\t{pitch_html}\n")
+        cls.save_derivative(temp_dict, dest_path)
 
 
 if __name__ == '__main__':

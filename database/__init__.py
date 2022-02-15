@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # Pitch Accent add-on for Anki 2.1
 # Copyright (C) 2021  Ren Tatsumoto. <tatsu at autistici.org>
 #
@@ -30,13 +28,13 @@ from .nhk_database import NhkDb
 
 def ensure_derivatives() -> None:
     if not os.path.isdir(DB_DIR_PATH):
-        raise IOError("Accent database folder is missing!")
+        raise OSError("Accent database folder is missing!")
 
     NhkDb.self_check()
     KanjiumDb.self_check()
 
 
-def init() -> Dict[str, List[Tuple[str, str]]]:
+def init() -> Dict[str, List[FormattedEntry]]:
     ensure_derivatives()
 
     # If the pickle exists and needs updating, remove it.
