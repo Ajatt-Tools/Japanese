@@ -16,6 +16,14 @@
   "destination_fields": [
     "VocabPitchPattern"
   ],
+  "profiles": [
+    {
+      "name": "Add pitch accent",
+      "note_type": "japanese",
+      "source": "VocabKanji",
+      "destination": "VocabPitchPattern"
+    }
+  ],
   "regenerate_readings": false,
   "use_hiragana": false,
   "use_mecab": true,
