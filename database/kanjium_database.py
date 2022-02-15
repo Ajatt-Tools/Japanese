@@ -16,7 +16,6 @@
 #
 # Any modifications to this file must keep this entire header intact.
 
-import re
 from typing import Iterable
 
 try:
@@ -25,10 +24,6 @@ try:
 except ImportError:
     from common import *
     from mecab_controller import to_katakana
-
-
-def kana_to_moraes(kana: str) -> List[str]:
-    return re.findall(r'.[ャュョゃゅょ]?', kana)
 
 
 class AccentEntry:

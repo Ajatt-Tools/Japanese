@@ -18,6 +18,7 @@
 
 import abc
 import os
+import re
 from typing import Dict, List, NamedTuple, Optional
 
 # Paths to the database files and this particular file
@@ -33,6 +34,10 @@ def should_regenerate(file_path: str) -> bool:
         for f in os.listdir(THIS_DIR_PATH) if f.endswith('.py')
     )
     return empty or old
+
+
+def kana_to_moraes(kana: str) -> List[str]:
+    return re.findall(r'.[ャュョゃゅょ]?', kana)
 
 
 class FormattedEntry(NamedTuple):

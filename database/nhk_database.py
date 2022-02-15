@@ -16,9 +16,6 @@
 #
 # Any modifications to this file must keep this entire header intact.
 
-import re
-from typing import NamedTuple
-
 try:
     from .common import *
 except ImportError:
@@ -69,12 +66,12 @@ def format_nasal_or_devoiced_positions(expr: str):
     return result + [int(pos) for pos in expr.split('0') if pos]
 
 
-def format_entry(e: AccentEntry) -> str:
+def format_entry(e: AccentEntry) -> FormattedEntry:
     """ Format an entry from the data in the original database to something that uses html """
-    kana_reading, acc_pattern = e.katakana_reading_alt, e.accent
+    katakana_reading, acc_pattern = e.katakana_reading_alt, e.accent
 
     # Fix accent notation by prepending zeros for moraes where accent info is omitted in the CSV.
-    acc_pattern = "0" * (len(kana_reading) - len(acc_pattern)) + acc_pattern
+    acc_pattern = "0" * (len(katakana_reading) - len(acc_pattern)) + acc_pattern
 
     # Get the nasal positions
     nasal = format_nasal_or_devoiced_positions(e.nasalsoundpos)
@@ -84,6 +81,7 @@ def format_entry(e: AccentEntry) -> str:
 
     result_str = []
     overline_flag = False
+    pitch_num = 0
 
     for idx, acc in enumerate(int(pos) for pos in acc_pattern):
         # Start or end overline when necessary
@@ -96,9 +94,9 @@ def format_entry(e: AccentEntry) -> str:
 
         # Wrap character if it's devoiced, else add as is.
         if (idx + 1) in devoiced:
-            result_str.append(f'<span class="nopron">{kana_reading[idx]}</span>')
+            result_str.append(f'<span class="nopron">{katakana_reading[idx]}</span>')
         else:
-            result_str.append(kana_reading[idx])
+            result_str.append(katakana_reading[idx])
 
         if (idx + 1) in nasal:
             result_str.append('<span class="nasal">&#176;</span>')
@@ -107,12 +105,13 @@ def format_entry(e: AccentEntry) -> str:
         if acc == 2:
             result_str.append('</span>&#42780;')
             overline_flag = False
+            pitch_num = len(kana_to_moraes(katakana_reading[:idx + 1]))
 
     # Close the overline if it's still open
     if overline_flag:
         result_str.append('</span>')
 
-    return ''.join(result_str)
+    return FormattedEntry(e.katakana_reading, ''.join(result_str), pitch_num)
 
 
 class NhkDb(AccDbManager):
@@ -125,7 +124,7 @@ class NhkDb(AccDbManager):
             entries: List[AccentEntry] = [make_accent_entry(line) for line in f]
 
         for entry in entries:
-            value = FormattedEntry(entry.katakana_reading, format_entry(entry), None)
+            value = format_entry(entry)
 
             # Add expressions for both
             for key in (entry.nhk, entry.kanjiexpr):
