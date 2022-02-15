@@ -27,10 +27,12 @@ DERIVATIVE_PICKLE = os.path.join(DB_DIR_PATH, "pronunciations_combined.pickle")
 
 
 def should_regenerate(file_path: str) -> bool:
-    return any(
+    empty = not os.path.getsize(file_path)
+    old = any(
         os.path.getmtime(os.path.join(THIS_DIR_PATH, f)) > os.path.getmtime(file_path)
         for f in os.listdir(THIS_DIR_PATH) if f.endswith('.py')
     )
+    return empty or old
 
 
 class FormattedEntry(NamedTuple):
