@@ -18,7 +18,7 @@
 
 import abc
 import os
-from typing import Dict, List, NamedTuple
+from typing import Dict, List, NamedTuple, Optional
 
 # Paths to the database files and this particular file
 THIS_DIR_PATH = os.path.dirname(os.path.normpath(__file__))
@@ -42,8 +42,11 @@ class AccDbManager(abc.ABC):
     accent_database: str = None
     derivative_database: str = None
 
-    def __init__(self):
-        self.self_check()
+    def __init__(self, self_check: bool = True, dest_path: Optional[str] = None):
+        self._temp_dict: Dict[str, List[FormattedEntry]] = {}
+        self._dest_path = dest_path or self.derivative_database
+        if self_check:
+            self.self_check()
 
     @classmethod
     def test(cls):
@@ -52,11 +55,11 @@ class AccDbManager(abc.ABC):
 
         import filecmp
         test_database = os.path.join(DB_DIR_PATH, "test.csv")
-        cls().build_derivative(dest_path=test_database)
+        cls(self_check=False, dest_path=test_database).build_derivative()
         print('Equal.' if filecmp.cmp(cls.derivative_database, test_database, shallow=False) else 'Not equal!')
 
     @abc.abstractmethod
-    def build_derivative(self, dest_path: str = None):
+    def build_derivative(self):
         raise NotImplementedError()
 
     def self_check(self):
@@ -83,9 +86,8 @@ class AccDbManager(abc.ABC):
 
         return acc_dict
 
-    @staticmethod
-    def save_derivative(temp_dict: Dict[str, List[FormattedEntry]], dest_path: str) -> None:
-        with open(dest_path, 'w', encoding="utf-8") as of:
-            for word, entries in temp_dict.items():
+    def save_derivative(self) -> None:
+        with open(self._dest_path, 'w', encoding="utf-8") as of:
+            for word, entries in self._temp_dict.items():
                 for entry in entries:
-                    of.write(f"{word}\t{entry.katakana_reading}\t{entry.html_notation}\n")
+                    print(word, *entry, sep='\t', file=of)

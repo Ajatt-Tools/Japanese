@@ -119,10 +119,8 @@ class NhkDb(AccDbManager):
     accent_database = os.path.join(DB_DIR_PATH, "nhk_data.csv")
     derivative_database = os.path.join(DB_DIR_PATH, "nhk_pronunciation.csv")
 
-    def build_derivative(self, dest_path: str = derivative_database) -> None:
+    def build_derivative(self) -> None:
         """ Build the derived database from the original database and save it as *.csv """
-        temp_dict: Dict[str, List[FormattedEntry]] = {}
-
         with open(self.accent_database, encoding="utf-8") as f:
             entries: List[AccentEntry] = [make_accent_entry(line) for line in f]
 
@@ -131,11 +129,11 @@ class NhkDb(AccDbManager):
 
             # Add expressions for both
             for key in (entry.nhk, entry.kanjiexpr):
-                temp_dict.setdefault(key, [])
-                if value not in temp_dict[key]:
-                    temp_dict[key].append(value)
+                self._temp_dict.setdefault(key, [])
+                if value not in self._temp_dict[key]:
+                    self._temp_dict[key].append(value)
 
-        self.save_derivative(temp_dict, dest_path)
+        self.save_derivative()
 
 
 if __name__ == '__main__':
