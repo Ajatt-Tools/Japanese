@@ -8,7 +8,7 @@ from aqt.qt import *
 from aqt.utils import restoreGeom, saveGeom
 
 from .ajt_common import menu_root_entry, tweak_window, ADDON_SERIES
-from .helpers import config
+from .helpers import config, write_config, get_config
 
 
 class ProfileList(QGroupBox):
@@ -52,7 +52,7 @@ class ControlPanel(QGroupBox):
         self.setCheckable(False)
         self._add_btn = QPushButton("Add")
         self._remove_btn = QPushButton("Remove")
-        self._apply_btn = QPushButton("Apply")
+        self._apply_btn = QPushButton("Apply Profile")
         self.setLayout(self.make_layout())
         self.add_clicked = self._add_btn.clicked
         self.remove_clicked = self._remove_btn.clicked
@@ -188,6 +188,8 @@ class SettingsDialog(QDialog):
         qconnect(self._mid_panel.remove_clicked, self.remove_profile)
         qconnect(self._mid_panel.apply_clicked, self.apply_profile_settings)
         qconnect(self._left_panel.current_row_changed, lambda row: self.edit_profile(row))
+        qconnect(self._button_box.accepted, self.accept)
+        qconnect(self._button_box.rejected, self.reject)
 
     def add_profile(self):
         config['profiles'].append({})
@@ -208,6 +210,15 @@ class SettingsDialog(QDialog):
         profile_dict = self._right_panel.as_dict()
         config['profiles'][self._left_panel.current_row()].update(profile_dict)
         self._left_panel.set_current_text(profile_dict['name'])
+
+    def accept(self) -> None:
+        self.apply_profile_settings()
+        write_config()
+        QDialog.accept(self)
+
+    def reject(self) -> None:
+        config.update(get_config())
+        QDialog.reject(self)
 
 
 def init():

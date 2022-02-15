@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import re
 from typing import Dict, Any, List, Tuple, Optional, Set, Iterator
 
@@ -21,7 +19,9 @@ JP_SEP_REGEX = re.compile(
     re.U
 )
 
-config = aqt.mw.addonManager.getConfig(__name__)
+
+def get_config():
+    return aqt.mw.addonManager.getConfig(__name__)
 
 
 def write_config():
@@ -70,7 +70,7 @@ def is_supported_notetype(note: Note) -> bool:
 def escape_text(text: str) -> str:
     """Strip characters that trip up mecab."""
     text = text.replace("\n", " ")
-    text = text.replace(u'\uff5e', "~")
+    text = text.replace('\uff5e', "~")
     text = re.sub("<br( /)?>", "---newline---", text)
     text = htmlToTextLine(text)
     text = text.replace("---newline---", "<br>")
@@ -100,3 +100,6 @@ def split_furigana(expr: str) -> Tuple[str, Optional[str]]:
         return match.group('word') + match.group('suffix'), match.group('reading') + match.group('suffix')
     else:
         return expr, None
+
+
+config = get_config()
