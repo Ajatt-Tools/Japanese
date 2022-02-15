@@ -80,12 +80,11 @@ class KanjiumDb(AccDbManager):
     accent_database = os.path.join(DB_DIR_PATH, "kanjium_data.tsv")
     derivative_database = os.path.join(DB_DIR_PATH, "kanjium_pronunciation.csv")
 
-    @classmethod
-    def build_derivative(cls, dest_path: str = derivative_database) -> None:
+    def build_derivative(self, dest_path: str = derivative_database) -> None:
         """ Build the derived database from the original database and save it as *.csv """
         temp_dict: Dict[str, List[FormattedEntry]] = {}
 
-        with open(cls.accent_database, encoding="utf-8") as f:
+        with open(self.accent_database, encoding="utf-8") as f:
             entries = [AccentEntry(*line.split('\t')) for line in f]
 
         for entry in entries:
@@ -95,7 +94,7 @@ class KanjiumDb(AccDbManager):
                 if value not in temp_dict[entry.keyword]:
                     temp_dict[entry.keyword].append(value)
 
-        cls.save_derivative(temp_dict, dest_path)
+        self.save_derivative(temp_dict, dest_path)
 
 
 if __name__ == '__main__':

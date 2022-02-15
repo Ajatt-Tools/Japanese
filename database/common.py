@@ -16,6 +16,7 @@
 #
 # Any modifications to this file must keep this entire header intact.
 
+import abc
 import os
 from typing import Dict, List, NamedTuple
 
@@ -37,39 +38,41 @@ class FormattedEntry(NamedTuple):
     html_notation: str
 
 
-class AccDbManager:
+class AccDbManager(abc.ABC):
     accent_database: str = None
     derivative_database: str = None
+
+    def __init__(self):
+        self.self_check()
 
     @classmethod
     def test(cls):
         if not os.path.isfile(cls.derivative_database):
             print("The derivative hasn't been built.")
+
         import filecmp
         test_database = os.path.join(DB_DIR_PATH, "test.csv")
-        cls.build_derivative(dest_path=test_database)
+        cls().build_derivative(dest_path=test_database)
         print('Equal.' if filecmp.cmp(cls.derivative_database, test_database, shallow=False) else 'Not equal!')
 
-    @classmethod
-    def build_derivative(cls, dest_path: str = None):
-        raise NotImplemented()
+    @abc.abstractmethod
+    def build_derivative(self, dest_path: str = None):
+        raise NotImplementedError()
 
-    @classmethod
-    def self_check(cls):
+    def self_check(self):
         # First check that the original database is present.
-        if not os.path.isfile(cls.accent_database):
+        if not os.path.isfile(self.accent_database):
             raise OSError("Could not locate the source database!")
 
         # Generate the derivative database if it does not exist yet or needs updating.
-        if not os.path.isfile(db := cls.derivative_database) or should_regenerate(db):
+        if not os.path.isfile(db := self.derivative_database) or should_regenerate(db):
             print("Will be rebuilt: ", os.path.basename(db))
-            cls.build_derivative()
+            self.build_derivative()
 
-    @classmethod
-    def read_derivative(cls) -> Dict[str, List[FormattedEntry]]:
+    def read_derivative(self) -> Dict[str, List[FormattedEntry]]:
         """ Read the derivative file to memory """
         acc_dict = {}
-        with open(cls.derivative_database, encoding="utf-8") as f:
+        with open(self.derivative_database, encoding="utf-8") as f:
             for line in f:
                 word, kana, pitch_html = line.strip().split('\t')
                 for key in (word, kana):
@@ -80,8 +83,8 @@ class AccDbManager:
 
         return acc_dict
 
-    @classmethod
-    def save_derivative(cls, temp_dict: Dict[str, List[FormattedEntry]], dest_path: str) -> None:
+    @staticmethod
+    def save_derivative(temp_dict: Dict[str, List[FormattedEntry]], dest_path: str) -> None:
         with open(dest_path, 'w', encoding="utf-8") as of:
             for word, entries in temp_dict.items():
                 for entry in entries:

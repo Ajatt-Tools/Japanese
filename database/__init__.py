@@ -26,16 +26,11 @@ from .kanjium_database import KanjiumDb
 from .nhk_database import NhkDb
 
 
-def ensure_derivatives() -> None:
+def init() -> Dict[str, List[FormattedEntry]]:
     if not os.path.isdir(DB_DIR_PATH):
         raise OSError("Accent database folder is missing!")
 
-    NhkDb.self_check()
-    KanjiumDb.self_check()
-
-
-def init() -> Dict[str, List[FormattedEntry]]:
-    ensure_derivatives()
+    nhk_db, kanjium_db = NhkDb(), KanjiumDb()
 
     # If the pickle exists and needs updating, remove it.
     if os.path.isfile(p := DERIVATIVE_PICKLE) and should_regenerate(p):
@@ -50,8 +45,8 @@ def init() -> Dict[str, List[FormattedEntry]]:
         with open(p, 'wb') as f:
             # Read kanjium data, then overwrite existing entries with NHK data.
             # NHK data is more rich, it contains nasal and devoiced positions.
-            derivative = KanjiumDb.read_derivative()
-            derivative.update(NhkDb.read_derivative())
+            derivative = kanjium_db.read_derivative()
+            derivative.update(nhk_db.read_derivative())
             # Pickle the 'data' dictionary using the highest protocol available.
             pickle.dump(derivative, f, pickle.HIGHEST_PROTOCOL)
 
