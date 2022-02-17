@@ -5,6 +5,7 @@ import anki.collection
 from anki.hooks import wrap
 from aqt import mw
 
+from .database import AccentDict, FormattedEntry
 from .database import init as database_init
 from .helpers import *
 from .mecab_controller import BasicMecabController
@@ -60,7 +61,14 @@ def should_skip(word: str) -> bool:
     return to_katakana(word) in map(to_katakana, get_skip_words())
 
 
-def get_pronunciations(expr: str, sanitize=True, recurse=True) -> Dict[str, List[str]]:
+def update_html(entry: FormattedEntry) -> FormattedEntry:
+    html_notation = convert_to_inline_style(entry.html_notation)
+    if config["use_hiragana"]:
+        html_notation = to_hiragana(entry.html_notation)
+    return FormattedEntry(entry.katakana_reading, html_notation, entry.pitch_number)
+
+
+def get_pronunciations(expr: str, sanitize=True, recurse=True) -> AccentDict:
     """
     Search pronunciations for a particular expression.
 
@@ -84,17 +92,13 @@ def get_pronunciations(expr: str, sanitize=True, recurse=True) -> Dict[str, List
     if expr in acc_dict:
         styled_prons = []
 
-        for reading, pitch_html in acc_dict[expr]:
-            if expr_reading and to_katakana(reading) != to_katakana(expr_reading):
+        for entry in acc_dict[expr]:
+            # if there's furigana, and it doesn't match the entry, skip.
+            if expr_reading and to_katakana(entry.katakana_reading) != to_katakana(expr_reading):
                 continue
 
-            inline_html = convert_to_inline_style(pitch_html)
-
-            if config["use_hiragana"]:
-                inline_html = to_hiragana(inline_html)
-
-            if inline_html not in styled_prons:
-                styled_prons.append(inline_html)
+            if (entry := update_html(entry)) not in styled_prons:
+                styled_prons.append(entry)
 
         ret[expr] = styled_prons
 
@@ -125,15 +129,23 @@ def get_pronunciations(expr: str, sanitize=True, recurse=True) -> Dict[str, List
     return ret
 
 
+def get_notation(entry: FormattedEntry, mode: TaskMode) -> str:
+    return {
+        TaskMode.html: entry.html_notation,
+        TaskMode.number: entry.pitch_number
+    }[mode]
+
+
 def format_pronunciations(
-        pronunciations: Dict[str, List[str]],
-        sep_single: str,
-        sep_multi: str,
+        pronunciations: AccentDict,
+        mode: TaskMode = TaskMode.html,
+        sep_single: str = "・",
+        sep_multi: str = "、",
         expr_sep: str = None
 ) -> str:
     ordered_dict = OrderedDict()
-    for k, v in pronunciations.items():
-        ordered_dict[k] = sep_single.join(v)
+    for word, entries in pronunciations.items():
+        ordered_dict[word] = sep_single.join(dict.fromkeys(get_notation(entry, mode) for entry in entries))
 
     # expr_sep is used to separate entries on lookup
     if expr_sep:
@@ -142,15 +154,6 @@ def format_pronunciations(
         txt = sep_multi.join(ordered_dict.values())
 
     return txt
-
-
-def get_formatted_pronunciations(expr: str, sep_single="・", sep_multi="、", expr_sep=None, sanitize=True):
-    return format_pronunciations(
-        get_pronunciations(expr, sanitize=sanitize),
-        sep_single=sep_single,
-        sep_multi=sep_multi,
-        expr_sep=expr_sep
-    )
 
 
 # Pitch generation
@@ -174,36 +177,42 @@ def can_fill_destination(note: Note, src_field: str, dst_field: str) -> bool:
     if len(htmlToTextLine(note[dst_field])) == 0:
         return True
 
-    # Allowed to regenerate regardless
+    # Allowed regenerating regardless
     if config["regenerate_readings"] is True:
         return True
 
     return False
 
 
-def fill_destination(note: Note, src_field: str, dst_field: str) -> bool:
-    if not can_fill_destination(note, src_field, dst_field):
+def fill_destination(note: Note, task: Task) -> bool:
+    if not can_fill_destination(note, task.src_field, task.dst_field):
         return False
 
     # grab source text and update note
-    if src_text := mw.col.media.strip(note[src_field]).strip():
-        note[dst_field] = get_formatted_pronunciations(src_text)
+    if src_text := mw.col.media.strip(note[task.src_field]).strip():
+        pitch_data = get_pronunciations(src_text)
+        note[task.dst_field] = format_pronunciations(pitch_data, mode=task.mode)
         return True
 
     return False
 
 
-def find_dest_fields(note: Note, src_field_name: str) -> Iterable[str]:
+def retrieve_tasks(note: Note, src_field: str) -> Iterable[Task]:
     note_type = get_notetype(note)
     for profile in config['profiles']:
-        if profile_matches(note_type, profile) and profile['source'] == src_field_name:
-            yield profile['destination']
+        if profile_matches(note_type, profile) and profile['source'] == src_field:
+            yield Task(src_field, profile['destination'], TaskMode[profile['mode']])
 
 
 def on_focus_lost(changed: bool, note: Note, field_idx: int) -> bool:
     src_field = note.keys()[field_idx]
-    for dst_field in find_dest_fields(note, src_field):
-        changed = changed or fill_destination(note, src_field, dst_field)
+    tasks = list(retrieve_tasks(note, src_field))
+
+    if tasks:
+        # src_text = mw.col.media.strip(note[src_field]).strip()
+        # pitch_data = get_pronunciations(src_text)
+        for task in tasks:
+            changed = fill_destination(note, task) or changed
     return changed
 
 
@@ -217,8 +226,8 @@ def should_add_pitch_accents(note: Note) -> bool:
 
 def on_add_note(_col, note: Note, _did) -> None:
     if should_add_pitch_accents(note):
-        for src_field, dst_field in iter_fields(note):
-            fill_destination(note, src_field, dst_field)
+        for task in iter_fields(note):
+            fill_destination(note, task)
 
 
 # Entry point

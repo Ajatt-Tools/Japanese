@@ -46,12 +46,15 @@ class FormattedEntry(NamedTuple):
     pitch_number: int
 
 
+AccentDict = Dict[str, List[FormattedEntry]]
+
+
 class AccDbManager(abc.ABC):
     accent_database: str = None
     derivative_database: str = None
 
     def __init__(self, self_check: bool = True, dest_path: Optional[str] = None):
-        self._temp_dict: Dict[str, List[FormattedEntry]] = {}
+        self._temp_dict: AccentDict = {}
         self._dest_path = dest_path or self.derivative_database
         if self_check:
             self.self_check()
@@ -80,7 +83,7 @@ class AccDbManager(abc.ABC):
             print("Will be rebuilt: ", os.path.basename(db))
             self.build_derivative()
 
-    def read_derivative(self) -> Dict[str, List[FormattedEntry]]:
+    def read_derivative(self) -> AccentDict:
         """ Read the derivative file to memory """
         acc_dict = {}
         with open(self.derivative_database, encoding="utf-8") as f:

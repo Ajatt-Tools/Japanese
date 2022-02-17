@@ -1,5 +1,6 @@
+import enum
 import re
-from typing import Dict, Any, List, Tuple, Optional, Set, Iterator, NewType
+from typing import Dict, Any, List, Tuple, Optional, Set, Iterator, NewType, NamedTuple
 
 import aqt
 from anki.notes import Note
@@ -25,6 +26,17 @@ JP_SEP_REGEX = re.compile(
 )
 
 
+class TaskMode(enum.Enum):
+    number = enum.auto()
+    html = enum.auto()
+
+
+class Task(NamedTuple):
+    src_field: str
+    dst_field: str
+    mode: TaskMode
+
+
 def get_config():
     return aqt.mw.addonManager.getConfig(__name__)
 
@@ -37,11 +49,11 @@ def profile_matches(note_type: Dict[str, Any], profile: Dict[str, str]) -> bool:
     return profile['note_type'].lower() in note_type['name'].lower()
 
 
-def iter_fields(note: Note) -> Iterator[Tuple[str, str]]:
+def iter_fields(note: Note) -> Iterator[Task]:
     note_type = get_notetype(note)
     for profile in config['profiles']:
         if profile_matches(note_type, profile):
-            yield profile['source'], profile['destination']
+            yield Task(profile['source'], profile['destination'], TaskMode[profile['mode']])
 
 
 def ui_translate(key: str) -> str:

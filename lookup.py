@@ -7,6 +7,7 @@ from aqt.utils import showInfo, restoreGeom, saveGeom
 from aqt.webview import AnkiWebView
 
 from .ajt_common import menu_root_entry, tweak_window
+from .database import AccentDict
 from .helpers import *
 from .nhk_pronunciation import get_pronunciations, format_pronunciations
 
@@ -55,14 +56,14 @@ def html_page(body_content: str):
     return f'<!DOCTYPE html><html><head>{head_content}</head><body>{body_content}</body></html>'
 
 
-def format_pronunciations_rich(pronunciations: Dict[str, List[str]]):
+def format_pronunciations_rich(pronunciations: AccentDict):
     ordered_dict = OrderedDict()
-    for key, html_entries in pronunciations.items():
-        ordered_dict[key] = ''.join(f'<li>{v}</li>' for v in html_entries)
+    for word, entries in pronunciations.items():
+        ordered_dict[word] = ''.join(f'<li>{entry.html_notation}</li>' for entry in entries)
 
     entries = []
-    for k, v in ordered_dict.items():
-        entries.append(f'<div class="key">{k}</div><ol class="value">{v}</ol>')
+    for word, html in ordered_dict.items():
+        entries.append(f'<div class="key">{word}</div><ol class="value">{html}</ol>')
 
     return html_page(''.join(entries))
 

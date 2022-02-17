@@ -10,7 +10,15 @@
       "name": "Add pitch accent",
       "note_type": "japanese",
       "source": "VocabKanji",
-      "destination": "VocabPitchPattern"
+      "destination": "VocabPitchPattern",
+      "mode": "html"
+    },
+    {
+      "name": "Add pitch number",
+      "note_type": "japanese",
+      "source": "VocabKanji",
+      "destination": "VocabPitchNum",
+      "mode": "number"
     }
   ],
   "regenerate_readings": false,

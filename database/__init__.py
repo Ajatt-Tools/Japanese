@@ -26,7 +26,7 @@ from .kanjium_database import KanjiumDb
 from .nhk_database import NhkDb
 
 
-def init() -> Dict[str, List[FormattedEntry]]:
+def init() -> AccentDict:
     if not os.path.isdir(DB_DIR_PATH):
         raise OSError("Accent database folder is missing!")
 
