@@ -5,7 +5,7 @@ from aqt.browser import Browser
 from aqt.qt import *
 
 from .helpers import *
-from .nhk_pronunciation import fill_destination
+from .nhk_pronunciation import do_tasks
 
 ACTION_NAME = "Bulk-add pitch accents"
 
@@ -13,12 +13,10 @@ ACTION_NAME = "Bulk-add pitch accents"
 def bulk_add_pitch_accents(nids: Sequence[NoteId]):
     mw.checkpoint(ACTION_NAME)
     mw.progress.start()
-    changed = False
 
     for nid in nids:
         note = mw.col.getNote(nid)
-        for task in iter_tasks(note):
-            changed = fill_destination(note, task) or changed
+        changed = do_tasks(note=note, tasks=iter_tasks(note))
         if changed:
             note.flush()
 

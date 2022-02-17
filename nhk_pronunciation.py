@@ -1,5 +1,5 @@
+import functools
 from collections import OrderedDict
-from typing import Iterable
 
 import anki.collection
 from anki.hooks import wrap
@@ -68,6 +68,7 @@ def update_html(entry: FormattedEntry) -> FormattedEntry:
     return FormattedEntry(entry.katakana_reading, html_notation, entry.pitch_number)
 
 
+@functools.lru_cache(maxsize=100)
 def get_pronunciations(expr: str, sanitize=True, recurse=True) -> AccentDict:
     """
     Search pronunciations for a particular expression.
@@ -184,29 +185,29 @@ def can_fill_destination(note: Note, src_field: str, dst_field: str) -> bool:
     return False
 
 
-def fill_destination(note: Note, task: Task) -> bool:
-    if not can_fill_destination(note, task.src_field, task.dst_field):
-        return False
+def do_task(note: Note, task: Task) -> bool:
+    proceed = can_fill_destination(note, task.src_field, task.dst_field)
+    src_text = mw.col.media.strip(note[task.src_field]).strip()
+    changed = False
+    if proceed and src_text:
+        result: AccentDict = get_pronunciations(src_text)
+        note[task.dst_field] = format_pronunciations(result, mode=task.mode)
+        changed = True
+    return changed
 
-    # grab source text and update note
-    if src_text := mw.col.media.strip(note[task.src_field]).strip():
-        pitch_data = get_pronunciations(src_text)
-        note[task.dst_field] = format_pronunciations(pitch_data, mode=task.mode)
-        return True
 
-    return False
+def do_tasks(note: Note, tasks: Iterable[Task], changed: bool = False) -> bool:
+    for task in tasks:
+        changed = do_task(note, task) or changed
+    return changed
 
 
 def on_focus_lost(changed: bool, note: Note, field_idx: int) -> bool:
-    src_field = note.keys()[field_idx]
-    tasks = list(iter_tasks(note, src_field))
-
-    if tasks:
-        # src_text = mw.col.media.strip(note[src_field]).strip()
-        # pitch_data = get_pronunciations(src_text)
-        for task in tasks:
-            changed = fill_destination(note, task) or changed
-    return changed
+    return do_tasks(
+        note=note,
+        tasks=iter_tasks(note, src_field=note.keys()[field_idx]),
+        changed=changed
+    )
 
 
 def should_add_pitch_accents(note: Note) -> bool:
@@ -219,8 +220,7 @@ def should_add_pitch_accents(note: Note) -> bool:
 
 def on_add_note(_col, note: Note, _did) -> None:
     if should_add_pitch_accents(note):
-        for task in iter_tasks(note):
-            fill_destination(note, task)
+        do_tasks(note=note, tasks=iter_tasks(note))
 
 
 # Entry point
