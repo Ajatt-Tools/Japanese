@@ -22,20 +22,39 @@ def adjust_to_contents(widget: QWidget):
 
 
 class ProfileList(QGroupBox):
+    class ControlPanel(QHBoxLayout):
+        def __init__(self):
+            super().__init__()
+            self.add_btn = QPushButton("Add")
+            self.remove_btn = QPushButton("Remove")
+            self.apply_btn = QPushButton("Apply")
+            self.addWidget(self.add_btn)
+            self.addWidget(self.remove_btn)
+            self.addStretch()
+            self.addWidget(self.apply_btn)
+
     def __init__(self):
         super().__init__()
         self.setTitle("Profiles")
         self.setCheckable(False)
         self._list_widget = QListWidget()
+        self._control_panel = self.ControlPanel()
         self.setLayout(self.make_layout())
         self.current_row_changed = self._list_widget.currentRowChanged
         self.current_row = self._list_widget.currentRow
         adjust_to_contents(self._list_widget)
         self.setMinimumWidth(EDIT_MIN_WIDTH)
+        self._pass_signals()
+
+    def _pass_signals(self):
+        self.add_clicked = self._control_panel.add_btn.clicked
+        self.remove_clicked = self._control_panel.remove_btn.clicked
+        self.apply_clicked = self._control_panel.apply_btn.clicked
 
     def make_layout(self) -> QLayout:
         layout = QVBoxLayout()
         layout.addWidget(self._list_widget)
+        layout.addLayout(self._control_panel)
         return layout
 
     def remove_current(self) -> Optional[int]:
@@ -55,28 +74,6 @@ class ProfileList(QGroupBox):
 
     def set_current_text(self, text: str):
         self._list_widget.currentItem().setText(text)
-
-
-class ControlPanel(QGroupBox):
-    def __init__(self):
-        super().__init__()
-        self.setTitle("Actions")
-        self.setCheckable(False)
-        self._add_btn = QPushButton("Add")
-        self._remove_btn = QPushButton("Remove")
-        self._apply_btn = QPushButton("Apply Profile")
-        self.setLayout(self.make_layout())
-        self.add_clicked = self._add_btn.clicked
-        self.remove_clicked = self._remove_btn.clicked
-        self.apply_clicked = self._apply_btn.clicked
-
-    def make_layout(self) -> QLayout:
-        layout = QVBoxLayout()
-        layout.addWidget(self._add_btn)
-        layout.addWidget(self._remove_btn)
-        layout.addStretch()
-        layout.addWidget(self._apply_btn)
-        return layout
 
 
 def relevant_field_names(note_type_name_fuzzy: Optional[str]) -> Iterable[str]:
@@ -158,7 +155,7 @@ class ProfileEditForm(QGroupBox):
     def load_profile(self, row: int):
         self._row = row
         self._form['name'].setText(self._profile.get('name', 'New profile'))
-        self._form['mode'].setCurrentText(self._profile.get('mode'))
+        self._form['mode'].setCurrentText(self._profile.get('mode', TaskMode.html.name))
         self._note_type.repopulate(self._profile.get('note_type'))
         self.repopulate_fields()
 
@@ -214,7 +211,6 @@ class SettingsDialog(QDialog):
     def __init__(self, parent: QWidget):
         QDialog.__init__(self, parent)
         self._left_panel = ProfileList()
-        self._mid_panel = ControlPanel()
         self._right_panel = ProfileEditForm()
         self._pitch_settings = PitchSettingsForm()
         self._button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
@@ -243,7 +239,6 @@ class SettingsDialog(QDialog):
     def make_profiles_form(self) -> QLayout:
         layout = QHBoxLayout()
         layout.addWidget(self._left_panel)
-        layout.addWidget(self._mid_panel)
         layout.addWidget(self._right_panel)
         return layout
 
@@ -252,9 +247,9 @@ class SettingsDialog(QDialog):
         self.edit_profile(self._left_panel.current_row())
 
     def connect_widgets(self):
-        qconnect(self._mid_panel.add_clicked, self.add_profile)
-        qconnect(self._mid_panel.remove_clicked, self.remove_profile)
-        qconnect(self._mid_panel.apply_clicked, self.apply_profile_settings)
+        qconnect(self._left_panel.add_clicked, self.add_profile)
+        qconnect(self._left_panel.remove_clicked, self.remove_profile)
+        qconnect(self._left_panel.apply_clicked, self.apply_profile_settings)
         qconnect(self._left_panel.current_row_changed, lambda row: self.edit_profile(row))
         qconnect(self._button_box.accepted, self.accept)
         qconnect(self._button_box.rejected, self.reject)
@@ -268,7 +263,6 @@ class SettingsDialog(QDialog):
             del config['profiles'][row]
 
     def edit_profile(self, row: int):
-        self.apply_profile_settings()
         if row >= 0 and len(config['profiles']) > 0:
             self._right_panel.setEnabled(True)
             self._right_panel.load_profile(row)
@@ -276,8 +270,9 @@ class SettingsDialog(QDialog):
             self._right_panel.setEnabled(False)
 
     def apply_profile_settings(self):
+        row = self._left_panel.current_row()
         profile_dict = self._right_panel.as_dict()
-        config['profiles'][self._left_panel.current_row()].update(profile_dict)
+        config['profiles'][row].update(profile_dict)
         self._left_panel.set_current_text(profile_dict['name'])
 
     def accept(self) -> None:
