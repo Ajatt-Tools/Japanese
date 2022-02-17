@@ -197,16 +197,9 @@ def fill_destination(note: Note, task: Task) -> bool:
     return False
 
 
-def retrieve_tasks(note: Note, src_field: str) -> Iterable[Task]:
-    note_type = get_notetype(note)
-    for profile in config['profiles']:
-        if profile_matches(note_type, profile) and profile['source'] == src_field:
-            yield Task(src_field, profile['destination'], TaskMode[profile['mode']])
-
-
 def on_focus_lost(changed: bool, note: Note, field_idx: int) -> bool:
     src_field = note.keys()[field_idx]
-    tasks = list(retrieve_tasks(note, src_field))
+    tasks = list(iter_tasks(note, src_field))
 
     if tasks:
         # src_text = mw.col.media.strip(note[src_field]).strip()
@@ -226,7 +219,7 @@ def should_add_pitch_accents(note: Note) -> bool:
 
 def on_add_note(_col, note: Note, _did) -> None:
     if should_add_pitch_accents(note):
-        for task in iter_fields(note):
+        for task in iter_tasks(note):
             fill_destination(note, task)
 
 

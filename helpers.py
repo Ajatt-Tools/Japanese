@@ -1,6 +1,6 @@
 import enum
 import re
-from typing import Dict, Any, List, Tuple, Optional, Set, Iterator, NewType, NamedTuple
+from typing import Dict, Any, List, Tuple, Optional, Set, NewType, NamedTuple, Iterable
 
 import aqt
 from anki.notes import Note
@@ -49,10 +49,10 @@ def profile_matches(note_type: Dict[str, Any], profile: Dict[str, str]) -> bool:
     return profile['note_type'].lower() in note_type['name'].lower()
 
 
-def iter_fields(note: Note) -> Iterator[Task]:
+def iter_tasks(note: Note, src_field: Optional[str] = None) -> Iterable[Task]:
     note_type = get_notetype(note)
     for profile in config['profiles']:
-        if profile_matches(note_type, profile):
+        if profile_matches(note_type, profile) and (src_field is None or profile['source'] == src_field):
             yield Task(profile['source'], profile['destination'], TaskMode[profile['mode']])
 
 
