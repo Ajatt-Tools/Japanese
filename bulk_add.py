@@ -17,8 +17,8 @@ def bulk_add_pitch_accents(nids: Sequence[NoteId]):
 
     for nid in nids:
         note = mw.col.getNote(nid)
-        for src_field, dst_field in iter_fields(note):
-            changed = changed or fill_destination(note, src_field, dst_field)
+        for task in iter_fields(note):
+            changed = fill_destination(note, task) or changed
         if changed:
             note.flush()
 
