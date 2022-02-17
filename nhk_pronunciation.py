@@ -15,6 +15,10 @@ from .mecab_controller import to_hiragana, to_katakana
 # Mecab controller
 ##########################################################################
 
+class WordReading(NamedTuple):
+    word: str
+    katakana_reading: Optional[str]
+
 
 class MecabController(BasicMecabController):
     _add_mecab_args = [
@@ -26,7 +30,7 @@ class MecabController(BasicMecabController):
     def __init__(self):
         super().__init__(mecab_args=self._add_mecab_args)
 
-    def translate(self, expr: str) -> List[Tuple[str, Optional[str]]]:
+    def translate(self, expr: str) -> List[WordReading]:
         """ Returns dictionary form and its reading for each word in expr. """
         ret = []
         for section in self.run(escape_text(expr)).split():
@@ -34,7 +38,7 @@ class MecabController(BasicMecabController):
                 word, katakana = split
             else:
                 word, katakana = split[0], None
-            ret.append((word, katakana))
+            ret.append(WordReading(word, katakana))
         return ret
 
 
