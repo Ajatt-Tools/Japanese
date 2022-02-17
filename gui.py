@@ -7,8 +7,18 @@ from aqt import mw
 from aqt.qt import *
 from aqt.utils import restoreGeom, saveGeom
 
-from .ajt_common import menu_root_entry, tweak_window, ADDON_SERIES
-from .helpers import config, write_config, get_config
+from .ajt_common import menu_root_entry, tweak_window, ShortCutGrabButton, ADDON_SERIES
+from .config import config, write_config, get_config
+from .helpers import TaskMode, ui_translate
+
+EDIT_MIN_WIDTH = 100
+
+
+def adjust_to_contents(widget: QWidget):
+    try:
+        widget.setSizeAdjustPolicy(widget.AdjustToContents)
+    except AttributeError:
+        pass
 
 
 class ProfileList(QGroupBox):
@@ -20,6 +30,8 @@ class ProfileList(QGroupBox):
         self.setLayout(self.make_layout())
         self.current_row_changed = self._list_widget.currentRowChanged
         self.current_row = self._list_widget.currentRow
+        adjust_to_contents(self._list_widget)
+        self.setMinimumWidth(EDIT_MIN_WIDTH)
 
     def make_layout(self) -> QLayout:
         layout = QVBoxLayout()
@@ -93,6 +105,18 @@ class NoteTypeSelector(EditableSelector):
             self.setCurrentIndex(0)
 
 
+class ModeSelector(QComboBox):
+    def __init__(self):
+        super().__init__()
+        self.addItems(mode.name.capitalize() for mode in TaskMode)
+
+    def setCurrentText(self, text: str):
+        return super().setCurrentText(text.capitalize())
+
+    def currentText(self) -> str:
+        return super().currentText().lower()
+
+
 class ProfileEditForm(QGroupBox):
     def __init__(self):
         super().__init__()
@@ -104,8 +128,11 @@ class ProfileEditForm(QGroupBox):
             "note_type": NoteTypeSelector(),
             "source": EditableSelector(),
             "destination": EditableSelector(),
+            "mode": ModeSelector(),
         }
         self.setLayout(self.make_layout())
+        adjust_to_contents(self)
+        self.setMinimumWidth(EDIT_MIN_WIDTH)
         qconnect(self._note_type.currentIndexChanged, self.repopulate_fields)
 
     @property
@@ -125,13 +152,13 @@ class ProfileEditForm(QGroupBox):
     def make_layout(self) -> QLayout:
         layout = QFormLayout()
         for key, widget in self._form.items():
-            widget.setMinimumWidth(120)
-            layout.addRow(key.capitalize().replace('_', ' '), widget)
+            layout.addRow(ui_translate(key), widget)
         return layout
 
     def load_profile(self, row: int):
         self._row = row
         self._form['name'].setText(self._profile.get('name', 'New profile'))
+        self._form['mode'].setCurrentText(self._profile.get('mode'))
         self._note_type.repopulate(self._profile.get('note_type'))
         self.repopulate_fields()
 
@@ -142,6 +169,45 @@ class ProfileEditForm(QGroupBox):
             self._form[key].setCurrentText(self._profile.get(key))
 
 
+class PitchSettingsForm(QGroupBox):
+    def __init__(self):
+        super().__init__()
+        self.setTitle("Pitch Settings")
+        self.setCheckable(False)
+        self._checkboxes = self.create_checkboxes()
+        self._shortcut_edit = ShortCutGrabButton(initial_value=config['lookup_shortcut'])
+        self.setLayout(self.make_layout())
+
+    def as_dict(self) -> Dict[str, Union[bool, str]]:
+        shortcut = {
+            'lookup_shortcut': self._shortcut_edit.value()
+        }
+        checkboxes = {
+            key: widget.isChecked() for key, widget in self._checkboxes.items()
+        }
+        return shortcut | checkboxes
+
+    @staticmethod
+    def create_checkboxes() -> Dict[str, QCheckBox]:
+        return {
+            key: QCheckBox(ui_translate(key))
+            for key, value in config.items()
+            if type(value) == bool
+        }
+
+    def make_layout(self) -> QLayout:
+        layout = QVBoxLayout()
+        for key, widget in self._checkboxes.items():
+            layout.addWidget(widget)
+            widget.setChecked(config[key])
+        shortcut_layout = QHBoxLayout()
+        shortcut_layout.addWidget(QLabel("Lookup shortcut"))
+        shortcut_layout.addWidget(self._shortcut_edit)
+        shortcut_layout.addStretch()
+        layout.addLayout(shortcut_layout)
+        return layout
+
+
 class SettingsDialog(QDialog):
     name = 'Pitch Accent Options'
 
@@ -150,6 +216,7 @@ class SettingsDialog(QDialog):
         self._left_panel = ProfileList()
         self._mid_panel = ControlPanel()
         self._right_panel = ProfileEditForm()
+        self._pitch_settings = PitchSettingsForm()
         self._button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         self._setup_ui()
         restoreGeom(self, self.name, adjustSize=True)
@@ -164,12 +231,11 @@ class SettingsDialog(QDialog):
         self.setLayout(self.make_layout())
         self.populate_ui()
         self.connect_widgets()
-        # self.add_tooltips()
-        # self.load_config_values()
 
     def make_layout(self) -> QLayout:
         layout = QVBoxLayout()
         layout.addLayout(self.make_profiles_form())
+        layout.addWidget(self._pitch_settings)
         layout.addStretch()
         layout.addWidget(self._button_box)
         return layout
@@ -202,6 +268,7 @@ class SettingsDialog(QDialog):
             del config['profiles'][row]
 
     def edit_profile(self, row: int):
+        self.apply_profile_settings()
         if row >= 0 and len(config['profiles']) > 0:
             self._right_panel.setEnabled(True)
             self._right_panel.load_profile(row)
@@ -215,6 +282,7 @@ class SettingsDialog(QDialog):
 
     def accept(self) -> None:
         self.apply_profile_settings()
+        config.update(self._pitch_settings.as_dict())
         write_config()
         QDialog.accept(self)
 
@@ -225,6 +293,6 @@ class SettingsDialog(QDialog):
 
 def init():
     root_menu = menu_root_entry()
-    menu_action = QAction(f'{SettingsDialog.name} (new)...', root_menu)
+    menu_action = QAction(f'{SettingsDialog.name}...', root_menu)
     qconnect(menu_action.triggered, lambda: SettingsDialog(mw))
     root_menu.addAction(menu_action)

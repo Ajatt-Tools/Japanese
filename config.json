@@ -7,7 +7,7 @@
   },
   "profiles": [
     {
-      "name": "Add pitch accent",
+      "name": "Add pitch accent html",
       "note_type": "japanese",
       "source": "VocabKanji",
       "destination": "VocabPitchPattern",
@@ -27,5 +27,6 @@
   "generate_on_note_add": true,
   "kana_lookups": true,
   "lookup_shortcut": "Ctrl+8",
+  "cache_lookups": 128,
   "skip_words": "へ,か,よ,ん,だ,び,の,や,ね,ば,て,と,た,が,に,な,は,も,ます,から,いる,たち,てる,う,ましょ,たい,です"
 }

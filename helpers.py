@@ -6,6 +6,7 @@ import aqt
 from anki.notes import Note
 from anki.utils import htmlToTextLine
 
+
 try:
     from anki.notes import NoteId
 except ImportError:
@@ -37,19 +38,13 @@ class Task(NamedTuple):
     mode: TaskMode
 
 
-def get_config():
-    return aqt.mw.addonManager.getConfig(__name__)
-
-
-def write_config():
-    return aqt.mw.addonManager.writeConfig(__name__, config)
-
-
 def profile_matches(note_type: Dict[str, Any], profile: Dict[str, str]) -> bool:
     return profile['note_type'].lower() in note_type['name'].lower()
 
 
 def iter_tasks(note: Note, src_field: Optional[str] = None) -> Iterable[Task]:
+    from .config import config
+
     note_type = get_notetype(note)
     for profile in config['profiles']:
         if profile_matches(note_type, profile) and (src_field is None or profile['source'] == src_field):
@@ -112,6 +107,3 @@ def split_furigana(expr: str) -> Tuple[str, Optional[str]]:
         return match.group('word') + match.group('suffix'), match.group('reading') + match.group('suffix')
     else:
         return expr, None
-
-
-config = get_config()

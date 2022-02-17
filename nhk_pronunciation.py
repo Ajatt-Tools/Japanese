@@ -5,6 +5,7 @@ import anki.collection
 from anki.hooks import wrap
 from aqt import mw
 
+from .config import config
 from .database import AccentDict, FormattedEntry
 from .database import init as database_init
 from .helpers import *
@@ -57,7 +58,7 @@ def convert_to_inline_style(txt: str) -> str:
 
 def get_skip_words() -> List[str]:
     """Returns a user-defined list of blocklisted words."""
-    return re.split(r'[、, ]+', config.get('skip_words', ''), flags=re.IGNORECASE)
+    return re.split(r'[、, ]+', config['skip_words'], flags=re.IGNORECASE)
 
 
 def should_skip(word: str) -> bool:
@@ -67,8 +68,8 @@ def should_skip(word: str) -> bool:
 
 def update_html(entry: FormattedEntry) -> FormattedEntry:
     html_notation = convert_to_inline_style(entry.html_notation)
-    if config["use_hiragana"]:
-        html_notation = to_hiragana(entry.html_notation)
+    if config['use_hiragana']:
+        html_notation = to_hiragana(html_notation)
     return FormattedEntry(entry.katakana_reading, html_notation, entry.pitch_number)
 
 
@@ -114,7 +115,7 @@ def get_pronunciations(expr: str, sanitize=True, recurse=True) -> AccentDict:
                 ret.update(get_pronunciations(section, sanitize))
 
         # Only if lookups were not successful, we try splitting with Mecab
-        if not ret and config.get('use_mecab') is True:
+        if not ret and config['use_mecab'] is True:
             for word, katakana in mecab.translate(expr):
                 # Avoid infinite recursion by saying that we should not try
                 # Mecab again if we do not find any matches for this sub-expression.
@@ -125,7 +126,7 @@ def get_pronunciations(expr: str, sanitize=True, recurse=True) -> AccentDict:
                 if (
                         not ret.get(word)
                         and katakana
-                        and config.get('kana_lookups') is True
+                        and config['kana_lookups'] is True
                         and not should_skip(katakana)
                         and not should_skip(word)
                 ):
@@ -183,7 +184,7 @@ def can_fill_destination(note: Note, src_field: str, dst_field: str) -> bool:
         return True
 
     # Allowed regenerating regardless
-    if config["regenerate_readings"] is True:
+    if config['regenerate_readings'] is True:
         return True
 
     return False
@@ -216,7 +217,7 @@ def on_focus_lost(changed: bool, note: Note, field_idx: int) -> bool:
 
 def should_add_pitch_accents(note: Note) -> bool:
     return (
-            config.get('generate_on_note_add') is True
+            config['generate_on_note_add'] is True
             and mw.app.activeWindow() is None
             and note.id == 0
     )
