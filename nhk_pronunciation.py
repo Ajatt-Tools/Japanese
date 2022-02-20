@@ -73,7 +73,7 @@ def update_html(entry: FormattedEntry) -> FormattedEntry:
     return FormattedEntry(entry.katakana_reading, html_notation, entry.pitch_number)
 
 
-@functools.lru_cache(maxsize=100)
+@functools.lru_cache(maxsize=config['cache_lookups'])
 def get_pronunciations(expr: str, sanitize=True, recurse=True) -> AccentDict:
     """
     Search pronunciations for a particular expression.
