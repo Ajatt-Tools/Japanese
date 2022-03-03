@@ -1,7 +1,8 @@
 # Copyright: (C) 2022 Ren Tatsumoto <tatsu at autistici.org>
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/copyleft/gpl.html
-
-from typing import Optional, Iterable, Dict
+import dataclasses
+from types import SimpleNamespace
+from typing import Optional, Iterable, Dict, List, NamedTuple
 
 from aqt import mw
 from aqt.qt import *
@@ -9,7 +10,7 @@ from aqt.utils import restoreGeom, saveGeom
 
 from .ajt_common import menu_root_entry, tweak_window, ShortCutGrabButton, ADDON_SERIES
 from .config import config, write_config, get_config
-from .helpers import TaskMode, ui_translate
+from .helpers import TaskMode, ui_translate, Profile
 
 EDIT_MIN_WIDTH = 100
 
@@ -21,32 +22,36 @@ def adjust_to_contents(widget: QWidget):
         pass
 
 
-class ProfileList(QGroupBox):
-    class ControlPanel(QHBoxLayout):
-        def __init__(self):
-            super().__init__()
-            self.add_btn = QPushButton("Add")
-            self.remove_btn = QPushButton("Remove")
-            self.apply_btn = QPushButton("Apply")
-            self.addWidget(self.add_btn)
-            self.addWidget(self.remove_btn)
-            self.addStretch()
-            self.addWidget(self.apply_btn)
+class ControlPanel(QHBoxLayout):
+    def __init__(self):
+        super().__init__()
+        self.add_btn = QPushButton("Add")
+        self.remove_btn = QPushButton("Remove")
+        self.apply_btn = QPushButton("Apply")
+        self.addWidget(self.add_btn)
+        self.addWidget(self.remove_btn)
+        self.addStretch()
+        self.addWidget(self.apply_btn)
 
+
+class ProfileList(QGroupBox):
     def __init__(self):
         super().__init__()
         self.setTitle("Profiles")
         self.setCheckable(False)
         self._list_widget = QListWidget()
-        self._control_panel = self.ControlPanel()
-        self.setLayout(self.make_layout())
-        self.current_row_changed = self._list_widget.currentRowChanged
-        self.current_row = self._list_widget.currentRow
-        adjust_to_contents(self._list_widget)
+        self._control_panel = ControlPanel()
         self.setMinimumWidth(EDIT_MIN_WIDTH)
+        self.setLayout(self.make_layout())
         self._pass_signals()
+        adjust_to_contents(self._list_widget)
+
+    @property
+    def current_row(self) -> int:
+        return self._list_widget.currentRow()
 
     def _pass_signals(self):
+        self.current_row_changed = self._list_widget.currentRowChanged
         self.add_clicked = self._control_panel.add_btn.clicked
         self.remove_clicked = self._control_panel.remove_btn.clicked
         self.apply_clicked = self._control_panel.apply_btn.clicked
@@ -119,51 +124,43 @@ class ProfileEditForm(QGroupBox):
         super().__init__()
         self.setTitle("Edit Profile")
         self.setCheckable(False)
-        self._row = 0
-        self._form = {
-            "name": QLineEdit(),
-            "note_type": NoteTypeSelector(),
-            "source": EditableSelector(),
-            "destination": EditableSelector(),
-            "mode": ModeSelector(),
-        }
+        self._form = SimpleNamespace(
+            name=QLineEdit(),
+            note_type=NoteTypeSelector(),
+            source=EditableSelector(),
+            destination=EditableSelector(),
+            mode=ModeSelector(),
+        )
         self.setLayout(self.make_layout())
         adjust_to_contents(self)
         self.setMinimumWidth(EDIT_MIN_WIDTH)
-        qconnect(self._note_type.currentIndexChanged, self.repopulate_fields)
-
-    @property
-    def _note_type(self) -> NoteTypeSelector:
-        return self._form['note_type']
-
-    @property
-    def _profile(self) -> Dict[str, str]:
-        return config['profiles'][self._row]
+        qconnect(self._form.note_type.currentIndexChanged, lambda index: self.repopulate_fields())
 
     def as_dict(self) -> Dict[str, str]:
         return {
             key: widget.currentText() if isinstance(widget, QComboBox) else widget.text()
-            for key, widget in self._form.items()
+            for key, widget in self._form.__dict__.items()
         }
 
     def make_layout(self) -> QLayout:
         layout = QFormLayout()
-        for key, widget in self._form.items():
+        for key, widget in self._form.__dict__.items():
             layout.addRow(ui_translate(key), widget)
         return layout
 
-    def load_profile(self, row: int):
-        self._row = row
-        self._form['name'].setText(self._profile.get('name', 'New profile'))
-        self._form['mode'].setCurrentText(self._profile.get('mode', TaskMode.html.name))
-        self._note_type.repopulate(self._profile.get('note_type'))
-        self.repopulate_fields()
+    def load_profile(self, profile: Profile):
+        self._form.name.setText(profile.name)
+        self._form.mode.setCurrentText(profile.mode)
+        self._form.note_type.repopulate(profile.note_type)
+        self.repopulate_fields(profile)
 
-    def repopulate_fields(self):
-        for key in ('source', 'destination'):
-            self._form[key].clear()
-            self._form[key].addItems(dict.fromkeys(relevant_field_names(self._note_type.currentText())))
-            self._form[key].setCurrentText(self._profile.get(key))
+    def repopulate_fields(self, profile: Optional[Profile] = None):
+        for key in ('source', 'destination',):
+            widget: QComboBox = self._form.__dict__[key]
+            current_text = dataclasses.asdict(profile)[key] if profile else widget.currentText()
+            widget.clear()
+            widget.addItems(dict.fromkeys(relevant_field_names(self._form.note_type.currentText())))
+            widget.setCurrentText(current_text)
 
 
 class PitchSettingsForm(QGroupBox):
@@ -210,6 +207,7 @@ class SettingsDialog(QDialog):
 
     def __init__(self, parent: QWidget):
         QDialog.__init__(self, parent)
+        self._profiles: List[Profile] = [Profile(**p) for p in config['profiles']]
         self._left_panel = ProfileList()
         self._right_panel = ProfileEditForm()
         self._pitch_settings = PitchSettingsForm()
@@ -243,41 +241,41 @@ class SettingsDialog(QDialog):
         return layout
 
     def populate_ui(self):
-        self._left_panel.populate(item['name'] for item in config['profiles'])
-        self.edit_profile(self._left_panel.current_row())
+        self._left_panel.populate(item.name for item in self._profiles)
+        self.edit_profile(self._left_panel.current_row)
 
     def connect_widgets(self):
         qconnect(self._left_panel.add_clicked, self.add_profile)
         qconnect(self._left_panel.remove_clicked, self.remove_profile)
         qconnect(self._left_panel.apply_clicked, self.apply_profile_settings)
-        qconnect(self._left_panel.current_row_changed, lambda row: self.edit_profile(row))
+        qconnect(self._left_panel.current_row_changed, self.edit_profile)
         qconnect(self._button_box.accepted, self.accept)
         qconnect(self._button_box.rejected, self.reject)
 
     def add_profile(self):
-        config['profiles'].append({})
-        self._left_panel.add_and_select("New Profile [unsaved]")
+        self._profiles.append(Profile.new())
+        self._left_panel.add_and_select(self._profiles[-1].name)
 
     def remove_profile(self):
         if (row := self._left_panel.remove_current()) is not None:
-            del config['profiles'][row]
+            del self._profiles[row]
 
     def edit_profile(self, row: int):
-        if row >= 0 and len(config['profiles']) > 0:
+        if row >= 0 and len(self._profiles) > 0:
             self._right_panel.setEnabled(True)
-            self._right_panel.load_profile(row)
+            self._right_panel.load_profile(self._profiles[row])
         else:
             self._right_panel.setEnabled(False)
 
     def apply_profile_settings(self):
-        row = self._left_panel.current_row()
-        profile_dict = self._right_panel.as_dict()
-        config['profiles'][row].update(profile_dict)
-        self._left_panel.set_current_text(profile_dict['name'])
+        row = self._left_panel.current_row
+        self._profiles[row] = Profile(**self._right_panel.as_dict())
+        self._left_panel.set_current_text(self._profiles[row].name)
 
     def accept(self) -> None:
         self.apply_profile_settings()
         config.update(self._pitch_settings.as_dict())
+        config['profiles'] = [dataclasses.asdict(p) for p in self._profiles]
         write_config()
         QDialog.accept(self)
 

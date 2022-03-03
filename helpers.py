@@ -1,3 +1,4 @@
+import dataclasses
 import enum
 import re
 from typing import Dict, Any, List, Tuple, Optional, Set, NewType, NamedTuple, Iterable
@@ -5,7 +6,6 @@ from typing import Dict, Any, List, Tuple, Optional, Set, NewType, NamedTuple, I
 import aqt
 from anki.notes import Note
 from anki.utils import htmlToTextLine
-
 
 try:
     from anki.notes import NoteId
@@ -36,6 +36,25 @@ class Task(NamedTuple):
     src_field: str
     dst_field: str
     mode: TaskMode
+
+
+@dataclasses.dataclass(frozen=True)
+class Profile:
+    name: str
+    note_type: str
+    source: str
+    destination: str
+    mode: str
+
+    @classmethod
+    def new(cls):
+        return cls(
+            name="New profile",
+            note_type="Japanese",
+            source="VocabKanji",
+            destination="VocabPitchPattern",
+            mode="html",
+        )
 
 
 def profile_matches(note_type: Dict[str, Any], profile: Dict[str, str]) -> bool:
