@@ -27,18 +27,23 @@ class ControlPanel(QHBoxLayout):
         super().__init__()
         self.add_btn = QPushButton("Add")
         self.remove_btn = QPushButton("Remove")
-        self.apply_btn = QPushButton("Apply")
         self.addWidget(self.add_btn)
         self.addWidget(self.remove_btn)
-        self.addStretch()
-        self.addWidget(self.apply_btn)
+
+
+class RowState(NamedTuple):
+    previous: Optional[int]
+    current: int
 
 
 class ProfileList(QGroupBox):
+    current_row_changed = pyqtSignal(RowState, name="Current row changed")
+
     def __init__(self):
         super().__init__()
         self.setTitle("Profiles")
         self.setCheckable(False)
+        self._row = None
         self._list_widget = QListWidget()
         self._control_panel = ControlPanel()
         self.setMinimumWidth(EDIT_MIN_WIDTH)
@@ -51,10 +56,13 @@ class ProfileList(QGroupBox):
         return self._list_widget.currentRow()
 
     def _pass_signals(self):
-        self.current_row_changed = self._list_widget.currentRowChanged
         self.add_clicked = self._control_panel.add_btn.clicked
         self.remove_clicked = self._control_panel.remove_btn.clicked
-        self.apply_clicked = self._control_panel.apply_btn.clicked
+        qconnect(self._list_widget.currentRowChanged, self.on_current_row_changed)
+
+    def on_current_row_changed(self, current_row: int):
+        self.current_row_changed.emit(RowState(previous=self._row, current=current_row))  # type: ignore
+        self._row = current_row
 
     def make_layout(self) -> QLayout:
         layout = QVBoxLayout()
@@ -76,6 +84,9 @@ class ProfileList(QGroupBox):
         count = self._list_widget.count()
         self._list_widget.addItem(label)
         self._list_widget.setCurrentRow(count)
+
+    def set_text(self, row: int, text: str):
+        self._list_widget.item(row).setText(text)
 
     def set_current_text(self, text: str):
         self._list_widget.currentItem().setText(text)
@@ -242,12 +253,11 @@ class SettingsDialog(QDialog):
 
     def populate_ui(self):
         self._left_panel.populate(item.name for item in self._profiles)
-        self.edit_profile(self._left_panel.current_row)
+        self.edit_profile(RowState(None, 0))
 
     def connect_widgets(self):
         qconnect(self._left_panel.add_clicked, self.add_profile)
         qconnect(self._left_panel.remove_clicked, self.remove_profile)
-        qconnect(self._left_panel.apply_clicked, self.apply_profile_settings)
         qconnect(self._left_panel.current_row_changed, self.edit_profile)
         qconnect(self._button_box.accepted, self.accept)
         qconnect(self._button_box.rejected, self.reject)
@@ -260,20 +270,21 @@ class SettingsDialog(QDialog):
         if (row := self._left_panel.remove_current()) is not None:
             del self._profiles[row]
 
-    def edit_profile(self, row: int):
-        if row >= 0 and len(self._profiles) > 0:
+    def edit_profile(self, row: RowState):
+        if row.previous is not None:
+            self.apply_profile_settings(row.previous)
+        if row.current >= 0 and len(self._profiles) > 0:
             self._right_panel.setEnabled(True)
-            self._right_panel.load_profile(self._profiles[row])
+            self._right_panel.load_profile(self._profiles[row.current])
         else:
             self._right_panel.setEnabled(False)
 
-    def apply_profile_settings(self):
-        row = self._left_panel.current_row
+    def apply_profile_settings(self, row: int):
         self._profiles[row] = Profile(**self._right_panel.as_dict())
-        self._left_panel.set_current_text(self._profiles[row].name)
+        self._left_panel.set_text(row, self._profiles[row].name)
 
     def accept(self) -> None:
-        self.apply_profile_settings()
+        self.apply_profile_settings(self._left_panel.current_row)
         config.update(self._pitch_settings.as_dict())
         config['profiles'] = [dataclasses.asdict(p) for p in self._profiles]
         write_config()
