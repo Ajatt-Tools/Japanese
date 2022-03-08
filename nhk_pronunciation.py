@@ -91,6 +91,10 @@ def get_pronunciations(expr: str, sanitize=True, recurse=True) -> AccentDict:
     # If the expression contains furigana, split it.
     expr, expr_reading = split_furigana(expr)
 
+    # Sometimes furigana notation is being used by the users to distinguish otherwise duplicate notes.
+    if expr_reading and expr_reading.isnumeric():
+        expr_reading = None
+
     # Skip empty strings and user-specified blocklisted words
     if not expr or should_skip(expr):
         return ret
