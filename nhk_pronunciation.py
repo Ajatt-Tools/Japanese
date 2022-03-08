@@ -66,11 +66,11 @@ def should_skip(word: str) -> bool:
     return to_katakana(word) in map(to_katakana, get_skip_words())
 
 
-def update_html(entry: FormattedEntry) -> FormattedEntry:
-    html_notation = convert_to_inline_style(entry.html_notation)
+def update_html(html_notation: str) -> str:
+    html_notation = convert_to_inline_style(html_notation)
     if config['use_hiragana']:
         html_notation = to_hiragana(html_notation)
-    return FormattedEntry(entry.katakana_reading, html_notation, entry.pitch_number)
+    return html_notation
 
 
 @functools.lru_cache(maxsize=config['cache_lookups'])
@@ -103,7 +103,7 @@ def get_pronunciations(expr: str, sanitize=True, recurse=True) -> AccentDict:
             if expr_reading and to_katakana(entry.katakana_reading) != to_katakana(expr_reading):
                 continue
 
-            if (entry := update_html(entry)) not in styled_prons:
+            if entry not in styled_prons:
                 styled_prons.append(entry)
 
         ret[expr] = styled_prons
@@ -136,10 +136,10 @@ def get_pronunciations(expr: str, sanitize=True, recurse=True) -> AccentDict:
 
 
 def get_notation(entry: FormattedEntry, mode: TaskMode) -> str:
-    return {
-        TaskMode.html: entry.html_notation,
-        TaskMode.number: entry.pitch_number
-    }[mode]
+    if mode == TaskMode.html:
+        return update_html(entry.html_notation)
+    if mode == TaskMode.number:
+        return str(entry.pitch_number)
 
 
 def format_pronunciations(
