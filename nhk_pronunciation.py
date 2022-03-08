@@ -100,18 +100,15 @@ def get_pronunciations(expr: str, sanitize=True, recurse=True) -> AccentDict:
         return ret
 
     if expr in acc_dict:
-        styled_prons = []
-
+        ret.setdefault(expr, [])
         for entry in acc_dict[expr]:
             # if there's furigana, and it doesn't match the entry, skip.
             if expr_reading and to_katakana(entry.katakana_reading) != to_katakana(expr_reading):
                 continue
-
-            if entry not in styled_prons:
-                styled_prons.append(entry)
-
-        ret[expr] = styled_prons
-
+            if entry not in ret[expr]:
+                ret[expr].append(entry)
+    elif (expr_katakana := to_katakana(expr)) in acc_dict and config['kana_lookups']:
+        ret.update(get_pronunciations(expr_katakana, recurse=False))
     elif recurse:
         # Try to split the expression in various ways, and check if any of those results
         if len(split_expr := split_separators(expr)) > 1:
