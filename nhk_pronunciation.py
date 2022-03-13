@@ -1,9 +1,7 @@
 import functools
 from collections import OrderedDict
-from typing import Tuple, NamedTuple, Optional, Iterable, List
+from typing import Tuple, NamedTuple, Optional, Iterable
 
-import anki.collection
-from anki.hooks import wrap
 from anki.notes import Note
 from aqt import mw
 
@@ -12,6 +10,7 @@ from .database import init as database_init
 from .helpers import *
 from .helpers.common_kana import adjust_reading
 from .helpers.config import config, Task, TaskMode, iter_tasks
+from .helpers.hooks import collection_will_add_note
 from .helpers.mingle_readings import mingle_readings, word_reading
 from .helpers.tokens import tokenize
 from .mecab_controller import BasicMecabController
@@ -276,7 +275,7 @@ def should_generate(note: Note) -> bool:
     )
 
 
-def on_add_note(_col, note: Note, _did) -> None:
+def on_add_note(note: Note) -> None:
     if should_generate(note):
         do_tasks(note=note, tasks=iter_tasks(note))
 
@@ -300,4 +299,4 @@ def init():
         gui_hooks.editor_did_unfocus_field.append(on_focus_lost)
 
     # Generate when AnkiConnect adds a new note
-    anki.collection.Collection.add_note = wrap(anki.collection.Collection.add_note, on_add_note, 'before')
+    collection_will_add_note.append(on_add_note)
