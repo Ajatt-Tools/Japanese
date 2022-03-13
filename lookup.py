@@ -7,7 +7,7 @@ from aqt.utils import showInfo, restoreGeom, saveGeom
 from aqt.webview import AnkiWebView
 
 from .ajt_common import menu_root_entry, tweak_window
-from .config import config
+from .helpers.config import config
 from .database import AccentDict
 from .nhk_pronunciation import get_pronunciations, format_pronunciations, update_html
 

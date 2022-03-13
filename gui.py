@@ -8,9 +8,10 @@ from aqt import mw
 from aqt.qt import *
 from aqt.utils import restoreGeom, saveGeom
 
+from .helpers import ui_translate
+from .helpers.config import TaskMode, Profile, config, write_config, list_profiles
 from .ajt_common import menu_root_entry, tweak_window, ShortCutGrabButton, ADDON_SERIES
-from .config import config, write_config, get_config
-from .helpers import TaskMode, ui_translate, Profile
+
 
 EDIT_MIN_WIDTH = 100
 
@@ -218,7 +219,7 @@ class SettingsDialog(QDialog):
 
     def __init__(self, parent: QWidget):
         QDialog.__init__(self, parent)
-        self._profiles: List[Profile] = [Profile(**p) for p in config['profiles']]
+        self._profiles: List[Profile] = list_profiles()
         self._left_panel = ProfileList()
         self._right_panel = ProfileEditForm()
         self._pitch_settings = PitchSettingsForm()
@@ -291,7 +292,6 @@ class SettingsDialog(QDialog):
         QDialog.accept(self)
 
     def reject(self) -> None:
-        config.update(get_config())
         QDialog.reject(self)
 
 

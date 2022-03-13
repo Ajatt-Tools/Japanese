@@ -1,10 +1,7 @@
-import dataclasses
-import enum
 import re
-from typing import Dict, Any, List, Optional, Set, NewType, NamedTuple, Iterable
+from typing import Set, NewType, List
 
 import aqt
-from anki.notes import Note
 from anki.utils import htmlToTextLine
 
 try:
@@ -27,60 +24,8 @@ JP_SEP_REGEX = re.compile(
 )
 
 
-@enum.unique
-class TaskMode(enum.Enum):
-    number = enum.auto()
-    html = enum.auto()
-    furigana = enum.auto()
-
-
-class Task(NamedTuple):
-    src_field: str
-    dst_field: str
-    mode: TaskMode
-
-
-@dataclasses.dataclass(frozen=True)
-class Profile:
-    name: str
-    note_type: str
-    source: str
-    destination: str
-    mode: str
-
-    @classmethod
-    def new(cls):
-        return cls(
-            name="New profile",
-            note_type="Japanese",
-            source="VocabKanji",
-            destination="VocabPitchPattern",
-            mode="html",
-        )
-
-
-def profile_matches(note_type: Dict[str, Any], profile: Dict[str, str]) -> bool:
-    return profile['note_type'].lower() in note_type['name'].lower()
-
-
-def iter_tasks(note: Note, src_field: Optional[str] = None) -> Iterable[Task]:
-    from .config import config
-
-    note_type = get_notetype(note)
-    for profile in config['profiles']:
-        if profile_matches(note_type, profile) and (src_field is None or profile['source'] == src_field):
-            yield Task(profile['source'], profile['destination'], TaskMode[profile['mode']])
-
-
 def ui_translate(key: str) -> str:
     return key.capitalize().replace('_', ' ')
-
-
-def get_notetype(note: Note) -> Dict[str, Any]:
-    if hasattr(note, 'note_type'):
-        return note.note_type()
-    else:
-        return note.model()
 
 
 def all_note_type_names():

@@ -1,21 +1,22 @@
 import functools
 from collections import OrderedDict
-from typing import Tuple
+from typing import Tuple, NamedTuple, Optional, Iterable, List
 
 import anki.collection
 from anki.hooks import wrap
+from anki.notes import Note
 from aqt import mw
 
-from .common_kana import adjust_reading
-from .config import config
 from .database import AccentDict, FormattedEntry
 from .database import init as database_init
 from .helpers import *
+from .helpers.common_kana import adjust_reading
+from .helpers.config import config, Task, TaskMode, iter_tasks
+from .helpers.mingle_readings import mingle_readings, word_reading
+from .helpers.tokens import tokenize
 from .mecab_controller import BasicMecabController
 from .mecab_controller import format_output, is_kana_word
 from .mecab_controller import to_hiragana, to_katakana
-from .mingle_readings import mingle_readings, word_reading
-from .tokens import tokenize
 
 
 # Mecab controller

@@ -4,7 +4,8 @@ from aqt import gui_hooks, mw
 from aqt.browser import Browser
 from aqt.qt import *
 
-from .helpers import *
+from .helpers.config import iter_tasks
+from .helpers import NoteId
 from .nhk_pronunciation import do_tasks
 
 ACTION_NAME = "Bulk-add pitch accents"
