@@ -1,7 +1,7 @@
 import dataclasses
 import enum
 import re
-from typing import Dict, Any, List, Tuple, Optional, Set, NewType, NamedTuple, Iterable
+from typing import Dict, Any, List, Optional, Set, NewType, NamedTuple, Iterable
 
 import aqt
 from anki.notes import Note
@@ -13,7 +13,7 @@ except ImportError:
     NoteId = NewType("NoteId", int)
 
 ANKI21_VERSION = int(aqt.appVersion.split('.')[-1])
-
+RE_FLAGS = re.MULTILINE | re.IGNORECASE
 NON_JP_REGEX = re.compile(
     # Reference: https://stackoverflow.com/questions/15033196/
     # Here I added `[` and `]` at the end to keep furigana notation.
@@ -27,9 +27,11 @@ JP_SEP_REGEX = re.compile(
 )
 
 
+@enum.unique
 class TaskMode(enum.Enum):
     number = enum.auto()
     html = enum.auto()
+    furigana = enum.auto()
 
 
 class Task(NamedTuple):
@@ -116,13 +118,5 @@ def split_separators(expr: str) -> List[str]:
     return expr.split(' ')
 
 
-def split_furigana(expr: str) -> Tuple[str, Optional[str]]:
-    """
-    Parses expr.
-    Outputs (word, reading) if the expr is formatted as word[reading].
-    If not, outputs (expr, None).
-    """
-    if match := re.search(r'^\s*(?P<word>[^\s\[\]]+)\[(?P<reading>[^\s\[\]]+)](?P<suffix>[^\s\[\]]*)\s*$', expr):
-        return match.group('word') + match.group('suffix'), match.group('reading') + match.group('suffix')
-    else:
-        return expr, None
+def clean_furigana(expr: str) -> str:
+    return re.sub(r'([^ \[\]]+)\[[^ \[\]]+]', r'\g<1>', expr, flags=RE_FLAGS).replace(' ', '')

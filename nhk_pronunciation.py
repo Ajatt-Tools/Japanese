@@ -1,46 +1,53 @@
 import functools
 from collections import OrderedDict
+from typing import Tuple
 
 import anki.collection
 from anki.hooks import wrap
 from aqt import mw
 
+from .common_kana import adjust_reading
 from .config import config
 from .database import AccentDict, FormattedEntry
 from .database import init as database_init
 from .helpers import *
 from .mecab_controller import BasicMecabController
+from .mecab_controller import format_output, is_kana_word
 from .mecab_controller import to_hiragana, to_katakana
+from .mingle_readings import mingle_readings, word_reading
+from .tokens import tokenize
 
 
 # Mecab controller
 ##########################################################################
 
-class WordReading(NamedTuple):
+class MecabOutput(NamedTuple):
     word: str
     katakana_reading: Optional[str]
+    headword: str
 
 
 class MecabController(BasicMecabController):
     _add_mecab_args = [
-        '--node-format=%f[6],%f[7] ',
-        '--unk-format=%m ',
+        '--node-format=%m,%f[7],%f[6]\t',
+        '--unk-format=%m\t',
         '--eos-format=\n',
     ]
 
     def __init__(self):
         super().__init__(mecab_args=self._add_mecab_args)
 
-    def translate(self, expr: str) -> List[WordReading]:
-        """ Returns dictionary form and its reading for each word in expr. """
-        ret = []
-        for section in self.run(escape_text(expr)).split():
-            if len(split := section.split(',')) > 1:
-                word, katakana = split
-            else:
-                word, katakana = split[0], None
-            ret.append(WordReading(word, katakana))
-        return ret
+    def translate(self, expr: str) -> Iterable[MecabOutput]:
+        """ Returns dictionary form and reading for each word in expr. """
+        for section in self.run(escape_text(expr)).split('\t'):
+            if section:
+                try:
+                    word, reading, headword = section.split(',')
+                except ValueError:
+                    word, reading, headword = section, None, section
+
+                print(word, reading, headword, sep='\t')
+                yield MecabOutput(word, reading, headword)
 
 
 # Lookup
@@ -74,6 +81,11 @@ def update_html(html_notation: str) -> str:
 
 
 @functools.lru_cache(maxsize=config['cache_lookups'])
+def mecab_translate(expr: str) -> Tuple[MecabOutput, ...]:
+    return tuple(mecab.translate(expr))
+
+
+@functools.lru_cache(maxsize=config['cache_lookups'])
 def get_pronunciations(expr: str, sanitize=True, recurse=True) -> AccentDict:
     """
     Search pronunciations for a particular expression.
@@ -87,17 +99,19 @@ def get_pronunciations(expr: str, sanitize=True, recurse=True) -> AccentDict:
     # Sanitize input
     if sanitize:
         expr = htmlToTextLine(expr)
+        sanitize = False
 
     # If the expression contains furigana, split it.
-    expr, expr_reading = split_furigana(expr)
-
-    # Sometimes furigana notation is being used by the users to distinguish otherwise duplicate notes.
-    if expr_reading and expr_reading.isnumeric():
-        expr_reading = None
+    expr, expr_reading = word_reading(expr)
 
     # Skip empty strings and user-specified blocklisted words
     if not expr or should_skip(expr):
         return ret
+
+    # Sometimes furigana notation is being used by the users to distinguish otherwise duplicate notes.
+    # E.g., テスト[1], テスト[2]
+    if expr_reading and expr_reading.isnumeric():
+        expr_reading = None
 
     if expr in acc_dict:
         ret.setdefault(expr, [])
@@ -117,21 +131,20 @@ def get_pronunciations(expr: str, sanitize=True, recurse=True) -> AccentDict:
 
         # Only if lookups were not successful, we try splitting with Mecab
         if not ret and config['use_mecab'] is True:
-            for word, katakana in mecab.translate(expr):
+            for out in mecab_translate(expr):
                 # Avoid infinite recursion by saying that we should not try
                 # Mecab again if we do not find any matches for this sub-expression.
-                ret.update(get_pronunciations(word, sanitize, False))
+                ret.update(get_pronunciations(out.headword, sanitize, recurse=False))
 
                 # If everything failed, try katakana lookups.
                 # Katakana lookups are possible because of the additional key in the database.
+                # If the word was in conjugated form, this lookup will also fail.
                 if (
-                        not ret.get(word)
-                        and katakana
+                        not ret.get(out.headword)
+                        and out.katakana_reading
                         and config['kana_lookups'] is True
-                        and not should_skip(katakana)
-                        and not should_skip(word)
                 ):
-                    ret.update(get_pronunciations(katakana, sanitize, False))
+                    ret.update(get_pronunciations(out.katakana_reading, sanitize, recurse=False))
 
     return ret
 
@@ -141,6 +154,7 @@ def get_notation(entry: FormattedEntry, mode: TaskMode) -> str:
         return update_html(entry.html_notation)
     if mode == TaskMode.number:
         return str(entry.pitch_number)
+    raise Exception("Unreachable.")
 
 
 def format_pronunciations(
@@ -161,6 +175,41 @@ def format_pronunciations(
         txt = sep_multi.join(ordered_dict.values())
 
     return txt
+
+
+def unique_readings(accent_entries: List[FormattedEntry]) -> Iterable[FormattedEntry]:
+    return {entry.katakana_reading.replace('ー', 'ウ'): entry for entry in accent_entries}.values()
+
+
+def format_furigana(out: MecabOutput) -> str:
+    accents = get_pronunciations(out.headword, recurse=False)
+
+    if is_kana_word(out.word):
+        return out.word
+    elif out.headword in accents:
+        readings = []
+        for entry in unique_readings(accents[out.headword]):
+            readings.append(format_output(
+                out.word,
+                adjust_reading(out.word, out.headword, to_hiragana(entry.katakana_reading))
+            ))
+        return mingle_readings(readings) if len(readings) > 1 else readings[0]
+    elif out.katakana_reading:
+        return format_output(out.word, to_hiragana(out.katakana_reading))
+    else:
+        return out.word
+
+
+def generate_furigana(src_text) -> str:
+    substrings = []
+    for token in tokenize(src_text):
+        if token.mecab_parsable:
+            for out in mecab_translate(clean_furigana(token.text)):
+                substrings.append(format_furigana(out))
+        else:
+            substrings.append(token.text)
+
+    return ''.join(substrings).strip()
 
 
 # Pitch generation
@@ -196,8 +245,10 @@ def do_task(note: Note, task: Task) -> bool:
     src_text = mw.col.media.strip(note[task.src_field]).strip()
     changed = False
     if proceed and src_text:
-        result: AccentDict = get_pronunciations(src_text)
-        note[task.dst_field] = format_pronunciations(result, mode=task.mode)
+        if task.mode == TaskMode.furigana:
+            note[task.dst_field] = generate_furigana(src_text)
+        else:
+            note[task.dst_field] = format_pronunciations(get_pronunciations(src_text), mode=task.mode)
         changed = True
     return changed
 
@@ -216,7 +267,7 @@ def on_focus_lost(changed: bool, note: Note, field_idx: int) -> bool:
     )
 
 
-def should_add_pitch_accents(note: Note) -> bool:
+def should_generate(note: Note) -> bool:
     return (
             config['generate_on_note_add'] is True
             and mw.app.activeWindow() is None
@@ -225,7 +276,7 @@ def should_add_pitch_accents(note: Note) -> bool:
 
 
 def on_add_note(_col, note: Note, _did) -> None:
-    if should_add_pitch_accents(note):
+    if should_generate(note):
         do_tasks(note=note, tasks=iter_tasks(note))
 
 
