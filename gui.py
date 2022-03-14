@@ -8,10 +8,9 @@ from aqt import mw
 from aqt.qt import *
 from aqt.utils import restoreGeom, saveGeom
 
+from .ajt_common import menu_root_entry, tweak_window, ShortCutGrabButton, ADDON_SERIES
 from .helpers import ui_translate
 from .helpers.config import TaskMode, Profile, config, write_config, list_profiles
-from .ajt_common import menu_root_entry, tweak_window, ShortCutGrabButton, ADDON_SERIES
-
 
 EDIT_MIN_WIDTH = 100
 
@@ -215,7 +214,7 @@ class PitchSettingsForm(QGroupBox):
 
 
 class SettingsDialog(QDialog):
-    name = 'Pitch Accent Options'
+    name = 'Japanese Options'
 
     def __init__(self, parent: QWidget):
         QDialog.__init__(self, parent)
@@ -290,9 +289,6 @@ class SettingsDialog(QDialog):
         config['profiles'] = [dataclasses.asdict(p) for p in self._profiles]
         write_config()
         QDialog.accept(self)
-
-    def reject(self) -> None:
-        QDialog.reject(self)
 
 
 def init():
