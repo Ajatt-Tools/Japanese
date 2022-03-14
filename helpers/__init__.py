@@ -1,5 +1,5 @@
 import re
-from typing import Set, NewType, List
+from typing import NewType, List
 
 import aqt
 from anki.utils import htmlToTextLine
@@ -26,18 +26,6 @@ JP_SEP_REGEX = re.compile(
 
 def ui_translate(key: str) -> str:
     return key.capitalize().replace('_', ' ')
-
-
-def all_note_type_names():
-    return (note_type.name for note_type in aqt.mw.col.models.all_names_and_ids())
-
-
-def all_note_type_field_names() -> Set[str]:
-    fields = set()
-    for model in aqt.mw.col.models.all():
-        fields.update(field['name'] for field in model.get('flds'))
-
-    return fields
 
 
 def escape_text(text: str) -> str:
