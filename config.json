@@ -28,5 +28,10 @@
   "kana_lookups": true,
   "lookup_shortcut": "Ctrl+8",
   "cache_lookups": 1024,
-  "skip_words": "へ,か,よ,ん,だ,び,の,や,ね,ば,て,と,た,が,に,な,は,も,ます,から,いる,たち,てる,う,ましょ,たい,です"
+  "skip_words": "へ,か,よ,ん,だ,び,の,や,ね,ば,て,と,た,が,に,な,は,も,ます,から,いる,たち,てる,う,ましょ,たい,です",
+  "context_menu": {
+    "generate_furigana": true,
+    "to_katakana": true,
+    "to_hiragana": true
+  }
 }
