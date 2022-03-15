@@ -7,7 +7,6 @@ from aqt.utils import showInfo, restoreGeom, saveGeom
 from aqt.webview import AnkiWebView
 
 from .ajt_common import menu_root_entry, tweak_window
-from .helpers.config import config
 from .database import AccentDict
 from .nhk_pronunciation import get_pronunciations, format_pronunciations, update_html
 
@@ -130,9 +129,11 @@ def on_lookup_pronunciation(parent: QWidget, text: str):
 
 def create_lookup_action(parent: QWidget) -> QAction:
     """ Add a hotkey and menu entry """
+    from .config_view import config_view as cfg
+
     action = QAction(ACTION_NAME, parent)
     qconnect(action.triggered, lambda: on_lookup_pronunciation(mw, mw.web.selectedText()))
-    if shortcut := config['lookup_shortcut']:
+    if shortcut := cfg.pitch_accent.lookup_shortcut:
         action.setShortcut(shortcut)
     return action
 
