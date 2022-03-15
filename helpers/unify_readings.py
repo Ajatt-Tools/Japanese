@@ -36,11 +36,12 @@ KANA_MAP = (
     ('ゅー', 'ゅう'),
     ('ゆー', 'ゆう'),
     ('つづ', 'つず'),
+    ('ほお', 'ほう'),
 )
 KANA_MAP_REV = ((val, key) for (key, val) in KANA_MAP)
 
 
-def unify_readings(reading: str, reverse: bool = False):
+def unify_repr(reading: str, reverse: bool = False):
     """
     NHK database contains entries with redundant readings.
     They only differ by the use of 'ー' or kana characters that sound the same.
@@ -55,5 +56,5 @@ def unify_readings(reading: str, reverse: bool = False):
 
 
 if __name__ == '__main__':
-    print(unify_readings('ひつよー'))
-    print(unify_readings('おはよう', reverse=True))
+    print(unify_repr('ひつよー'))
+    print(unify_repr('おはよう', reverse=True))
