@@ -1,8 +1,13 @@
+# Copyright: Ren Tatsumoto <tatsu at autistici.org>
+# License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
+
 import functools
+import re
 from collections import OrderedDict
 from typing import Tuple, NamedTuple, Optional, Iterable
 
 from anki.notes import Note
+from anki.utils import htmlToTextLine
 from aqt import mw
 
 from .config_view import config_view as cfg
@@ -13,7 +18,7 @@ from .helpers.common_kana import adjust_reading
 from .helpers.config import Task, TaskMode, iter_tasks
 from .helpers.hooks import collection_will_add_note
 from .helpers.mingle_readings import mingle_readings, word_reading
-from .helpers.tokens import tokenize
+from .helpers.tokens import tokenize, split_separators
 from .mecab_controller import BasicMecabController
 from .mecab_controller import format_output, is_kana_word
 from .mecab_controller import to_hiragana, to_katakana
@@ -27,6 +32,10 @@ class ParsedToken(NamedTuple):
     katakana_reading: Optional[str]
     headword: str
 
+    @property
+    def hiragana_reading(self) -> str:
+        return to_hiragana(self.katakana_reading)
+
 
 class MecabController(BasicMecabController):
     _add_mecab_args = [
@@ -38,9 +47,21 @@ class MecabController(BasicMecabController):
     def __init__(self):
         super().__init__(mecab_args=self._add_mecab_args)
 
+    @staticmethod
+    def escape_text(text: str) -> str:
+        """Strip characters that trip up mecab."""
+        text = text.replace("\n", " ")
+        text = text.replace('\uff5e', "~")
+        text = re.sub("<br( /)?>", "---newline---", text)
+        text = htmlToTextLine(text)
+        text = text.replace("---newline---", "<br>")
+        return text
+
     def translate(self, expr: str) -> Iterable[ParsedToken]:
         """ Returns dictionary form and reading for each word in expr. """
-        for section in self.run(escape_text(expr)).split('\t'):
+        expr = self.escape_text(expr)
+
+        for section in self.run(expr).split('\t'):
             if section:
                 try:
                     word, reading, headword = section.split(',')

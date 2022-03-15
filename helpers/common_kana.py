@@ -1,16 +1,19 @@
 # Copyright: Ren Tatsumoto <tatsu at autistici.org>
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
+try:
+    from ..mecab_controller import to_katakana as _
+except ImportError:
+    from mecab_controller import to_katakana as _
+
+
 def adjust_reading(raw_word: str, headword: str, headword_reading: str):
-    if headword == headword_reading:
+    if _(headword) == _(headword_reading):
         return raw_word
     idx_headword, idx_reading = len(headword), len(headword_reading)
-    try:
-        while headword[idx_headword - 1] == headword_reading[idx_reading - 1]:
-            idx_headword -= 1
-            idx_reading -= 1
-    except IndexError:
-        return raw_word
+    while _(headword[idx_headword - 1]) == _(headword_reading[idx_reading - 1]):
+        idx_headword -= 1
+        idx_reading -= 1
     return headword_reading[:idx_reading] + raw_word[idx_headword:]
 
 
@@ -22,6 +25,7 @@ def main():
     print(adjust_reading('やり遂げさせられない', 'やり遂げる', 'やりとげる'))
     print(adjust_reading('死ん', '死ぬ', 'しぬ'))
     print(adjust_reading('たべた', 'たべる', 'たべる'))
+    print(adjust_reading('xxxxxxx', 'invalid', 'input'))
 
 
 if __name__ == '__main__':

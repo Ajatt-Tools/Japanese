@@ -45,7 +45,8 @@ def mingle_readings(readings: Iterable[str], sep: str = '<br>') -> str:
         word, readings, suffix = split.head, {split.reading: None, }, split.suffix
         for split in map(split_furigana, pack[1:]):
             readings[split.reading] = None
-        packs.append(f' {word}[{sep.join(readings)}]{suffix}')
+        readings = sep.join(readings)
+        packs.append(f' {word}[{readings}]{suffix}' if readings != word else word)
     return ''.join(packs)
 
 
@@ -57,3 +58,4 @@ if __name__ == '__main__':
     print(word_reading('有る'))
     print(mingle_readings(['有[あ]り 得[う]る', '有[あ]り 得[え]る', '有[あ]り 得[え]る']))
     print(mingle_readings(['故郷[こきょう]', '故郷[ふるさと]']))
+    print(mingle_readings(['お 前[まえ]', 'お 前[めえ]']))
