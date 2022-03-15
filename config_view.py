@@ -1,6 +1,5 @@
 import re
-from types import SimpleNamespace
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Iterable, Tuple
 
 
 class WordBlockList:
@@ -29,10 +28,67 @@ class WordBlockList:
         return to_katakana(word) in map(to_katakana, self._blocklisted_words)
 
 
+def iter_bools(d: Dict[str, Any]) -> Iterable[Tuple[str, bool]]:
+    for key, value in d.items():
+        if type(value) == bool:
+            yield key, value
+
+
+class FuriganaConfigView:
+    def __init__(self):
+        from .helpers.config import config
+
+        self._dict = config['furigana']
+        self._blocklist = WordBlockList(self._dict)
+
+    @property
+    def database_lookups(self) -> bool:
+        return self._dict.get('database_lookups') is True
+
+    @property
+    def reading_separator(self) -> str:
+        return self._dict.get('reading_separator', ',')
+
+    def can_lookup_db(self, word: str) -> bool:
+        return self.database_lookups and word not in self._dict.get('mecab_only', '').split(',')
+
+    def is_blocklisted(self, word: str) -> bool:
+        return self._blocklist.is_blocklisted(word)
+
+
+class PitchConfigView:
+    def __init__(self):
+        from .helpers.config import config
+
+        self._dict = config['pitch_accent']
+        self._blocklist = WordBlockList(self._dict)
+
+    @property
+    def lookup_shortcut(self) -> str:
+        return self._dict.get('lookup_shortcut')
+
+    @property
+    def use_mecab(self):
+        return self._dict.get('use_mecab') is True
+
+    @property
+    def output_hiragana(self):
+        return self._dict.get('output_hiragana') is True
+
+    @property
+    def kana_lookups(self):
+        return self._dict.get('kana_lookups') is True
+
+    def is_blocklisted(self, word: str) -> bool:
+        return self._blocklist.is_blocklisted(word)
+
+
 class ConfigView:
     def __init__(self):
         from .helpers.config import config
         self._dict = config
+        self._furigana = FuriganaConfigView()
+        self._pitch = PitchConfigView()
 
     @property
     def generate_on_note_add(self) -> bool:
@@ -51,24 +107,12 @@ class ConfigView:
         return self._dict['styles']
 
     @property
-    def furigana(self):
-        furigana_config = self._dict['furigana']
-        return SimpleNamespace(
-            database_lookups=furigana_config.get('database_lookups') is True,
-            reading_separator=furigana_config.get('reading_separator', ','),
-            is_blocklisted=WordBlockList(furigana_config).is_blocklisted,
-        )
+    def furigana(self) -> FuriganaConfigView:
+        return self._furigana
 
     @property
-    def pitch_accent(self):
-        pitch_config = self._dict['pitch_accent']
-        return SimpleNamespace(
-            lookup_shortcut=pitch_config.get('lookup_shortcut'),
-            use_mecab=pitch_config.get('use_mecab') is True,
-            output_hiragana=pitch_config.get('output_hiragana') is True,
-            kana_lookups=pitch_config.get('kana_lookups') is True,
-            is_blocklisted=WordBlockList(pitch_config).is_blocklisted,
-        )
+    def pitch_accent(self) -> PitchConfigView:
+        return self._pitch
 
 
 config_view = ConfigView()
