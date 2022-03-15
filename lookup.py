@@ -6,6 +6,7 @@ from aqt.qt import *
 from aqt.utils import showInfo, restoreGeom, saveGeom
 from aqt.webview import AnkiWebView
 
+from .helpers.tokens import clean_furigana
 from .ajt_common import menu_root_entry, tweak_window
 from .database import AccentDict
 from .reading import get_pronunciations, format_pronunciations, update_html
@@ -121,7 +122,7 @@ class ViewPitchAccentsDialog(QDialog):
 
 def on_lookup_pronunciation(parent: QWidget, text: str):
     """ Do a lookup on the selection """
-    if text := text.strip():
+    if text := clean_furigana(text).strip():
         ViewPitchAccentsDialog(parent, text).exec_()
     else:
         showInfo(_("Empty selection."))
