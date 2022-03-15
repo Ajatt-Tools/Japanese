@@ -32,20 +32,21 @@ def tokenize(expr: str, regexes: Optional[List[re.Pattern]] = None) -> Iterable[
     regexes = regexes or [HTML_AND_MEDIA_REGEX, NON_JP_REGEX, JP_SEP_REGEX]
     expr = re.sub(regexes[0], mark_non_jp_token, expr)
 
-    for token in re.split(r'(<no-jp>.*?</no-jp>)', expr):
-        if token:
-            if m := re.fullmatch(r'<no-jp>(.*?)</no-jp>', token):
+    for part in re.split(r'(<no-jp>.*?</no-jp>)', expr):
+        if part:
+            if m := re.fullmatch(r'<no-jp>(.*?)</no-jp>', part):
                 yield Token(m.group(1))
             elif len(regexes) > 1:
-                yield from tokenize(token, regexes[1:])
+                yield from tokenize(part, regexes[1:])
             else:
-                yield Token(token, mecab_parsable=True)
+                yield Token(part, mecab_parsable=True)
 
 
 def main():
     expr = (
         "<div>Lorem ipsum dolor sit amet, [sound:はな.mp3]<img src=\"はな.jpg\"> "
         "consectetur adipiscing<br> elit <b>私達</b>は昨日ロンドンに着いた。おはよう。 Тест.</div>"
+        "彼女は１２月のある寒い夜に亡くなった。"
     )
     for token in tokenize(expr):
         print(token)

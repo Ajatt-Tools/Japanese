@@ -22,7 +22,7 @@ from .mecab_controller import to_hiragana, to_katakana
 # Mecab controller
 ##########################################################################
 
-class MecabOutput(NamedTuple):
+class ParsedToken(NamedTuple):
     word: str
     katakana_reading: Optional[str]
     headword: str
@@ -38,7 +38,7 @@ class MecabController(BasicMecabController):
     def __init__(self):
         super().__init__(mecab_args=self._add_mecab_args)
 
-    def translate(self, expr: str) -> Iterable[MecabOutput]:
+    def translate(self, expr: str) -> Iterable[ParsedToken]:
         """ Returns dictionary form and reading for each word in expr. """
         for section in self.run(escape_text(expr)).split('\t'):
             if section:
@@ -48,7 +48,7 @@ class MecabController(BasicMecabController):
                     word, reading, headword = section, None, section
 
                 print(word, reading, headword, sep='\t')
-                yield MecabOutput(word, reading, headword)
+                yield ParsedToken(word, reading, headword)
 
 
 # Lookup
@@ -66,13 +66,13 @@ def convert_to_inline_style(txt: str) -> str:
 
 def update_html(html_notation: str) -> str:
     html_notation = convert_to_inline_style(html_notation)
-    if cfg.pitch_accent.use_hiragana:
+    if cfg.pitch_accent.output_hiragana:
         html_notation = to_hiragana(html_notation)
     return html_notation
 
 
 @functools.lru_cache(maxsize=cfg.cache_lookups)
-def mecab_translate(expr: str) -> Tuple[MecabOutput, ...]:
+def mecab_translate(expr: str) -> Tuple[ParsedToken, ...]:
     return tuple(mecab.translate(expr))
 
 
@@ -172,7 +172,7 @@ def unique_readings(accent_entries: List[FormattedEntry]) -> Iterable[FormattedE
     return {(entry.html_notation, entry.pitch_number): entry for entry in accent_entries}.values()
 
 
-def db_lookup_furigana(out: MecabOutput) -> Optional[str]:
+def db_lookup_furigana(out: ParsedToken) -> Optional[str]:
     if out.headword in (accents := get_pronunciations(out.headword, recurse=False)):
         readings = []
         for entry in unique_readings(accents[out.headword]):
@@ -183,7 +183,7 @@ def db_lookup_furigana(out: MecabOutput) -> Optional[str]:
         return mingle_readings(readings, sep=cfg.furigana.reading_separator) if len(readings) > 1 else readings[0]
 
 
-def format_furigana(out: MecabOutput) -> str:
+def format_furigana(out: ParsedToken) -> str:
     if is_kana_word(out.word) or cfg.furigana.is_blocklisted(out.word):
         return out.word
     elif cfg.furigana.database_lookups and (furigana := db_lookup_furigana(out)):

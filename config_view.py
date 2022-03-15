@@ -65,7 +65,7 @@ class ConfigView:
         return SimpleNamespace(
             lookup_shortcut=pitch_config.get('lookup_shortcut'),
             use_mecab=pitch_config.get('use_mecab') is True,
-            use_hiragana=pitch_config.get('use_hiragana') is True,
+            output_hiragana=pitch_config.get('output_hiragana') is True,
             kana_lookups=pitch_config.get('kana_lookups') is True,
             is_blocklisted=WordBlockList(pitch_config).is_blocklisted,
         )

@@ -53,3 +53,7 @@ def split_separators(expr: str) -> List[str]:
 
 def clean_furigana(expr: str) -> str:
     return re.sub(r'([^ \[\]]+)\[[^ \[\]]+]', r'\g<1>', expr, flags=RE_FLAGS).replace(' ', '')
+
+
+if __name__ == '__main__':
+    print(clean_furigana("富竹[とみたけ]さん 今[こん] 扉[とびら]の南京錠[なんきんじょう]いじってませんでした？"))

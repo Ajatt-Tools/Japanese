@@ -55,5 +55,5 @@ if __name__ == '__main__':
     print(split_furigana('ひらがな'))
     print(word_reading('有[あ]り 得[う]る'))
     print(word_reading('有る'))
-    print(mingle_readings(['有[あ]り 得[う]る', '有[あ]り 得[え]る']))
+    print(mingle_readings(['有[あ]り 得[う]る', '有[あ]り 得[え]る', '有[あ]り 得[え]る']))
     print(mingle_readings(['故郷[こきょう]', '故郷[ふるさと]']))
