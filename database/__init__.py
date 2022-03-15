@@ -46,7 +46,10 @@ def init() -> AccentDict:
             # Read kanjium data, then overwrite existing entries with NHK data.
             # NHK data is more rich, it contains nasal and devoiced positions.
             derivative = kanjium_db.read_derivative()
-            derivative.update(nhk_db.read_derivative())
+            for keyword, entries in nhk_db.read_derivative().items():
+                derivative.setdefault(keyword, []).extend(entries)
+                unique = {(entry.katakana_reading, entry.pitch_number): entry for entry in derivative[keyword]}
+                derivative[keyword] = list(unique.values())
             # Pickle the 'data' dictionary using the highest protocol available.
             pickle.dump(derivative, f, pickle.HIGHEST_PROTOCOL)
 
