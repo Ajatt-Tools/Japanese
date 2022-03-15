@@ -44,11 +44,12 @@
     "use_hiragana": false,
     "kana_lookups": true,
     "skip_numbers": true,
-    "blocklisted_words": "へ,か,よ,ん,だ,び,の,や,ね,ば,て,と,た,が,に,な,は,も,ます,から,いる,たち,てる,う,ましょ,たい,です"
+    "blocklisted_words": "こと,へ,か,よ,ん,だ,び,の,や,ね,ば,て,と,た,が,に,な,は,も,ます,から,いる,たち,てる,う,ましょ,たい,です"
   },
   "furigana": {
     "database_lookups": true,
     "skip_numbers": true,
+    "reading_separator": ",",
     "blocklisted_words": "人,一,二"
   },
   "context_menu": {

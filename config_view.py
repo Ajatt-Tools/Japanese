@@ -55,6 +55,7 @@ class ConfigView:
         furigana_config = self._dict['furigana']
         return SimpleNamespace(
             database_lookups=furigana_config.get('database_lookups') is True,
+            reading_separator=furigana_config.get('reading_separator', ','),
             is_blocklisted=WordBlockList(furigana_config).is_blocklisted,
         )
 
