@@ -5,11 +5,12 @@ from typing import Tuple, NamedTuple, Optional, Iterable
 from anki.notes import Note
 from aqt import mw
 
+from .config_view import config_view as cfg
 from .database import AccentDict, FormattedEntry
 from .database import init as database_init
 from .helpers import *
 from .helpers.common_kana import adjust_reading
-from .helpers.config import config, Task, TaskMode, iter_tasks
+from .helpers.config import Task, TaskMode, iter_tasks
 from .helpers.hooks import collection_will_add_note
 from .helpers.mingle_readings import mingle_readings, word_reading
 from .helpers.tokens import tokenize
@@ -57,35 +58,25 @@ class MecabController(BasicMecabController):
 def convert_to_inline_style(txt: str) -> str:
     """ Map style classes to their user-configured inline versions. """
 
-    for k, v in config["styles"].items():
+    for k, v in cfg.styles.items():
         txt = txt.replace(k, v)
 
     return txt
 
 
-def get_skip_words() -> List[str]:
-    """Returns a user-defined list of blocklisted words."""
-    return re.split(r'[、, ]+', config['skip_words'], flags=re.IGNORECASE)
-
-
-def should_skip(word: str) -> bool:
-    """Returns True if the user specified that the word should not be looked up."""
-    return to_katakana(word) in map(to_katakana, get_skip_words())
-
-
 def update_html(html_notation: str) -> str:
     html_notation = convert_to_inline_style(html_notation)
-    if config['use_hiragana']:
+    if cfg.pitch_accent.use_hiragana:
         html_notation = to_hiragana(html_notation)
     return html_notation
 
 
-@functools.lru_cache(maxsize=config['cache_lookups'])
+@functools.lru_cache(maxsize=cfg.cache_lookups)
 def mecab_translate(expr: str) -> Tuple[MecabOutput, ...]:
     return tuple(mecab.translate(expr))
 
 
-@functools.lru_cache(maxsize=config['cache_lookups'])
+@functools.lru_cache(maxsize=cfg.cache_lookups)
 def get_pronunciations(expr: str, sanitize=True, recurse=True) -> AccentDict:
     """
     Search pronunciations for a particular expression.
@@ -105,7 +96,7 @@ def get_pronunciations(expr: str, sanitize=True, recurse=True) -> AccentDict:
     expr, expr_reading = word_reading(expr)
 
     # Skip empty strings and user-specified blocklisted words
-    if not expr or should_skip(expr):
+    if not expr or cfg.pitch_accent.is_blocklisted(expr):
         return ret
 
     # Sometimes furigana notation is being used by the users to distinguish otherwise duplicate notes.
@@ -121,7 +112,7 @@ def get_pronunciations(expr: str, sanitize=True, recurse=True) -> AccentDict:
                 continue
             if entry not in ret[expr]:
                 ret[expr].append(entry)
-    elif (expr_katakana := to_katakana(expr)) in acc_dict and config['kana_lookups']:
+    elif (expr_katakana := to_katakana(expr)) in acc_dict and cfg.pitch_accent.kana_lookups:
         ret.update(get_pronunciations(expr_katakana, recurse=False))
     elif recurse:
         # Try to split the expression in various ways, and check if any of those results
@@ -130,7 +121,7 @@ def get_pronunciations(expr: str, sanitize=True, recurse=True) -> AccentDict:
                 ret.update(get_pronunciations(section, sanitize))
 
         # Only if lookups were not successful, we try splitting with Mecab
-        if not ret and config['use_mecab'] is True:
+        if not ret and cfg.pitch_accent.use_mecab is True:
             for out in mecab_translate(expr):
                 # Avoid infinite recursion by saying that we should not try
                 # Mecab again if we do not find any matches for this sub-expression.
@@ -142,7 +133,7 @@ def get_pronunciations(expr: str, sanitize=True, recurse=True) -> AccentDict:
                 if (
                         not ret.get(out.headword)
                         and out.katakana_reading
-                        and config['kana_lookups'] is True
+                        and cfg.pitch_accent.kana_lookups is True
                 ):
                     ret.update(get_pronunciations(out.katakana_reading, sanitize, recurse=False))
 
@@ -178,22 +169,25 @@ def format_pronunciations(
 
 
 def unique_readings(accent_entries: List[FormattedEntry]) -> Iterable[FormattedEntry]:
-    return {entry.katakana_reading.replace('ー', 'ウ'): entry for entry in accent_entries}.values()
+    return {(entry.html_notation, entry.pitch_number): entry for entry in accent_entries}.values()
 
 
-def format_furigana(out: MecabOutput) -> str:
-    accents = get_pronunciations(out.headword, recurse=False)
-
-    if is_kana_word(out.word):
-        return out.word
-    elif out.headword in accents:
+def db_lookup_furigana(out: MecabOutput) -> Optional[str]:
+    if out.headword in (accents := get_pronunciations(out.headword, recurse=False)):
         readings = []
         for entry in unique_readings(accents[out.headword]):
             readings.append(format_output(
                 out.word,
                 adjust_reading(out.word, out.headword, to_hiragana(entry.katakana_reading))
             ))
-        return mingle_readings(readings) if len(readings) > 1 else readings[0]
+        return mingle_readings(readings, sep=cfg.furigana.reading_separator) if len(readings) > 1 else readings[0]
+
+
+def format_furigana(out: MecabOutput) -> str:
+    if is_kana_word(out.word) or cfg.furigana.is_blocklisted(out.word):
+        return out.word
+    elif cfg.furigana.database_lookups and (furigana := db_lookup_furigana(out)):
+        return furigana
     elif out.katakana_reading:
         return format_output(out.word, to_hiragana(out.katakana_reading))
     else:
@@ -234,7 +228,7 @@ def can_fill_destination(note: Note, src_field: str, dst_field: str) -> bool:
         return True
 
     # Allowed regenerating regardless
-    if config['regenerate_readings'] is True:
+    if cfg.regenerate_readings is True:
         return True
 
     return False
@@ -269,7 +263,7 @@ def on_focus_lost(changed: bool, note: Note, field_idx: int) -> bool:
 
 def should_generate(note: Note) -> bool:
     return (
-            config['generate_on_note_add'] is True
+            cfg.generate_on_note_add is True
             and mw.app.activeWindow() is None
             and note.id == 0
     )
