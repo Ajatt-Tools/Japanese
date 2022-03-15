@@ -10,7 +10,7 @@ from aqt.qt import *
 from aqt.utils import tooltip
 
 from .mecab_controller import to_katakana, to_hiragana
-from .nhk_pronunciation import generate_furigana
+from .reading import generate_furigana
 from .helpers.config import config
 
 

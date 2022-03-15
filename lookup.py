@@ -8,7 +8,7 @@ from aqt.webview import AnkiWebView
 
 from .ajt_common import menu_root_entry, tweak_window
 from .database import AccentDict
-from .nhk_pronunciation import get_pronunciations, format_pronunciations, update_html
+from .reading import get_pronunciations, format_pronunciations, update_html
 
 ACTION_NAME = "Pitch Accent lookup"
 
