@@ -1,8 +1,9 @@
 # Copyright: (C) 2022 Ren Tatsumoto <tatsu at autistici.org>
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/copyleft/gpl.html
+
 import dataclasses
 from types import SimpleNamespace
-from typing import Optional, Iterable, Dict, List, NamedTuple
+from typing import Optional, Iterable, Dict, List, NamedTuple, Tuple, Any
 
 from aqt import mw
 from aqt.qt import *
@@ -96,9 +97,9 @@ def relevant_field_names(note_type_name_fuzzy: Optional[str]) -> Iterable[str]:
     """
     Return an iterable of field names present in note types whose names contain the first parameter.
     """
-    for tup in mw.col.models.all_names_and_ids():
-        if not note_type_name_fuzzy or note_type_name_fuzzy.lower() in tup.name.lower():
-            for field in mw.col.models.get(tup.id)['flds']:
+    for model in mw.col.models.all_names_and_ids():
+        if not note_type_name_fuzzy or note_type_name_fuzzy.lower() in model.name.lower():
+            for field in mw.col.models.get(model.id)['flds']:
                 yield field['name']
 
 
@@ -174,42 +175,99 @@ class ProfileEditForm(QGroupBox):
             widget.setCurrentText(current_text)
 
 
-class PitchSettingsForm(QGroupBox):
+class SettingsForm(QGroupBox):
+    @property
+    def _title(self) -> str:
+        raise NotImplementedError()
+
+    @property
+    def _config(self) -> Dict[str, Any]:
+        raise NotImplementedError()
+
+    def as_dict(self) -> Dict[str, Union[bool, str, int]]:
+        raise NotImplementedError()
+
+    def _iter_toggleables(self) -> Iterable[str]:
+        for key, value in self._config.items():
+            if type(value) == bool:
+                yield key
+
+    def _create_checkboxes(self) -> Iterable[Tuple[str, QCheckBox]]:
+        for key in self._iter_toggleables():
+            checkbox = QCheckBox(ui_translate(key))
+            checkbox.setChecked(self._config.get(key, bool()))
+            yield key, checkbox
+
+    def _checkboxes_as_dict(self) -> Dict[str, bool]:
+        return {key: widget.isChecked() for key, widget in self._checkboxes.items()}
+
     def __init__(self):
         super().__init__()
-        self.setTitle("Pitch Settings")
+        self.setTitle(self._title)
         self.setCheckable(False)
-        self._checkboxes = self.create_checkboxes()
-        self._shortcut_edit = ShortCutGrabButton(initial_value=config['lookup_shortcut'])
-        self.setLayout(self.make_layout())
+        self._checkboxes = dict(self._create_checkboxes())
+
+
+class GeneralSettingsForm(SettingsForm):
+    _title = "General"
+    _config = config
+
+    def __init__(self):
+        super().__init__()
+        self.setLayout(self._make_layout())
 
     def as_dict(self) -> Dict[str, Union[bool, str]]:
-        shortcut = {
-            'lookup_shortcut': self._shortcut_edit.value()
-        }
-        checkboxes = {
-            key: widget.isChecked() for key, widget in self._checkboxes.items()
-        }
-        return shortcut | checkboxes
+        return self._checkboxes_as_dict()
 
-    @staticmethod
-    def create_checkboxes() -> Dict[str, QCheckBox]:
-        return {
-            key: QCheckBox(ui_translate(key))
-            for key, value in config.items()
-            if type(value) == bool
-        }
-
-    def make_layout(self) -> QLayout:
+    def _make_layout(self) -> QLayout:
         layout = QVBoxLayout()
         for key, widget in self._checkboxes.items():
             layout.addWidget(widget)
-            widget.setChecked(config[key])
-        shortcut_layout = QHBoxLayout()
-        shortcut_layout.addWidget(QLabel("Lookup shortcut"))
-        shortcut_layout.addWidget(self._shortcut_edit)
-        shortcut_layout.addStretch()
-        layout.addLayout(shortcut_layout)
+        layout.addStretch()
+        return layout
+
+
+class PitchSettingsForm(SettingsForm):
+    _title = "Pitch Options"
+    _config = config['pitch_accent']
+    _shortcut_key = 'lookup_shortcut'
+
+    def __init__(self):
+        super().__init__()
+        self._shortcut_edit = ShortCutGrabButton(initial_value=self._config.get(self._shortcut_key))
+        self.setLayout(self._make_layout())
+
+    def as_dict(self) -> Dict[str, Union[bool, str]]:
+        return {self._shortcut_key: self._shortcut_edit.value()} | self._checkboxes_as_dict()
+
+    def _make_layout(self) -> QLayout:
+        layout = QFormLayout()
+        for key, widget in self._checkboxes.items():
+            layout.addRow(widget)
+        layout.addRow(ui_translate(self._shortcut_key), self._shortcut_edit)
+        return layout
+
+
+class FuriganaSettingsForm(SettingsForm):
+    _title = "Furigana Options"
+    _config = config['furigana']
+    _sep_key = 'reading_separator'
+
+    def __init__(self):
+        super().__init__()
+        self._separator_edit = QLineEdit(self._config.get(self._sep_key))
+        self._separator_edit.setMinimumWidth(50)
+        self._separator_edit.setMaximumWidth(80)
+        self.setLayout(self._make_layout())
+
+    def as_dict(self) -> Dict[str, Union[bool, str]]:
+        return self._checkboxes_as_dict() | {self._sep_key: self._separator_edit.text()}
+
+    def _make_layout(self) -> QLayout:
+        layout = QFormLayout()
+        for key, widget in self._checkboxes.items():
+            layout.addRow(widget)
+        layout.addRow(ui_translate(self._sep_key), self._separator_edit)
         return layout
 
 
@@ -221,7 +279,9 @@ class SettingsDialog(QDialog):
         self._profiles: List[Profile] = list_profiles()
         self._left_panel = ProfileList()
         self._right_panel = ProfileEditForm()
+        self._general_settings = GeneralSettingsForm()
         self._pitch_settings = PitchSettingsForm()
+        self._furigana_settings = FuriganaSettingsForm()
         self._button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         self._setup_ui()
         restoreGeom(self, self.name, adjustSize=True)
@@ -240,9 +300,16 @@ class SettingsDialog(QDialog):
     def make_layout(self) -> QLayout:
         layout = QVBoxLayout()
         layout.addLayout(self.make_profiles_form())
-        layout.addWidget(self._pitch_settings)
+        layout.addLayout(self.make_bottom_row())
         layout.addStretch()
         layout.addWidget(self._button_box)
+        return layout
+
+    def make_bottom_row(self) -> QLayout:
+        layout = QHBoxLayout()
+        layout.addWidget(self._general_settings)
+        layout.addWidget(self._furigana_settings)
+        layout.addWidget(self._pitch_settings)
         return layout
 
     def make_profiles_form(self) -> QLayout:
@@ -285,7 +352,9 @@ class SettingsDialog(QDialog):
 
     def accept(self) -> None:
         self.apply_profile_settings(self._left_panel.current_row)
-        config.update(self._pitch_settings.as_dict())
+        config.update(self._general_settings.as_dict())
+        config['pitch_accent'].update(self._pitch_settings.as_dict())
+        config['furigana'].update(self._furigana_settings.as_dict())
         config['profiles'] = [dataclasses.asdict(p) for p in self._profiles]
         write_config()
         QDialog.accept(self)
