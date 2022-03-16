@@ -1,3 +1,5 @@
+import abc
+import itertools
 import re
 from typing import List, Dict, Any, Iterable, Tuple
 
@@ -13,28 +15,35 @@ class WordBlockList:
         return self._dict.get('skip_numbers') is True
 
     @property
-    def _blocklisted_words(self) -> List[str]:
+    def words(self) -> List[str]:
         """Returns a user-defined list of blocklisted words."""
-        words = re.split(r'[、, ]+', self._dict.get('blocklisted_words', str()), flags=re.IGNORECASE)
+        return re.split(r'[、, ]+', self._dict.get('blocklisted_words', str()), flags=re.IGNORECASE)
+
+    @property
+    def numbers(self) -> Iterable[str]:
+        """ Iterates blocklisted numbers, if enabled. """
         if self._should_skip_numbers:
-            words.extend(self._NUMBERS)
-        return words
+            for c in self._NUMBERS:
+                yield c
 
     def is_blocklisted(self, word: str) -> bool:
         """Returns True if the user specified that the word should not be looked up."""
 
         from .mecab_controller import to_katakana
 
-        return to_katakana(word) in map(to_katakana, self._blocklisted_words)
+        return to_katakana(word) in map(to_katakana, itertools.chain(self.words, self.numbers))
 
 
-def iter_bools(d: Dict[str, Any]) -> Iterable[Tuple[str, bool]]:
-    for key, value in d.items():
-        if type(value) == bool:
-            yield key, value
+class ConfigViewBase(abc.ABC):
+    _dict = None
+
+    def iter_bools(self) -> Iterable[Tuple[str, bool]]:
+        for key, value in self._dict.items():
+            if type(value) == bool:
+                yield key, value
 
 
-class FuriganaConfigView:
+class FuriganaConfigView(ConfigViewBase):
     def __init__(self):
         from .helpers.config import config
 
@@ -55,8 +64,12 @@ class FuriganaConfigView:
     def is_blocklisted(self, word: str) -> bool:
         return self._blocklist.is_blocklisted(word)
 
+    @property
+    def blocklisted_words(self) -> List[str]:
+        return self._blocklist.words
 
-class PitchConfigView:
+
+class PitchConfigView(ConfigViewBase):
     def __init__(self):
         from .helpers.config import config
 
@@ -79,11 +92,15 @@ class PitchConfigView:
     def kana_lookups(self):
         return self._dict.get('kana_lookups') is True
 
+    @property
+    def blocklisted_words(self) -> List[str]:
+        return self._blocklist.words
+
     def is_blocklisted(self, word: str) -> bool:
         return self._blocklist.is_blocklisted(word)
 
 
-class ConfigView:
+class ConfigView(ConfigViewBase):
     def __init__(self):
         from .helpers.config import config
         self._dict = config
