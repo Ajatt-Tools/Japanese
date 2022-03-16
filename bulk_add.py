@@ -1,17 +1,17 @@
 from typing import Sequence
 
-from aqt import gui_hooks, mw
+from aqt import mw
 from aqt.browser import Browser
 from aqt.qt import *
 
+from .helpers import NoteId, ANKI21_VERSION
 from .helpers.config import iter_tasks
-from .helpers import NoteId
 from .reading import do_tasks
 
-ACTION_NAME = "Bulk-add pitch accents"
+ACTION_NAME = "AJT: Bulk-add readings"
 
 
-def bulk_add_pitch_accents(nids: Sequence[NoteId]):
+def bulk_add_readings(nids: Sequence[NoteId]):
     mw.checkpoint(ACTION_NAME)
     mw.progress.start()
 
@@ -28,9 +28,15 @@ def bulk_add_pitch_accents(nids: Sequence[NoteId]):
 def setup_browser_menu(browser: Browser):
     """ Add menu entry to browser window """
     action = QAction(ACTION_NAME, browser)
-    qconnect(action.triggered, lambda: bulk_add_pitch_accents(browser.selectedNotes()))
+    qconnect(action.triggered, lambda: bulk_add_readings(browser.selectedNotes()))
     browser.form.menuEdit.addAction(action)
 
 
 def init():
-    gui_hooks.browser_menus_did_init.append(setup_browser_menu)
+    if ANKI21_VERSION < 45:
+        from anki.hooks import addHook
+        addHook("browser.setupMenus", setup_browser_menu)
+    else:
+        from aqt import gui_hooks
+
+        gui_hooks.browser_menus_did_init.append(setup_browser_menu)
