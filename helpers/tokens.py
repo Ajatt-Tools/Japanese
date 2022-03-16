@@ -3,7 +3,7 @@
 
 import itertools
 import re
-from typing import Optional, List, NamedTuple, Iterable
+from typing import Optional, List, Iterable
 
 RE_FLAGS = re.MULTILINE | re.IGNORECASE
 HTML_AND_MEDIA_REGEX = re.compile(
@@ -20,7 +20,7 @@ NON_JP_REGEX = re.compile(
 )
 JP_SEP_REGEX = re.compile(
     # Reference: https://wikiless.org/wiki/List_of_Japanese_typographic_symbols
-    r'[仝 ・、※【】「」〒◎×〃゜『』《》〜〽。〄〇〈〉〓〔〕〖〗〘〙〚〛〝〞〟〠〡〢〣〥〦〧〨〭〮〯〫〬〶〷〸〹〺〻〼〾〿！？…ヽヾゞ〱〲〳〵〴（）［］｛｝｟｠゠＝‥•◦﹅﹆＊♪♫♬♩ⓍⓁⓎ]',
+    r'[仝　 ・、※【】「」〒◎×〃゜『』《》〜~〽,.。〄〇〈〉〓〔〕〖〗〘〙〚〛〝〞〟〠〡〢〣〥〦〧〨〭〮〯〫〬〶〷〸〹〺〻〼〾〿！？…ヽヾゞ〱〲〳〵〴（）［］｛｝｟｠゠＝‥•◦﹅﹆＊♪♫♬♩ⓍⓁⓎ]',
     flags=RE_FLAGS
 )
 HALF_MONTHS = ("11月", "12月", "1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月")
@@ -30,9 +30,12 @@ PEOPLE = ("一人", "二人", "1人", "2人")
 SPECIAL_WORDS_REGEX = re.compile(rf'({"|".join(itertools.chain(HALF_MONTHS, FULL_MONTHS, KANJI_MONTHS, PEOPLE))})')
 
 
-class Token(NamedTuple):
-    text: str
-    mecab_parsable: bool = False
+class Token(str):
+    pass
+
+
+class ParseableToken(Token):
+    pass
 
 
 def split_separators(expr: str) -> List[str]:
@@ -48,10 +51,11 @@ def clean_furigana(expr: str) -> str:
     return re.sub(r'([^ \[\]]+)\[[^ \[\]]+]', r'\g<1>', expr, flags=RE_FLAGS).replace(' ', '')
 
 
-def split_special_words(text: str) -> Iterable[Token]:
+def split_special_words(text: str) -> Iterable[ParseableToken]:
     """ Preemptively split text by words that mecab doesn't know how to parse. """
     for part in re.split(SPECIAL_WORDS_REGEX, text):
-        yield Token(part, mecab_parsable=True)
+        if part:
+            yield ParseableToken(part)
 
 
 def mark_non_jp_token(m: re.Match) -> str:
@@ -87,7 +91,7 @@ def main():
         "振り仮名[ふりがな]"
     )
     for token in tokenize(expr):
-        print(token)
+        print(f"{token.__class__.__name__}({token})")
 
 
 if __name__ == '__main__':

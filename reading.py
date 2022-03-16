@@ -18,7 +18,7 @@ from .helpers.common_kana import adjust_reading
 from .helpers.config import Task, TaskMode, iter_tasks
 from .helpers.hooks import collection_will_add_note
 from .helpers.mingle_readings import mingle_readings, word_reading
-from .helpers.tokens import tokenize, split_separators
+from .helpers.tokens import tokenize, split_separators, ParseableToken
 from .mecab_controller import BasicMecabController
 from .mecab_controller import format_output, is_kana_word
 from .mecab_controller import to_hiragana, to_katakana
@@ -218,11 +218,11 @@ def format_furigana(out: ParsedToken) -> str:
 def generate_furigana(src_text) -> str:
     substrings = []
     for token in tokenize(src_text):
-        if token.mecab_parsable:
-            for out in mecab_translate(clean_furigana(token.text)):
+        if isinstance(token, ParseableToken):
+            for out in mecab_translate(token):
                 substrings.append(format_furigana(out))
         else:
-            substrings.append(token.text)
+            substrings.append(token)
 
     return ''.join(substrings).strip()
 
