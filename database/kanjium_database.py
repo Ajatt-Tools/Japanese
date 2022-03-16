@@ -16,6 +16,9 @@
 #
 # Any modifications to this file must keep this entire header intact.
 
+# Data source:
+# https://raw.githubusercontent.com/mifunetoshiro/kanjium/master/data/source_files/raw/accents.txt
+
 from typing import Iterable
 
 try:

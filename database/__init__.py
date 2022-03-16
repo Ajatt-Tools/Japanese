@@ -16,9 +16,6 @@
 #
 # Any modifications to this file must keep this entire header intact.
 
-# Data source:
-# https://raw.githubusercontent.com/mifunetoshiro/kanjium/master/data/source_files/raw/accents.txt
-
 import pickle
 
 from .common import *
@@ -30,28 +27,30 @@ def init() -> AccentDict:
     if not os.path.isdir(DB_DIR_PATH):
         raise OSError("Accent database folder is missing!")
 
-    nhk_db, kanjium_db = NhkDb(), KanjiumDb()
-
-    # If the pickle exists and needs updating, remove it.
-    if os.path.isfile(p := DERIVATIVE_PICKLE) and should_regenerate(p):
-        os.remove(p)
-
     # If a pickle exists of the derivative file, use that.
     # Otherwise, read from the derivative file and generate a pickle.
-    if os.path.isfile(p := DERIVATIVE_PICKLE):
-        with open(p, 'rb') as f:
-            derivative = pickle.load(f)
+    if os.path.isfile(DERIVATIVE_PICKLE):
+        try:
+            if should_regenerate(DERIVATIVE_PICKLE):
+                raise RuntimeError("The pickle needs updating.")
+            with open(DERIVATIVE_PICKLE, 'rb') as f:
+                derivative = pickle.load(f)
+        except (ModuleNotFoundError, RuntimeError) as e:
+            print(e)
+            os.remove(DERIVATIVE_PICKLE)
+            return init()
     else:
-        with open(p, 'wb') as f:
-            # Read kanjium data, then overwrite existing entries with NHK data.
-            # NHK data is more rich, it contains nasal and devoiced positions.
-            derivative = kanjium_db.read_derivative()
-            for keyword, entries in nhk_db.read_derivative().items():
-                derivative.setdefault(keyword, []).extend(entries)
-                unique = {(entry.katakana_reading, entry.pitch_number): entry for entry in derivative[keyword]}
-                derivative[keyword] = list(unique.values())
-            # Pickle the 'data' dictionary using the highest protocol available.
+        nhk_db, kanjium_db = NhkDb(), KanjiumDb()
+        # Read kanjium data, then overwrite existing entries with NHK data.
+        # NHK data is more rich, it contains nasal and devoiced positions.
+        derivative = kanjium_db.read_derivative()
+        for keyword, entries in nhk_db.read_derivative().items():
+            derivative.setdefault(keyword, []).extend(entries)
+            unique = {(entry.katakana_reading, entry.pitch_number): entry for entry in derivative[keyword]}
+            derivative[keyword] = list(unique.values())
+        with open(DERIVATIVE_PICKLE, 'wb') as f:
+            # Pickle the dictionary using the highest protocol available.
             pickle.dump(derivative, f, pickle.HIGHEST_PROTOCOL)
 
-    print('Total pitch accent entries:', len(derivative.keys()))
+    print(f"Total pitch accent entries: {len(derivative)}.")
     return derivative
