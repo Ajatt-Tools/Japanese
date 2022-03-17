@@ -44,17 +44,38 @@
     "output_hiragana": false,
     "kana_lookups": true,
     "skip_numbers": true,
-    "blocklisted_words": "こと,へ,か,よ,ん,だ,び,の,や,ね,ば,て,と,た,が,に,な,は,も,ます,から,いる,たち,てる,う,ましょ,たい,です"
+    "blocklisted_words": "こと,へ,か,よ,ん,だ,び,の,や,ね,ば,て,と,た,が,に,な,は,も,ます,から,いる,たち,てる,う,ましょ,たい,する,です,ない",
+    "maximum_results": 3
   },
   "furigana": {
     "database_lookups": true,
     "skip_numbers": true,
+    "prefer_long_vowel_mark": false,
     "reading_separator": ",",
-    "blocklisted_words": "人"
+    "blocklisted_words": "人",
+    "mecab_only": "猫,首,母,顔,木,頭,私,弟,空",
+    "maximum_results": 3
   },
   "context_menu": {
     "generate_furigana": true,
     "to_katakana": true,
     "to_hiragana": true
+  },
+  "toolbar": {
+    "furigana_button": {
+      "enable": true,
+      "shortcut": "Ctrl+F1",
+      "text": "振"
+    },
+    "generate_all_readings": {
+      "enable": true,
+      "shortcut": "Ctrl+F2",
+      "text": "再"
+    },
+    "clean_furigana_button": {
+      "enable": true,
+      "shortcut": "Ctrl+F3",
+      "text": "削"
+    }
   }
 }
