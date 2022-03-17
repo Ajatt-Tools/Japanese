@@ -136,7 +136,7 @@ def get_pronunciations(expr: str, sanitize=True, recurse=True) -> AccentDict:
             if entry not in ret[expr]:
                 ret[expr].append(entry)
     elif (expr_katakana := to_katakana(expr)) in acc_dict and cfg.pitch_accent.kana_lookups:
-        ret.update(get_pronunciations(expr_katakana, recurse=False))
+        ret.update(get_pronunciations(expr_katakana, sanitize, recurse=False))
     elif recurse:
         # Try to split the expression in various ways, and check if any of those results
         if len(split_expr := split_separators(expr)) > 1:
