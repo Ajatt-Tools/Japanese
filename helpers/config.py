@@ -27,6 +27,10 @@ class Profile:
             mode="html",
         )
 
+    @classmethod
+    def clone(cls, profile: 'Profile'):
+        return cls(**dataclasses.asdict(profile))
+
 
 @enum.unique
 class TaskMode(enum.Enum):
