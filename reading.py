@@ -19,6 +19,7 @@ from .helpers.config import Task, TaskMode, iter_tasks
 from .helpers.hooks import collection_will_add_note
 from .helpers.mingle_readings import mingle_readings, word_reading
 from .helpers.tokens import tokenize, split_separators, ParseableToken
+from .helpers.unify_readings import unify_repr
 from .mecab_controller import BasicMecabController
 from .mecab_controller import format_output, is_kana_word
 from .mecab_controller import to_hiragana, to_katakana
@@ -161,6 +162,12 @@ def get_pronunciations(expr: str, sanitize=True, recurse=True) -> AccentDict:
     return ret
 
 
+def iter_accents(word: str) -> Iterable[FormattedEntry]:
+    if word in (accents := get_pronunciations(word, recurse=False)):
+        for entry in accents[word]:
+            yield entry
+
+
 def get_notation(entry: FormattedEntry, mode: TaskMode) -> str:
     if mode == TaskMode.html:
         return update_html(entry.html_notation)
@@ -189,28 +196,21 @@ def format_pronunciations(
     return txt
 
 
-def unique_readings(accent_entries: List[FormattedEntry]) -> Iterable[FormattedEntry]:
-    return {(entry.html_notation, entry.pitch_number): entry for entry in accent_entries}.values()
+def iter_furigana(out: ParsedToken) -> Iterable[str]:
+    if out.katakana_reading:
+        yield format_output(out.word, out.hiragana_reading)
 
-
-def db_lookup_furigana(out: ParsedToken) -> Optional[str]:
-    if out.headword in (accents := get_pronunciations(out.headword, recurse=False)):
-        readings = []
-        for entry in unique_readings(accents[out.headword]):
-            readings.append(format_output(
-                out.word,
-                adjust_reading(out.word, out.headword, to_hiragana(entry.katakana_reading))
-            ))
-        return mingle_readings(readings, sep=cfg.furigana.reading_separator) if len(readings) > 1 else readings[0]
+    if cfg.furigana.can_lookup_db(out.headword):
+        for entry in iter_accents(out.headword):
+            reading = unify_repr(adjust_reading(out.word, out.headword, to_hiragana(entry.katakana_reading)))
+            yield format_output(out.word, reading)
 
 
 def format_furigana(out: ParsedToken) -> str:
     if is_kana_word(out.word) or cfg.furigana.is_blocklisted(out.word):
         return out.word
-    elif cfg.furigana.database_lookups and (furigana := db_lookup_furigana(out)):
-        return furigana
-    elif out.katakana_reading:
-        return format_output(out.word, to_hiragana(out.katakana_reading))
+    elif readings := list(iter_furigana(out)):
+        return mingle_readings(readings, sep=cfg.furigana.reading_separator) if len(readings) > 1 else readings[0]
     else:
         return out.word
 
@@ -241,7 +241,7 @@ def generate_furigana(src_text) -> str:
     return ''.join(substrings).strip()
 
 
-# Pitch generation
+# Tasks
 ##########################################################################
 
 
