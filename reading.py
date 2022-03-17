@@ -215,10 +215,24 @@ def format_furigana(out: ParsedToken) -> str:
         return out.word
 
 
+def try_lookup_full_text(text: str) -> Optional[str]:
+    """
+    Try looking up whole text in the accent db.
+    Avoids calling mecab when the text contains one word in dictionary form
+    or multiple words in dictionary form separated by punctuation.
+    """
+    dummy = ParsedToken(text, None, text)
+    furigana = format_furigana(dummy)
+    return furigana if furigana != text else None
+
+
 def generate_furigana(src_text) -> str:
     substrings = []
     for token in tokenize(src_text):
         if isinstance(token, ParseableToken):
+            if furigana := try_lookup_full_text(token):
+                substrings.append(furigana)
+                continue
             for out in mecab_translate(token):
                 substrings.append(format_furigana(out))
         else:
