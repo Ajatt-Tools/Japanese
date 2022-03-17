@@ -123,7 +123,8 @@ def get_pronunciations(expr: str, sanitize=True, recurse=True) -> AccentDict:
 
     # Sometimes furigana notation is being used by the users to distinguish otherwise duplicate notes.
     # E.g., テスト[1], テスト[2]
-    if expr_reading and expr_reading.isnumeric():
+    # If there are multiple readings present, ignore all of them.
+    if expr_reading and (expr_reading.isnumeric() or cfg.furigana.reading_separator in expr_reading):
         expr_reading = None
 
     if expr in acc_dict:
