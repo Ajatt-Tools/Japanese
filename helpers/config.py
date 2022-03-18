@@ -67,6 +67,12 @@ def get_config():
     return aqt.mw.addonManager.getConfig(__name__)
 
 
+def get_default_config():
+    manager = aqt.mw.addonManager
+    addon = manager.addonFromModule(__name__)
+    return manager.addonConfigDefaults(addon)
+
+
 def write_config():
     return aqt.mw.addonManager.writeConfig(__name__, config)
 

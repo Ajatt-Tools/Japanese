@@ -8,6 +8,7 @@ except ImportError:
     NoteId = NewType("NoteId", int)
 
 ANKI21_VERSION = int(aqt.appVersion.split('.')[-1])
+LONG_VOWEL_MARK = 'ー'
 
 
 def ui_translate(key: str) -> str:
