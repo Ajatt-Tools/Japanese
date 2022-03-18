@@ -5,8 +5,7 @@ from aqt.browser import Browser
 from aqt.qt import *
 
 from .helpers import NoteId, ANKI21_VERSION
-from .helpers.config import iter_tasks
-from .reading import do_tasks
+from .reading import DoTasks
 
 ACTION_NAME = "AJT: Bulk-add readings"
 
@@ -17,7 +16,7 @@ def bulk_add_readings(nids: Sequence[NoteId]):
 
     for nid in nids:
         note = mw.col.getNote(nid)
-        changed = do_tasks(note=note, tasks=iter_tasks(note))
+        changed = DoTasks(note=note).run()
         if changed:
             note.flush()
 

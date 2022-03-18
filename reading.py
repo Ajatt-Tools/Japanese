@@ -245,56 +245,58 @@ def generate_furigana(src_text) -> str:
 # Tasks
 ##########################################################################
 
+class DoTasks:
+    def __init__(self, note: Note, src_field: Optional[str] = None, overwrite: bool = False):
+        self._note = note
+        self._tasks = iter_tasks(note, src_field)
+        self._overwrite = overwrite
 
-def can_fill_destination(note: Note, src_field: str, dst_field: str) -> bool:
-    # Field names are empty or None
-    if not src_field or not dst_field:
+    def run(self, changed: bool = False) -> bool:
+        for task in self._tasks:
+            changed = self.do_task(task) or changed
+        return changed
+
+    def do_task(self, task: Task) -> bool:
+        proceed = self.can_fill_destination(task)
+        src_text = mw.col.media.strip(self._note[task.src_field]).strip()
+        changed = False
+        if proceed and src_text:
+            if task.mode == TaskMode.furigana:
+                self._note[task.dst_field] = generate_furigana(src_text)
+            else:
+                self._note[task.dst_field] = format_pronunciations(get_pronunciations(src_text), mode=task.mode)
+            changed = True
+        return changed
+
+    def can_fill_destination(self, task: Task) -> bool:
+        # Field names are empty or None
+        if not task.src_field or not task.dst_field:
+            return False
+
+        # The note doesn't have fields with these names
+        if task.src_field not in self._note or task.dst_field not in self._note:
+            return False
+
+        # Yomichan added `No pitch accent data` to the field when creating the note
+        if "No pitch accent data".lower() in self._note[task.dst_field].lower():
+            return True
+
+        # Field is empty
+        if len(htmlToTextLine(self._note[task.dst_field])) == 0 or self._overwrite is True:
+            return True
+
+        # Allowed regenerating regardless
+        if cfg.regenerate_readings is True:
+            return True
+
         return False
-
-    # The note doesn't have fields with these names
-    if src_field not in note or dst_field not in note:
-        return False
-
-    # Yomichan added `No pitch accent data` to the field when creating the note
-    if "No pitch accent data".lower() in note[dst_field].lower():
-        return True
-
-    # Field is empty
-    if len(htmlToTextLine(note[dst_field])) == 0:
-        return True
-
-    # Allowed regenerating regardless
-    if cfg.regenerate_readings is True:
-        return True
-
-    return False
-
-
-def do_task(note: Note, task: Task) -> bool:
-    proceed = can_fill_destination(note, task.src_field, task.dst_field)
-    src_text = mw.col.media.strip(note[task.src_field]).strip()
-    changed = False
-    if proceed and src_text:
-        if task.mode == TaskMode.furigana:
-            note[task.dst_field] = generate_furigana(src_text)
-        else:
-            note[task.dst_field] = format_pronunciations(get_pronunciations(src_text), mode=task.mode)
-        changed = True
-    return changed
-
-
-def do_tasks(note: Note, tasks: Iterable[Task], changed: bool = False) -> bool:
-    for task in tasks:
-        changed = do_task(note, task) or changed
-    return changed
 
 
 def on_focus_lost(changed: bool, note: Note, field_idx: int) -> bool:
-    return do_tasks(
+    return DoTasks(
         note=note,
-        tasks=iter_tasks(note, src_field=note.keys()[field_idx]),
-        changed=changed
-    )
+        src_field=note.keys()[field_idx],
+    ).run(changed=changed)
 
 
 def should_generate(note: Note) -> bool:
@@ -307,7 +309,7 @@ def should_generate(note: Note) -> bool:
 
 def on_add_note(note: Note) -> None:
     if should_generate(note):
-        do_tasks(note=note, tasks=iter_tasks(note))
+        DoTasks(note=note).run()
 
 
 # Entry point
