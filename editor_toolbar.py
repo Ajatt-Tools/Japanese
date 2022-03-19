@@ -1,35 +1,22 @@
 # Copyright: Ren Tatsumoto <tatsu at autistici.org>
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
-from dataclasses import dataclass
-from typing import List, Callable, Any, Collection
+from typing import List, Callable, Any, NamedTuple, Iterable
 
 from anki.notes import Note
 from aqt import gui_hooks
 from aqt.editor import Editor
 
-from .helpers.config import config, iter_tasks
+from .config_view import config_view as cfg, ToolbarButtonConfig
 from .helpers.tokens import clean_furigana
-from .reading import generate_furigana, do_tasks
+from .reading import generate_furigana, DoTasks
 
 
-@dataclass(frozen=True)
-class BtnCfg:
+class ToolbarButton(NamedTuple):
     id: str
     on_press: Callable[[Editor], None]
     tip: str
-
-    @property
-    def enabled(self) -> bool:
-        return config['toolbar'][self.id]['enable']
-
-    @property
-    def shortcut(self) -> str:
-        return config['toolbar'][self.id]['shortcut']
-
-    @property
-    def text(self) -> str:
-        return config['toolbar'][self.id]['text']
+    conf: ToolbarButtonConfig
 
 
 def modify_field(func: Callable[[str], str]) -> Callable[[Editor], None]:
@@ -45,45 +32,50 @@ def modify_note(func: Callable[[Note], Any]) -> Callable[[Editor], None]:
     def decorator(editor: Editor) -> None:
         if note := editor.note:
             func(note)
-            editor.loadNoteKeepingFocus()
+            if editor.currentField is None:
+                editor.loadNote(focusTo=0)
+            else:
+                editor.loadNoteKeepingFocus()
 
     return decorator
 
 
-def create_callback(configs: Collection[BtnCfg]):
-    def add_toolbar_buttons(buttons: List[str], editor: Editor) -> None:
-        for cfg in configs:
-            if cfg.enabled:
-                b = editor.addButton(
-                    icon=None,
-                    cmd=cfg.id,
-                    func=cfg.on_press,
-                    tip=f"{cfg.tip} ({cfg.shortcut})",
-                    keys=cfg.shortcut,
-                    label=cfg.text,
-                )
-                buttons.append(b)
-
-    return add_toolbar_buttons
-
-
-def init():
-    configs = (
-        BtnCfg(
+def query_buttons() -> Iterable[ToolbarButton]:
+    return (
+        ToolbarButton(
+            id='generate_all_button',
+            on_press=modify_note(lambda note: DoTasks(note, overwrite=True).run()),
+            tip='Regenerate all fields',
+            conf=cfg.toolbar.generate_all_button
+        ),
+        ToolbarButton(
             id='furigana_button',
             on_press=modify_field(generate_furigana),
             tip='Generate furigana in the field',
+            conf=cfg.toolbar.furigana_button
         ),
-        BtnCfg(
-            id='generate_all_readings',
-            on_press=modify_note(lambda note: do_tasks(note, iter_tasks(note))),
-            tip='Fill all empty fields.',
-        ),
-        BtnCfg(
+        ToolbarButton(
             id='clean_furigana_button',
             on_press=modify_field(clean_furigana),
             tip='Clean furigana in the field',
+            conf=cfg.toolbar.clean_furigana_button
         ),
     )
 
-    gui_hooks.editor_did_init_buttons.append(create_callback(configs))
+
+def add_toolbar_buttons(html_buttons: List[str], editor: Editor) -> None:
+    html_buttons.extend(
+        editor.addButton(
+            icon=None,
+            cmd=b.id,
+            func=b.on_press,
+            tip=f"{b.tip} ({b.conf.shortcut})",
+            keys=b.conf.shortcut,
+            label=b.conf.text,
+        )
+        for b in query_buttons() if b.conf.enabled
+    )
+
+
+def init():
+    gui_hooks.editor_did_init_buttons.append(add_toolbar_buttons)
