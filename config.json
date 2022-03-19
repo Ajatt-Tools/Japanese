@@ -1,4 +1,7 @@
 {
+  "generate_on_note_add": true,
+  "regenerate_readings": false,
+  "cache_lookups": 1024,
   "styles": {
     "class=\"overline\"": "style=\"text-decoration:overline;\"",
     "class=\"nopron\"": "style=\"color: royalblue;\"",
@@ -35,9 +38,6 @@
       "mode": "furigana"
     }
   ],
-  "generate_on_note_add": true,
-  "regenerate_readings": false,
-  "cache_lookups": 1024,
   "pitch_accent": {
     "lookup_shortcut": "Ctrl+8",
     "use_mecab": true,
@@ -53,7 +53,7 @@
     "prefer_long_vowel_mark": false,
     "reading_separator": ",",
     "blocklisted_words": "人",
-    "mecab_only": "猫,首,母,顔,木,頭,私,弟,空",
+    "mecab_only": "彼,猫,首,母,顔,木,頭,私,弟,空",
     "maximum_results": 3
   },
   "context_menu": {
@@ -62,19 +62,19 @@
     "to_hiragana": true
   },
   "toolbar": {
-    "furigana_button": {
-      "enable": true,
-      "shortcut": "Ctrl+F1",
-      "text": "振"
-    },
-    "generate_all_readings": {
-      "enable": true,
-      "shortcut": "Ctrl+F2",
+    "generate_all_button": {
+      "enabled": true,
+      "shortcut": "Alt+P",
       "text": "再"
     },
+    "furigana_button": {
+      "enabled": false,
+      "shortcut": "",
+      "text": "振"
+    },
     "clean_furigana_button": {
-      "enable": true,
-      "shortcut": "Ctrl+F3",
+      "enabled": false,
+      "shortcut": "",
       "text": "削"
     }
   }
