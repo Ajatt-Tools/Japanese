@@ -1,31 +1,50 @@
 # Copyright: Ren Tatsumoto <tatsu at autistici.org>
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
-import abc
 import re
-from typing import List, Dict, Iterable, Tuple, NamedTuple
+from typing import List, Dict, Iterable, Tuple, NamedTuple, final, Any
 
 from .helpers.config import default_config, config
+from .helpers.tokens import RE_FLAGS
 
 
-class WordBlockList:
-    _NUMBERS = re.compile(r'[一二三四五六七八九十０１２３４５６７８９0123456789]+')
+def split_words(config_value: str) -> List[str]:
+    """Splits string by comma."""
+    return re.split(r'[、, ]+', config_value, flags=RE_FLAGS)
 
-    def __init__(self, master_key: str):
-        self._master_key = master_key
+
+class ConfigViewBase:
+    _view_key = None
 
     @property
     def _dict(self):
-        return config[self._master_key]
+        return config[self._view_key] if self._view_key else config
 
     @property
-    def _should_skip_numbers(self):
+    def _default_dict(self):
+        return default_config[self._view_key] if self._view_key else default_config
+
+    def all(self) -> Iterable[Tuple[str, Any]]:
+        for key, default_value in self._default_dict.items():
+            yield key, self._dict.get(key, default_value)
+
+    def bools(self) -> Iterable[Tuple[str, bool]]:
+        for key, default_value in self._default_dict.items():
+            if type(default_value) == bool:
+                yield key, bool(self._dict.get(key, default_value))
+
+
+class WordBlockListManager(ConfigViewBase):
+    _NUMBERS = re.compile(r'[一二三四五六七八九十０１２３４５６７８９0123456789]+')
+
+    @property
+    def _should_skip_numbers(self) -> bool:
         return self._dict.get('skip_numbers') is True
 
     @property
-    def words(self) -> List[str]:
+    def blocklisted_words(self) -> List[str]:
         """Returns a user-defined list of blocklisted words."""
-        return re.split(r'[、, ]+', self._dict.get('blocklisted_words', str()), flags=re.IGNORECASE)
+        return split_words(self._dict.get('blocklisted_words', str()))
 
     def is_blocklisted(self, word: str) -> bool:
         """Returns True if the user specified that the word should not be looked up."""
@@ -33,38 +52,14 @@ class WordBlockList:
         from .mecab_controller import to_katakana
 
         return (
-                to_katakana(word) in map(to_katakana, self.words)
+                to_katakana(word) in map(to_katakana, self.blocklisted_words)
                 or (self._should_skip_numbers and re.fullmatch(self._NUMBERS, word))
         )
 
 
-class ConfigViewBase(abc.ABC):
-    _master_key = None
-
-    @property
-    def _dict(self):
-        return config[self._master_key] if self._master_key else config
-
-    @property
-    def _default_dict(self):
-        return default_config[self._master_key] if self._master_key else default_config
-
-    def iter_bools(self) -> Iterable[Tuple[str, bool]]:
-        for key, default_value in self._default_dict.items():
-            if type(default_value) == bool:
-                yield key, self._dict.get(key, default_value)
-
-
-class FuriganaConfigView(ConfigViewBase):
-    _master_key = 'furigana'
-
-    def __init__(self):
-        super().__init__()
-        self._blocklist = WordBlockList(self._master_key)
-
-    @property
-    def database_lookups(self) -> bool:
-        return self._dict.get('database_lookups') is True
+@final
+class FuriganaConfigView(WordBlockListManager):
+    _view_key = 'furigana'
 
     @property
     def prefer_long_vowel_mark(self):
@@ -74,31 +69,25 @@ class FuriganaConfigView(ConfigViewBase):
     def reading_separator(self) -> str:
         return self._dict.get('reading_separator', ',')
 
-    def can_lookup_in_db(self, word: str) -> bool:
-        return self.database_lookups and word not in self._dict.get('mecab_only', '').split(',')
-
-    def is_blocklisted(self, word: str) -> bool:
-        return self._blocklist.is_blocklisted(word)
-
     @property
     def maximum_results(self) -> int:
         return int(self._dict.get('maximum_results', 3))
 
     @property
-    def blocklisted_words(self) -> List[str]:
-        return self._blocklist.words
+    def mecab_only(self) -> List[str]:
+        return split_words(self._dict.get('mecab_only', str()))
 
     @property
-    def mecab_only(self) -> List[str]:
-        return re.split(r'[、, ]+', self._dict.get('mecab_only', str()), flags=re.IGNORECASE)
+    def database_lookups(self) -> bool:
+        return self._dict.get('database_lookups') is True
+
+    def can_lookup_in_db(self, word: str) -> bool:
+        return self.database_lookups and word not in self.mecab_only
 
 
-class PitchConfigView(ConfigViewBase):
-    _master_key = 'pitch_accent'
-
-    def __init__(self):
-        super().__init__()
-        self._blocklist = WordBlockList(self._master_key)
+@final
+class PitchConfigView(WordBlockListManager):
+    _view_key = 'pitch_accent'
 
     @property
     def lookup_shortcut(self) -> str:
@@ -120,16 +109,10 @@ class PitchConfigView(ConfigViewBase):
     def maximum_results(self) -> int:
         return int(self._dict.get('maximum_results', 3))
 
-    @property
-    def blocklisted_words(self) -> List[str]:
-        return self._blocklist.words
 
-    def is_blocklisted(self, word: str) -> bool:
-        return self._blocklist.is_blocklisted(word)
-
-
+@final
 class ContextMenuConfigView(ConfigViewBase):
-    _master_key = 'context_menu'
+    _view_key = 'context_menu'
 
     @property
     def generate_furigana(self):
@@ -150,12 +133,38 @@ class ToolbarButtonConfig(NamedTuple):
     text: str
 
 
+class ToolbarConfigView(ConfigViewBase):
+    _view_key = 'toolbar'
+
+    def get(self, key: str) -> ToolbarButtonConfig:
+        return ToolbarButtonConfig(**self._dict.get(key))
+
+    def all(self) -> Iterable[Tuple[str, ToolbarButtonConfig]]:
+        """ Get all button configs. """
+        for key, button_config in super().all():
+            yield key, ToolbarButtonConfig(**button_config)
+
+    @property
+    def generate_all_button(self) -> ToolbarButtonConfig:
+        return self.get('generate_all_button')
+
+    @property
+    def furigana_button(self) -> ToolbarButtonConfig:
+        return self.get('furigana_button')
+
+    @property
+    def clean_furigana_button(self) -> ToolbarButtonConfig:
+        return self.get('clean_furigana_button')
+
+
+@final
 class ConfigView(ConfigViewBase):
     def __init__(self):
         super().__init__()
         self._furigana = FuriganaConfigView()
         self._pitch = PitchConfigView()
         self._context_menu = ContextMenuConfigView()
+        self._toolbar = ToolbarConfigView()
 
     @property
     def generate_on_note_add(self) -> bool:
@@ -186,11 +195,8 @@ class ConfigView(ConfigViewBase):
         return self._context_menu
 
     @property
-    def toolbar(self) -> Dict[str, ToolbarButtonConfig]:
-        return {
-            key: ToolbarButtonConfig(**button_config)
-            for key, button_config in self._dict['toolbar'].items()
-        }
+    def toolbar(self) -> ToolbarConfigView:
+        return self._toolbar
 
 
 config_view = ConfigView()
