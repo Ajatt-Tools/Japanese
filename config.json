@@ -62,7 +62,7 @@
     "to_hiragana": true
   },
   "toolbar": {
-    "generate_all_button": {
+    "regenerate_all_button": {
       "enabled": true,
       "shortcut": "Alt+P",
       "text": "再"

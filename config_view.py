@@ -148,8 +148,8 @@ class ToolbarConfigView(ConfigViewBase):
             yield key, ToolbarButtonConfig(**button_config)
 
     @property
-    def generate_all_button(self) -> ToolbarButtonConfig:
-        return self.get('generate_all_button')
+    def regenerate_all_button(self) -> ToolbarButtonConfig:
+        return self.get('regenerate_all_button')
 
     @property
     def furigana_button(self) -> ToolbarButtonConfig:
