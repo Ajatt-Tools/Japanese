@@ -3,7 +3,7 @@
 
 import dataclasses
 from types import SimpleNamespace
-from typing import Optional, Iterable, Dict, NamedTuple, Tuple, List
+from typing import Optional, Iterable, Dict, Tuple, List
 
 from aqt import mw
 from aqt.qt import *
@@ -12,7 +12,8 @@ from aqt.utils import restoreGeom, saveGeom
 from .ajt_common import menu_root_entry, tweak_window, ShortCutGrabButton, ADDON_SERIES
 from .config_view import ConfigViewBase, config_view as cfg
 from .helpers import ui_translate
-from .helpers.config import TaskMode, Profile, write_config, list_profiles
+from .helpers.config import write_config
+from .helpers.profiles import TaskMode, Profile, iter_profiles
 
 EDIT_MIN_WIDTH = 100
 
@@ -25,8 +26,8 @@ def adjust_to_contents(widget: QWidget):
 
 
 class ControlPanel(QHBoxLayout):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args):
+        super().__init__(*args)
         self.add_btn = QPushButton("Add")
         self.remove_btn = QPushButton("Remove")
         self.clone_btn = QPushButton("Clone")
@@ -35,14 +36,67 @@ class ControlPanel(QHBoxLayout):
         self.addWidget(self.clone_btn)
 
 
-class RowState(NamedTuple):
-    previous: int
-    current: int
+def relevant_field_names(note_type_name_fuzzy: Optional[str]) -> Iterable[str]:
+    """
+    Return an iterable of field names present in note types whose names contain the first parameter.
+    """
+    for model in mw.col.models.all_names_and_ids():
+        if not note_type_name_fuzzy or note_type_name_fuzzy.lower() in model.name.lower():
+            for field in mw.col.models.get(model.id)['flds']:
+                yield field['name']
+
+
+class EditableSelector(QComboBox):
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.setEditable(True)
+
+
+class NoteTypeSelector(EditableSelector):
+    def repopulate(self, current_text: Optional[str]):
+        self.clear()
+        self.addItems([n.name for n in mw.col.models.all_names_and_ids()])
+        if current_text:
+            self.setCurrentText(current_text)
+        elif self.count() > 0:
+            self.setCurrentIndex(0)
+
+
+class ModeSelector(QComboBox):
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.addItems(mode.name.capitalize() for mode in TaskMode)
+
+    def setCurrentText(self, text: str):
+        return super().setCurrentText(text.capitalize())
+
+    def currentText(self) -> str:
+        return super().currentText().lower()
+
+
+def as_config_dict(widgets: Dict[str, QWidget]) -> Dict[str, Union[bool, str, int]]:
+    d = {}
+    for key, widget in widgets.items():
+        if isinstance(widget, QComboBox):
+            d[key] = widget.currentText()
+        elif isinstance(widget, QLineEdit):
+            d[key] = widget.text()
+        elif isinstance(widget, QCheckBox):
+            d[key] = widget.isChecked()
+        elif isinstance(widget, ShortCutGrabButton):
+            d[key] = widget.value()
+        elif isinstance(widget, WordsEdit):
+            d[key] = widget.as_text()
+        elif isinstance(widget, QSpinBox):
+            d[key] = widget.value()
+        else:
+            raise RuntimeError(f"Don't know how to handle widget of type {type(widget).__name__}.")
+    return d
 
 
 class ProfileList(QGroupBox):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args):
+        super().__init__(*args)
         self.setTitle("Profiles")
         self.setCheckable(False)
         self._list_widget = QListWidget()
@@ -101,65 +155,9 @@ class ProfileList(QGroupBox):
         self._list_widget.setCurrentRow(count)
 
 
-def relevant_field_names(note_type_name_fuzzy: Optional[str]) -> Iterable[str]:
-    """
-    Return an iterable of field names present in note types whose names contain the first parameter.
-    """
-    for model in mw.col.models.all_names_and_ids():
-        if not note_type_name_fuzzy or note_type_name_fuzzy.lower() in model.name.lower():
-            for field in mw.col.models.get(model.id)['flds']:
-                yield field['name']
-
-
-class EditableSelector(QComboBox):
-    def __init__(self):
-        super().__init__()
-        self.setEditable(True)
-
-
-class NoteTypeSelector(EditableSelector):
-    def repopulate(self, current_profile_name: Optional[str]):
-        self.clear()
-        self.addItems([n.name for n in mw.col.models.all_names_and_ids()])
-        if current_profile_name:
-            self.setCurrentText(current_profile_name)
-        elif self.count() > 0:
-            self.setCurrentIndex(0)
-
-
-class ModeSelector(QComboBox):
-    def __init__(self):
-        super().__init__()
-        self.addItems(mode.name.capitalize() for mode in TaskMode)
-
-    def setCurrentText(self, text: str):
-        return super().setCurrentText(text.capitalize())
-
-    def currentText(self) -> str:
-        return super().currentText().lower()
-
-
-def as_config_dict(widgets: Dict[str, QWidget]) -> Dict[str, Union[bool, str, int]]:
-    d = {}
-    for key, widget in widgets.items():
-        if isinstance(widget, QComboBox):
-            d[key] = widget.currentText()
-        elif isinstance(widget, QLineEdit):
-            d[key] = widget.text()
-        elif isinstance(widget, QCheckBox):
-            d[key] = widget.isChecked()
-        elif isinstance(widget, ShortCutGrabButton):
-            d[key] = widget.value()
-        elif isinstance(widget, ListEdit):
-            d[key] = widget.text()
-        else:
-            raise RuntimeError(f"Don't know how to handle widget of type {type(widget).__name__}.")
-    return d
-
-
 class ProfileEditForm(QGroupBox):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args):
+        super().__init__(*args)
         self.setTitle("Edit Profile")
         self.setCheckable(False)
         self._form = SimpleNamespace(
@@ -201,16 +199,58 @@ class ProfileEditForm(QGroupBox):
             widget.setCurrentText(current_text)
 
 
-class ListEdit(QTextEdit):
-    def __init__(self, initial_values: List[str]):
-        super().__init__()
-        self.setPlainText('\n'.join(initial_values))
+class ProfileEdit(QHBoxLayout):
+    def __init__(self, profiles: Iterable[Profile], *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._left_panel = ProfileList()
+        self._right_panel = ProfileEditForm()
+        self.addWidget(self._left_panel)
+        self.addWidget(self._right_panel)
+        qconnect(self._left_panel.current_item_changed, self._edit_profile)
+        self._left_panel.populate(profiles)
 
-    def text(self) -> str:
-        return ','.join(filter(bool, self.toPlainText().split('\n')))
+    def _edit_profile(self, current: QListWidgetItem, previous: QListWidgetItem):
+        self._apply_profile(previous)
+        if current:
+            self._right_panel.setEnabled(True)
+            self._right_panel.load_profile(current.data(Qt.UserRole))
+        else:
+            self._right_panel.setEnabled(False)
+
+    def _apply_profile(self, item: QListWidgetItem):
+        if item:
+            profile = self._right_panel.data()
+            item.setData(Qt.UserRole, profile)
+            item.setText(profile.name)
+
+    def as_list(self) -> List[Dict[str, str]]:
+        self._apply_profile(self._left_panel.current_item())
+        return [dataclasses.asdict(p) for p in self._left_panel.profiles()]
+
+
+class WordsEdit(QTextEdit):
+    def __init__(self, initial_values: List[str], *args):
+        super().__init__(*args)
+        self.setAcceptRichText(False)
+        if initial_values:
+            self.set_values(initial_values)
+
+    def set_values(self, values: List[str]):
+        self.setPlainText(','.join(dict.fromkeys(values)))
+
+    def as_text(self) -> str:
+        return ','.join(dict.fromkeys(filter(bool, self.toPlainText().replace(' ', '').split('\n'))))
 
 
 class SettingsForm(QGroupBox):
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.setTitle(self._title)
+        self.setCheckable(False)
+        self._widgets = SimpleNamespace(**dict(self._create_checkboxes()))
+        self._add_widgets()
+        self.setLayout(self._make_layout())
+
     @property
     def _title(self) -> str:
         raise NotImplementedError()
@@ -223,7 +263,7 @@ class SettingsForm(QGroupBox):
         return as_config_dict(self._widgets.__dict__)
 
     def _create_checkboxes(self) -> Iterable[Tuple[str, QCheckBox]]:
-        for key, value in self._config.iter_bools():
+        for key, value in self._config.bools():
             checkbox = QCheckBox(ui_translate(key))
             checkbox.setChecked(value)
             yield key, checkbox
@@ -240,14 +280,6 @@ class SettingsForm(QGroupBox):
     def _add_widgets(self):
         pass
 
-    def __init__(self):
-        super().__init__()
-        self.setTitle(self._title)
-        self.setCheckable(False)
-        self._widgets = SimpleNamespace(**dict(self._create_checkboxes()))
-        self._add_widgets()
-        self.setLayout(self._make_layout())
-
 
 class GeneralSettingsForm(SettingsForm):
     _title = "General"
@@ -259,8 +291,13 @@ class PitchSettingsForm(SettingsForm):
     _config = cfg.pitch_accent
 
     def _add_widgets(self):
+        max_results = QSpinBox()
+        max_results.setRange(1, 99)
+        max_results.setValue(self._config.maximum_results)
+        self._widgets.maximum_results = max_results
+
         self._widgets.lookup_shortcut = ShortCutGrabButton(initial_value=self._config.lookup_shortcut)
-        self._widgets.blocklisted_words = ListEdit(initial_values=self._config.blocklisted_words)
+        self._widgets.blocklisted_words = WordsEdit(initial_values=self._config.blocklisted_words)
 
 
 class FuriganaSettingsForm(SettingsForm):
@@ -268,24 +305,90 @@ class FuriganaSettingsForm(SettingsForm):
     _config = cfg.furigana
 
     def _add_widgets(self):
-        separator_edit = QLineEdit(self._config.reading_separator)
-        separator_edit.setMinimumWidth(50)
-        separator_edit.setMaximumWidth(80)
-        self._widgets.reading_separator = separator_edit
-        self._widgets.blocklisted_words = ListEdit(initial_values=self._config.blocklisted_words)
-        self._widgets.mecab_only = ListEdit(initial_values=self._config.mecab_only)
+        max_results = QSpinBox()
+        max_results.setRange(1, 99)
+        max_results.setValue(self._config.maximum_results)
+        self._widgets.maximum_results = max_results
+
+        self._widgets.reading_separator = QLineEdit(self._config.reading_separator)
+        self._widgets.blocklisted_words = WordsEdit(initial_values=self._config.blocklisted_words)
+        self._widgets.mecab_only = WordsEdit(initial_values=self._config.mecab_only)
+
+
+class ContextMenuSettingsForm(SettingsForm):
+    _title = "Context menu"
+    _config = cfg.context_menu
+
+
+class ToolbarButtonSettingsForm(QGroupBox):
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.setCheckable(True)
+        self._shortcut_edit = ShortCutGrabButton()
+        self._label_edit = QLineEdit()
+        self.setLayout(self._make_layout())
+        self._pass_methods()
+
+    def _make_layout(self) -> QLayout:
+        layout = QFormLayout()
+        layout.addRow("Shortcut", self._shortcut_edit)
+        layout.addRow("Label", self._label_edit)
+        return layout
+
+    def _pass_methods(self):
+        self.setText = self._label_edit.setText
+        self.setShortcut = self._shortcut_edit.setValue
+
+    def as_dict(self) -> Dict[str, Union[bool, str]]:
+        return {
+            "enabled": self.isChecked(),
+            "shortcut": self._shortcut_edit.value(),
+            "text": self._label_edit.text(),
+        }
+
+
+class ToolbarSettingsForm(QGroupBox):
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.setTitle("Toolbar")
+        self.setCheckable(False)
+        self._widgets = {}
+        self._add_widgets()
+        self.setLayout(self._make_layout())
+
+    def _add_widgets(self):
+        for key, button_config in cfg.toolbar.all():
+            widget = ToolbarButtonSettingsForm()
+            widget.setTitle(ui_translate(key))
+            widget.setChecked(button_config.enabled)
+            widget.setShortcut(button_config.shortcut)
+            widget.setText(button_config.text)
+            self._widgets[key] = widget
+
+    def _make_layout(self) -> QLayout:
+        layout = QVBoxLayout()
+        for key, widget in self._widgets.items():
+            layout.addWidget(widget)
+        return layout
+
+    def as_dict(self) -> Dict[str, Dict[str, Union[str, bool]]]:
+        return {
+            key: widget.as_dict()
+            for key, widget in self._widgets.items()
+        }
 
 
 class SettingsDialog(QDialog):
     name = 'Japanese Options'
 
-    def __init__(self, parent: QWidget):
-        QDialog.__init__(self, parent)
-        self._left_panel = ProfileList()
-        self._right_panel = ProfileEditForm()
+    def __init__(self, *args):
+        super().__init__(*args)
+        self._profile_layout = ProfileEdit(profiles=iter_profiles())
         self._general_settings = GeneralSettingsForm()
         self._pitch_settings = PitchSettingsForm()
         self._furigana_settings = FuriganaSettingsForm()
+        self._context_menu_settings = ContextMenuSettingsForm()
+        self._toolbar_settings = ToolbarSettingsForm()
         self._button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         self._setup_ui()
         restoreGeom(self, self.name, adjustSize=True)
@@ -295,63 +398,43 @@ class SettingsDialog(QDialog):
     def _setup_ui(self) -> None:
         self.setWindowModality(Qt.ApplicationModal)
         self.setWindowTitle(f'{ADDON_SERIES} {self.name}')
-        self.setMinimumSize(420, 240)
+        self.setMinimumSize(800, 600)
         tweak_window(self)
         self.setLayout(self.make_layout())
         self.connect_widgets()
-        self.populate_ui()
+
+    def connect_widgets(self):
+        qconnect(self._button_box.accepted, self.accept)
+        qconnect(self._button_box.rejected, self.reject)
 
     def make_layout(self) -> QLayout:
         layout = QVBoxLayout()
-        layout.addLayout(self.make_profiles_form())
+        layout.addLayout(self._profile_layout)
         layout.addLayout(self.make_bottom_row())
         layout.addStretch()
         layout.addWidget(self._button_box)
         return layout
 
     def make_bottom_row(self) -> QLayout:
-        layout = QHBoxLayout()
-        layout.addWidget(self._general_settings)
-        layout.addWidget(self._furigana_settings)
-        layout.addWidget(self._pitch_settings)
+        layout = QGridLayout()
+        # row, column, rowSpan, columnSpan
+        layout.addWidget(self._general_settings, 1, 1)
+        layout.addWidget(self._context_menu_settings, 2, 1)
+        layout.addWidget(self._furigana_settings, 1, 2, 2, 1)
+        layout.addWidget(self._pitch_settings, 1, 3, 2, 1)
+        layout.addWidget(self._toolbar_settings, 1, 4, 2, 1)
+        for column in (1, 2, 3):
+            layout.setColumnStretch(column, 1)
         return layout
-
-    def make_profiles_form(self) -> QLayout:
-        layout = QHBoxLayout()
-        layout.addWidget(self._left_panel)
-        layout.addWidget(self._right_panel)
-        return layout
-
-    def populate_ui(self):
-        self._left_panel.populate(list_profiles())
-
-    def connect_widgets(self):
-        qconnect(self._left_panel.current_item_changed, self.edit_profile)
-        qconnect(self._button_box.accepted, self.accept)
-        qconnect(self._button_box.rejected, self.reject)
-
-    def edit_profile(self, current: QListWidgetItem, previous: QListWidgetItem):
-        self.apply_profile_settings(previous)
-        if current:
-            self._right_panel.setEnabled(True)
-            self._right_panel.load_profile(current.data(Qt.UserRole))
-        else:
-            self._right_panel.setEnabled(False)
-
-    def apply_profile_settings(self, item: QListWidgetItem):
-        if item:
-            profile = self._right_panel.data()
-            item.setData(Qt.UserRole, profile)
-            item.setText(profile.name)
 
     def accept(self) -> None:
         from .helpers.config import config
-
-        self.apply_profile_settings(self._left_panel.current_item())
         config.update(self._general_settings.as_dict())
         config['pitch_accent'].update(self._pitch_settings.as_dict())
         config['furigana'].update(self._furigana_settings.as_dict())
-        config['profiles'] = [dataclasses.asdict(p) for p in self._left_panel.profiles()]
+        config['context_menu'].update(self._context_menu_settings.as_dict())
+        config['toolbar'].update(self._toolbar_settings.as_dict())
+        config['profiles'] = self._profile_layout.as_list()
         write_config()
         QDialog.accept(self)
 
