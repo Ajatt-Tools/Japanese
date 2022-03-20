@@ -43,7 +43,7 @@ def kana_to_moraes(kana: str) -> List[str]:
 class FormattedEntry(NamedTuple):
     katakana_reading: str
     html_notation: str
-    pitch_number: int
+    pitch_number: str
 
 
 AccentDict = Dict[str, List[FormattedEntry]]

@@ -55,7 +55,7 @@ def make_accent_entry(csv_line: str) -> AccentEntry:
     return AccentEntry(*csv_line.split(','))
 
 
-def format_nasal_or_devoiced_positions(expr: str):
+def format_nasal_or_devoiced_positions(expr: str) -> List[int]:
     # Sometimes the expr ends with 10
     if expr.endswith('10'):
         expr = expr[:-2]
@@ -64,6 +64,14 @@ def format_nasal_or_devoiced_positions(expr: str):
         result = []
 
     return result + [int(pos) for pos in expr.split('0') if pos]
+
+
+def calculate_drop(katakana_reading: str, idx: int) -> int:
+    """
+    Returns position of the drop.
+    Handles expressions with multiple accents, such as 月雪花(つキ・ユキ・ハナ)[2,2,2]
+    """
+    return len(kana_to_moraes(katakana_reading[:idx + 1].split('・')[-1]))
 
 
 def format_entry(e: AccentEntry) -> FormattedEntry:
@@ -79,9 +87,9 @@ def format_entry(e: AccentEntry) -> FormattedEntry:
     # Get the devoiced positions
     devoiced = format_nasal_or_devoiced_positions(e.devoiced_pos)
 
-    result_str = []
+    result_str: List[str] = []
+    pitch_nums: List[int] = []
     overline_flag = False
-    pitch_num = 0
 
     for idx, acc in enumerate(int(pos) for pos in acc_pattern):
         # Start or end overline when necessary
@@ -90,6 +98,7 @@ def format_entry(e: AccentEntry) -> FormattedEntry:
             overline_flag = True
         if overline_flag and acc == 0:
             result_str.append('</span>')
+            pitch_nums.append(0)
             overline_flag = False
 
         # Wrap character if it's devoiced, else add as is.
@@ -105,13 +114,16 @@ def format_entry(e: AccentEntry) -> FormattedEntry:
         if acc == 2:
             result_str.append('</span>&#42780;')
             overline_flag = False
-            pitch_num = len(kana_to_moraes(katakana_reading[:idx + 1]))
+            pitch_nums.append(calculate_drop(katakana_reading, idx))
 
     # Close the overline if it's still open
     if overline_flag:
         result_str.append('</span>')
+        pitch_nums.append(0)
+    if not pitch_nums:
+        pitch_nums.append(0)
 
-    return FormattedEntry(e.katakana_reading, ''.join(result_str), pitch_num)
+    return FormattedEntry(e.katakana_reading.replace('・', ''), ''.join(result_str), '+'.join(map(str, pitch_nums)))
 
 
 class NhkDb(AccDbManager):
