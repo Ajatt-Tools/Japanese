@@ -1,4 +1,4 @@
-# AJT Pitch Accent
+# AJT Japanese
 
 [![Rate on AnkiWeb](https://glutanimate.com/logos/ankiweb-rate.svg)](https://ankiweb.net/shared/info/1225470483)
 [![Chat](https://img.shields.io/badge/chat-join-green)](https://tatsumoto-ren.github.io/blog/join-our-community.html)
@@ -92,17 +92,8 @@ The two databases produce 229798 entries total.
 
 ## Acknowledgements
 
-This add-on is a completely remastered version of
-[Japanese Pronunciation / Pitch Accent](https://ankiweb.net/shared/info/932119536).
+Some code of this add-on based off of:
 
-The changes include:
-
-* Significantly refactored 99% of the codebase.
-* Removed all annoying features.
-* Preset the default config file to match
-the [mpvacious cards](https://ankiweb.net/shared/info/1557722832)
-note type.
-If you're using mpvacious cards, you don't have to configure the add-on before using it.
-* Added kana lookups.
-* Fixed a great number of bugs.
-* Bundled [Mecab controller](https://github.com/Ajatt-Tools/mecab_controller) with the add-on.
+* [Japanese Pronunciation / Pitch Accent](https://ankiweb.net/shared/info/932119536).
+* [AJT Furigana](https://ankiweb.net/shared/info/1344485230)
+* [Japanese Support](https://ankiweb.net/shared/info/3918629684).
