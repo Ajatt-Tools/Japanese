@@ -8,6 +8,10 @@ except ImportError:
 
 
 def adjust_reading(raw_word: str, headword: str, headword_reading: str):
+    """
+    Adjusts the word's reading to match its conjugated form.
+    E.g., if raw_word is 食べた, should output たべた.
+    """
     if _(headword) == _(headword_reading):
         return raw_word
     if _(headword) == _(raw_word):

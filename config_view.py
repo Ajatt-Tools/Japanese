@@ -144,6 +144,7 @@ class ToolbarButtonConfig(NamedTuple):
     text: str
 
 
+@final
 class ToolbarConfigView(ConfigViewBase):
     _view_key = 'toolbar'
 
