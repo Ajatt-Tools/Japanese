@@ -211,7 +211,7 @@ def iter_furigana(out: ParsedToken) -> Iterable[str]:
     if cfg.furigana.can_lookup_in_db(out.headword):
         entries = sorted(
             iter_accents(out.headword),
-            key=lambda e: LONG_VOWEL_MARK not in e.katakana_reading,
+            key=lambda e: LONG_VOWEL_MARK in e.katakana_reading,
             reverse=cfg.furigana.prefer_long_vowel_mark
         )
         for entry in entries:
