@@ -205,6 +205,9 @@ def format_pronunciations(
 def iter_furigana(out: ParsedToken) -> Iterable[str]:
     readings = {}
 
+    if out.katakana_reading:
+        readings[unify_repr(out.hiragana_reading)] = format_output(out.word, out.hiragana_reading)
+
     if cfg.furigana.can_lookup_in_db(out.headword):
         entries = sorted(
             iter_accents(out.headword),
@@ -213,10 +216,7 @@ def iter_furigana(out: ParsedToken) -> Iterable[str]:
         )
         for entry in entries:
             reading = adjust_reading(out.word, out.headword, to_hiragana(entry.katakana_reading))
-            readings[unify_repr(reading)] = format_output(out.word, reading)
-
-    if out.katakana_reading and (u := unify_repr(out.hiragana_reading)) not in readings:
-        readings[u] = format_output(out.word, out.hiragana_reading)
+            readings.setdefault(unify_repr(reading), format_output(out.word, reading))
 
     return readings.values()
 
