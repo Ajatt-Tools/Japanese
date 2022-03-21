@@ -123,7 +123,7 @@ class ViewPitchAccentsDialog(QDialog):
 def on_lookup_pronunciation(parent: QWidget, text: str):
     """ Do a lookup on the selection """
     if text := clean_furigana(text).strip():
-        ViewPitchAccentsDialog(parent, text).exec_()
+        ViewPitchAccentsDialog(parent, text).exec()
     else:
         showInfo(_("Empty selection."))
 
