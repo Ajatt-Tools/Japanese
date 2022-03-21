@@ -280,7 +280,12 @@ class DoTasks:
             if task.mode == TaskMode.furigana:
                 self._note[task.dst_field] = generate_furigana(src_text)
             else:
-                self._note[task.dst_field] = format_pronunciations(get_pronunciations(src_text), mode=task.mode)
+                self._note[task.dst_field] = format_pronunciations(
+                    pronunciations=get_pronunciations(src_text),
+                    mode=task.mode,
+                    sep_single=cfg.pitch_accent.reading_separator,
+                    sep_multi=cfg.pitch_accent.word_separator,
+                )
             changed = True
         return changed
 

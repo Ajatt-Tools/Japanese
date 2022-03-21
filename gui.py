@@ -295,7 +295,8 @@ class PitchSettingsForm(SettingsForm):
         max_results.setRange(1, 99)
         max_results.setValue(self._config.maximum_results)
         self._widgets.maximum_results = max_results
-
+        self._widgets.reading_separator = QLineEdit(self._config.reading_separator)
+        self._widgets.word_separator = QLineEdit(self._config.word_separator)
         self._widgets.lookup_shortcut = ShortCutGrabButton(initial_value=self._config.lookup_shortcut)
         self._widgets.blocklisted_words = WordsEdit(initial_values=self._config.blocklisted_words)
 

@@ -112,6 +112,14 @@ class PitchConfigView(WordBlockListManager):
     def maximum_results(self) -> int:
         return int(self.get('maximum_results'))
 
+    @property
+    def reading_separator(self) -> str:
+        return self.get('reading_separator')
+
+    @property
+    def word_separator(self) -> str:
+        return self.get('word_separator')
+
 
 @final
 class ContextMenuConfigView(ConfigViewBase):
