@@ -15,9 +15,9 @@ from .database import AccentDict, FormattedEntry
 from .database import init as database_init
 from .helpers import *
 from .helpers.common_kana import adjust_reading
-from .helpers.config import Task, TaskMode, iter_tasks
 from .helpers.hooks import collection_will_add_note
 from .helpers.mingle_readings import mingle_readings, word_reading
+from .helpers.profiles import Task, TaskMode, iter_tasks
 from .helpers.tokens import tokenize, split_separators, ParseableToken
 from .helpers.unify_readings import unify_repr
 from .mecab_controller import BasicMecabController
@@ -67,7 +67,10 @@ class MecabController(BasicMecabController):
                 try:
                     word, reading, headword = section.split(',')
                 except ValueError:
-                    word, reading, headword = section, None, section
+                    word, reading, headword = section, section, section
+
+                if is_kana_word(word) or to_katakana(word) == to_katakana(reading):
+                    reading = None
 
                 print(word, reading, headword, sep='\t')
                 yield ParsedToken(word, reading, headword)
@@ -99,7 +102,7 @@ def mecab_translate(expr: str) -> Tuple[ParsedToken, ...]:
 
 
 @functools.lru_cache(maxsize=cfg.cache_lookups)
-def get_pronunciations(expr: str, sanitize=True, recurse=True) -> AccentDict:
+def get_pronunciations(expr: str, sanitize: bool = True, recurse: bool = True) -> AccentDict:
     """
     Search pronunciations for a particular expression.
 
@@ -173,7 +176,7 @@ def get_notation(entry: FormattedEntry, mode: TaskMode) -> str:
     if mode == TaskMode.html:
         return update_html(entry.html_notation)
     if mode == TaskMode.number:
-        return str(entry.pitch_number)
+        return entry.pitch_number
     raise Exception("Unreachable.")
 
 
@@ -186,7 +189,9 @@ def format_pronunciations(
 ) -> str:
     ordered_dict = OrderedDict()
     for word, entries in pronunciations.items():
-        ordered_dict[word] = sep_single.join(dict.fromkeys(get_notation(entry, mode) for entry in entries))
+        entries = dict.fromkeys(get_notation(entry, mode) for entry in entries)
+        if len(entries) <= cfg.pitch_accent.maximum_results:
+            ordered_dict[word] = sep_single.join(entries)
 
     # expr_sep is used to separate entries on lookup
     if expr_sep:
@@ -198,20 +203,33 @@ def format_pronunciations(
 
 
 def iter_furigana(out: ParsedToken) -> Iterable[str]:
-    if out.katakana_reading:
-        yield format_output(out.word, out.hiragana_reading)
+    readings = {}
 
-    if cfg.furigana.can_lookup_db(out.headword):
-        for entry in iter_accents(out.headword):
-            reading = unify_repr(adjust_reading(out.word, out.headword, to_hiragana(entry.katakana_reading)))
-            yield format_output(out.word, reading)
+    if cfg.furigana.can_lookup_in_db(out.headword):
+        entries = sorted(
+            iter_accents(out.headword),
+            key=lambda e: LONG_VOWEL_MARK not in e.katakana_reading,
+            reverse=cfg.furigana.prefer_long_vowel_mark
+        )
+        for entry in entries:
+            reading = adjust_reading(out.word, out.headword, to_hiragana(entry.katakana_reading))
+            readings[unify_repr(reading)] = format_output(out.word, reading)
+
+    if out.katakana_reading and (u := unify_repr(out.hiragana_reading)) not in readings:
+        readings[u] = format_output(out.word, out.hiragana_reading)
+
+    return readings.values()
 
 
 def format_furigana(out: ParsedToken) -> str:
     if is_kana_word(out.word) or cfg.furigana.is_blocklisted(out.word):
         return out.word
     elif readings := list(iter_furigana(out)):
-        return mingle_readings(readings, sep=cfg.furigana.reading_separator) if len(readings) > 1 else readings[0]
+        return (
+            mingle_readings(readings, sep=cfg.furigana.reading_separator)
+            if 1 < len(readings) <= cfg.furigana.maximum_results
+            else readings[0]
+        )
     else:
         return out.word
 
@@ -257,10 +275,8 @@ class DoTasks:
         return changed
 
     def do_task(self, task: Task) -> bool:
-        proceed = self.can_fill_destination(task)
-        src_text = mw.col.media.strip(self._note[task.src_field]).strip()
         changed = False
-        if proceed and src_text:
+        if self.can_fill_destination(task) and (src_text := mw.col.media.strip(self._note[task.src_field]).strip()):
             if task.mode == TaskMode.furigana:
                 self._note[task.dst_field] = generate_furigana(src_text)
             else:
@@ -281,7 +297,7 @@ class DoTasks:
         if "No pitch accent data".lower() in self._note[task.dst_field].lower():
             return True
 
-        # Field is empty
+        # Field is empty or overwrite requested
         if len(htmlToTextLine(self._note[task.dst_field])) == 0 or self._overwrite is True:
             return True
 
