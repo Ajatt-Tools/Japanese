@@ -69,8 +69,8 @@ def add_toolbar_buttons(html_buttons: List[str], editor: Editor) -> None:
             icon=None,
             cmd=b.id,
             func=b.on_press,
-            tip=f"{b.tip} ({b.conf.shortcut})",
-            keys=b.conf.shortcut,
+            tip=f"{b.tip} ({b.conf.shortcut})" if b.conf.shortcut else b.tip,
+            keys=b.conf.shortcut or None,
             label=b.conf.text,
         )
         for b in query_buttons() if b.conf.enabled
