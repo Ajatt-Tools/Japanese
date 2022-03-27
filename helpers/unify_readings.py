@@ -40,6 +40,7 @@ KANA_MAP = (
     ('おお', 'おう'),
     ('づう', 'ずう'),
     ('ぢ', 'じ'),
+    ('づ', 'ず'),
 )
 
 KANA_MAP_REV = ((val, key) for (key, val) in KANA_MAP)
