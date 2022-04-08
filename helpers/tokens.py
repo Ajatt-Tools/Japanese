@@ -23,11 +23,6 @@ JP_SEP_REGEX = re.compile(
     r'[仝　 ・、※【】「」〒◎×〃゜『』《》〜~〽,.。〄〇〈〉〓〔〕〖〗〘〙〚〛〝〞〟〠〡〢〣〥〦〧〨〭〮〯〫〬〶〷〸〹〺〻〼〾〿！？…ヽヾゞ〱〲〳〵〴（）［］｛｝｟｠゠＝‥•◦﹅﹆＊♪♫♬♩ⓍⓁⓎ]',
     flags=RE_FLAGS
 )
-HALF_MONTHS = ("11月", "12月", "1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月")
-FULL_MONTHS = ("１１月", "１２月", "１月", "２月", "３月", "４月", "５月", "６月", "７月", "８月", "９月", "１０月")
-KANJI_MONTHS = ("十一月", "十二月", "一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月")
-PEOPLE = ("一人", "二人", "1人", "2人")
-SPECIAL_WORDS_REGEX = re.compile(rf'({"|".join(itertools.chain(HALF_MONTHS, FULL_MONTHS, KANJI_MONTHS, PEOPLE))})')
 
 
 class Token(str):
@@ -53,7 +48,7 @@ def clean_furigana(expr: str) -> str:
 
 def split_special_words(text: str) -> Iterable[ParseableToken]:
     """ Preemptively split text by words that mecab doesn't know how to parse. """
-    for part in re.split(SPECIAL_WORDS_REGEX, text):
+    for part in re.split(r'([0-9０-９一二三四五六七八九十]{1,4}[つ月日人筋隻丁品])', text):
         if part:
             yield ParseableToken(part)
 
@@ -90,7 +85,7 @@ def main():
     expr = (
         "<div>Lorem ipsum dolor sit amet, [sound:はな.mp3]<img src=\"はな.jpg\"> "
         "consectetur adipiscing<br> elit <b>私達</b>は昨日ロンドンに着いた。おはよう。 Тест.</div>"
-        "1月.彼女は１２月のある寒い夜に亡くなった。"
+        "1月8日八日.彼女は１２月のある寒い夜に亡くなった。"
         "情報処理[じょうほうしょり]の 技術[ぎじゅつ]は 日々[にちにち,ひび] 進化[しんか]している。"
     )
     for token in tokenize(expr):
