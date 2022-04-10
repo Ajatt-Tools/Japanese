@@ -183,14 +183,15 @@ def get_notation(entry: FormattedEntry, mode: TaskMode) -> str:
 def format_pronunciations(
         pronunciations: AccentDict,
         mode: TaskMode = TaskMode.html,
+        max_results_per_word: int = 0,
         sep_single: str = "・",
         sep_multi: str = "、",
-        expr_sep: str = None
+        expr_sep: str = None,
 ) -> str:
     ordered_dict = OrderedDict()
     for word, entries in pronunciations.items():
         entries = dict.fromkeys(get_notation(entry, mode) for entry in entries)
-        if len(entries) <= cfg.pitch_accent.maximum_results:
+        if max_results_per_word == 0 or len(entries) <= max_results_per_word:
             ordered_dict[word] = sep_single.join(entries)
 
     # expr_sep is used to separate entries on lookup
@@ -285,6 +286,7 @@ class DoTasks:
                     mode=task.mode,
                     sep_single=cfg.pitch_accent.reading_separator,
                     sep_multi=cfg.pitch_accent.word_separator,
+                    max_results_per_word=cfg.pitch_accent.maximum_results,
                 )
             changed = True
         return changed

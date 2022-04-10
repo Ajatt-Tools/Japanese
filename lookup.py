@@ -6,9 +6,8 @@ from aqt.qt import *
 from aqt.utils import showInfo, restoreGeom, saveGeom
 from aqt.webview import AnkiWebView
 
-from .helpers.tokens import clean_furigana
 from .ajt_common import menu_root_entry, tweak_window
-from .database import AccentDict
+from .helpers.tokens import clean_furigana
 from .reading import get_pronunciations, format_pronunciations, update_html
 
 ACTION_NAME = "Pitch Accent lookup"
@@ -56,21 +55,6 @@ def html_page(body_content: str):
     return f'<!DOCTYPE html><html><head>{head_content}</head><body>{body_content}</body></html>'
 
 
-def format_pronunciations_rich(pronunciations: AccentDict):
-    ordered_dict = OrderedDict()
-    for word, entries in pronunciations.items():
-        ordered_dict[word] = ''.join(dict.fromkeys(
-            f'<li>{update_html(entry.html_notation)}[{entry.pitch_number}]</li>'
-            for entry in entries
-        ))
-
-    entries = []
-    for word, html in ordered_dict.items():
-        entries.append(f'<div class="key">{word}</div><ol class="value">{html}</ol>')
-
-    return html_page(''.join(entries))
-
-
 class ViewPitchAccentsDialog(QDialog):
     def __init__(self, parent: QWidget, selected_text: str, *args, **kwargs):
         QDialog.__init__(self, parent=parent, *args, **kwargs)
@@ -84,12 +68,27 @@ class ViewPitchAccentsDialog(QDialog):
         self.setWindowTitle(ACTION_NAME)
         self.setMinimumSize(420, 240)
 
-        self.webview.setHtml(format_pronunciations_rich(self.pronunciations))
+        self.webview.setHtml(self.format_pronunciations())
         layout = QVBoxLayout()
         layout.addWidget(self.webview)
         layout.addLayout(self.make_buttons())
         self.setLayout(layout)
         restoreGeom(self, ACTION_NAME)
+
+    def format_pronunciations(self):
+        """ Format pronunciations as an HTML list. """
+        ordered_dict = OrderedDict()
+        for word, entries in self.pronunciations.items():
+            ordered_dict[word] = ''.join(dict.fromkeys(
+                f'<li>{update_html(entry.html_notation)}[{entry.pitch_number}]</li>'
+                for entry in entries
+            ))
+
+        entries = []
+        for word, html in ordered_dict.items():
+            entries.append(f'<div class="key">{word}</div><ol class="value">{html}</ol>')
+
+        return html_page(''.join(entries))
 
     def reject(self) -> None:
         self.webview = None
