@@ -1,6 +1,11 @@
 # Copyright: Ren Tatsumoto <tatsu at autistici.org>
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
+try:
+    from ..mecab_controller import to_katakana
+except ImportError:
+    from mecab_controller import to_katakana
+
 KANA_MAP = (
     ('ぐー', 'ぐう'),
     ('ごー', 'ごう'),
@@ -35,6 +40,7 @@ KANA_MAP = (
     ('ゅー', 'ゅう'),
     ('ゆー', 'ゆう'),
     ('いー', 'いい'),
+    ('ちー', 'ちい'),
     ('せー', 'せい'),
     ('つづ', 'つず'),
     ('ほお', 'ほう'),
@@ -45,8 +51,8 @@ KANA_MAP = (
     ('ぢ', 'じ'),
     ('づ', 'ず'),
 )
-
-KANA_MAP_REV = ((val, key) for (key, val) in KANA_MAP)
+KANA_MAP = KANA_MAP + tuple((to_katakana(key), to_katakana(val)) for key, val in KANA_MAP)
+KANA_MAP_REV = tuple((val, key) for key, val in KANA_MAP)
 
 
 def unify_repr(reading: str, reverse: bool = False):
@@ -65,4 +71,5 @@ def unify_repr(reading: str, reverse: bool = False):
 
 if __name__ == '__main__':
     print(unify_repr('ひつよー'))
+    print(unify_repr('ヒツヨー'))
     print(unify_repr('おはよう', reverse=True))
