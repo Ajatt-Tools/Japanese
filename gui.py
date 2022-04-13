@@ -2,6 +2,7 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/copyleft/gpl.html
 
 import dataclasses
+import enum
 from types import SimpleNamespace
 from typing import Optional, Iterable, Dict, Tuple, List
 
@@ -13,6 +14,7 @@ from .ajt_common import menu_root_entry, tweak_window, ShortCutGrabButton, ADDON
 from .config_view import ConfigViewBase, config_view as cfg
 from .helpers import ui_translate
 from .helpers.config import write_config
+from .helpers.mingle_readings import WordWrapMode
 from .helpers.profiles import TaskMode, Profile, iter_profiles
 
 EDIT_MIN_WIDTH = 100
@@ -62,16 +64,30 @@ class NoteTypeSelector(EditableSelector):
             self.setCurrentIndex(0)
 
 
-class ModeSelector(QComboBox):
-    def __init__(self, *args):
+class EnumSelector(QComboBox):
+    @property
+    def _type(self) -> enum.EnumMeta:
+        raise NotImplementedError()
+
+    def __init__(self, initial_value: Optional[enum.Enum] = None, *args):
         super().__init__(*args)
-        self.addItems(mode.name.capitalize() for mode in TaskMode)
+        self.addItems(mode.name.capitalize() for mode in self._type)
+        if initial_value is not None:
+            self.setCurrentText(initial_value.name)
 
     def setCurrentText(self, text: str):
         return super().setCurrentText(text.capitalize())
 
     def currentText(self) -> str:
         return super().currentText().lower()
+
+
+class ModeSelector(EnumSelector):
+    _type = TaskMode
+
+
+class WrapSelector(EnumSelector):
+    _type = WordWrapMode
 
 
 def as_config_dict(widgets: Dict[str, QWidget]) -> Dict[str, Union[bool, str, int]]:
@@ -311,6 +327,7 @@ class FuriganaSettingsForm(SettingsForm):
         max_results.setValue(self._config.maximum_results)
         self._widgets.maximum_results = max_results
 
+        self._widgets.wrap_readings = WrapSelector(initial_value=self._config.wrap_readings)
         self._widgets.reading_separator = QLineEdit(self._config.reading_separator)
         self._widgets.blocklisted_words = WordsEdit(initial_values=self._config.blocklisted_words)
         self._widgets.mecab_only = WordsEdit(initial_values=self._config.mecab_only)

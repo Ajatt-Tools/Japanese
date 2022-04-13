@@ -227,7 +227,7 @@ def format_furigana(out: ParsedToken) -> str:
         return out.word
     elif readings := list(iter_furigana(out)):
         return (
-            mingle_readings(readings, sep=cfg.furigana.reading_separator)
+            mingle_readings(readings, sep=cfg.furigana.reading_separator, wrap=cfg.furigana.wrap_readings.value)
             if 1 < len(readings) <= cfg.furigana.maximum_results
             else readings[0]
         )
