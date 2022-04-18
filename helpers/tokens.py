@@ -1,9 +1,8 @@
 # Copyright: Ren Tatsumoto <tatsu at autistici.org>
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
-import itertools
 import re
-from typing import Optional, List, Iterable, Collection
+from typing import List, Iterable, Sequence
 
 RE_FLAGS = re.MULTILINE | re.IGNORECASE
 HTML_AND_MEDIA_REGEX = re.compile(
@@ -46,37 +45,54 @@ def clean_furigana(expr: str) -> str:
     return re.sub(r' ?([^ \[\]]+)\[[^ \[\]]+]', r'\g<1>', expr, flags=RE_FLAGS)
 
 
-def split_special_words(text: str) -> Iterable[ParseableToken]:
-    """ Preemptively split text by words that mecab doesn't know how to parse. """
-    for part in re.split(r'([0-9０-９一二三四五六七八九十]{1,4}[つ月日人筋隻丁品])', text):
-        if part:
-            yield ParseableToken(part)
-
-
 def mark_non_jp_token(m: re.Match) -> str:
     return "<no-jp>" + m.group() + "</no-jp>"
 
 
-def tokenize(expr: str, regexes: Optional[Collection[re.Pattern]] = None) -> Iterable[Token]:
+def parts(expr: str, pattern: re.Pattern):
+    return re.split(
+        r'(<no-jp>.*?</no-jp>)',
+        string=re.sub(pattern, mark_non_jp_token, expr),
+        flags=RE_FLAGS
+    )
+
+
+def compile_counters(counters: List[str]):
+    return re.compile(
+        r'([0-9０-９一二三四五六七八九十]{1,4}(?:' + r'|'.join(sorted(counters, key=len, reverse=True)) + r'))'
+    )
+
+
+def split_counters(text: str, counters: re.Pattern) -> Iterable[ParseableToken]:
+    """ Preemptively split text by words that mecab doesn't know how to parse. """
+    for part in counters.split(text):
+        if part:
+            yield ParseableToken(part)
+
+
+def _tokenize(expr: str, *, split_regexes: Sequence[re.Pattern], counters: re.Pattern) -> Iterable[Token]:
+    if not split_regexes:
+        yield from split_counters(expr.replace(' ', ''), counters)
+    else:
+        for part in parts(expr, split_regexes[0]):
+            if part:
+                if m := re.fullmatch(r'<no-jp>(.*?)</no-jp>', part, flags=RE_FLAGS):
+                    yield Token(m.group(1))
+                else:
+                    yield from _tokenize(part, split_regexes=split_regexes[1:], counters=counters)
+
+
+def tokenize(expr: str, *, counters: List[str]):
     """
     Splits expr to tokens.
     Each token can be either parseable with mecab or not.
     Furigana is removed from parseable tokens, if present.
     """
-    if not regexes:
-        expr = clean_furigana(expr)
-        regexes = HTML_AND_MEDIA_REGEX, NON_JP_REGEX, JP_SEP_REGEX
-
-    expr = re.sub(regexes[0], mark_non_jp_token, expr)
-
-    for part in re.split(r'(<no-jp>.*?</no-jp>)', expr, flags=RE_FLAGS):
-        if part:
-            if m := re.fullmatch(r'<no-jp>(.*?)</no-jp>', part, flags=RE_FLAGS):
-                yield Token(m.group(1))
-            elif len(regexes) > 1:
-                yield from tokenize(part, regexes[1:])
-            else:
-                yield from split_special_words(part.replace(' ', ''))
+    return _tokenize(
+        expr=clean_furigana(expr),
+        split_regexes=(HTML_AND_MEDIA_REGEX, NON_JP_REGEX, JP_SEP_REGEX,),
+        counters=compile_counters(counters),
+    )
 
 
 def main():
@@ -88,7 +104,7 @@ def main():
         "1月8日八日.彼女は１２月のある寒い夜に亡くなった。"
         "情報処理[じょうほうしょり]の 技術[ぎじゅつ]は 日々[にちにち,ひび] 進化[しんか]している。"
     )
-    for token in tokenize(expr):
+    for token in tokenize(expr, counters=list("つ月日人筋隻丁品番枚")):
         print(f"{token.__class__.__name__}({token})")
 
 
