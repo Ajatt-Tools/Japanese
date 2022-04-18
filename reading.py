@@ -246,9 +246,9 @@ def try_lookup_full_text(text: str) -> Optional[str]:
     return furigana if furigana != text else None
 
 
-def generate_furigana(src_text) -> str:
+def generate_furigana(src_text: str) -> str:
     substrings = []
-    for token in tokenize(src_text):
+    for token in tokenize(src_text, counters=cfg.furigana.counters):
         if isinstance(token, ParseableToken):
             if furigana := try_lookup_full_text(token):
                 substrings.append(furigana)

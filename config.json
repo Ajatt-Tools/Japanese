@@ -57,6 +57,7 @@
     "reading_separator": ",",
     "blocklisted_words": "人",
     "mecab_only": "彼,猫,首,母,顔,木,頭,私,弟,空",
+    "counters": "つ,月,日,人,筋,隻,丁,品,番,枚",
     "maximum_results": 3
   },
   "context_menu": {

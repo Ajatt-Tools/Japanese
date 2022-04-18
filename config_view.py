@@ -86,6 +86,11 @@ class FuriganaConfigView(WordBlockListManager):
         return split_words(self.get('mecab_only'))
 
     @property
+    def counters(self) -> List[str]:
+        """Words that shouldn't be looked up in the accent dictionary."""
+        return split_words(self.get('counters'))
+
+    @property
     def database_lookups(self) -> bool:
         return self.get('database_lookups') is True
 
