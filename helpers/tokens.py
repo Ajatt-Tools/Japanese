@@ -19,7 +19,7 @@ NON_JP_REGEX = re.compile(
 )
 JP_SEP_REGEX = re.compile(
     # Reference: https://wikiless.org/wiki/List_of_Japanese_typographic_symbols
-    r'[仝　 ・、※【】「」〒◎×〃゜『』《》〜~〽,.。〄〇〈〉〓〔〕〖〗〘〙〚〛〝〞〟〠〡〢〣〥〦〧〨〭〮〯〫〬〶〷〸〹〺〻〼〾〿！？…ヽヾゞ〱〲〳〵〴（）［］｛｝｟｠゠＝‥•◦﹅﹆＊♪♫♬♩ⓍⓁⓎ]',
+    r'[仝　 ・、※【】「」〒◎×〃゜『』《》～〜~〽,.。〄〇〈〉〓〔〕〖〗〘〙〚〛〝〞〟〠〡〢〣〥〦〧〨〭〮〯〫〬〶〷〸〹〺〻〼〾〿！？…ヽヾゞ〱〲〳〵〴（）［］｛｝｟｠゠＝‥•◦﹅﹆＊♪♫♬♩ⓍⓁⓎ]',
     flags=RE_FLAGS
 )
 
