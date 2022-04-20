@@ -2,9 +2,8 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import functools
-import re
 from collections import OrderedDict
-from typing import Tuple, NamedTuple, Optional, Iterable
+from typing import Tuple, Optional, Iterable
 
 from anki.notes import Note
 from anki.utils import htmlToTextLine
@@ -20,60 +19,10 @@ from .helpers.mingle_readings import mingle_readings, word_reading
 from .helpers.profiles import Task, TaskMode, iter_tasks
 from .helpers.tokens import tokenize, split_separators, ParseableToken
 from .helpers.unify_readings import unify_repr
-from .mecab_controller import BasicMecabController
+from .mecab_controller import MecabController
 from .mecab_controller import format_output, is_kana_word
 from .mecab_controller import to_hiragana, to_katakana
-
-
-# Mecab controller
-##########################################################################
-
-class ParsedToken(NamedTuple):
-    word: str
-    katakana_reading: Optional[str]
-    headword: str
-
-    @property
-    def hiragana_reading(self) -> str:
-        return to_hiragana(self.katakana_reading)
-
-
-class MecabController(BasicMecabController):
-    _add_mecab_args = [
-        '--node-format=%m,%f[7],%f[6]\t',
-        '--unk-format=%m\t',
-        '--eos-format=\n',
-    ]
-
-    def __init__(self):
-        super().__init__(mecab_args=self._add_mecab_args)
-
-    @staticmethod
-    def escape_text(text: str) -> str:
-        """Strip characters that trip up mecab."""
-        text = text.replace("\n", " ")
-        text = text.replace('\uff5e', "~")
-        text = re.sub("<br( /)?>", "---newline---", text)
-        text = htmlToTextLine(text)
-        text = text.replace("---newline---", "<br>")
-        return text
-
-    def translate(self, expr: str) -> Iterable[ParsedToken]:
-        """ Returns dictionary form and reading for each word in expr. """
-        expr = self.escape_text(expr)
-
-        for section in self.run(expr).split('\t'):
-            if section:
-                try:
-                    word, reading, headword = section.split(',')
-                except ValueError:
-                    word, reading, headword = section, section, section
-
-                if is_kana_word(word) or to_katakana(word) == to_katakana(reading):
-                    reading = None
-
-                print(word, reading, headword, sep='\t')
-                yield ParsedToken(word, reading, headword)
+from .mecab_controller.mecab_controller import ParsedToken
 
 
 # Lookup
@@ -168,8 +117,7 @@ def get_pronunciations(expr: str, sanitize: bool = True, recurse: bool = True) -
 
 def iter_accents(word: str) -> Iterable[FormattedEntry]:
     if word in (accents := get_pronunciations(word, recurse=False)):
-        for entry in accents[word]:
-            yield entry
+        yield from accents[word]
 
 
 def get_notation(entry: FormattedEntry, mode: TaskMode) -> str:
@@ -241,7 +189,7 @@ def try_lookup_full_text(text: str) -> Optional[str]:
     Avoids calling mecab when the text contains one word in dictionary form
     or multiple words in dictionary form separated by punctuation.
     """
-    dummy = ParsedToken(text, None, text)
+    dummy = ParsedToken(text, text, None, None, None)
     furigana = format_furigana(dummy)
     return furigana if furigana != text else None
 
@@ -338,7 +286,7 @@ def on_add_note(note: Note) -> None:
 # Entry point
 ##########################################################################
 
-mecab = MecabController()
+mecab = MecabController(verbose=True)
 acc_dict = database_init()
 
 
