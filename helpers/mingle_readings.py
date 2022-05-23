@@ -51,8 +51,7 @@ def word_reading(text: str) -> WordReading:
 
 
 def pairs(seq: List):
-    for previous, current in zip(seq, seq[1:]):
-        yield previous, current
+    yield from zip(seq, seq[1:])
 
 
 def mingle_readings(readings: List[str], *, sep: str = '', wrap: WordWrap = WordWrapMode.div.value) -> str:
