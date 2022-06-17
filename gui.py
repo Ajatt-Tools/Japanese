@@ -15,7 +15,7 @@ from .config_view import ConfigViewBase, config_view as cfg
 from .helpers import ui_translate
 from .helpers.config import write_config
 from .helpers.mingle_readings import WordWrapMode
-from .helpers.profiles import TaskMode, Profile, iter_profiles
+from .helpers.profiles import TaskMode, Profile
 
 EDIT_MIN_WIDTH = 100
 
@@ -191,7 +191,7 @@ class ProfileEditForm(QGroupBox):
     def as_dict(self) -> Dict[str, str]:
         return as_config_dict(self._form.__dict__)
 
-    def data(self) -> Profile:
+    def as_profile(self) -> Profile:
         return Profile(**self.as_dict())
 
     def make_layout(self) -> QLayout:
@@ -218,41 +218,41 @@ class ProfileEditForm(QGroupBox):
 class ProfileEdit(QHBoxLayout):
     def __init__(self, profiles: Iterable[Profile], *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._left_panel = ProfileList()
-        self._right_panel = ProfileEditForm()
-        self.addWidget(self._left_panel)
-        self.addWidget(self._right_panel)
-        qconnect(self._left_panel.current_item_changed, self._edit_profile)
-        self._left_panel.populate(profiles)
+        self._profile_list = ProfileList()
+        self._edit_form = ProfileEditForm()
+        self.addWidget(self._profile_list)
+        self.addWidget(self._edit_form)
+        qconnect(self._profile_list.current_item_changed, self._edit_profile)
+        self._profile_list.populate(profiles)
 
     def _edit_profile(self, current: QListWidgetItem, previous: QListWidgetItem):
         self._apply_profile(previous)
         if current:
-            self._right_panel.setEnabled(True)
-            self._right_panel.load_profile(current.data(Qt.UserRole))
+            self._edit_form.setEnabled(True)
+            self._edit_form.load_profile(current.data(Qt.UserRole))
         else:
-            self._right_panel.setEnabled(False)
+            self._edit_form.setEnabled(False)
 
     def _apply_profile(self, item: QListWidgetItem):
         if item:
-            profile = self._right_panel.data()
+            profile = self._edit_form.as_profile()
             item.setData(Qt.UserRole, profile)
             item.setText(profile.name)
 
     def as_list(self) -> List[Dict[str, str]]:
-        self._apply_profile(self._left_panel.current_item())
-        return [dataclasses.asdict(p) for p in self._left_panel.profiles()]
+        self._apply_profile(self._profile_list.current_item())
+        return [dataclasses.asdict(p) for p in self._profile_list.profiles()]
 
 
 class WordsEdit(QTextEdit):
-    def __init__(self, initial_values: List[str], *args):
+    def __init__(self, initial_values: Optional[List[str]] = None, *args):
         super().__init__(*args)
         self.setAcceptRichText(False)
-        if initial_values:
-            self.set_values(initial_values)
+        self.set_values(initial_values)
 
     def set_values(self, values: List[str]):
-        self.setPlainText(','.join(dict.fromkeys(values)))
+        if values:
+            self.setPlainText(','.join(dict.fromkeys(values)))
 
     def as_text(self) -> str:
         return ','.join(dict.fromkeys(filter(bool, self.toPlainText().replace(' ', '').split('\n'))))
@@ -401,7 +401,7 @@ class SettingsDialog(QDialog):
 
     def __init__(self, *args):
         super().__init__(*args)
-        self._profile_layout = ProfileEdit(profiles=iter_profiles())
+        self._profile_layout = ProfileEdit(profiles=cfg.iter_profiles())
         self._general_settings = GeneralSettingsForm()
         self._pitch_settings = PitchSettingsForm()
         self._furigana_settings = FuriganaSettingsForm()
