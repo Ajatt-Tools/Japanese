@@ -4,6 +4,7 @@
 import re
 from typing import List, Dict, Iterable, Tuple, NamedTuple, final, Any
 
+from .helpers.profiles import Profile
 from .helpers.config import default_config, config
 from .helpers.mingle_readings import WordWrapMode
 from .helpers.tokens import RE_FLAGS
@@ -83,6 +84,7 @@ class FuriganaConfigView(WordBlockListManager):
 
     @property
     def mecab_only(self) -> List[str]:
+        """Words that shouldn't be looked up in the accent dictionary."""
         return split_words(self.get('mecab_only'))
 
     @property
@@ -147,6 +149,10 @@ class ContextMenuConfigView(ConfigViewBase):
     def to_hiragana(self) -> bool:
         return self.get('to_hiragana') is True
 
+    @property
+    def literal_pronunciation(self) -> bool:
+        return self.get('literal_pronunciation') is True
+
 
 class ToolbarButtonConfig(NamedTuple):
     enabled: bool
@@ -187,6 +193,9 @@ class ConfigView(ConfigViewBase):
         self._pitch = PitchConfigView()
         self._context_menu = ContextMenuConfigView()
         self._toolbar = ToolbarConfigView()
+
+    def iter_profiles(self) -> Iterable[Profile]:
+        return (Profile(**p) for p in self.get('profiles'))
 
     @property
     def generate_on_note_add(self) -> bool:
