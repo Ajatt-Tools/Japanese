@@ -71,7 +71,7 @@ def calculate_drop(katakana_reading: str, idx: int) -> int:
     Returns position of the drop.
     Handles expressions with multiple accents, such as 月雪花(つキ・ユキ・ハナ)[2,2,2]
     """
-    return len(kana_to_moraes(katakana_reading[:idx + 1].split('・')[-1]))
+    return len(kana_to_moras(katakana_reading[:idx + 1].split('・')[-1]))
 
 
 def format_entry(e: AccentEntry) -> FormattedEntry:

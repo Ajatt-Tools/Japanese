@@ -36,8 +36,8 @@ def should_regenerate(file_path: str) -> bool:
     return empty or old
 
 
-def kana_to_moraes(kana: str) -> List[str]:
-    return re.findall(r'.[ャュョゃゅょ]?', kana)
+def kana_to_moras(kana: str) -> List[str]:
+    return re.findall(r'.[ァィゥェォャュョぁぃぅぇぉゃゅょ]?', kana)
 
 
 class FormattedEntry(NamedTuple):

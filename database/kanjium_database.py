@@ -34,7 +34,7 @@ class AccentEntry:
 
     def __init__(self, keyword: str, reading: str, accents: str):
         self._keyword = keyword
-        self._reading = kana_to_moraes(to_katakana(reading or keyword))
+        self._reading = kana_to_moras(to_katakana(reading or keyword))
         self._accents = {int(re.search(r'\d{1,2}$', pos).group()) for pos in accents.split(',')}
 
     @property
