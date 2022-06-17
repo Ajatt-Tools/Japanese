@@ -9,9 +9,10 @@ from aqt.editor import EditorWebView, Editor
 from aqt.qt import *
 from aqt.utils import tooltip
 
+from .config_view import config_view as cfg
+from .helpers.unify_readings import KANA_MAP
 from .mecab_controller import to_katakana, to_hiragana
 from .reading import generate_furigana
-from .helpers.config import config
 
 
 class ContextMenuAction(abc.ABC):
@@ -26,7 +27,7 @@ class ContextMenuAction(abc.ABC):
 
     @classmethod
     def enabled(cls) -> bool:
-        return config['context_menu'][cls.key]
+        return cfg.context_menu.get(cls.key)
 
     @property
     @abc.abstractmethod
@@ -65,6 +66,20 @@ class ToHiragana(ContextMenuAction):
     key = "to_hiragana"
     label = "Convert to hiragana"
     action = staticmethod(to_hiragana)
+
+
+class LiteralPronunciation(ContextMenuAction):
+    key = "literal_pronunciation"
+    label = "Literal pronunciation"
+
+    @classmethod
+    def action(cls, text: str) -> str:
+        text = text.replace("を", "オ")
+        for adjusted, normal in KANA_MAP:
+            if normal in text:
+                text = text.replace(normal, adjusted)
+        text = to_katakana(text)
+        return text
 
 
 def add_context_menu_items(webview: EditorWebView, menu: QMenu) -> None:
