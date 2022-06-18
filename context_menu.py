@@ -10,7 +10,7 @@ from aqt.qt import *
 from aqt.utils import tooltip
 
 from .config_view import config_view as cfg
-from .helpers.unify_readings import KANA_MAP
+from .helpers.unify_readings import literal_pronunciation
 from .mecab_controller import to_katakana, to_hiragana
 from .reading import generate_furigana
 
@@ -71,21 +71,13 @@ class ToHiragana(ContextMenuAction):
 class LiteralPronunciation(ContextMenuAction):
     key = "literal_pronunciation"
     label = "Literal pronunciation"
-
-    @classmethod
-    def action(cls, text: str) -> str:
-        text = text.replace("を", "オ")
-        for adjusted, normal in KANA_MAP:
-            if normal in text:
-                text = text.replace(normal, adjusted)
-        text = to_katakana(text)
-        return text
+    action = staticmethod(literal_pronunciation)
 
 
 def add_context_menu_items(webview: EditorWebView, menu: QMenu) -> None:
     for Action in ContextMenuAction.subclasses:
         if Action.enabled():
-            action = menu.addAction(Action.label)
+            action = menu.addAction(str(Action.label))
             qconnect(action.triggered, Action(webview.editor))
 
 
