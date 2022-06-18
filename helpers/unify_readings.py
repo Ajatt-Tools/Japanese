@@ -7,6 +7,7 @@ except ImportError:
     from mecab_controller import to_katakana
 
 KANA_MAP = (
+    ('けー', 'けい'),
     ('ぐー', 'ぐう'),
     ('ごー', 'ごう'),
     ('ずー', 'ずう'),
@@ -44,14 +45,17 @@ KANA_MAP = (
     ('せー', 'せい'),
     ('じー', 'じい'),
     ('かー', 'かあ'),
-    ('つづ', 'つず'),
+    ('ゅー', 'ゅう'),
+    ('ぜー', 'ぜい'),
     ('ほお', 'ほう'),
     ('どお', 'どう'),
     ('とお', 'とう'),
     ('おお', 'おう'),
-    ('づう', 'ずう'),
-    ('ぢ', 'じ'),
-    ('づ', 'ず'),
+    ('ずう', 'づう'),
+    ('つず', 'つづ'),
+    ('じ', 'ぢ'),
+    ('ず', 'づ'),
+    ('お', 'を'),
 )
 KANA_MAP = KANA_MAP + tuple((to_katakana(key), to_katakana(val)) for key, val in KANA_MAP)
 KANA_MAP_REV = tuple((val, key) for key, val in KANA_MAP)
@@ -71,7 +75,19 @@ def unify_repr(reading: str, reverse: bool = False):
     return reading
 
 
+def literal_pronunciation(text: str) -> str:
+    for adjusted, normal in KANA_MAP:
+        if normal in text:
+            text = text.replace(normal, adjusted)
+    text = to_katakana(text)
+    return text
+
+
 if __name__ == '__main__':
+    print("Unified:")
     print(unify_repr('ひつよー'))
     print(unify_repr('ヒツヨー'))
+    print("Reverse:")
     print(unify_repr('おはよう', reverse=True))
+    print("Literal:")
+    print(literal_pronunciation('がっこう'))
