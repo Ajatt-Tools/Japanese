@@ -6,88 +6,79 @@ try:
 except ImportError:
     from mecab_controller import to_katakana
 
-KANA_MAP = (
-    ('けー', 'けい'),
-    ('ぐー', 'ぐう'),
-    ('ごー', 'ごう'),
-    ('ずー', 'ずう'),
-    ('ぞー', 'ぞう'),
-    ('づー', 'づう'),
-    ('どー', 'どう'),
-    ('ぶー', 'ぶう'),
-    ('ぼー', 'ぼう'),
-    ('ぷー', 'ぷう'),
-    ('ぽー', 'ぽう'),
-    ('うー', 'うう'),
-    ('おー', 'おう'),
-    ('くー', 'くう'),
-    ('こー', 'こう'),
-    ('すー', 'すう'),
-    ('そー', 'そう'),
-    ('つー', 'つう'),
-    ('とー', 'とう'),
-    ('ぬー', 'ぬう'),
-    ('のー', 'のう'),
-    ('ふー', 'ふう'),
-    ('ほー', 'ほう'),
-    ('むー', 'むう'),
-    ('もー', 'もう'),
-    ('よー', 'よう'),
-    ('るー', 'るう'),
-    ('ろー', 'ろう'),
-    ('ぅー', 'ぅう'),
-    ('ぉー', 'ぉう'),
-    ('ょー', 'ょう'),
-    ('ゅー', 'ゅう'),
-    ('ゆー', 'ゆう'),
-    ('いー', 'いい'),
-    ('ちー', 'ちい'),
-    ('せー', 'せい'),
-    ('じー', 'じい'),
-    ('かー', 'かあ'),
-    ('ゅー', 'ゅう'),
-    ('ぜー', 'ぜい'),
-    ('ほお', 'ほう'),
-    ('どお', 'どう'),
-    ('とお', 'とう'),
-    ('おお', 'おう'),
-    ('ずう', 'づう'),
-    ('つず', 'つづ'),
-    ('じ', 'ぢ'),
-    ('ず', 'づ'),
-    ('お', 'を'),
-)
-KANA_MAP = KANA_MAP + tuple((to_katakana(key), to_katakana(val)) for key, val in KANA_MAP)
-KANA_MAP_REV = tuple((val, key) for key, val in KANA_MAP)
+EQUIVALENT_SOUNDS = {
+    'けい': 'けー',
+    'ぐう': 'ぐー',
+    'ごう': 'ごー',
+    'ずう': 'ずー',
+    'づう': 'ずー',
+    'づー': 'ずー',
+    'ぞう': 'ぞー',
+    'どう': 'どー',
+    'どお': 'どー',
+    'ぶう': 'ぶー',
+    'ぼう': 'ぼー',
+    'ぷう': 'ぷー',
+    'ぽう': 'ぽー',
+    'うう': 'うー',
+    'おう': 'おー',
+    'おお': 'おー',
+    'くう': 'くー',
+    'こう': 'こー',
+    'すう': 'すー',
+    'そう': 'そー',
+    'つう': 'つー',
+    'とう': 'とー',
+    'とお': 'とー',
+    'ぬう': 'ぬー',
+    'のう': 'のー',
+    'ふう': 'ふー',
+    'ほう': 'ほー',
+    'ほお': 'ほー',
+    'むう': 'むー',
+    'もう': 'もー',
+    'よう': 'よー',
+    'るう': 'るー',
+    'ろう': 'ろー',
+    'ぅう': 'ぅー',
+    'ぉう': 'ぉー',
+    'ょう': 'ょー',
+    'ゆう': 'ゆー',
+    'いい': 'いー',
+    'ちい': 'ちー',
+    'せい': 'せー',
+    'じい': 'じー',
+    'かあ': 'かー',
+    'ゅう': 'ゅー',
+    'ぜい': 'ぜー',
+    'つづ': 'つず',
+    'ぢ': 'じ',
+    'づ': 'ず',
+    'を': 'お',
+}
+EQUIVALENT_SOUNDS |= {to_katakana(key): to_katakana(val) for key, val in EQUIVALENT_SOUNDS.items()}
 
 
-def unify_repr(reading: str, reverse: bool = False):
+def unify_repr(reading: str):
     """
     NHK database contains entries with redundant readings.
     They only differ by the use of 'ー' or kana characters that sound the same.
     Try to de-duplicate them.
     """
-    vowels_map = KANA_MAP_REV if reverse else KANA_MAP
-
-    for key, value in vowels_map:
+    for key, value in EQUIVALENT_SOUNDS.items():
         if key in reading:
             reading = reading.replace(key, value)
     return reading
 
 
 def literal_pronunciation(text: str) -> str:
-    for adjusted, normal in KANA_MAP:
-        if normal in text:
-            text = text.replace(normal, adjusted)
-    text = to_katakana(text)
-    return text
+    return to_katakana(unify_repr(text))
+
+
+def test():
+    assert unify_repr('おはよう') == 'おはよー'
+    assert literal_pronunciation('がっこう') == 'ガッコー'
 
 
 if __name__ == '__main__':
-    print("Unified:")
-    print(unify_repr('ひつよー'))
-    print(unify_repr('ヒツヨー'))
-    print("Reverse:")
-    print(unify_repr('おはよう', reverse=True))
-    print("Literal:")
-    print(literal_pronunciation('がっこう'))
+    test()
