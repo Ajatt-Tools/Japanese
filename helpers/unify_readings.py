@@ -7,6 +7,12 @@ except ImportError:
     from mecab_controller import to_katakana
 
 EQUIVALENT_SOUNDS = {
+    'ぢ': 'じ',
+    'づ': 'ず',
+    'を': 'お',
+    'れい': 'れー',
+    'めい': 'めー',
+    'べい': 'べー',
     'けい': 'けー',
     'ぐう': 'ぐー',
     'ごう': 'ごー',
@@ -53,9 +59,7 @@ EQUIVALENT_SOUNDS = {
     'ゅう': 'ゅー',
     'ぜい': 'ぜー',
     'つづ': 'つず',
-    'ぢ': 'じ',
-    'づ': 'ず',
-    'を': 'お',
+    'じゃあ': 'じゃー',
 }
 EQUIVALENT_SOUNDS |= {to_katakana(key): to_katakana(val) for key, val in EQUIVALENT_SOUNDS.items()}
 
@@ -78,6 +82,7 @@ def literal_pronunciation(text: str) -> str:
 
 def test():
     assert unify_repr('おはよう') == 'おはよー'
+    assert unify_repr('おお') == 'おー'
     assert literal_pronunciation('がっこう') == 'ガッコー'
 
 
