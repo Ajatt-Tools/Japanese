@@ -15,7 +15,7 @@ from .config_view import ConfigViewBase, config_view as cfg
 from .helpers import ui_translate
 from .helpers.config import write_config
 from .helpers.mingle_readings import WordWrapMode
-from .helpers.profiles import TaskMode, Profile
+from .helpers.profiles import Profile
 
 EDIT_MIN_WIDTH = 100
 
@@ -80,10 +80,6 @@ class EnumSelector(QComboBox):
 
     def currentText(self) -> str:
         return super().currentText().lower()
-
-
-class ModeSelector(EnumSelector):
-    _type = TaskMode
 
 
 class WrapSelector(EnumSelector):
@@ -181,32 +177,32 @@ class ProfileEditForm(QGroupBox):
             note_type=NoteTypeSelector(),
             source=EditableSelector(),
             destination=EditableSelector(),
-            mode=ModeSelector(),
         )
-        self.setLayout(self.make_layout())
+        self._last_used_profile: Optional[Profile] = Profile.new()
+        self.setLayout(self._make_layout())
         adjust_to_contents(self)
         self.setMinimumWidth(EDIT_MIN_WIDTH)
-        qconnect(self._form.note_type.currentIndexChanged, lambda index: self.repopulate_fields())
-
-    def as_dict(self) -> Dict[str, str]:
-        return as_config_dict(self._form.__dict__)
+        qconnect(self._form.note_type.currentIndexChanged, lambda index: self._repopulate_fields())
 
     def as_profile(self) -> Profile:
-        return Profile(**self.as_dict())
+        return Profile(**self._as_dict())
 
-    def make_layout(self) -> QLayout:
+    def load_profile(self, profile: Profile):
+        self._last_used_profile = profile
+        self._form.name.setText(profile.name)
+        self._form.note_type.repopulate(profile.note_type)
+        self._repopulate_fields(profile)
+
+    def _as_dict(self) -> Dict[str, str]:
+        return dataclasses.asdict(self._last_used_profile) | as_config_dict(self._form.__dict__)
+
+    def _make_layout(self) -> QLayout:
         layout = QFormLayout()
         for key, widget in self._form.__dict__.items():
             layout.addRow(ui_translate(key), widget)
         return layout
 
-    def load_profile(self, profile: Profile):
-        self._form.name.setText(profile.name)
-        self._form.mode.setCurrentText(profile.mode)
-        self._form.note_type.repopulate(profile.note_type)
-        self.repopulate_fields(profile)
-
-    def repopulate_fields(self, profile: Optional[Profile] = None):
+    def _repopulate_fields(self, profile: Optional[Profile] = None):
         for key in ('source', 'destination',):
             widget: QComboBox = self._form.__dict__[key]
             current_text = dataclasses.asdict(profile)[key] if profile else widget.currentText()
