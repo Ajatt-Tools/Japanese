@@ -67,7 +67,7 @@ def add_toolbar_buttons(html_buttons: List[str], editor: Editor) -> None:
     html_buttons.extend(
         editor.addButton(
             icon=None,
-            cmd=b.id,
+            cmd=f'ajt__{b.id}',
             func=b.on_press,
             tip=f"{b.tip} ({b.conf.shortcut})" if b.conf.shortcut else b.tip,
             keys=b.conf.shortcut or None,
