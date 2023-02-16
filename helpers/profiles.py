@@ -3,9 +3,13 @@
 
 import dataclasses
 import enum
-from typing import Dict, Any, Optional, NamedTuple, Iterable
-from .config import config
-from anki.notes import Note
+
+
+# noinspection PyArgumentList
+@enum.unique
+class PitchOutputFormat(enum.Enum):
+    number = enum.auto()
+    html = enum.auto()
 
 
 @dataclasses.dataclass(frozen=True)
@@ -16,14 +20,25 @@ class Profile:
     destination: str
     mode: str
 
+    __subclasses_map = {}  # furigana -> ProfileFurigana
+
+    def __init_subclass__(cls, **kwargs):
+        mode = kwargs.pop('mode')  # suppresses ide warning
+        super().__init_subclass__(**kwargs)
+        cls.__subclasses_map[mode] = cls
+        cls.mode = mode
+
+    def __new__(cls, mode: str, *args, **kwargs):
+        subclass = cls.__subclasses_map[mode]
+        return object.__new__(subclass)
+
     @classmethod
-    def new(cls):
+    def new(cls, **kwargs):
         return cls(
+            **kwargs,
+            mode=cls.mode,
             name="New profile",
             note_type="Japanese",
-            source="VocabKanji",
-            destination="VocabPitchPattern",
-            mode="html",
         )
 
     @classmethod
@@ -31,36 +46,38 @@ class Profile:
         return cls(**dataclasses.asdict(profile))
 
 
-@enum.unique
-class TaskMode(enum.Enum):
-    number = enum.auto()
-    html = enum.auto()
-    furigana = enum.auto()
+@dataclasses.dataclass(frozen=True)
+class ProfilePitch(Profile, mode="pitch"):
+    output_format: str
+
+    @classmethod
+    def new(cls):
+        return super().new(
+            source="VocabKanji",
+            destination="VocabPitchPattern",
+            output_format=PitchOutputFormat.html.name,
+        )
 
 
-class Task(NamedTuple):
-    src_field: str
-    dst_field: str
-    mode: TaskMode
+@dataclasses.dataclass(frozen=True)
+class ProfileFurigana(Profile, mode="furigana"):
+    @classmethod
+    def new(cls):
+        return super().new(
+            source="VocabKanji",
+            destination="VocabFurigana",
+        )
 
 
-def profile_matches(note_type: Dict[str, Any], profile: Profile) -> bool:
-    return profile.note_type.lower() in note_type['name'].lower()
+def test():
+    import json
+
+    with open('../config.json') as f:
+        config = json.load(f)
+
+    for p in config.get('profiles'):
+        print(Profile(**p))
 
 
-def get_notetype(note: Note) -> Dict[str, Any]:
-    if hasattr(note, 'note_type'):
-        return note.note_type()
-    else:
-        return note.model()
-
-
-def iter_profiles() -> Iterable[Profile]:
-    return (Profile(**p) for p in config['profiles'])
-
-
-def iter_tasks(note: Note, src_field: Optional[str] = None) -> Iterable[Task]:
-    note_type = get_notetype(note)
-    for profile in iter_profiles():
-        if profile_matches(note_type, profile) and (src_field is None or profile.source == src_field):
-            yield Task(profile.source, profile.destination, TaskMode[profile.mode])
+if __name__ == '__main__':
+    test()

@@ -195,7 +195,7 @@ class ConfigView(ConfigViewBase):
         self._toolbar = ToolbarConfigView()
 
     def iter_profiles(self) -> Iterable[Profile]:
-        return (Profile(**p) for p in self.get('profiles'))
+        return map(lambda dict_: Profile(**dict_), self.get('profiles'))
 
     @property
     def generate_on_note_add(self) -> bool:

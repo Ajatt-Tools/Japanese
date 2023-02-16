@@ -3,6 +3,7 @@
 
 import dataclasses
 import enum
+import itertools
 from types import SimpleNamespace
 from typing import Optional, Iterable, Dict, Tuple, List
 
@@ -15,7 +16,7 @@ from .config_view import ConfigViewBase, config_view as cfg
 from .helpers import ui_translate
 from .helpers.config import write_config
 from .helpers.mingle_readings import WordWrapMode
-from .helpers.profiles import Profile
+from .helpers.profiles import Profile, ProfileFurigana, ProfilePitch
 
 EDIT_MIN_WIDTH = 100
 
@@ -107,10 +108,11 @@ def as_config_dict(widgets: Dict[str, QWidget]) -> Dict[str, Union[bool, str, in
 
 
 class ProfileList(QGroupBox):
-    def __init__(self, *args):
+    def __init__(self, store: type(Profile), *args):
         super().__init__(*args)
         self.setTitle("Profiles")
         self.setCheckable(False)
+        self._store_type = store
         self._list_widget = QListWidget()
         self._control_panel = ControlPanel()
         self.setMinimumWidth(EDIT_MIN_WIDTH)
@@ -132,7 +134,7 @@ class ProfileList(QGroupBox):
         qconnect(self._control_panel.clone_btn.clicked, self.clone_profile)
 
     def add_profile(self):
-        self.add_and_select(Profile.new())
+        self.add_and_select(self._store_type.new())
 
     def remove_current(self) -> Optional[int]:
         if (current := self.current_item()) and current.isSelected():
@@ -149,13 +151,11 @@ class ProfileList(QGroupBox):
         layout.addLayout(self._control_panel)
         return layout
 
-    def populate(self, profiles: Iterable[Profile]):
+    def populate(self):
         self._list_widget.clear()
-        for profile in profiles:
-            item = QListWidgetItem()
-            item.setText(profile.name)
-            item.setData(Qt.UserRole, profile)
-            self._list_widget.addItem(item)
+        for profile in cfg.iter_profiles():
+            if isinstance(profile, self._store_type):
+                self.add_and_select(profile)
         self._list_widget.setCurrentRow(0)
 
     def add_and_select(self, profile: Profile):
@@ -178,7 +178,7 @@ class ProfileEditForm(QGroupBox):
             source=EditableSelector(),
             destination=EditableSelector(),
         )
-        self._last_used_profile: Optional[Profile] = Profile.new()
+        self._last_used_profile: Optional[Profile] = None
         self.setLayout(self._make_layout())
         adjust_to_contents(self)
         self.setMinimumWidth(EDIT_MIN_WIDTH)
@@ -212,14 +212,18 @@ class ProfileEditForm(QGroupBox):
 
 
 class ProfileEdit(QHBoxLayout):
-    def __init__(self, profiles: Iterable[Profile], *args, **kwargs):
+    def __init_subclass__(cls, *, profile_class: type(Profile), **kwargs):
+        super().__init_subclass__(**kwargs)
+        cls.profile_class = profile_class
+
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._profile_list = ProfileList()
+        self._profile_list = ProfileList(store=self.profile_class)
         self._edit_form = ProfileEditForm()
         self.addWidget(self._profile_list)
         self.addWidget(self._edit_form)
         qconnect(self._profile_list.current_item_changed, self._edit_profile)
-        self._profile_list.populate(profiles)
+        self._profile_list.populate()
 
     def _edit_profile(self, current: QListWidgetItem, previous: QListWidgetItem):
         self._apply_profile(previous)
@@ -238,6 +242,14 @@ class ProfileEdit(QHBoxLayout):
     def as_list(self) -> List[Dict[str, str]]:
         self._apply_profile(self._profile_list.current_item())
         return [dataclasses.asdict(p) for p in self._profile_list.profiles()]
+
+
+class FuriganaProfilesEdit(ProfileEdit, profile_class=ProfileFurigana):
+    pass
+
+
+class PitchProfilesEdit(ProfileEdit, profile_class=ProfilePitch):
+    pass
 
 
 class WordsEdit(QTextEdit):
@@ -397,17 +409,27 @@ class SettingsDialog(QDialog):
 
     def __init__(self, *args):
         super().__init__(*args)
-        self._profile_layout = ProfileEdit(profiles=cfg.iter_profiles())
+        self._tabs = QTabWidget()
+        self._profile_edits = {
+            "furigana": FuriganaProfilesEdit(),
+            "pitch accent": PitchProfilesEdit(),
+        }
         self._general_settings = GeneralSettingsForm()
         self._pitch_settings = PitchSettingsForm()
         self._furigana_settings = FuriganaSettingsForm()
         self._context_menu_settings = ContextMenuSettingsForm()
         self._toolbar_settings = ToolbarSettingsForm()
         self._button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self._setup_tabs()
         self._setup_ui()
         restoreGeom(self, self.name, adjustSize=True)
         self.exec()
         saveGeom(self, self.name)
+
+    def _setup_tabs(self):
+        for tab_name, edit_layout in self._profile_edits.items():
+            (tab := QWidget()).setLayout(edit_layout)
+            self._tabs.addTab(tab, tab_name.capitalize())
 
     def _setup_ui(self) -> None:
         self.setWindowModality(Qt.ApplicationModal)
@@ -423,7 +445,7 @@ class SettingsDialog(QDialog):
 
     def make_layout(self) -> QLayout:
         layout = QVBoxLayout()
-        layout.addLayout(self._profile_layout)
+        layout.addWidget(self._tabs)
         layout.addLayout(self.make_bottom_row())
         layout.addStretch()
         layout.addWidget(self._button_box)
@@ -448,7 +470,7 @@ class SettingsDialog(QDialog):
         config['furigana'].update(self._furigana_settings.as_dict())
         config['context_menu'].update(self._context_menu_settings.as_dict())
         config['toolbar'].update(self._toolbar_settings.as_dict())
-        config['profiles'] = self._profile_layout.as_list()
+        config['profiles'] = list(itertools.chain(*map(ProfileEdit.as_list, self._profile_edits.values())))
         write_config()
         QDialog.accept(self)
 

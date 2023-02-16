@@ -5,7 +5,6 @@ import functools
 from collections import OrderedDict
 from typing import Tuple, Optional, Iterable
 
-from anki.notes import Note
 from anki.utils import htmlToTextLine
 from aqt import mw
 
@@ -16,7 +15,7 @@ from .helpers import *
 from .helpers.common_kana import adjust_reading
 from .helpers.hooks import collection_will_add_note
 from .helpers.mingle_readings import mingle_readings, word_reading
-from .helpers.profiles import Task, TaskMode, iter_tasks
+from .helpers.profiles import Profile, ProfileFurigana, PitchOutputFormat, ProfilePitch
 from .helpers.tokens import tokenize, split_separators, ParseableToken
 from .helpers.unify_readings import unify_repr
 from .mecab_controller import MecabController
@@ -120,17 +119,17 @@ def iter_accents(word: str) -> Iterable[FormattedEntry]:
         yield from accents[word]
 
 
-def get_notation(entry: FormattedEntry, mode: TaskMode) -> str:
-    if mode == TaskMode.html:
+def get_notation(entry: FormattedEntry, mode: PitchOutputFormat) -> str:
+    if mode == PitchOutputFormat.html:
         return update_html(entry.html_notation)
-    if mode == TaskMode.number:
+    if mode == PitchOutputFormat.number:
         return entry.pitch_number
     raise Exception("Unreachable.")
 
 
 def format_pronunciations(
         pronunciations: AccentDict,
-        mode: TaskMode = TaskMode.html,
+        output_format: PitchOutputFormat = PitchOutputFormat.html,
         max_results_per_word: int = 0,
         sep_single: str = "・",
         sep_multi: str = "、",
@@ -138,7 +137,7 @@ def format_pronunciations(
 ) -> str:
     ordered_dict = OrderedDict()
     for word, entries in pronunciations.items():
-        entries = dict.fromkeys(get_notation(entry, mode) for entry in entries)
+        entries = dict.fromkeys(get_notation(entry, output_format) for entry in entries)
         if max_results_per_word == 0 or len(entries) <= max_results_per_word:
             ordered_dict[word] = sep_single.join(entries)
 
@@ -212,6 +211,17 @@ def generate_furigana(src_text: str) -> str:
 # Tasks
 ##########################################################################
 
+def note_type_matches(note_type: Dict[str, Any], profile: Profile) -> bool:
+    return profile.note_type.lower() in note_type['name'].lower()
+
+
+def iter_tasks(note: Note, src_field: Optional[str] = None) -> Iterable[Profile]:
+    note_type = get_notetype(note)
+    for profile in cfg.iter_profiles():
+        if note_type_matches(note_type, profile) and (src_field is None or profile.source == src_field):
+            yield profile
+
+
 class DoTasks:
     def __init__(self, note: Note, src_field: Optional[str] = None, overwrite: bool = False):
         self._note = note
@@ -223,15 +233,15 @@ class DoTasks:
             changed = self.do_task(task) or changed
         return changed
 
-    def do_task(self, task: Task) -> bool:
+    def do_task(self, task: Profile) -> bool:
         changed = False
-        if self.can_fill_destination(task) and (src_text := mw.col.media.strip(self._note[task.src_field]).strip()):
-            if task.mode == TaskMode.furigana:
-                self._note[task.dst_field] = generate_furigana(src_text)
-            else:
-                self._note[task.dst_field] = format_pronunciations(
+        if self.can_fill_destination(task) and (src_text := mw.col.media.strip(self._note[task.source]).strip()):
+            if isinstance(task, ProfileFurigana):
+                self._note[task.destination] = generate_furigana(src_text)
+            elif isinstance(task, ProfilePitch):
+                self._note[task.destination] = format_pronunciations(
                     pronunciations=get_pronunciations(src_text),
-                    mode=task.mode,
+                    output_format=PitchOutputFormat[task.output_format],
                     sep_single=cfg.pitch_accent.reading_separator,
                     sep_multi=cfg.pitch_accent.word_separator,
                     max_results_per_word=cfg.pitch_accent.maximum_results,
@@ -239,21 +249,21 @@ class DoTasks:
             changed = True
         return changed
 
-    def can_fill_destination(self, task: Task) -> bool:
+    def can_fill_destination(self, task: Profile) -> bool:
         # Field names are empty or None
-        if not task.src_field or not task.dst_field:
+        if not task.source or not task.destination:
             return False
 
         # The note doesn't have fields with these names
-        if task.src_field not in self._note or task.dst_field not in self._note:
+        if task.source not in self._note or task.destination not in self._note:
             return False
 
         # Yomichan added `No pitch accent data` to the field when creating the note
-        if "No pitch accent data".lower() in self._note[task.dst_field].lower():
+        if "No pitch accent data".lower() in self._note[task.destination].lower():
             return True
 
         # Field is empty or overwrite requested
-        if len(htmlToTextLine(self._note[task.dst_field])) == 0 or self._overwrite is True:
+        if len(htmlToTextLine(self._note[task.destination])) == 0 or self._overwrite is True:
             return True
 
         # Allowed regenerating regardless

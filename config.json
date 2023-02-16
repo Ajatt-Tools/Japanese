@@ -14,14 +14,16 @@
       "note_type": "japanese",
       "source": "VocabKanji",
       "destination": "VocabPitchPattern",
-      "mode": "html"
+      "mode": "pitch",
+      "output_format": "html"
     },
     {
       "name": "Add pitch accent number",
       "note_type": "japanese",
       "source": "VocabKanji",
       "destination": "VocabPitchNum",
-      "mode": "number"
+      "mode": "pitch",
+      "output_format": "number"
     },
     {
       "name": "Add furigana for sentence",

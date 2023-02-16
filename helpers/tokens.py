@@ -59,7 +59,7 @@ def parts(expr: str, pattern: re.Pattern):
 
 def compile_counters(counters: List[str]):
     return re.compile(
-        r'([0-9０-９一二三四五六七八九十]{1,4}(?:' + r'|'.join(sorted(counters, key=len, reverse=True)) + r'))'
+        r'([\d０-９一二三四五六七八九十]{1,4}(?:' + r'|'.join(sorted(counters, key=len, reverse=True)) + r'))'
     )
 
 

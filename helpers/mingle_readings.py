@@ -54,7 +54,7 @@ def pairs(seq: List):
     yield from zip(seq, seq[1:])
 
 
-def mingle_readings(readings: List[str], *, sep: str = '', wrap: WordWrap = WordWrapMode.div.value) -> str:
+def mingle_readings(readings: List[str], *, sep: str = ', ', wrap: WordWrap = WordWrapMode.none.value) -> str:
     """ Takes several furigana notations, packs them into one, with readings separated by sep. """
 
     assert len(readings) > 1
@@ -76,12 +76,13 @@ def mingle_readings(readings: List[str], *, sep: str = '', wrap: WordWrap = Word
 
 
 if __name__ == '__main__':
-    print(split_furigana('故郷[こきょう]'))
-    print(split_furigana('有[あ]り'))
-    print(split_furigana('ひらがな'))
-    print(word_reading('有[あ]り 得[う]る'))
-    print(word_reading('有る'))
-    print(mingle_readings([' 有[あ]り 得[う]る', ' 有[あ]り 得[え]る', ' 有[あ]り 得[え]る']))
-    print(mingle_readings([' 故郷[こきょう]', ' 故郷[ふるさと]']))
-    print(mingle_readings(['お 前[まえ]', 'お 前[めえ]']))
-    print(mingle_readings([' 言[い]い 分[ぶん]', ' 言い分[いーぶん]']))
+    assert (split_furigana('故郷[こきょう]') == SplitFurigana(head='故郷', reading='こきょう', suffix=''))
+    assert (split_furigana('有[あ]り') == SplitFurigana(head='有', reading='あ', suffix='り'))
+    assert (split_furigana('ひらがな') == SplitFurigana(head='ひらがな', reading='ひらがな', suffix=''))
+    assert (word_reading('有[あ]り 得[う]る') == WordReading(word='有り得る', reading='ありうる'))
+    assert (word_reading('有る') == WordReading(word='有る', reading=None))
+    assert (mingle_readings([' 有[あ]り 得[う]る', ' 有[あ]り 得[え]る', ' 有[あ]り 得[え]る']) == ' 有[あ]り 得[う, え]る')
+    assert (mingle_readings([' 故郷[こきょう]', ' 故郷[ふるさと]']) == ' 故郷[こきょう, ふるさと]')
+    assert (mingle_readings(['お 前[まえ]', 'お 前[めえ]']) == 'お 前[まえ, めえ]')
+    assert (mingle_readings([' 言[い]い 分[ぶん]', ' 言い分[いーぶん]']) == ' 言[い]い 分[ぶん]')
+    print("Passed.")
