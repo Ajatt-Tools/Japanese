@@ -54,7 +54,6 @@ class AccDbManager(abc.ABC):
     derivative_database: str = None
 
     def __init__(self, self_check: bool = True, dest_path: Optional[str] = None):
-        self._temp_dict: AccentDict = {}
         self._dest_path = dest_path or self.derivative_database
         if self_check:
             self.self_check()
@@ -68,10 +67,6 @@ class AccDbManager(abc.ABC):
         test_database = os.path.join(DB_DIR_PATH, "test.csv")
         cls(self_check=False, dest_path=test_database).build_derivative()
         print('Equal.' if filecmp.cmp(cls.derivative_database, test_database, shallow=False) else 'Not equal!')
-
-    @abc.abstractmethod
-    def build_derivative(self):
-        raise NotImplementedError()
 
     def self_check(self):
         # First check that the original database is present.
@@ -94,11 +89,20 @@ class AccDbManager(abc.ABC):
                     entry = FormattedEntry(kana, *pitch_data)
                     if entry not in acc_dict[key]:
                         acc_dict[key].append(entry)
-
         return acc_dict
 
-    def save_derivative(self) -> None:
+    @abc.abstractmethod
+    def create_derivative(self) -> AccentDict:
+        """ Produce the derived database. """
+        raise NotImplementedError()
+
+    def build_derivative(self) -> None:
+        """ Build the derived database from the original database and save it as *.csv """
+        self.save_derivative(self.create_derivative())
+
+    def save_derivative(self, derivative: AccentDict) -> None:
+        """ Dump the derived database to a *.csv file. """
         with open(self._dest_path, 'w', encoding="utf-8") as of:
-            for word, entries in self._temp_dict.items():
+            for word, entries in derivative.items():
                 for entry in entries:
                     print(word, *entry, sep='\t', file=of)
