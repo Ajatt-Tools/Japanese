@@ -125,7 +125,7 @@ class ProfileList(QGroupBox):
 
     def profiles(self) -> Iterable[Profile]:
         for idx in range(self._list_widget.count()):
-            yield self._list_widget.item(idx).data(Qt.UserRole)
+            yield self._list_widget.item(idx).data(Qt.ItemDataRole.UserRole)
 
     def _setup_signals(self):
         self.current_item_changed = self._list_widget.currentItemChanged
@@ -143,7 +143,7 @@ class ProfileList(QGroupBox):
 
     def clone_profile(self):
         if (current := self.current_item()) and current.isSelected():
-            self.add_and_select(Profile.clone(current.data(Qt.UserRole)))
+            self.add_and_select(Profile.clone(current.data(Qt.ItemDataRole.UserRole)))
 
     def make_layout(self) -> QLayout:
         layout = QVBoxLayout()
@@ -162,7 +162,7 @@ class ProfileList(QGroupBox):
         count = self._list_widget.count()
         item = QListWidgetItem()
         item.setText(profile.name)
-        item.setData(Qt.UserRole, profile)
+        item.setData(Qt.ItemDataRole.UserRole, profile)
         self._list_widget.addItem(item)
         self._list_widget.setCurrentRow(count)
 
@@ -190,15 +190,15 @@ class ProfileEditForm(QGroupBox):
             source=EditableSelector(),
             destination=EditableSelector(),
         )
-        self.expand_form()
+        self._expand_form()
         self._last_used_profile: Optional[Profile] = None
         self.setLayout(self._make_layout())
         adjust_to_contents(self)
         self.setMinimumWidth(EDIT_MIN_WIDTH)
         qconnect(self._form.note_type.currentIndexChanged, lambda index: self._repopulate_fields())
 
-    def expand_form(self):
-        """Children add new widgets here."""
+    def _expand_form(self):
+        """Subclasses add new widgets here."""
         pass
 
     def as_profile(self) -> Profile:
@@ -238,8 +238,8 @@ class PitchProfileEditForm(ProfileEditForm, profile_class=ProfilePitch):
             super().__init__()
             self.addItems(item.name for item in PitchOutputFormat)
 
-    def expand_form(self):
-        super().expand_form()
+    def _expand_form(self):
+        super()._expand_form()
         self._form.output_format = self.OutputFormatCombo()
 
     def load_profile(self, profile: ProfilePitch):
@@ -247,7 +247,7 @@ class PitchProfileEditForm(ProfileEditForm, profile_class=ProfilePitch):
         self._form.output_format.setCurrentText(profile.output_format)
 
 
-class ProfileEdit(QHBoxLayout):
+class ProfileEdit(QWidget):
     def __init_subclass__(cls, **kwargs):
         cls._profile_class: type(Profile) = kwargs.pop('profile_class')  # suppresses ide warning
         super().__init_subclass__(**kwargs)
@@ -256,8 +256,11 @@ class ProfileEdit(QHBoxLayout):
         super().__init__(*args, **kwargs)
         self._profile_list = ProfileList(profile_class=self._profile_class)
         self._edit_form = ProfileEditForm(profile_class=self._profile_class)
-        self.addWidget(self._profile_list)
-        self.addWidget(self._edit_form)
+
+        self.setLayout(_main_layout := QHBoxLayout())
+        _main_layout.addWidget(self._profile_list)
+        _main_layout.addWidget(self._edit_form)
+
         qconnect(self._profile_list.current_item_changed, self._edit_profile)
         self._profile_list.populate()
 
@@ -265,14 +268,14 @@ class ProfileEdit(QHBoxLayout):
         self._apply_profile(previous)
         if current:
             self._edit_form.setEnabled(True)
-            self._edit_form.load_profile(current.data(Qt.UserRole))
+            self._edit_form.load_profile(current.data(Qt.ItemDataRole.UserRole))
         else:
             self._edit_form.setEnabled(False)
 
     def _apply_profile(self, item: QListWidgetItem):
         if item:
             profile = self._edit_form.as_profile()
-            item.setData(Qt.UserRole, profile)
+            item.setData(Qt.ItemDataRole.UserRole, profile)
             item.setText(profile.name)
 
     def as_list(self) -> List[Dict[str, str]]:
@@ -307,9 +310,13 @@ class SettingsForm(QGroupBox):
         super().__init__(*args)
         self.setTitle(self._title)
         self.setCheckable(False)
-        self._widgets = SimpleNamespace(**dict(self._create_checkboxes()))
+        self._widgets = SimpleNamespace()
         self._add_widgets()
         self.setLayout(self._make_layout())
+
+    def _add_widgets(self):
+        """Subclasses add new widgets here."""
+        self._widgets.__dict__.update(self._create_checkboxes())
 
     @property
     def _title(self) -> str:
@@ -337,12 +344,9 @@ class SettingsForm(QGroupBox):
                 layout.addRow(ui_translate(key), widget)
         return layout
 
-    def _add_widgets(self):
-        pass
 
-
-class GeneralSettingsForm(SettingsForm):
-    _title = "General"
+class BehaviorSettingsForm(SettingsForm):
+    _title = "Behavior"
     _config = cfg
 
 
@@ -445,17 +449,22 @@ class SettingsDialog(QDialog):
 
     def __init__(self, *args):
         super().__init__(*args)
-        self._tabs = QTabWidget()
-        self._profile_edits = {
-            "furigana": FuriganaProfilesEdit(),
-            "pitch accent": PitchProfilesEdit(),
-        }
-        self._general_settings = GeneralSettingsForm()
-        self._pitch_settings = PitchSettingsForm()
-        self._furigana_settings = FuriganaSettingsForm()
+
+        # General tab
+        self._behavior_settings = BehaviorSettingsForm()
         self._context_menu_settings = ContextMenuSettingsForm()
         self._toolbar_settings = ToolbarSettingsForm()
-        self._button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+
+        # Furigana tab
+        self._furigana_profiles_edit = FuriganaProfilesEdit()
+        self._furigana_settings = FuriganaSettingsForm()
+
+        # Pitch tab
+        self._pitch_profiles_edit = PitchProfilesEdit()
+        self._pitch_settings = PitchSettingsForm()
+
+        self._tabs = QTabWidget()
+        self._button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         self._setup_tabs()
         self._setup_ui()
         restoreGeom(self, self.name, adjustSize=True)
@@ -463,12 +472,33 @@ class SettingsDialog(QDialog):
         saveGeom(self, self.name)
 
     def _setup_tabs(self):
-        for tab_name, edit_layout in self._profile_edits.items():
-            (tab := QWidget()).setLayout(edit_layout)
-            self._tabs.addTab(tab, tab_name.capitalize())
+        # General
+        tab = QWidget()
+        tab.setLayout(layout := QGridLayout())
+        # row, column, rowSpan, columnSpan
+        layout.addWidget(self._behavior_settings, 1, 1)
+        layout.addWidget(self._context_menu_settings, 2, 1)
+        layout.addWidget(self._toolbar_settings, 1, 2, 2, 1)
+        for column in (1, 2):
+            layout.setColumnStretch(column, 1)
+        self._tabs.addTab(tab, "General")
+
+        # Furigana
+        tab = QWidget()
+        tab.setLayout(layout := QVBoxLayout())
+        layout.addWidget(self._furigana_profiles_edit)
+        layout.addWidget(self._furigana_settings)
+        self._tabs.addTab(tab, "Furigana")
+
+        # Furigana
+        tab = QWidget()
+        tab.setLayout(layout := QVBoxLayout())
+        layout.addWidget(self._pitch_profiles_edit)
+        layout.addWidget(self._pitch_settings)
+        self._tabs.addTab(tab, "Pitch accent")
 
     def _setup_ui(self) -> None:
-        self.setWindowModality(Qt.ApplicationModal)
+        self.setWindowModality(Qt.WindowModality.ApplicationModal)
         self.setWindowTitle(f'{ADDON_SERIES} {self.name}')
         self.setMinimumSize(800, 600)
         tweak_window(self)
@@ -482,31 +512,21 @@ class SettingsDialog(QDialog):
     def make_layout(self) -> QLayout:
         layout = QVBoxLayout()
         layout.addWidget(self._tabs)
-        layout.addLayout(self.make_bottom_row())
         layout.addStretch()
         layout.addWidget(self._button_box)
         return layout
 
-    def make_bottom_row(self) -> QLayout:
-        layout = QGridLayout()
-        # row, column, rowSpan, columnSpan
-        layout.addWidget(self._general_settings, 1, 1)
-        layout.addWidget(self._context_menu_settings, 2, 1)
-        layout.addWidget(self._furigana_settings, 1, 2, 2, 1)
-        layout.addWidget(self._pitch_settings, 1, 3, 2, 1)
-        layout.addWidget(self._toolbar_settings, 1, 4, 2, 1)
-        for column in (1, 2, 3):
-            layout.setColumnStretch(column, 1)
-        return layout
-
     def accept(self) -> None:
         from .helpers.config import config
-        config.update(self._general_settings.as_dict())
+        config.update(self._behavior_settings.as_dict())
         config['pitch_accent'].update(self._pitch_settings.as_dict())
         config['furigana'].update(self._furigana_settings.as_dict())
         config['context_menu'].update(self._context_menu_settings.as_dict())
         config['toolbar'].update(self._toolbar_settings.as_dict())
-        config['profiles'] = list(itertools.chain(*map(ProfileEdit.as_list, self._profile_edits.values())))
+        config['profiles'] = [
+            *self._furigana_profiles_edit.as_list(),
+            *self._pitch_profiles_edit.as_list()
+        ]
         write_config()
         QDialog.accept(self)
 
