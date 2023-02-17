@@ -16,14 +16,14 @@ from .config_view import ConfigViewBase, config_view as cfg
 from .helpers import ui_translate
 from .helpers.config import write_config
 from .helpers.mingle_readings import WordWrapMode
-from .helpers.profiles import Profile, ProfileFurigana, ProfilePitch
+from .helpers.profiles import Profile, ProfileFurigana, ProfilePitch, PitchOutputFormat
 
 EDIT_MIN_WIDTH = 100
 
 
 def adjust_to_contents(widget: QWidget):
     try:
-        widget.setSizeAdjustPolicy(widget.AdjustToContents)
+        widget.setSizeAdjustPolicy(widget.AdjustToContents)  # type: ignore
     except AttributeError:
         pass
 
@@ -108,11 +108,11 @@ def as_config_dict(widgets: Dict[str, QWidget]) -> Dict[str, Union[bool, str, in
 
 
 class ProfileList(QGroupBox):
-    def __init__(self, store: type(Profile), *args):
+    def __init__(self, profile_class: type(Profile), *args):
         super().__init__(*args)
         self.setTitle("Profiles")
         self.setCheckable(False)
-        self._store_type = store
+        self._store_type = profile_class
         self._list_widget = QListWidget()
         self._control_panel = ControlPanel()
         self.setMinimumWidth(EDIT_MIN_WIDTH)
@@ -168,8 +168,20 @@ class ProfileList(QGroupBox):
 
 
 class ProfileEditForm(QGroupBox):
-    def __init__(self, *args):
-        super().__init__(*args)
+    _subclasses_map = {}  # e.g. ProfileFurigana => FuriganaProfileEditForm
+
+    def __init_subclass__(cls, **kwargs):
+        profile_class: type(Profile) = kwargs.pop('profile_class')  # suppresses ide warning
+        super().__init_subclass__(**kwargs)
+        cls._subclasses_map[profile_class] = cls
+
+    def __new__(cls, profile_class: type(Profile), *args, **kwargs):
+        subclass = cls._subclasses_map[profile_class]
+        return QGroupBox.__new__(subclass)
+
+    def __init__(self, profile_class: type(Profile), *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._profile_class = profile_class
         self.setTitle("Edit Profile")
         self.setCheckable(False)
         self._form = SimpleNamespace(
@@ -178,11 +190,16 @@ class ProfileEditForm(QGroupBox):
             source=EditableSelector(),
             destination=EditableSelector(),
         )
+        self.expand_form()
         self._last_used_profile: Optional[Profile] = None
         self.setLayout(self._make_layout())
         adjust_to_contents(self)
         self.setMinimumWidth(EDIT_MIN_WIDTH)
         qconnect(self._form.note_type.currentIndexChanged, lambda index: self._repopulate_fields())
+
+    def expand_form(self):
+        """Children add new widgets here."""
+        pass
 
     def as_profile(self) -> Profile:
         return Profile(**self._as_dict())
@@ -211,15 +228,34 @@ class ProfileEditForm(QGroupBox):
             widget.setCurrentText(current_text)
 
 
+class FuriganaProfileEditForm(ProfileEditForm, profile_class=ProfileFurigana):
+    pass
+
+
+class PitchProfileEditForm(ProfileEditForm, profile_class=ProfilePitch):
+    class OutputFormatCombo(QComboBox):
+        def __init__(self):
+            super().__init__()
+            self.addItems(item.name for item in PitchOutputFormat)
+
+    def expand_form(self):
+        super().expand_form()
+        self._form.output_format = self.OutputFormatCombo()
+
+    def load_profile(self, profile: ProfilePitch):
+        super().load_profile(profile)
+        self._form.output_format.setCurrentText(profile.output_format)
+
+
 class ProfileEdit(QHBoxLayout):
-    def __init_subclass__(cls, *, profile_class: type(Profile), **kwargs):
+    def __init_subclass__(cls, **kwargs):
+        cls._profile_class: type(Profile) = kwargs.pop('profile_class')  # suppresses ide warning
         super().__init_subclass__(**kwargs)
-        cls.profile_class = profile_class
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._profile_list = ProfileList(store=self.profile_class)
-        self._edit_form = ProfileEditForm()
+        self._profile_list = ProfileList(profile_class=self._profile_class)
+        self._edit_form = ProfileEditForm(profile_class=self._profile_class)
         self.addWidget(self._profile_list)
         self.addWidget(self._edit_form)
         qconnect(self._profile_list.current_item_changed, self._edit_profile)

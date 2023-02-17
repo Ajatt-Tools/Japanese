@@ -20,16 +20,16 @@ class Profile:
     destination: str
     mode: str
 
-    __subclasses_map = {}  # furigana -> ProfileFurigana
+    _subclasses_map = {}  # "furigana" (str) -> ProfileFurigana
 
     def __init_subclass__(cls, **kwargs):
         mode = kwargs.pop('mode')  # suppresses ide warning
         super().__init_subclass__(**kwargs)
-        cls.__subclasses_map[mode] = cls
+        cls._subclasses_map[mode] = cls
         cls.mode = mode
 
     def __new__(cls, mode: str, *args, **kwargs):
-        subclass = cls.__subclasses_map[mode]
+        subclass = cls._subclasses_map[mode]
         return object.__new__(subclass)
 
     @classmethod
