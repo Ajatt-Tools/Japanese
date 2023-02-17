@@ -87,6 +87,7 @@ if __name__ == '__main__':
     assert (word_reading('有[あ]り 得[う]る') == WordReading(word='有り得る', reading='ありうる'))
     assert (word_reading('有る') == WordReading(word='有る', reading=None))
     assert (word_reading('お 前[まい<br>まえ<br>めえ]') == WordReading(word='お前', reading='おまい<br>まえ<br>めえ'))
+    assert (word_reading('もうお 金[かね]が 無[な]くなりました。') == WordReading(word='もうお金が無くなりました。', reading='もうおかねがなくなりました。'))
     assert (mingle_readings([' 有[あ]り 得[う]る', ' 有[あ]り 得[え]る', ' 有[あ]り 得[え]る']) == ' 有[あ]り 得[う, え]る')
     assert (mingle_readings([' 故郷[こきょう]', ' 故郷[ふるさと]']) == ' 故郷[こきょう, ふるさと]')
     assert (mingle_readings(['お 前[まえ]', 'お 前[めえ]']) == 'お 前[まえ, めえ]')
