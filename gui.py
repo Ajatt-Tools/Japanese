@@ -3,7 +3,6 @@
 
 import dataclasses
 import enum
-import itertools
 from types import SimpleNamespace
 from typing import Optional, Iterable, Dict, Tuple, List
 
@@ -11,10 +10,11 @@ from aqt import mw
 from aqt.qt import *
 from aqt.utils import restoreGeom, saveGeom
 
-from .ajt_common import menu_root_entry, tweak_window, ShortCutGrabButton, ADDON_SERIES
+from .ajt_common.about_menu import tweak_window, menu_root_entry
+from .ajt_common.consts import ADDON_SERIES
+from .ajt_common.grab_key import ShortCutGrabButton
 from .config_view import ConfigViewBase, config_view as cfg
 from .helpers import ui_translate
-from .helpers.config import write_config
 from .helpers.mingle_readings import WordWrapMode
 from .helpers.profiles import Profile, ProfileFurigana, ProfilePitch, PitchOutputFormat
 
@@ -189,6 +189,7 @@ class ProfileEditForm(QGroupBox):
             note_type=NoteTypeSelector(),
             source=EditableSelector(),
             destination=EditableSelector(),
+            split_morphemes=QCheckBox(),
         )
         self._expand_form()
         self._last_used_profile: Optional[Profile] = None
@@ -208,6 +209,7 @@ class ProfileEditForm(QGroupBox):
         self._last_used_profile = profile
         self._form.name.setText(profile.name)
         self._form.note_type.repopulate(profile.note_type)
+        self._form.split_morphemes.setChecked(profile.split_morphemes)
         self._repopulate_fields(profile)
 
     def _as_dict(self) -> Dict[str, str]:
@@ -330,7 +332,7 @@ class SettingsForm(QGroupBox):
         return as_config_dict(self._widgets.__dict__)
 
     def _create_checkboxes(self) -> Iterable[Tuple[str, QCheckBox]]:
-        for key, value in self._config.bools():
+        for key, value in self._config.toggleables():
             checkbox = QCheckBox(ui_translate(key))
             checkbox.setChecked(value)
             yield key, checkbox
@@ -423,7 +425,7 @@ class ToolbarSettingsForm(QGroupBox):
         self.setLayout(self._make_layout())
 
     def _add_widgets(self):
-        for key, button_config in cfg.toolbar.all():
+        for key, button_config in cfg.toolbar.items():
             widget = ToolbarButtonSettingsForm()
             widget.setTitle(ui_translate(key))
             widget.setChecked(button_config.enabled)
@@ -517,17 +519,16 @@ class SettingsDialog(QDialog):
         return layout
 
     def accept(self) -> None:
-        from .helpers.config import config
-        config.update(self._behavior_settings.as_dict())
-        config['pitch_accent'].update(self._pitch_settings.as_dict())
-        config['furigana'].update(self._furigana_settings.as_dict())
-        config['context_menu'].update(self._context_menu_settings.as_dict())
-        config['toolbar'].update(self._toolbar_settings.as_dict())
-        config['profiles'] = [
+        cfg.update(self._behavior_settings.as_dict())
+        cfg['pitch_accent'].update(self._pitch_settings.as_dict())
+        cfg['furigana'].update(self._furigana_settings.as_dict())
+        cfg['context_menu'].update(self._context_menu_settings.as_dict())
+        cfg['toolbar'].update(self._toolbar_settings.as_dict())
+        cfg['profiles'] = [
             *self._furigana_profiles_edit.as_list(),
             *self._pitch_profiles_edit.as_list()
         ]
-        write_config()
+        cfg.write_config()
         QDialog.accept(self)
 
 

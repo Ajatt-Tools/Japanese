@@ -15,7 +15,8 @@
       "source": "VocabKanji",
       "destination": "VocabPitchPattern",
       "mode": "pitch",
-      "output_format": "html"
+      "output_format": "html",
+      "split_morphemes": false
     },
     {
       "name": "Add pitch accent number",
@@ -23,26 +24,28 @@
       "source": "VocabKanji",
       "destination": "VocabPitchNum",
       "mode": "pitch",
-      "output_format": "number"
+      "output_format": "number",
+      "split_morphemes": false
     },
     {
       "name": "Add furigana for sentence",
       "note_type": "japanese",
       "source": "SentKanji",
       "destination": "SentFurigana",
-      "mode": "furigana"
+      "mode": "furigana",
+      "split_morphemes": true
     },
     {
       "name": "Add furigana for word",
       "note_type": "japanese",
       "source": "VocabKanji",
       "destination": "VocabFurigana",
-      "mode": "furigana"
+      "mode": "furigana",
+      "split_morphemes": false
     }
   ],
   "pitch_accent": {
     "lookup_shortcut": "Ctrl+8",
-    "use_mecab": true,
     "output_hiragana": false,
     "kana_lookups": true,
     "skip_numbers": true,
@@ -58,7 +61,7 @@
     "wrap_readings": "none",
     "reading_separator": ",",
     "blocklisted_words": "人",
-    "mecab_only": "彼,猫,首,母,顔,木,頭,私,弟,空,体",
+    "mecab_only": "彼,猫,首,母,顔,木,頭,私,弟,空,体,行く",
     "counters": "つ,月,日,人,筋,隻,丁,品,番,枚",
     "maximum_results": 3
   },

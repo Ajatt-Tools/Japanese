@@ -1,12 +1,12 @@
 # Copyright: Ren Tatsumoto <tatsu at autistici.org>
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
-
+import dataclasses
 import re
-from typing import List, Dict, Iterable, Tuple, NamedTuple, final, Any
+from typing import List, Dict, Iterable, NamedTuple, final
 
-from .helpers.profiles import Profile
-from .helpers.config import default_config, config
+from .ajt_common.addon_config import AddonConfigManager
 from .helpers.mingle_readings import WordWrapMode
+from .helpers.profiles import Profile
 from .helpers.tokens import RE_FLAGS
 
 
@@ -15,28 +15,19 @@ def split_words(config_value: str) -> List[str]:
     return re.split(r'[、, ]+', config_value, flags=RE_FLAGS)
 
 
-class ConfigViewBase:
+class ConfigViewBase(AddonConfigManager):
     _view_key = None
 
-    @property
-    def _dict(self) -> Dict[str, Any]:
-        return config[self._view_key] if self._view_key else config
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self._view_key is not None:
+            self._config = self._config[self._view_key]
+            self._default_config = self._default_config[self._view_key]
 
-    @property
-    def _default_dict(self) -> Dict[str, Any]:
-        return default_config[self._view_key] if self._view_key else default_config
-
-    def get(self, key: str) -> Any:
-        return self._dict.get(key, self._default_dict.get(key))
-
-    def all(self) -> Iterable[Tuple[str, Any]]:
-        for key, default_value in self._default_dict.items():
-            yield key, self._dict.get(key, default_value)
-
-    def bools(self) -> Iterable[Tuple[str, bool]]:
-        for key, default_value in self._default_dict.items():
-            if type(default_value) == bool:
-                yield key, bool(self._dict.get(key, default_value))
+    def write_config(self):
+        if self._view_key is not None:
+            raise RuntimeError("Can't call this function from a sub-view.")
+        return super().write_config()
 
 
 class WordBlockListManager(ConfigViewBase):
@@ -44,12 +35,12 @@ class WordBlockListManager(ConfigViewBase):
 
     @property
     def _should_skip_numbers(self) -> bool:
-        return self.get('skip_numbers') is True
+        return self['skip_numbers'] is True
 
     @property
     def blocklisted_words(self) -> List[str]:
         """Returns a user-defined list of blocklisted words."""
-        return split_words(self.get('blocklisted_words'))
+        return split_words(self['blocklisted_words'])
 
     def is_blocklisted(self, word: str) -> bool:
         """Returns True if the user specified that the word should not be looked up."""
@@ -68,33 +59,33 @@ class FuriganaConfigView(WordBlockListManager):
 
     @property
     def prefer_long_vowel_mark(self) -> bool:
-        return self.get('prefer_long_vowel_mark') is True
+        return self['prefer_long_vowel_mark'] is True
 
     @property
     def reading_separator(self) -> str:
-        return self.get('reading_separator')
+        return self['reading_separator']
 
     @property
     def wrap_readings(self) -> WordWrapMode:
-        return WordWrapMode[self.get('wrap_readings')]
+        return WordWrapMode[self['wrap_readings']]
 
     @property
     def maximum_results(self) -> int:
-        return int(self.get('maximum_results'))
+        return int(self['maximum_results'])
 
     @property
     def mecab_only(self) -> List[str]:
         """Words that shouldn't be looked up in the accent dictionary."""
-        return split_words(self.get('mecab_only'))
+        return split_words(self['mecab_only'])
 
     @property
     def counters(self) -> List[str]:
         """Words that shouldn't be looked up in the accent dictionary."""
-        return split_words(self.get('counters'))
+        return split_words(self['counters'])
 
     @property
     def database_lookups(self) -> bool:
-        return self.get('database_lookups') is True
+        return self['database_lookups'] is True
 
     def can_lookup_in_db(self, word: str) -> bool:
         return self.database_lookups and word not in self.mecab_only
@@ -106,31 +97,27 @@ class PitchConfigView(WordBlockListManager):
 
     @property
     def lookup_shortcut(self) -> str:
-        return self.get('lookup_shortcut')
-
-    @property
-    def use_mecab(self) -> bool:
-        return self.get('use_mecab') is True
+        return self['lookup_shortcut']
 
     @property
     def output_hiragana(self) -> bool:
-        return self.get('output_hiragana') is True
+        return self['output_hiragana'] is True
 
     @property
     def kana_lookups(self) -> bool:
-        return self.get('kana_lookups') is True
+        return self['kana_lookups'] is True
 
     @property
     def maximum_results(self) -> int:
-        return int(self.get('maximum_results'))
+        return int(self['maximum_results'])
 
     @property
     def reading_separator(self) -> str:
-        return self.get('reading_separator')
+        return self['reading_separator']
 
     @property
     def word_separator(self) -> str:
-        return self.get('word_separator')
+        return self['word_separator']
 
 
 @final
@@ -139,19 +126,19 @@ class ContextMenuConfigView(ConfigViewBase):
 
     @property
     def generate_furigana(self) -> bool:
-        return self.get('generate_furigana') is True
+        return self['generate_furigana'] is True
 
     @property
     def to_katakana(self) -> bool:
-        return self.get('to_katakana') is True
+        return self['to_katakana'] is True
 
     @property
     def to_hiragana(self) -> bool:
-        return self.get('to_hiragana') is True
+        return self['to_hiragana'] is True
 
     @property
     def literal_pronunciation(self) -> bool:
-        return self.get('literal_pronunciation') is True
+        return self['literal_pronunciation'] is True
 
 
 class ToolbarButtonConfig(NamedTuple):
@@ -164,25 +151,20 @@ class ToolbarButtonConfig(NamedTuple):
 class ToolbarConfigView(ConfigViewBase):
     _view_key = 'toolbar'
 
-    def get(self, key: str) -> ToolbarButtonConfig:
-        return ToolbarButtonConfig(**super().get(key))
-
-    def all(self) -> Iterable[Tuple[str, ToolbarButtonConfig]]:
-        """ Get all button configs. """
-        for key, button_config in super().all():
-            yield key, ToolbarButtonConfig(**button_config)
+    def __getitem__(self, item) -> ToolbarButtonConfig:
+        return ToolbarButtonConfig(**super().__getitem__(item))
 
     @property
     def regenerate_all_button(self) -> ToolbarButtonConfig:
-        return self.get('regenerate_all_button')
+        return self['regenerate_all_button']
 
     @property
     def furigana_button(self) -> ToolbarButtonConfig:
-        return self.get('furigana_button')
+        return self['furigana_button']
 
     @property
     def clean_furigana_button(self) -> ToolbarButtonConfig:
-        return self.get('clean_furigana_button')
+        return self['clean_furigana_button']
 
 
 @final
@@ -195,23 +177,25 @@ class ConfigView(ConfigViewBase):
         self._toolbar = ToolbarConfigView()
 
     def iter_profiles(self) -> Iterable[Profile]:
-        return map(lambda dict_: Profile(**dict_), self.get('profiles'))
+        for profile_dict in self['profiles']:
+            default = Profile.class_by_mode(profile_dict['mode']).new()
+            yield Profile(**(dataclasses.asdict(default) | profile_dict))
 
     @property
     def generate_on_note_add(self) -> bool:
-        return self.get('generate_on_note_add') is True
+        return self['generate_on_note_add'] is True
 
     @property
     def regenerate_readings(self) -> bool:
-        return self.get('regenerate_readings') is True
+        return self['regenerate_readings'] is True
 
     @property
     def cache_lookups(self) -> int:
-        return int(self.get('cache_lookups'))
+        return int(self['cache_lookups'])
 
     @property
     def styles(self) -> Dict[str, str]:
-        return self._dict['styles']
+        return self['styles']
 
     @property
     def furigana(self) -> FuriganaConfigView:

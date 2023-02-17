@@ -50,7 +50,7 @@ def mecab_translate(expr: str) -> Tuple[ParsedToken, ...]:
 
 
 @functools.lru_cache(maxsize=cfg.cache_lookups)
-def get_pronunciations(expr: str, sanitize: bool = True, recurse: bool = True) -> AccentDict:
+def get_pronunciations(expr: str, sanitize: bool = True, recurse: bool = True, use_mecab: bool = True) -> AccentDict:
     """
     Search pronunciations for a particular expression.
 
@@ -95,7 +95,7 @@ def get_pronunciations(expr: str, sanitize: bool = True, recurse: bool = True) -
                 ret.update(get_pronunciations(section, sanitize))
 
         # Only if lookups were not successful, we try splitting with Mecab
-        if not ret and cfg.pitch_accent.use_mecab is True:
+        if not ret and use_mecab is True:
             for out in mecab_translate(expr):
                 # Avoid infinite recursion by saying that we should not try
                 # Mecab again if we do not find any matches for this sub-expression.
@@ -193,15 +193,18 @@ def try_lookup_full_text(text: str) -> Optional[str]:
     return furigana if furigana != text else None
 
 
-def generate_furigana(src_text: str) -> str:
+def generate_furigana(src_text: str, use_mecab: bool = True) -> str:
     substrings = []
     for token in tokenize(src_text, counters=cfg.furigana.counters):
         if isinstance(token, ParseableToken):
             if furigana := try_lookup_full_text(token):
                 substrings.append(furigana)
                 continue
-            for out in mecab_translate(token):
-                substrings.append(format_furigana(out))
+            if use_mecab is True:
+                for out in mecab_translate(token):
+                    substrings.append(format_furigana(out))
+            else:
+                substrings.append(token)
         else:
             substrings.append(token)
 
@@ -237,10 +240,10 @@ class DoTasks:
         changed = False
         if self.can_fill_destination(task) and (src_text := mw.col.media.strip(self._note[task.source]).strip()):
             if isinstance(task, ProfileFurigana):
-                self._note[task.destination] = generate_furigana(src_text)
+                self._note[task.destination] = generate_furigana(src_text, use_mecab=task.split_morphemes)
             elif isinstance(task, ProfilePitch):
                 self._note[task.destination] = format_pronunciations(
-                    pronunciations=get_pronunciations(src_text),
+                    pronunciations=get_pronunciations(src_text, use_mecab=task.split_morphemes),
                     output_format=PitchOutputFormat[task.output_format],
                     sep_single=cfg.pitch_accent.reading_separator,
                     sep_multi=cfg.pitch_accent.word_separator,

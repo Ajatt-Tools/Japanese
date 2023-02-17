@@ -19,6 +19,7 @@ class Profile:
     source: str
     destination: str
     mode: str
+    split_morphemes: bool
 
     _subclasses_map = {}  # "furigana" (str) -> ProfileFurigana
 
@@ -33,12 +34,17 @@ class Profile:
         return object.__new__(subclass)
 
     @classmethod
+    def class_by_mode(cls, mode: str):
+        return cls._subclasses_map[mode]
+
+    @classmethod
     def new(cls, **kwargs):
         return cls(
-            **kwargs,
             mode=cls.mode,
             name="New profile",
             note_type="Japanese",
+            split_morphemes=True,
+            **kwargs,
         )
 
     @classmethod

@@ -6,7 +6,7 @@ from aqt.qt import *
 from aqt.utils import showInfo, restoreGeom, saveGeom
 from aqt.webview import AnkiWebView
 
-from .ajt_common import menu_root_entry, tweak_window
+from .ajt_common.about_menu import menu_root_entry, tweak_window
 from .helpers.tokens import clean_furigana
 from .reading import get_pronunciations, format_pronunciations, update_html
 
