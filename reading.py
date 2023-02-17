@@ -284,6 +284,7 @@ def on_focus_lost(changed: bool, note: Note, field_idx: int) -> bool:
 
 
 def should_generate(note: Note) -> bool:
+    """ Generate when a new note is added by Yomichan or Mpvacious. """
     return (
             cfg.generate_on_note_add is True
             and mw.app.activeWindow() is None
@@ -314,5 +315,5 @@ def init():
 
         gui_hooks.editor_did_unfocus_field.append(on_focus_lost)
 
-    # Generate when AnkiConnect adds a new note
+    # Generate when AnkiConnect (Yomichan, Mpvacious) adds a new note.
     collection_will_add_note.append(on_add_note)

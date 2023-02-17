@@ -1,5 +1,6 @@
 # Copyright: Ren Tatsumoto <tatsu at autistici.org>
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
+
 import dataclasses
 import re
 from typing import List, Dict, Iterable, NamedTuple, final
@@ -178,6 +179,8 @@ class ConfigView(ConfigViewBase):
 
     def iter_profiles(self) -> Iterable[Profile]:
         for profile_dict in self['profiles']:
+            # In case new options are added in the future,
+            # load default settings first, then overwrite them.
             default = Profile.class_by_mode(profile_dict['mode']).new()
             yield Profile(**(dataclasses.asdict(default) | profile_dict))
 
