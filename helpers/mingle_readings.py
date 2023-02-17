@@ -2,6 +2,7 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import enum
+import re
 from typing import Optional, NamedTuple, List
 
 
@@ -40,10 +41,14 @@ def split_furigana(text: str) -> SplitFurigana:
     else:
         return SplitFurigana(text[:furigana_start], text[furigana_start + 1:furigana_end], text[furigana_end + 1:])
 
+def tie_inside_furigana(s: str) -> str:
+    def fixup(m: re.Match):
+        return m.group().replace(' ', '・')
+    return re.sub(r'\[[^\[\]]+?]', fixup, s)
 
 def word_reading(text: str) -> WordReading:
     word, reading = [], []
-    for split in map(split_furigana, text.split()):
+    for split in map(split_furigana, tie_inside_furigana(text).split()):
         word.append(split.head + split.suffix)
         reading.append(split.reading + split.suffix)
     word, reading = ''.join(word), ''.join(reading)
@@ -81,6 +86,7 @@ if __name__ == '__main__':
     assert (split_furigana('ひらがな') == SplitFurigana(head='ひらがな', reading='ひらがな', suffix=''))
     assert (word_reading('有[あ]り 得[う]る') == WordReading(word='有り得る', reading='ありうる'))
     assert (word_reading('有る') == WordReading(word='有る', reading=None))
+    assert (word_reading('お 前[まい<br>まえ<br>めえ]') == WordReading(word='お前', reading='おまい<br>まえ<br>めえ'))
     assert (mingle_readings([' 有[あ]り 得[う]る', ' 有[あ]り 得[え]る', ' 有[あ]り 得[え]る']) == ' 有[あ]り 得[う, え]る')
     assert (mingle_readings([' 故郷[こきょう]', ' 故郷[ふるさと]']) == ' 故郷[こきょう, ふるさと]')
     assert (mingle_readings(['お 前[まえ]', 'お 前[めえ]']) == 'お 前[まえ, めえ]')
