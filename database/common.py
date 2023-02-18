@@ -1,20 +1,5 @@
-# Pitch Accent add-on for Anki 2.1
-# Copyright (C) 2021  Ren Tatsumoto. <tatsu at autistici.org>
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Affero General Public License as
-# published by the Free Software Foundation, either version 3 of the
-# License, or (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Affero General Public License for more details.
-#
-# You should have received a copy of the GNU Affero General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
-#
-# Any modifications to this file must keep this entire header intact.
+# Copyright: Ren Tatsumoto <tatsu at autistici.org>
+# License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import abc
 import os
@@ -25,6 +10,7 @@ from typing import Dict, List, NamedTuple, Optional
 THIS_DIR_PATH = os.path.dirname(os.path.normpath(__file__))
 DB_DIR_PATH = os.path.join(THIS_DIR_PATH, "accent_dict")
 DERIVATIVE_PICKLE = os.path.join(DB_DIR_PATH, "pronunciations_combined.pickle")
+NO_ACCENT = "?"
 
 
 def should_regenerate(file_path: str) -> bool:
@@ -44,6 +30,9 @@ class FormattedEntry(NamedTuple):
     katakana_reading: str
     html_notation: str
     pitch_number: str
+
+    def has_accent(self) -> bool:
+        return self.pitch_number != NO_ACCENT
 
 
 AccentDict = Dict[str, List[FormattedEntry]]
