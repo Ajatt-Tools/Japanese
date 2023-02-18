@@ -262,6 +262,7 @@ class ProfileEdit(QWidget):
         self.setLayout(_main_layout := QHBoxLayout())
         _main_layout.addWidget(self._profile_list)
         _main_layout.addWidget(self._edit_form)
+        _main_layout.setContentsMargins(0, 0, 0, 0)
 
         qconnect(self._profile_list.current_item_changed, self._edit_profile)
         self._profile_list.populate()
@@ -294,10 +295,13 @@ class PitchProfilesEdit(ProfileEdit, profile_class=ProfilePitch):
 
 
 class WordsEdit(QTextEdit):
+    _min_height = 32
+
     def __init__(self, initial_values: Optional[List[str]] = None, *args):
         super().__init__(*args)
         self.setAcceptRichText(False)
         self.set_values(initial_values)
+        self.setMinimumHeight(self._min_height)
 
     def set_values(self, values: List[str]):
         if values:
@@ -357,6 +361,7 @@ class PitchSettingsForm(SettingsForm):
     _config = cfg.pitch_accent
 
     def _add_widgets(self):
+        super()._add_widgets()
         max_results = QSpinBox()
         max_results.setRange(1, 99)
         max_results.setValue(self._config.maximum_results)
@@ -367,11 +372,23 @@ class PitchSettingsForm(SettingsForm):
         self._widgets.blocklisted_words = WordsEdit(initial_values=self._config.blocklisted_words)
 
 
+def split_list(input_list: list, n_chunks: int):
+    """ Splits a list into N chunks. """
+    chunk_size = len(input_list) // n_chunks
+    output = []
+    for i in range(0, len(input_list), chunk_size):
+        output.append(input_list[i:i + chunk_size])
+    return output
+
+
 class FuriganaSettingsForm(SettingsForm):
     _title = "Furigana Options"
     _config = cfg.furigana
+    _columns = 2
+    _alignment = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop
 
     def _add_widgets(self):
+        super()._add_widgets()
         max_results = QSpinBox()
         max_results.setRange(1, 99)
         max_results.setValue(self._config.maximum_results)
@@ -381,6 +398,23 @@ class FuriganaSettingsForm(SettingsForm):
         self._widgets.reading_separator = QLineEdit(self._config.reading_separator)
         self._widgets.blocklisted_words = WordsEdit(initial_values=self._config.blocklisted_words)
         self._widgets.mecab_only = WordsEdit(initial_values=self._config.mecab_only)
+
+    def _make_layout(self) -> QLayout:
+        layout = QGridLayout()
+        layout.setSpacing(10)
+        for column, chunk in enumerate(split_list(list(self._widgets.__dict__.items()), self._columns)):
+            layout.setColumnStretch(column, 1)
+            for row, (key, widget) in enumerate(chunk):
+                # row: int, column: int, rowSpan: int, columnSpan: int
+                if isinstance(widget, QCheckBox):
+                    layout.addWidget(widget, row, column * 2, 1, 2)
+                else:
+                    layout.addWidget(l := QLabel(ui_translate(key)), row, column * 2)
+                    layout.setAlignment(l, self._alignment)
+                    layout.addWidget(widget, row, column * 2 + 1)
+                layout.setAlignment(widget, self._alignment)
+
+        return layout
 
 
 class ContextMenuSettingsForm(SettingsForm):
