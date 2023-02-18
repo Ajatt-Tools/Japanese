@@ -46,9 +46,13 @@ def tie_inside_furigana(s: str) -> str:
         return m.group().replace(' ', '・')
     return re.sub(r'\[[^\[\]]+?]', fixup, s)
 
+def sanitize(furigana_notation: str) -> List[str]:
+    return tie_inside_furigana(furigana_notation).split()
+
+
 def word_reading(text: str) -> WordReading:
     word, reading = [], []
-    for split in map(split_furigana, tie_inside_furigana(text).split()):
+    for split in map(split_furigana, sanitize(text)):
         word.append(split.head + split.suffix)
         reading.append(split.reading + split.suffix)
     word, reading = ''.join(word), ''.join(reading)
@@ -65,7 +69,7 @@ def mingle_readings(readings: List[str], *, sep: str = ', ', wrap: WordWrap = Wo
     assert len(readings) > 1
 
     packs = []
-    split = list(map(str.split, readings))
+    split = list(map(sanitize, readings))
 
     if any(len(x) != len(y) for x, y in pairs(split)):
         return readings[0]
