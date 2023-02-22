@@ -193,16 +193,20 @@ def try_lookup_full_text(text: str) -> Optional[str]:
     return furigana if furigana != text else None
 
 
-def generate_furigana(src_text: str, use_mecab: bool = True) -> str:
+def generate_furigana(src_text: str, split_morphemes: bool = True) -> str:
     substrings = []
     for token in tokenize(src_text, counters=cfg.furigana.counters):
         if isinstance(token, ParseableToken):
             if furigana := try_lookup_full_text(token):
                 substrings.append(furigana)
                 continue
-            if use_mecab is True:
+            if split_morphemes is True:
                 for out in mecab_translate(token):
                     substrings.append(format_furigana(out))
+            elif (first := mecab_translate(token)[0]).word == token:
+                # If the user doesn't word to split morphemes, still try to find the reading using mecab
+                # but abort if mecab outputs more than one word.
+                substrings.append(format_furigana(first))
             else:
                 substrings.append(token)
         else:
@@ -240,7 +244,7 @@ class DoTasks:
         changed = False
         if self.can_fill_destination(task) and (src_text := mw.col.media.strip(self._note[task.source]).strip()):
             if isinstance(task, ProfileFurigana):
-                self._note[task.destination] = generate_furigana(src_text, use_mecab=task.split_morphemes)
+                self._note[task.destination] = generate_furigana(src_text, split_morphemes=task.split_morphemes)
             elif isinstance(task, ProfilePitch):
                 self._note[task.destination] = format_pronunciations(
                     pronunciations=get_pronunciations(src_text, use_mecab=task.split_morphemes),
