@@ -39,7 +39,7 @@ def init() -> AccentDict:
             pickle.dump(derivative, f, pickle.HIGHEST_PROTOCOL)
 
     # Finally, patch with user-defined entries.
-    derivative.update(UserDb(self_check=False).create_derivative())
+    derivative.update(UserDb().create_derivative())
     print(f"Total pitch accent entries: {len(derivative)}.")
     return derivative
 
