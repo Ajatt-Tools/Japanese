@@ -188,30 +188,35 @@ def try_lookup_full_text(text: str) -> Optional[str]:
     Avoids calling mecab when the text contains one word in dictionary form
     or multiple words in dictionary form separated by punctuation.
     """
-    dummy = ParsedToken(text, text, None, None, None)
-    furigana = format_furigana(dummy)
+    furigana = format_furigana(ParsedToken(
+        word=text,
+        headword=text,
+        katakana_reading=None,
+        part_of_speech=None,
+        inflection=None
+    ))
     return furigana if furigana != text else None
 
 
 def generate_furigana(src_text: str, split_morphemes: bool = True) -> str:
     substrings = []
     for token in tokenize(src_text, counters=cfg.furigana.counters):
-        if isinstance(token, ParseableToken):
-            if furigana := try_lookup_full_text(token):
-                substrings.append(furigana)
-                continue
-            if split_morphemes is True:
-                for out in mecab_translate(token):
-                    substrings.append(format_furigana(out))
-            elif (first := mecab_translate(token)[0]).word == token:
-                # If the user doesn't word to split morphemes, still try to find the reading using mecab
-                # but abort if mecab outputs more than one word.
-                substrings.append(format_furigana(first))
-            else:
-                substrings.append(token)
+        if not isinstance(token, ParseableToken):
+            # Skip tokens that can't be parsed (non-japanese text).
+            substrings.append(token)
+        elif furigana := try_lookup_full_text(token):
+            # If full text search succeeded, continue.
+            substrings.append(furigana)
+        elif split_morphemes is True:
+            # Split with mecab, format furigana for each word.
+            for out in mecab_translate(token):
+                substrings.append(format_furigana(out))
+        elif (first := mecab_translate(token)[0]).word == token:
+            # If the user doesn't want to split morphemes, still try to find the reading using mecab
+            # but abort if mecab outputs more than one word.
+            substrings.append(format_furigana(first))
         else:
             substrings.append(token)
-
     return ''.join(substrings).strip()
 
 
