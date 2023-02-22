@@ -66,19 +66,16 @@ class KanjiumDb(AccDbManager):
 
     def create_derivative(self) -> AccentDict:
         """ Build the derived database from the original database and save it as *.csv """
-        temp_dict: AccentDict = {}
-
+        temp_dict = {}
         with open(self.accent_database, encoding="utf-8") as f:
-            entries = [AccentEntry(*line.split('\t')) for line in f]
-
+            entries = [AccentEntry(*line.split('\t')) for line in f if line.strip()]
         for entry in entries:
             for pitch_num in entry.accents:
                 value = FormattedEntry(''.join(entry.moraes), format_entry(entry.moraes, pitch_num), str(pitch_num))
                 temp_dict.setdefault(entry.keyword, [])
                 if value not in temp_dict[entry.keyword]:
                     temp_dict[entry.keyword].append(value)
-
-        return temp_dict
+        return AccentDict(temp_dict)
 
 
 if __name__ == '__main__':

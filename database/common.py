@@ -4,7 +4,7 @@
 import abc
 import os
 import re
-from typing import Dict, List, NamedTuple, Optional
+from typing import Dict, List, NamedTuple, Optional, NewType
 
 # Paths to the database files and this particular file
 THIS_DIR_PATH = os.path.dirname(os.path.normpath(__file__))
@@ -35,7 +35,8 @@ class FormattedEntry(NamedTuple):
         return self.pitch_number != NO_ACCENT
 
 
-AccentDict = Dict[str, List[FormattedEntry]]
+
+AccentDict = NewType("AccentDict", Dict[str, List[FormattedEntry]])
 
 
 class AccDbManager(abc.ABC):
@@ -78,7 +79,7 @@ class AccDbManager(abc.ABC):
                     entry = FormattedEntry(kana, *pitch_data)
                     if entry not in acc_dict[key]:
                         acc_dict[key].append(entry)
-        return acc_dict
+        return AccentDict(acc_dict)
 
     @abc.abstractmethod
     def create_derivative(self) -> AccentDict:

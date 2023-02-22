@@ -117,7 +117,7 @@ class NhkDb(AccDbManager):
 
     def create_derivative(self) -> AccentDict:
         """ Build the derived database from the original database and save it as *.csv """
-        temp_dict: AccentDict = {}
+        temp_dict = {}
 
         with open(self.accent_database, encoding="utf-8") as f:
             entries: List[AccentEntry] = [make_accent_entry(line) for line in f]
@@ -131,7 +131,7 @@ class NhkDb(AccDbManager):
                 if value not in temp_dict[key]:
                     temp_dict[key].append(value)
 
-        return temp_dict
+        return AccentDict(temp_dict)
 
 
 if __name__ == '__main__':
