@@ -9,6 +9,7 @@ except ImportError:
 EQUIVALENT_SOUNDS = {
     'おおう': 'おーう',
     'じゃあ': 'じゃー',
+    'じょう': 'じょー',
     'れい': 'れー',
     'めい': 'めー',
     'べい': 'べー',
@@ -91,6 +92,7 @@ def test():
     assert unify_repr('おおうなばら') == 'おーうなばら'
     assert unify_repr('おはよう') == 'おはよー'
     assert unify_repr('おお') == 'おー'
+    assert unify_repr('よじょうはん') == 'よじょーはん'
     assert literal_pronunciation('がっこう') == 'ガッコー'
 
 
