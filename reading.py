@@ -150,6 +150,14 @@ def format_pronunciations(
     return txt
 
 
+def sorted_accents(headword: str) -> list[FormattedEntry]:
+    return sorted(
+        iter_accents(headword),
+        key=lambda e: LONG_VOWEL_MARK in e.katakana_reading,
+        reverse=cfg.furigana.prefer_long_vowel_mark
+    )
+
+
 def iter_furigana(out: ParsedToken) -> Iterable[str]:
     readings = {}
 
@@ -157,12 +165,7 @@ def iter_furigana(out: ParsedToken) -> Iterable[str]:
         readings[unify_repr(out.hiragana_reading)] = format_output(out.word, out.hiragana_reading)
 
     if cfg.furigana.can_lookup_in_db(out.headword):
-        entries = sorted(
-            iter_accents(out.headword),
-            key=lambda e: LONG_VOWEL_MARK in e.katakana_reading,
-            reverse=cfg.furigana.prefer_long_vowel_mark
-        )
-        for entry in entries:
+        for entry in sorted_accents(out.headword):
             reading = adjust_reading(out.word, out.headword, to_hiragana(entry.katakana_reading))
             readings.setdefault(unify_repr(reading), format_output(out.word, reading))
 
