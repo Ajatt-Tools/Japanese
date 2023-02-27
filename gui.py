@@ -503,9 +503,17 @@ class SettingsDialog(QDialog):
         self._button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         self._setup_tabs()
         self._setup_ui()
-        restoreGeom(self, self.name, adjustSize=True)
+
+        # Show window
         self.exec()
+
+    def show(self) -> None:
+        super().show()
+        restoreGeom(self, self.name, adjustSize=True)
+
+    def done(self, *args, **kwargs) -> None:
         saveGeom(self, self.name)
+        return super().done(*args, **kwargs)
 
     def _setup_tabs(self):
         # General
