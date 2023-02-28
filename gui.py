@@ -13,8 +13,8 @@ from aqt.utils import restoreGeom, saveGeom
 from .ajt_common.about_menu import tweak_window, menu_root_entry
 from .ajt_common.consts import ADDON_SERIES
 from .ajt_common.grab_key import ShortCutGrabButton
-from .config_view import ConfigViewBase, config_view as cfg
-from .helpers import ui_translate
+from .config_view import config_view as cfg
+from .helpers import ui_translate, split_list
 from .helpers.mingle_readings import WordWrapMode
 from .helpers.profiles import Profile, ProfileFurigana, ProfilePitch, PitchOutputFormat
 
@@ -179,8 +179,8 @@ class ProfileEditForm(QGroupBox):
         subclass = cls._subclasses_map[profile_class]
         return QGroupBox.__new__(subclass)
 
-    def __init__(self, profile_class: type(Profile), *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, profile_class: type(Profile), *args):
+        super().__init__(*args)
         self._profile_class = profile_class
         self.setTitle("Edit Profile")
         self.setCheckable(False)
@@ -236,13 +236,13 @@ class FuriganaProfileEditForm(ProfileEditForm, profile_class=ProfileFurigana):
 
 class PitchProfileEditForm(ProfileEditForm, profile_class=ProfilePitch):
     class OutputFormatCombo(QComboBox):
-        def __init__(self):
-            super().__init__()
+        def __init__(self, parent):
+            super().__init__(parent)
             self.addItems(item.name for item in PitchOutputFormat)
 
     def _expand_form(self):
         super()._expand_form()
-        self._form.output_format = self.OutputFormatCombo()
+        self._form.output_format = self.OutputFormatCombo(self)
 
     def load_profile(self, profile: ProfilePitch):
         super().load_profile(profile)
@@ -312,6 +312,9 @@ class WordsEdit(QTextEdit):
 
 
 class SettingsForm(QGroupBox):
+    _title = None
+    _config = None
+
     def __init__(self, *args):
         super().__init__(*args)
         self.setTitle(self._title)
@@ -323,14 +326,6 @@ class SettingsForm(QGroupBox):
     def _add_widgets(self):
         """Subclasses add new widgets here."""
         self._widgets.__dict__.update(self._create_checkboxes())
-
-    @property
-    def _title(self) -> str:
-        raise NotImplementedError()
-
-    @property
-    def _config(self) -> ConfigViewBase:
-        raise NotImplementedError()
 
     def as_dict(self) -> Dict[str, Union[bool, str, int]]:
         return as_config_dict(self._widgets.__dict__)
@@ -356,7 +351,35 @@ class BehaviorSettingsForm(SettingsForm):
     _config = cfg
 
 
-class PitchSettingsForm(SettingsForm):
+class ContextMenuSettingsForm(SettingsForm):
+    _title = "Context menu"
+    _config = cfg.context_menu
+
+
+class TwoColumnsSettingsForm(SettingsForm):
+    _columns = 2
+    _alignment = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop
+    _widget_min_height = 25
+    _column_spacing = 16
+
+    def _make_layout(self) -> QLayout:
+        layout = QHBoxLayout()
+        layout.setSpacing(self._column_spacing)
+        for index, chunk in enumerate(split_list(list(self._widgets.__dict__.items()), self._columns)):
+            layout.addLayout(form := QFormLayout())
+            form.setAlignment(self._alignment)
+            for key, widget in chunk:
+                widget: QWidget
+                widget.setMinimumHeight(max(widget.minimumHeight(), self._widget_min_height))
+                if isinstance(widget, QCheckBox):
+                    form.addRow(widget)
+                else:
+                    form.addRow(ui_translate(key), widget)
+            layout.setStretch(index, 1)
+        return layout
+
+
+class PitchSettingsForm(TwoColumnsSettingsForm):
     _title = "Pitch Options"
     _config = cfg.pitch_accent
 
@@ -372,20 +395,9 @@ class PitchSettingsForm(SettingsForm):
         self._widgets.blocklisted_words = WordsEdit(initial_values=self._config.blocklisted_words)
 
 
-def split_list(input_list: list, n_chunks: int):
-    """ Splits a list into N chunks. """
-    chunk_size = len(input_list) // n_chunks
-    output = []
-    for i in range(0, len(input_list), chunk_size):
-        output.append(input_list[i:i + chunk_size])
-    return output
-
-
-class FuriganaSettingsForm(SettingsForm):
+class FuriganaSettingsForm(TwoColumnsSettingsForm):
     _title = "Furigana Options"
     _config = cfg.furigana
-    _columns = 2
-    _alignment = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop
 
     def _add_widgets(self):
         super()._add_widgets()
@@ -398,28 +410,6 @@ class FuriganaSettingsForm(SettingsForm):
         self._widgets.reading_separator = QLineEdit(self._config.reading_separator)
         self._widgets.blocklisted_words = WordsEdit(initial_values=self._config.blocklisted_words)
         self._widgets.mecab_only = WordsEdit(initial_values=self._config.mecab_only)
-
-    def _make_layout(self) -> QLayout:
-        layout = QGridLayout()
-        layout.setSpacing(10)
-        for column, chunk in enumerate(split_list(list(self._widgets.__dict__.items()), self._columns)):
-            layout.setColumnStretch(column, 1)
-            for row, (key, widget) in enumerate(chunk):
-                # row: int, column: int, rowSpan: int, columnSpan: int
-                if isinstance(widget, QCheckBox):
-                    layout.addWidget(widget, row, column * 2, 1, 2)
-                else:
-                    layout.addWidget(l := QLabel(ui_translate(key)), row, column * 2)
-                    layout.setAlignment(l, self._alignment)
-                    layout.addWidget(widget, row, column * 2 + 1)
-                layout.setAlignment(widget, self._alignment)
-
-        return layout
-
-
-class ContextMenuSettingsForm(SettingsForm):
-    _title = "Context menu"
-    _config = cfg.context_menu
 
 
 class ToolbarButtonSettingsForm(QGroupBox):
@@ -505,11 +495,8 @@ class SettingsDialog(QDialog):
         self._setup_ui()
 
         # Show window
-        self.exec()
-
-    def show(self) -> None:
-        super().show()
         restoreGeom(self, self.name, adjustSize=True)
+        self.exec()
 
     def done(self, *args, **kwargs) -> None:
         saveGeom(self, self.name)
@@ -534,7 +521,7 @@ class SettingsDialog(QDialog):
         layout.addWidget(self._furigana_settings)
         self._tabs.addTab(tab, "Furigana")
 
-        # Furigana
+        # Pitch accent
         tab = QWidget()
         tab.setLayout(layout := QVBoxLayout())
         layout.addWidget(self._pitch_profiles_edit)
