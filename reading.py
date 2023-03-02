@@ -3,9 +3,9 @@
 
 import functools
 from collections import OrderedDict
-from typing import Tuple, Optional, Iterable
+from typing import Tuple, Optional
 
-from anki.utils import htmlToTextLine
+from anki.utils import html_to_text_line
 from aqt import mw
 
 from .config_view import config_view as cfg
@@ -14,12 +14,12 @@ from .database import init as database_init
 from .helpers import *
 from .helpers.common_kana import adjust_reading
 from .helpers.hooks import collection_will_add_note
-from .helpers.mingle_readings import mingle_readings, word_reading
+from .helpers.mingle_readings import mingle_readings, word_reading, strip_non_jp_furigana
 from .helpers.profiles import Profile, ProfileFurigana, PitchOutputFormat, ProfilePitch
 from .helpers.tokens import tokenize, split_separators, ParseableToken
 from .helpers.unify_readings import unify_repr
 from .mecab_controller import MecabController
-from .mecab_controller import format_output, is_kana_word
+from .mecab_controller import format_output, is_kana_str
 from .mecab_controller import to_hiragana, to_katakana
 from .mecab_controller.mecab_controller import ParsedToken
 
@@ -62,8 +62,12 @@ def get_pronunciations(expr: str, sanitize: bool = True, recurse: bool = True, u
 
     # Sanitize input
     if sanitize:
-        expr = htmlToTextLine(expr)
+        expr = html_to_text_line(expr)
         sanitize = False
+
+    # Sometimes furigana notation is being used by the users to distinguish otherwise duplicate notes.
+    # E.g., テスト[1], テスト[2]
+    expr = strip_non_jp_furigana(expr)
 
     # If the expression contains furigana, split it.
     expr, expr_reading = word_reading(expr)
@@ -72,9 +76,7 @@ def get_pronunciations(expr: str, sanitize: bool = True, recurse: bool = True, u
     if not expr or cfg.pitch_accent.is_blocklisted(expr):
         return ret
 
-    # Sometimes furigana notation is being used by the users to distinguish otherwise duplicate notes.
-    # E.g., テスト[1], テスト[2]
-    # If there are multiple readings present, ignore all of them.
+    # If there are numbers or multiple readings present, ignore all of them.
     if expr_reading and (expr_reading.isnumeric() or cfg.furigana.reading_separator in expr_reading):
         expr_reading = None
 
@@ -162,7 +164,15 @@ def iter_furigana(out: ParsedToken) -> Iterable[str]:
     readings = {}
 
     if out.katakana_reading:
-        readings[unify_repr(out.hiragana_reading)] = format_output(out.word, out.hiragana_reading)
+        readings.setdefault(
+            unify_repr(to_hiragana(out.katakana_reading)),
+            format_output(
+                out.word,
+                to_hiragana(out.katakana_reading)
+                if not cfg.furigana.prefer_long_vowel_mark
+                else unify_repr(to_hiragana(out.katakana_reading))
+            ),
+        )
 
     if cfg.furigana.can_lookup_in_db(out.headword):
         for entry in sorted_accents(out.headword):
@@ -173,7 +183,7 @@ def iter_furigana(out: ParsedToken) -> Iterable[str]:
 
 
 def format_furigana(out: ParsedToken) -> str:
-    if is_kana_word(out.word) or cfg.furigana.is_blocklisted(out.word):
+    if is_kana_str(out.word) or cfg.furigana.is_blocklisted(out.word):
         return out.word
     elif readings := list(iter_furigana(out)):
         return (
@@ -278,7 +288,7 @@ class DoTasks:
             return True
 
         # Field is empty or overwrite requested
-        if len(htmlToTextLine(self._note[task.destination])) == 0 or self._overwrite is True:
+        if len(html_to_text_line(self._note[task.destination])) == 0 or self._overwrite is True:
             return True
 
         # Allowed regenerating regardless
