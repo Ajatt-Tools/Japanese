@@ -29,6 +29,11 @@ class WordWrapMode(enum.Enum):
     none = WordWrap('', '')
 
 
+def strip_non_jp_furigana(expr: str) -> str:
+    """Non-japanese furigana is not real furigana. Strip it."""
+    return re.sub(r'\[[^ぁ-ゖァ-ヺｧ-ﾝ]+]', '', expr)
+
+
 def split_furigana(text: str) -> SplitFurigana:
     furigana_start, furigana_end = -1, -1
     for i, c in enumerate(text):
@@ -41,10 +46,13 @@ def split_furigana(text: str) -> SplitFurigana:
     else:
         return SplitFurigana(text[:furigana_start], text[furigana_start + 1:furigana_end], text[furigana_end + 1:])
 
+
 def tie_inside_furigana(s: str) -> str:
     def fixup(m: re.Match):
         return m.group().replace(' ', '・')
+
     return re.sub(r'\[[^\[\]]+?]', fixup, s)
+
 
 def sanitize(furigana_notation: str) -> List[str]:
     return tie_inside_furigana(furigana_notation).split()
@@ -85,6 +93,7 @@ def mingle_readings(readings: List[str], *, sep: str = ', ', wrap: WordWrap = Wo
 
 
 if __name__ == '__main__':
+    assert (strip_non_jp_furigana('悪[わる][1223]い[2]') == '悪[わる]い')
     assert (split_furigana('故郷[こきょう]') == SplitFurigana(head='故郷', reading='こきょう', suffix=''))
     assert (split_furigana('有[あ]り') == SplitFurigana(head='有', reading='あ', suffix='り'))
     assert (split_furigana('ひらがな') == SplitFurigana(head='ひらがな', reading='ひらがな', suffix=''))
