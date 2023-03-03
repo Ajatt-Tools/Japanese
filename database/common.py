@@ -35,7 +35,6 @@ class FormattedEntry(NamedTuple):
         return self.pitch_number != NO_ACCENT
 
 
-
 AccentDict = NewType("AccentDict", Dict[str, List[FormattedEntry]])
 
 
