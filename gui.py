@@ -2,7 +2,6 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/copyleft/gpl.html
 
 import dataclasses
-import enum
 from types import SimpleNamespace
 from typing import Optional, Iterable, Dict, Tuple, List
 
@@ -63,28 +62,6 @@ class NoteTypeSelector(EditableSelector):
             self.setCurrentText(current_text)
         elif self.count() > 0:
             self.setCurrentIndex(0)
-
-
-class EnumSelector(QComboBox):
-    @property
-    def _type(self) -> enum.EnumMeta:
-        raise NotImplementedError()
-
-    def __init__(self, initial_value: Optional[enum.Enum] = None, *args):
-        super().__init__(*args)
-        self.addItems(mode.name.capitalize() for mode in self._type)
-        if initial_value is not None:
-            self.setCurrentText(initial_value.name)
-
-    def setCurrentText(self, text: str):
-        return super().setCurrentText(text.capitalize())
-
-    def currentText(self) -> str:
-        return super().currentText().lower()
-
-
-class WrapSelector(EnumSelector):
-    _type = WordWrapMode
 
 
 def as_config_dict(widgets: Dict[str, QWidget]) -> Dict[str, Union[bool, str, int]]:
