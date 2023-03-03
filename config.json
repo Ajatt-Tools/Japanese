@@ -2,6 +2,7 @@
   "generate_on_note_add": true,
   "regenerate_readings": false,
   "cache_lookups": 1024,
+  "last_file_save_location": "",
   "styles": {
     "class=\"overline\"": "style=\"text-decoration:overline;\"",
     "class=\"nopron\"": "style=\"color: royalblue;\"",
@@ -58,8 +59,7 @@
     "database_lookups": true,
     "skip_numbers": true,
     "prefer_long_vowel_mark": false,
-    "wrap_readings": "none",
-    "reading_separator": ",",
+    "reading_separator": "<br>",
     "blocklisted_words": "人",
     "mecab_only": "彼,猫,首,母,顔,木,頭,私,弟,空,体,行く",
     "counters": "つ,月,日,人,筋,隻,丁,品,番,枚",

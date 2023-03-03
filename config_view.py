@@ -6,7 +6,6 @@ import re
 from typing import List, Dict, Iterable, NamedTuple, final
 
 from .ajt_common.addon_config import AddonConfigManager
-from .helpers.mingle_readings import WordWrapMode
 from .helpers.profiles import Profile
 from .helpers.tokens import RE_FLAGS
 
@@ -65,10 +64,6 @@ class FuriganaConfigView(WordBlockListManager):
     @property
     def reading_separator(self) -> str:
         return self['reading_separator']
-
-    @property
-    def wrap_readings(self) -> WordWrapMode:
-        return WordWrapMode[self['wrap_readings']]
 
     @property
     def maximum_results(self) -> int:
