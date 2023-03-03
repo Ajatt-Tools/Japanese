@@ -6,6 +6,7 @@ import re
 from typing import Collection, Iterable, List, NewType, NamedTuple
 
 from aqt.qt import *
+from aqt.utils import showInfo
 
 
 def is_ctrl_v_pressed(event: QKeyEvent) -> bool:
@@ -149,8 +150,11 @@ class PitchOverrideTable(ExpandingTableWidget):
         ]
 
     def dump(self, file_path: str, column_sep: str = '\t'):
-        with open(file_path, 'w', encoding='utf8') as of:
-            of.write('\n'.join(self.as_tsv(column_sep)))
+        try:
+            with open(file_path, 'w', encoding='utf8') as of:
+                of.write('\n'.join(self.as_tsv(column_sep)))
+        except OSError as ex:
+            showInfo(f"{ex.__class__.__name__}: this file can't be written.")
 
 
 class App(QWidget):
