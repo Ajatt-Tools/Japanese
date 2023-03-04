@@ -4,7 +4,7 @@
 import abc
 import os
 import re
-from typing import Dict, List, NamedTuple, Optional, NewType
+from typing import Dict, List, NamedTuple, Optional, NewType, Collection
 
 # Paths to the database files and this particular file
 THIS_DIR_PATH = os.path.dirname(os.path.normpath(__file__))
@@ -35,7 +35,7 @@ class FormattedEntry(NamedTuple):
         return self.pitch_number != NO_ACCENT
 
 
-AccentDict = NewType("AccentDict", Dict[str, List[FormattedEntry]])
+AccentDict = NewType("AccentDict", Dict[str, Collection[FormattedEntry]])
 
 
 class AccDbManager(abc.ABC):
