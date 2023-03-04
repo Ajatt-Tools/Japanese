@@ -82,15 +82,13 @@ def mingle_readings(readings: List[str], *, sep: str = ', ') -> str:
     split = list(map(whitespace_split, readings))
 
     if any(len(x) != len(y) for x, y in pairs(split)):
+        # When notations are inconsistent, don't attempt further parsing.
         return readings[0]
 
-    for pack in zip(*split):
-        split = decompose_word(pack[0])
-        word, readings, suffix = split.head, {split.reading: None, }, split.suffix
-        for split in map(decompose_word, pack[1:]):
-            readings[split.reading] = None
-        readings = sep.join(readings)
-        packs.append(f' {word}[{readings}]{suffix}' if readings != word else word)
+    for first, *rest in zip(*split):
+        first = decompose_word(first)
+        readings = sep.join(dict.fromkeys(word.reading for word in (first, *map(decompose_word, rest))))
+        packs.append(f' {first.head}[{readings}]{first.suffix}' if readings != first.head else first.head)
     return ''.join(packs)
 
 
