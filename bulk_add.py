@@ -10,7 +10,7 @@ from .config_view import config_view as cfg
 from .helpers import NoteId, ANKI21_VERSION
 from .tasks import DoTasks
 
-ACTION_NAME = "AJT: Bulk-add readings"
+ACTION_NAME = "AJT: Bulk-generate"
 
 
 def bulk_add_readings(nids: Sequence[NoteId]):
