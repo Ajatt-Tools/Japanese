@@ -1,6 +1,8 @@
 # Copyright: Ren Tatsumoto <tatsu at autistici.org>
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
+from typing import Iterable
+
 try:
     from .common import *
 except ImportError:
@@ -115,16 +117,17 @@ class NhkDb(AccDbManager):
     accent_database = os.path.join(DB_DIR_PATH, "nhk_data.csv")
     derivative_database = os.path.join(DB_DIR_PATH, "nhk_pronunciation.csv")
 
+    def read_entries(self) -> Iterable[AccentEntry]:
+        with open(self.accent_database, encoding="utf-8") as f:
+            for line in f:
+                yield make_accent_entry(line)
+
     def create_derivative(self) -> AccentDict:
         """ Build the derived database from the original database and save it as *.csv """
         temp_dict = {}
 
-        with open(self.accent_database, encoding="utf-8") as f:
-            entries: List[AccentEntry] = [make_accent_entry(line) for line in f]
-
-        for entry in entries:
+        for entry in self.read_entries():
             value = format_entry(entry)
-
             # Add expressions for both
             for key in (entry.nhk, entry.kanjiexpr):
                 temp_dict.setdefault(key, [])
