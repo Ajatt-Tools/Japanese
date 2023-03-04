@@ -4,7 +4,7 @@
 import functools
 import itertools
 from collections import OrderedDict
-from typing import Tuple, Optional
+from typing import Tuple, Optional, List
 
 from anki.utils import html_to_text_line
 
@@ -175,75 +175,109 @@ def sorted_accents(headword: str) -> list[FormattedEntry]:
     )
 
 
-def iter_furigana(out: ParsedToken) -> Iterable[str]:
+def iter_possible_readings(out: ParsedToken) -> Iterable[str]:
+    """
+    Return all possible hiragana readings for the word, e.g. [そそぐ, すすぐ, ゆすぐ].
+    If the user doesn't want to look up readings in the database,
+    return back the one reading contained in the parsed token, which may be empty.
+    """
     readings = {}
 
     if out.katakana_reading:
         readings.setdefault(
             unify_repr(to_hiragana(out.katakana_reading)),
-            format_output(
-                out.word,
-                to_hiragana(out.katakana_reading)
-                if not cfg.furigana.prefer_long_vowel_mark
-                else unify_repr(to_hiragana(out.katakana_reading))
-            ),
+            to_hiragana(out.katakana_reading),
         )
 
     if cfg.furigana.can_lookup_in_db(out.headword):
         for entry in sorted_accents(out.headword):
             reading = adjust_reading(out.word, out.headword, to_hiragana(entry.katakana_reading))
-            readings.setdefault(unify_repr(reading), format_output(out.word, reading))
+            readings.setdefault(unify_repr(reading), reading)
 
     return readings.values()
 
 
-def format_furigana(out: ParsedToken) -> str:
+def format_furigana_readings(word: str, hiragana_readings: List[str]) -> str:
+    """
+    Pack all readings into this format: "word[reading<sep>reading, ...]suffix".
+    If there are too many readings to pack, discard all but the first.
+    """
+    furigana_readings = [
+        format_output(
+            word,
+            reading
+            if not cfg.furigana.prefer_long_vowel_mark
+            else unify_repr(reading)
+        )
+        for reading in hiragana_readings
+    ]
+    if 1 < len(furigana_readings) <= cfg.furigana.maximum_results:
+        return mingle_readings(furigana_readings, sep=cfg.furigana.reading_separator)
+    else:
+        return furigana_readings[0]
+
+
+def format_hiragana_readings(readings: List[str]):
+    """
+    Discard kanji and format the readings as hiragana.
+    """
+    if 1 < len(readings) <= cfg.furigana.maximum_results:
+        return f"({','.join(map(to_hiragana, readings))})"
+    else:
+        return to_hiragana(readings[0])
+
+
+def format_furigana(out: ParsedToken, full_hiragana: bool = False) -> str:
     if is_kana_str(out.word) or cfg.furigana.is_blocklisted(out.word):
         return out.word
-    elif readings := list(iter_furigana(out)):
+    elif readings := list(iter_possible_readings(out)):
         return (
-            mingle_readings(readings, sep=cfg.furigana.reading_separator)
-            if 1 < len(readings) <= cfg.furigana.maximum_results
-            else readings[0]
+            format_furigana_readings(out.word, readings)
+            if full_hiragana is False
+            else format_hiragana_readings(readings)
         )
     else:
         return out.word
 
 
-def try_lookup_full_text(text: str) -> Optional[str]:
+def try_lookup_full_text(text: str, full_hiragana: bool = False) -> Optional[str]:
     """
     Try looking up whole text in the accent db.
     Avoids calling mecab when the text contains one word in dictionary form
     or multiple words in dictionary form separated by punctuation.
     """
-    furigana = format_furigana(ParsedToken(
-        word=text,
-        headword=text,
-        katakana_reading=None,
-        part_of_speech=None,
-        inflection=None
-    ))
+
+    furigana = format_furigana(
+        ParsedToken(
+            word=text,
+            headword=text,
+            katakana_reading=None,
+            part_of_speech=None,
+            inflection=None
+        ),
+        full_hiragana=full_hiragana
+    )
     return furigana if furigana != text else None
 
 
-def generate_furigana(src_text: str, split_morphemes: bool = True) -> str:
+def generate_furigana(src_text: str, split_morphemes: bool = True, full_hiragana: bool = False) -> str:
     substrings = []
     for token in tokenize(src_text, counters=cfg.furigana.counters):
         if not isinstance(token, ParseableToken) or is_kana_str(token):
             # Skip tokens that can't be parsed (non-japanese text).
             # Skip full-kana tokens (no furigana is needed).
             substrings.append(token)
-        elif furigana := try_lookup_full_text(token):
+        elif furigana := try_lookup_full_text(token, full_hiragana):
             # If full text search succeeded, continue.
             substrings.append(furigana)
         elif split_morphemes is True:
             # Split with mecab, format furigana for each word.
             for out in mecab_translate(token):
-                substrings.append(format_furigana(out))
+                substrings.append(format_furigana(out, full_hiragana))
         elif (first := mecab_translate(token)[0]).word == token:
             # If the user doesn't want to split morphemes, still try to find the reading using mecab
             # but abort if mecab outputs more than one word.
-            substrings.append(format_furigana(first))
+            substrings.append(format_furigana(first, full_hiragana))
         else:
             substrings.append(token)
     return ''.join(substrings).strip()

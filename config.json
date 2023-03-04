@@ -78,9 +78,14 @@
       "text": "再"
     },
     "furigana_button": {
-      "enabled": false,
+      "enabled": true,
       "shortcut": "",
       "text": "振"
+    },
+   "hiragana_button": {
+      "enabled": false,
+      "shortcut": "",
+      "text": "平"
     },
     "clean_furigana_button": {
       "enabled": false,

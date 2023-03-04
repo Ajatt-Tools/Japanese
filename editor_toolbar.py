@@ -1,6 +1,7 @@
 # Copyright: Ren Tatsumoto <tatsu at autistici.org>
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
+import functools
 from typing import List, Callable, Any, NamedTuple, Iterable
 
 from anki.notes import Note
@@ -9,7 +10,8 @@ from aqt.editor import Editor
 
 from .config_view import config_view as cfg, ToolbarButtonConfig
 from .helpers.tokens import clean_furigana
-from .reading import generate_furigana, DoTasks
+from .reading import generate_furigana
+from .tasks import DoTasks
 
 
 class ToolbarButton(NamedTuple):
@@ -53,6 +55,12 @@ def query_buttons() -> Iterable[ToolbarButton]:
             on_press=modify_field(generate_furigana),
             tip='Generate furigana in the field',
             conf=cfg.toolbar.furigana_button
+        ),
+        ToolbarButton(
+            id='hiragana_button',
+            on_press=modify_field(functools.partial(generate_furigana, full_hiragana=True)),
+            tip='Reconvert the field as hiragana',
+            conf=cfg.toolbar.hiragana_button
         ),
         ToolbarButton(
             id='clean_furigana_button',

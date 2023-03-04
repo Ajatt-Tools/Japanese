@@ -159,6 +159,10 @@ class ToolbarConfigView(ConfigViewBase):
         return self['furigana_button']
 
     @property
+    def hiragana_button(self) -> ToolbarButtonConfig:
+        return self['hiragana_button']
+
+    @property
     def clean_furigana_button(self) -> ToolbarButtonConfig:
         return self['clean_furigana_button']
 
