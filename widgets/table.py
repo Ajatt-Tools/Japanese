@@ -8,6 +8,8 @@ from typing import Collection, Iterable, List, NewType, NamedTuple
 from aqt.qt import *
 from aqt.utils import showInfo
 
+from ..database import NO_ACCENT
+
 
 def is_ctrl_v_pressed(event: QKeyEvent) -> bool:
     return (event.modifiers() & Qt.KeyboardModifier.ControlModifier) and (event.key() == Qt.Key.Key_V)
@@ -113,6 +115,10 @@ def is_comma_separated_list_of_numbers(text: str):
     return bool(re.fullmatch(r'[0-9,]+', text))
 
 
+def is_allowed_accent_notation(text: str):
+    return is_comma_separated_list_of_numbers(text) or text == NO_ACCENT
+
+
 class PitchAccentTableRow(NamedTuple):
     word: str
     reading: str
@@ -164,7 +170,7 @@ class PitchOverrideTable(ExpandingTableWidget):
         return [
             self._column_sep.join(row_cells)
             for row_cells in self.iterateRowTexts()
-            if all(row_cells) and is_comma_separated_list_of_numbers(row_cells.pitch_number)
+            if all(row_cells) and is_allowed_accent_notation(row_cells.pitch_number)
         ]
 
     def dump(self, file_path: str):
