@@ -64,7 +64,7 @@ class ViewPitchAccentsDialog(QDialog):
         self._setup_ui()
 
     def _setup_ui(self):
-        self.setWindowModality(Qt.ApplicationModal)
+        self.setWindowModality(Qt.WindowModality.ApplicationModal)
         self.setWindowTitle(ACTION_NAME)
         self.setMinimumSize(420, 240)
 
