@@ -11,10 +11,8 @@ HTML_AND_MEDIA_REGEX = re.compile(
 )
 NON_JP_REGEX = re.compile(
     # Reference: https://stackoverflow.com/questions/15033196/
-    # Added `[` and `]` at the end to keep furigana notation.
-    # Furigana notation is going to be parsed separately.
     # Added arabic numbers.
-    r'[^\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\uff66-\uff9f\u4e00-\u9fff\u3400-\u4dbf０-９0-9\]\[]+',
+    r'[^\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\uff66-\uff9f\u4e00-\u9fff\u3400-\u4dbf０-９0-9]+',
     flags=RE_FLAGS
 )
 JP_SEP_REGEX = re.compile(
