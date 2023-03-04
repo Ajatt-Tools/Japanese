@@ -13,11 +13,14 @@ from .ajt_common.about_menu import tweak_window, menu_root_entry
 from .ajt_common.consts import ADDON_SERIES
 from .ajt_common.grab_key import ShortCutGrabButton
 from .config_view import config_view as cfg
+from .database import UserDb
 from .helpers import ui_translate, split_list
-from .helpers.mingle_readings import WordWrapMode
 from .helpers.profiles import Profile, ProfileFurigana, ProfilePitch, PitchOutputFormat
+from .reading import acc_dict
+from .widgets.pitch_override import PitchOverrideWidget
 
 EDIT_MIN_WIDTH = 100
+NARROW_WIDGET_MAX_WIDTH = 64
 
 
 def adjust_to_contents(widget: QWidget):
@@ -273,12 +276,20 @@ class PitchProfilesEdit(ProfileEdit, profile_class=ProfilePitch):
 
 class WordsEdit(QTextEdit):
     _min_height = 32
+    _font_size = 16
 
     def __init__(self, initial_values: Optional[List[str]] = None, *args):
         super().__init__(*args)
         self.setAcceptRichText(False)
         self.set_values(initial_values)
         self.setMinimumHeight(self._min_height)
+        self._adjust_font_size()
+        self.setPlaceholderText("Comma-separated list of words...")
+
+    def _adjust_font_size(self):
+        font = self.font()
+        font.setPixelSize(self._font_size)
+        self.setFont(font)
 
     def set_values(self, values: List[str]):
         if values:
@@ -333,11 +344,12 @@ class ContextMenuSettingsForm(SettingsForm):
     _config = cfg.context_menu
 
 
-class TwoColumnsSettingsForm(SettingsForm):
-    _columns = 2
+class MultiColumnSettingsForm(SettingsForm):
+    _columns = 3
     _alignment = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop
     _widget_min_height = 25
     _column_spacing = 16
+    _equal_col_width = False
 
     def _make_layout(self) -> QLayout:
         layout = QHBoxLayout()
@@ -347,44 +359,53 @@ class TwoColumnsSettingsForm(SettingsForm):
             form.setAlignment(self._alignment)
             for key, widget in chunk:
                 widget: QWidget
+                widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
                 widget.setMinimumHeight(max(widget.minimumHeight(), self._widget_min_height))
                 if isinstance(widget, QCheckBox):
                     form.addRow(widget)
                 else:
                     form.addRow(ui_translate(key), widget)
-            layout.setStretch(index, 1)
+            if self._equal_col_width:
+                layout.setStretch(index, 1)
         return layout
 
 
-class PitchSettingsForm(TwoColumnsSettingsForm):
+class NarrowSpinBox(QSpinBox):
+    def __init__(self, initial_value: int = None, *args):
+        super().__init__(*args)
+        self.setRange(1, 99)
+        self.setMaximumWidth(NARROW_WIDGET_MAX_WIDTH)
+        if initial_value:
+            self.setValue(initial_value)
+
+
+class NarrowLineEdit(QLineEdit):
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.setMaximumWidth(NARROW_WIDGET_MAX_WIDTH)
+
+
+class PitchSettingsForm(MultiColumnSettingsForm):
     _title = "Pitch Options"
     _config = cfg.pitch_accent
 
     def _add_widgets(self):
         super()._add_widgets()
-        max_results = QSpinBox()
-        max_results.setRange(1, 99)
-        max_results.setValue(self._config.maximum_results)
-        self._widgets.maximum_results = max_results
-        self._widgets.reading_separator = QLineEdit(self._config.reading_separator)
-        self._widgets.word_separator = QLineEdit(self._config.word_separator)
+        self._widgets.maximum_results = NarrowSpinBox(initial_value=self._config.maximum_results)
+        self._widgets.reading_separator = NarrowLineEdit(self._config.reading_separator)
+        self._widgets.word_separator = NarrowLineEdit(self._config.word_separator)
         self._widgets.lookup_shortcut = ShortCutGrabButton(initial_value=self._config.lookup_shortcut)
         self._widgets.blocklisted_words = WordsEdit(initial_values=self._config.blocklisted_words)
 
 
-class FuriganaSettingsForm(TwoColumnsSettingsForm):
+class FuriganaSettingsForm(MultiColumnSettingsForm):
     _title = "Furigana Options"
     _config = cfg.furigana
 
     def _add_widgets(self):
         super()._add_widgets()
-        max_results = QSpinBox()
-        max_results.setRange(1, 99)
-        max_results.setValue(self._config.maximum_results)
-        self._widgets.maximum_results = max_results
-
-        self._widgets.wrap_readings = WrapSelector(initial_value=self._config.wrap_readings)
-        self._widgets.reading_separator = QLineEdit(self._config.reading_separator)
+        self._widgets.maximum_results = NarrowSpinBox(initial_value=self._config.maximum_results)
+        self._widgets.reading_separator = NarrowLineEdit(self._config.reading_separator)
         self._widgets.blocklisted_words = WordsEdit(initial_values=self._config.blocklisted_words)
         self._widgets.mecab_only = WordsEdit(initial_values=self._config.mecab_only)
 
@@ -466,6 +487,10 @@ class SettingsDialog(QDialog):
         self._pitch_profiles_edit = PitchProfilesEdit()
         self._pitch_settings = PitchSettingsForm()
 
+        # Overrides tab
+        self._accents_override = PitchOverrideWidget(self, file_path=UserDb.accent_database)
+
+        # Finish layout
         self._tabs = QTabWidget()
         self._button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         self._setup_tabs()
@@ -505,6 +530,9 @@ class SettingsDialog(QDialog):
         layout.addWidget(self._pitch_settings)
         self._tabs.addTab(tab, "Pitch accent")
 
+        # Accent DB override
+        self._tabs.addTab(self._accents_override, "Overrides")
+
     def _setup_ui(self) -> None:
         self.setWindowModality(Qt.WindowModality.ApplicationModal)
         self.setWindowTitle(f'{ADDON_SERIES} {self.name}')
@@ -535,7 +563,9 @@ class SettingsDialog(QDialog):
             *self._pitch_profiles_edit.as_list()
         ]
         cfg.write_config()
-        QDialog.accept(self)
+        self._accents_override.save_to_disk()
+        acc_dict.reload_from_disk(self)
+        return super().accept()
 
 
 def init():
