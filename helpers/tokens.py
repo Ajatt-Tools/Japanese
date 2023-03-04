@@ -40,7 +40,8 @@ def split_separators(expr: str) -> List[str]:
 
 
 def clean_furigana(expr: str) -> str:
-    return re.sub(r' ?([^ \[\]]+)\[[^ \[\]]+]', r'\g<1>', expr, flags=RE_FLAGS)
+    """Remove text in [] used to represent furigana."""
+    return re.sub(r' *([^ \[\]]+)\[[^\[\]]+]', r'\g<1>', expr, flags=RE_FLAGS)
 
 
 def mark_non_jp_token(m: re.Match) -> str:
@@ -94,6 +95,7 @@ def tokenize(expr: str, *, counters: List[str]):
 
 
 def main():
+    print(clean_furigana("手紙[てがみ]は、 男[おとこ]らしく 潔[いさぎよ]い<b>筆致[ひっち]</b>で 書[か]かれていた。"))
     print(clean_furigana("富竹[とみたけ]さん 今[いま] 扉[とびら]の 南京錠[なんきんじょう]いじってませんでした？"))
 
     expr = (
