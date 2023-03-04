@@ -5,3 +5,4 @@ __pycache__
 /meta.json
 /manifest.json
 /*.ankiaddon
+/user_files/user_data*
