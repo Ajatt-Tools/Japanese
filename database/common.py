@@ -53,9 +53,13 @@ class AccDbManager(abc.ABC):
             print("The derivative hasn't been built.")
 
         import filecmp
-        test_database = os.path.join(DB_DIR_PATH, "test.csv")
+        import tempfile
+
+        test_database = os.path.join(tempfile.gettempdir(), os.path.basename(cls.derivative_database))
         cls(self_check=False, dest_path=test_database).build_derivative()
-        print('Equal.' if filecmp.cmp(cls.derivative_database, test_database, shallow=False) else 'Not equal!')
+        print('\n'.join(f'・{database}' for database in (test_database, cls.derivative_database)))
+        are_equal = filecmp.cmp(cls.derivative_database, test_database, shallow=False)
+        print('Equal.' if are_equal else 'Not equal!')
 
     def self_check(self):
         # First check that the original database is present.
