@@ -122,20 +122,21 @@ class PitchAccentTableRow(NamedTuple):
 class PitchOverrideTable(ExpandingTableWidget):
     _columns = tuple(s.capitalize() for s in PitchAccentTableRow._fields)
     _sep_regex = re.compile(r"[ \t\n.;。、；・]+", flags=re.IGNORECASE | re.MULTILINE)
+    _column_sep = '\t'
 
     filename_filter = "TSV Files (*.tsv *.csv);; All Files (*.*)"
 
     @classmethod
-    def from_tsv(cls, file_path: str, column_sep: str = '\t', *args):
-        return cls(*args).update_from_tsv(file_path, column_sep)
+    def from_tsv(cls, file_path: str, *args):
+        return cls(*args).update_from_tsv(file_path)
 
-    def read_tsv_file(self, file_path: str, column_sep: str = '\t') -> Collection[PitchAccentTableRow]:
+    def read_tsv_file(self, file_path: str) -> Collection[PitchAccentTableRow]:
         table_rows = {}
         if os.path.isfile(file_path):
             with open(file_path, encoding='utf8') as f:
                 try:
                     table_rows.update(dict.fromkeys(
-                        PitchAccentTableRow(*line.strip().split(column_sep))
+                        PitchAccentTableRow(*line.strip().split(self._column_sep))
                         for line in f
                     ))
                 except TypeError as ex:
@@ -148,10 +149,10 @@ class PitchOverrideTable(ExpandingTableWidget):
             if all(row_cells):
                 yield PitchAccentTableRow(*(cell.text() for cell in row_cells))
 
-    def update_from_tsv(self, file_path: str, column_sep: str = '\t', reset_table: bool = True):
+    def update_from_tsv(self, file_path: str, reset_table: bool = True):
         table_rows_combined = dict.fromkeys((
             *(self.iterateRowTexts() if not reset_table else ()),
-            *self.read_tsv_file(file_path, column_sep),
+            *self.read_tsv_file(file_path),
         ))
         self.setRowCount(0)
         for row_cells in table_rows_combined:
@@ -159,17 +160,17 @@ class PitchOverrideTable(ExpandingTableWidget):
                 self.addRow(row_cells)
         return self
 
-    def as_tsv(self, column_sep: str = '\t') -> List[str]:
+    def as_tsv(self) -> List[str]:
         return [
-            column_sep.join(row_cells)
+            self._column_sep.join(row_cells)
             for row_cells in self.iterateRowTexts()
             if all(row_cells) and is_comma_separated_list_of_numbers(row_cells.pitch_number)
         ]
 
-    def dump(self, file_path: str, column_sep: str = '\t'):
+    def dump(self, file_path: str):
         try:
             with open(file_path, 'w', encoding='utf8') as of:
-                of.write('\n'.join(self.as_tsv(column_sep)))
+                of.write('\n'.join(self.as_tsv()))
         except OSError as ex:
             showInfo(f"{ex.__class__.__name__}: this file can't be written.", type="warning", parent=self)
 
