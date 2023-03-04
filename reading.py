@@ -2,6 +2,7 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import functools
+import itertools
 from collections import OrderedDict
 from typing import Tuple, Optional
 
@@ -13,7 +14,7 @@ from .helpers import *
 from .helpers.common_kana import adjust_reading
 from .helpers.mingle_readings import mingle_readings, word_reading, strip_non_jp_furigana
 from .helpers.profiles import PitchOutputFormat
-from .helpers.tokens import tokenize, split_separators, ParseableToken
+from .helpers.tokens import tokenize, split_separators, ParseableToken, clean_furigana
 from .helpers.unify_readings import unify_repr
 from .mecab_controller import MecabController
 from .mecab_controller import format_output, is_kana_str
@@ -46,6 +47,15 @@ def mecab_translate(expr: str) -> Tuple[ParsedToken, ...]:
     return tuple(mecab.translate(expr))
 
 
+def lookup_expr_variants(expr: str) -> Iterable[FormattedEntry]:
+    """Look up various forms of expr in accent db."""
+    return dict.fromkeys(itertools.chain(*(
+        acc_dict[variant]
+        for variant in (expr, to_katakana(expr), to_hiragana(expr))
+        if variant in acc_dict
+    ))).keys()
+
+
 @functools.lru_cache(maxsize=cfg.cache_lookups)
 def get_pronunciations(expr: str, sanitize: bool = True, recurse: bool = True, use_mecab: bool = True) -> AccentDict:
     """
@@ -68,6 +78,7 @@ def get_pronunciations(expr: str, sanitize: bool = True, recurse: bool = True, u
 
     # If the expression contains furigana, split it.
     expr, expr_reading = word_reading(expr)
+    expr, expr_reading = clean_furigana(expr), clean_furigana(expr_reading)
 
     # Skip empty strings and user-specified blocklisted words
     if not expr or cfg.pitch_accent.is_blocklisted(expr):
@@ -75,23 +86,30 @@ def get_pronunciations(expr: str, sanitize: bool = True, recurse: bool = True, u
 
     # If there are numbers or multiple readings present, ignore all of them.
     if expr_reading and (expr_reading.isnumeric() or cfg.furigana.reading_separator in expr_reading):
-        expr_reading = None
+        expr_reading = ''
 
-    if expr in acc_dict:
-        ret.setdefault(expr, [])
-        for entry in acc_dict[expr]:
+    # Look up the main expression.
+    if lookup_main := lookup_expr_variants(expr):
+        ret.setdefault(expr, []).extend(
+            entry
+            for entry in lookup_main
             # if there's furigana, and it doesn't match the entry, skip.
-            if expr_reading and to_katakana(entry.katakana_reading) != to_katakana(expr_reading):
-                continue
-            if entry not in ret[expr]:
-                ret[expr].append(entry)
-    elif (expr_katakana := to_katakana(expr)) in acc_dict and cfg.pitch_accent.kana_lookups:
-        ret.update(get_pronunciations(expr_katakana, sanitize, recurse=False))
-    elif recurse:
-        # Try to split the expression in various ways, and check if any of those results
+            if not expr_reading or to_katakana(entry.katakana_reading) == to_katakana(expr_reading)
+        )
+
+    # If there's furigana, e.g. when using the VocabFurigana field as the source,
+    # and the user wants to perform kana lookups,
+    # try the reading.
+    if not ret and expr_reading and cfg.pitch_accent.kana_lookups:
+        if lookup_reading := lookup_expr_variants(expr_reading):
+            ret.setdefault(expr_reading, []).extend(lookup_reading)
+
+    # Try to split the expression in various ways (punctuation, whitespace, etc.),
+    # and check if any of those brings results.
+    if not ret and recurse:
         if len(split_expr := split_separators(expr)) > 1:
             for section in split_expr:
-                ret.update(get_pronunciations(section, sanitize))
+                ret.update(get_pronunciations(section, sanitize, recurse=False))
 
         # Only if lookups were not successful, we try splitting with Mecab
         if not ret and use_mecab is True:
@@ -104,7 +122,7 @@ def get_pronunciations(expr: str, sanitize: bool = True, recurse: bool = True, u
                 # Katakana lookups are possible because of the additional key in the database.
                 # If the word was in conjugated form, this lookup will also fail.
                 if (
-                        not ret.get(out.headword)
+                        out.headword not in ret
                         and out.katakana_reading
                         and cfg.pitch_accent.kana_lookups is True
                 ):
