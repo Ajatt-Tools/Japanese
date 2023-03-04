@@ -13,7 +13,7 @@ class SplitFurigana(NamedTuple):
 
 class WordReading(NamedTuple):
     word: str
-    reading: Optional[str]
+    reading: str
 
 
 def strip_non_jp_furigana(expr: str) -> str:
@@ -61,7 +61,7 @@ def word_reading(text: str) -> WordReading:
         word.append(split.head + split.suffix)
         reading.append(split.reading + split.suffix)
     word, reading = ''.join(word), ''.join(reading)
-    return WordReading(word, reading) if word != reading else WordReading(text, None)
+    return WordReading(word, reading) if word != reading else WordReading(text, '')
 
 
 def pairs(seq: List):
@@ -99,7 +99,7 @@ if __name__ == '__main__':
     assert (decompose_word('有[あ]り') == SplitFurigana(head='有', reading='あ', suffix='り'))
     assert (decompose_word('ひらがな') == SplitFurigana(head='ひらがな', reading='ひらがな', suffix=''))
     assert (word_reading('有[あ]り 得[う]る') == WordReading(word='有り得る', reading='ありうる'))
-    assert (word_reading('有る') == WordReading(word='有る', reading=None))
+    assert (word_reading('有る') == WordReading(word='有る', reading=''))
     assert (word_reading('お 前[まい<br>まえ<br>めえ]') == WordReading(word='お前', reading='おまい<br>まえ<br>めえ'))
     assert (
             word_reading('もうお 金[かね]が 無[な]くなりました。')
