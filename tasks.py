@@ -110,10 +110,6 @@ class DoTasks:
         if len(html_to_text_line(self._note[task.destination])) == 0 or self._overwrite is True:
             return True
 
-        # Allowed regenerating regardless
-        if cfg.regenerate_readings is True:
-            return True
-
         return False
 
 

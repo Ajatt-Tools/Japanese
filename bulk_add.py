@@ -6,9 +6,9 @@ from typing import Sequence
 from aqt import mw
 from aqt.browser import Browser
 from aqt.qt import *
-
+from .config_view import config_view as cfg
 from .helpers import NoteId, ANKI21_VERSION
-from .reading import DoTasks
+from .tasks import DoTasks
 
 ACTION_NAME = "AJT: Bulk-add readings"
 
@@ -19,7 +19,7 @@ def bulk_add_readings(nids: Sequence[NoteId]):
 
     for nid in nids:
         note = mw.col.getNote(nid)
-        changed = DoTasks(note=note).run()
+        changed = DoTasks(note=note, overwrite=cfg.regenerate_readings).run()
         if changed:
             note.flush()
 
