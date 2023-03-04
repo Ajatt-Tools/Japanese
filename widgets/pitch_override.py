@@ -51,7 +51,7 @@ class PitchOverrideWidget(QWidget):
             )
             if not name:
                 return tooltip("Aborted.")
-            self._table.read_tsv(name)
+            self._table.update_from_tsv(name, reset_table=False)
             cfg['last_file_save_location'] = name  # may or may not be lost
 
         qconnect(self._import_button.clicked, read_tsv_file)

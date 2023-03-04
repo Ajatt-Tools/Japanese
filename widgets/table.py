@@ -127,26 +127,43 @@ class PitchOverrideTable(ExpandingTableWidget):
 
     @classmethod
     def from_tsv(cls, file_path: str, column_sep: str = '\t', *args):
-        return cls(*args).read_tsv(file_path, column_sep)
+        return cls(*args).update_from_tsv(file_path, column_sep)
 
-    def read_tsv(self, file_path: str, column_sep: str = '\t', reset_table: bool = True):
-        if reset_table:
-            self.setRowCount(0)
+    def read_tsv_file(self, file_path: str, column_sep: str = '\t') -> Collection[PitchAccentTableRow]:
+        table_rows = {}
         if os.path.isfile(file_path):
             with open(file_path, encoding='utf8') as f:
-                for line in f:
-                    if (new_row := PitchAccentTableRow(*line.strip().split(column_sep))) not in self.iterateRows():
-                        self.addRow(new_row)
+                try:
+                    table_rows.update(dict.fromkeys(
+                        PitchAccentTableRow(*line.strip().split(column_sep))
+                        for line in f
+                    ))
+                except TypeError as ex:
+                    error = str(ex).replace('.__new__()', '')
+                    showInfo(f"The file is formatted incorrectly. {error}.", type="warning", parent=self)
+        return table_rows.keys()
+
+    def iterateRowTexts(self) -> Iterable[PitchAccentTableRow]:
+        for row_cells in self.iterateRows():
+            if all(row_cells):
+                yield PitchAccentTableRow(*(cell.text() for cell in row_cells))
+
+    def update_from_tsv(self, file_path: str, column_sep: str = '\t', reset_table: bool = True):
+        table_rows_combined = dict.fromkeys((
+            *(self.iterateRowTexts() if not reset_table else ()),
+            *self.read_tsv_file(file_path, column_sep),
+        ))
+        self.setRowCount(0)
+        for row_cells in table_rows_combined:
+            if all(row_cells):
+                self.addRow(row_cells)
         return self
 
     def as_tsv(self, column_sep: str = '\t') -> List[str]:
         return [
-            column_sep.join(cell_strings)
-            for row in self.iterateRows()
-            if (
-                    all(cell_strings := [cell.text() for cell in row])
-                    and is_comma_separated_list_of_numbers(cell_strings[-1])
-            )
+            column_sep.join(row_cells)
+            for row_cells in self.iterateRowTexts()
+            if all(row_cells) and is_comma_separated_list_of_numbers(row_cells.pitch_number)
         ]
 
     def dump(self, file_path: str, column_sep: str = '\t'):
@@ -154,7 +171,7 @@ class PitchOverrideTable(ExpandingTableWidget):
             with open(file_path, 'w', encoding='utf8') as of:
                 of.write('\n'.join(self.as_tsv(column_sep)))
         except OSError as ex:
-            showInfo(f"{ex.__class__.__name__}: this file can't be written.")
+            showInfo(f"{ex.__class__.__name__}: this file can't be written.", type="warning", parent=self)
 
 
 class App(QWidget):
