@@ -7,7 +7,7 @@ from typing import Optional, Iterable, Dict, Tuple, List
 
 from aqt import mw
 from aqt.qt import *
-from aqt.utils import restoreGeom, saveGeom
+from aqt.utils import restoreGeom, saveGeom, openLink
 
 from .ajt_common.about_menu import tweak_window, menu_root_entry
 from .ajt_common.consts import ADDON_SERIES
@@ -21,6 +21,7 @@ from .widgets.pitch_override import PitchOverrideWidget
 
 EDIT_MIN_WIDTH = 100
 NARROW_WIDGET_MAX_WIDTH = 64
+EXAMPLE_DECK_ANKIWEB_URL = "https://ankiweb.net/shared/info/1557722832"
 
 
 def adjust_to_contents(widget: QWidget):
@@ -568,8 +569,19 @@ class SettingsDialog(QDialog):
         return super().accept()
 
 
-def init():
-    root_menu = menu_root_entry()
+def add_settings_action(root_menu: QMenu):
     menu_action = QAction(f'{SettingsDialog.name}...', root_menu)
     qconnect(menu_action.triggered, lambda: SettingsDialog(mw))
     root_menu.addAction(menu_action)
+
+
+def add_deck_download_action(root_menu: QMenu):
+    menu_action = QAction("Download example deck", root_menu)
+    qconnect(menu_action.triggered, lambda: openLink(EXAMPLE_DECK_ANKIWEB_URL))
+    root_menu.addAction(menu_action)
+
+
+def init():
+    root_menu = menu_root_entry()
+    add_settings_action(root_menu)
+    add_deck_download_action(root_menu)
