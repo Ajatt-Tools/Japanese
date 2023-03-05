@@ -59,7 +59,7 @@
     "database_lookups": true,
     "skip_numbers": true,
     "prefer_long_vowel_mark": false,
-    "reading_separator": "<br>",
+    "reading_separator": ", ",
     "blocklisted_words": "人",
     "mecab_only": "彼,猫,首,母,顔,木,頭,私,弟,空,体,行く",
     "counters": "つ,月,日,人,筋,隻,丁,品,番,枚",
