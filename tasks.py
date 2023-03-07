@@ -138,15 +138,10 @@ def on_add_note(note: Note) -> None:
 
 
 def init():
+    from aqt import gui_hooks
+
     # Generate when editing a note
-
-    if ANKI21_VERSION < 45:
-        from anki.hooks import addHook
-        addHook('editFocusLost', on_focus_lost)
-    else:
-        from aqt import gui_hooks
-
-        gui_hooks.editor_did_unfocus_field.append(on_focus_lost)
+    gui_hooks.editor_did_unfocus_field.append(on_focus_lost)
 
     # Generate when AnkiConnect (Yomichan, Mpvacious) adds a new note.
     collection_will_add_note.append(on_add_note)
