@@ -19,7 +19,7 @@ from .helpers.unify_readings import unify_repr
 from .mecab_controller import MecabController
 from .mecab_controller import format_output, is_kana_str
 from .mecab_controller import to_hiragana, to_katakana
-from .mecab_controller.mecab_controller import ParsedToken
+from .mecab_controller.mecab_controller import MecabParsedToken
 
 
 # Lookup
@@ -43,7 +43,7 @@ def update_html(html_notation: str) -> str:
 
 
 @functools.lru_cache(maxsize=cfg.cache_lookups)
-def mecab_translate(expr: str) -> Tuple[ParsedToken, ...]:
+def mecab_translate(expr: str) -> Tuple[MecabParsedToken, ...]:
     return tuple(mecab.translate(expr))
 
 
@@ -175,7 +175,7 @@ def sorted_accents(headword: str) -> list[FormattedEntry]:
     )
 
 
-def iter_possible_readings(out: ParsedToken) -> Iterable[str]:
+def iter_possible_readings(out: MecabParsedToken) -> Iterable[str]:
     """
     Return all possible hiragana readings for the word, e.g. [そそぐ, すすぐ, ゆすぐ].
     If the user doesn't want to look up readings in the database,
@@ -227,7 +227,7 @@ def format_hiragana_readings(readings: List[str], sep: str = ','):
         return to_hiragana(readings[0])
 
 
-def format_furigana(out: ParsedToken, full_hiragana: bool = False) -> str:
+def format_furigana(out: MecabParsedToken, full_hiragana: bool = False) -> str:
     if is_kana_str(out.word) or cfg.furigana.is_blocklisted(out.word):
         return out.word
     elif readings := list(iter_possible_readings(out)):
@@ -240,7 +240,7 @@ def format_furigana(out: ParsedToken, full_hiragana: bool = False) -> str:
         return out.word
 
 
-def try_lookup_full_text(text: str) -> Optional[ParsedToken]:
+def try_lookup_full_text(text: str) -> Optional[MecabParsedToken]:
     """
     Try looking up whole text in the accent db.
     Avoids calling mecab when the text contains one word in dictionary form
@@ -248,7 +248,7 @@ def try_lookup_full_text(text: str) -> Optional[ParsedToken]:
     """
 
     if cfg.furigana.can_lookup_in_db(text) and next(iter(iter_accents(text)), None) is not None:
-        return ParsedToken(
+        return MecabParsedToken(
             word=text,
             headword=text,
             katakana_reading=None,
@@ -257,11 +257,11 @@ def try_lookup_full_text(text: str) -> Optional[ParsedToken]:
         )
 
 
-def format_parsed_tokens(tokens: List[Union[ParsedToken, Token]], full_hiragana: bool = False) -> Iterable[str]:
+def format_parsed_tokens(tokens: List[Union[MecabParsedToken, Token]], full_hiragana: bool = False) -> Iterable[str]:
     for token in tokens:
         if isinstance(token, str):
             yield token
-        elif isinstance(token, ParsedToken):
+        elif isinstance(token, MecabParsedToken):
             yield format_furigana(token, full_hiragana)
         else:
             raise ValueError("Invalid type.")
