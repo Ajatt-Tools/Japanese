@@ -63,7 +63,7 @@
     "reading_separator": ", ",
     "blocklisted_words": "人",
     "mecab_only": "彼,猫,首,母,顔,木,頭,私,弟,空,体,行く",
-    "counters": "つ,月,日,人,筋,隻,丁,品,番,枚",
+    "counters": "つ,月,日,人,筋,隻,丁,品,番,枚,時,回,円,万,歳,限,万人",
     "maximum_results": 3,
     "discard_mode": "keep_first"
   },
