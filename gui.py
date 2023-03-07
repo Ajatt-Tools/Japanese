@@ -9,10 +9,11 @@ from aqt import mw
 from aqt.qt import *
 from aqt.utils import restoreGeom, saveGeom, openLink
 
+from .widgets.enum_selector import EnumSelectCombo
 from .ajt_common.about_menu import tweak_window, menu_root_entry
 from .ajt_common.consts import ADDON_SERIES
 from .ajt_common.grab_key import ShortCutGrabButton
-from .config_view import config_view as cfg
+from .config_view import config_view as cfg, ReadingsDiscardMode
 from .database import UserDb
 from .helpers import ui_translate, split_list
 from .helpers.profiles import Profile, ProfileFurigana, ProfilePitch, PitchOutputFormat
@@ -71,7 +72,9 @@ class NoteTypeSelector(EditableSelector):
 def as_config_dict(widgets: Dict[str, QWidget]) -> Dict[str, Union[bool, str, int]]:
     d = {}
     for key, widget in widgets.items():
-        if isinstance(widget, QComboBox):
+        if isinstance(widget, EnumSelectCombo):
+            d[key] = widget.currentName()
+        elif isinstance(widget, QComboBox):
             d[key] = widget.currentText()
         elif isinstance(widget, QLineEdit):
             d[key] = widget.text()
@@ -216,18 +219,14 @@ class FuriganaProfileEditForm(ProfileEditForm, profile_class=ProfileFurigana):
 
 
 class PitchProfileEditForm(ProfileEditForm, profile_class=ProfilePitch):
-    class OutputFormatCombo(QComboBox):
-        def __init__(self, parent):
-            super().__init__(parent)
-            self.addItems(item.name for item in PitchOutputFormat)
 
     def _expand_form(self):
         super()._expand_form()
-        self._form.output_format = self.OutputFormatCombo(self)
+        self._form.output_format = EnumSelectCombo(enum_type=PitchOutputFormat)
 
     def load_profile(self, profile: ProfilePitch):
         super().load_profile(profile)
-        self._form.output_format.setCurrentText(profile.output_format)
+        self._form.output_format.setCurrentName(profile.output_format)
 
 
 class ProfileEdit(QWidget):
@@ -393,6 +392,10 @@ class PitchSettingsForm(MultiColumnSettingsForm):
     def _add_widgets(self):
         super()._add_widgets()
         self._widgets.maximum_results = NarrowSpinBox(initial_value=self._config.maximum_results)
+        self._widgets.discard_mode = EnumSelectCombo(
+            enum_type=ReadingsDiscardMode,
+            initial_value=self._config.discard_mode
+        )
         self._widgets.reading_separator = NarrowLineEdit(self._config.reading_separator)
         self._widgets.word_separator = NarrowLineEdit(self._config.word_separator)
         self._widgets.lookup_shortcut = ShortCutGrabButton(initial_value=self._config.lookup_shortcut)
@@ -406,6 +409,10 @@ class FuriganaSettingsForm(MultiColumnSettingsForm):
     def _add_widgets(self):
         super()._add_widgets()
         self._widgets.maximum_results = NarrowSpinBox(initial_value=self._config.maximum_results)
+        self._widgets.discard_mode = EnumSelectCombo(
+            enum_type=ReadingsDiscardMode,
+            initial_value=self._config.discard_mode
+        )
         self._widgets.reading_separator = NarrowLineEdit(self._config.reading_separator)
         self._widgets.blocklisted_words = WordsEdit(initial_values=self._config.blocklisted_words)
         self._widgets.mecab_only = WordsEdit(initial_values=self._config.mecab_only)

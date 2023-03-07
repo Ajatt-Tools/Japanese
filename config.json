@@ -53,7 +53,8 @@
     "reading_separator": ", ",
     "word_separator": "; ",
     "blocklisted_words": "こと,へ,か,よ,ん,だ,び,の,や,ね,ば,て,と,た,が,に,な,は,も,ます,から,いる,たち,てる,う,ましょ,たい,する,です,ない",
-    "maximum_results": 3
+    "maximum_results": 3,
+    "discard_mode": "keep_first"
   },
   "furigana": {
     "database_lookups": true,
@@ -63,7 +64,8 @@
     "blocklisted_words": "人",
     "mecab_only": "彼,猫,首,母,顔,木,頭,私,弟,空,体,行く",
     "counters": "つ,月,日,人,筋,隻,丁,品,番,枚",
-    "maximum_results": 3
+    "maximum_results": 3,
+    "discard_mode": "keep_first"
   },
   "context_menu": {
     "generate_furigana": true,

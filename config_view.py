@@ -2,6 +2,7 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import dataclasses
+import enum
 import re
 from typing import List, Dict, Iterable, NamedTuple, final
 
@@ -53,21 +54,34 @@ class WordBlockListManager(ConfigViewBase):
         )
 
 
-@final
-class FuriganaConfigView(WordBlockListManager):
-    _view_key = 'furigana'
+@enum.unique
+class ReadingsDiscardMode(enum.Enum):
+    keep_first = enum.auto()
+    discard_extra = enum.auto()
+    discard_all = enum.auto()
 
+
+class PitchAndFuriganaCommon(WordBlockListManager):
     @property
-    def prefer_long_vowel_mark(self) -> bool:
-        return self['prefer_long_vowel_mark'] is True
+    def maximum_results(self) -> int:
+        return int(self['maximum_results'])
 
     @property
     def reading_separator(self) -> str:
         return self['reading_separator']
 
     @property
-    def maximum_results(self) -> int:
-        return int(self['maximum_results'])
+    def discard_mode(self) -> ReadingsDiscardMode:
+        return ReadingsDiscardMode[self['discard_mode']]
+
+
+@final
+class FuriganaConfigView(PitchAndFuriganaCommon):
+    _view_key = 'furigana'
+
+    @property
+    def prefer_long_vowel_mark(self) -> bool:
+        return self['prefer_long_vowel_mark'] is True
 
     @property
     def mecab_only(self) -> List[str]:
@@ -88,7 +102,7 @@ class FuriganaConfigView(WordBlockListManager):
 
 
 @final
-class PitchConfigView(WordBlockListManager):
+class PitchConfigView(PitchAndFuriganaCommon):
     _view_key = 'pitch_accent'
 
     @property
@@ -102,14 +116,6 @@ class PitchConfigView(WordBlockListManager):
     @property
     def kana_lookups(self) -> bool:
         return self['kana_lookups'] is True
-
-    @property
-    def maximum_results(self) -> int:
-        return int(self['maximum_results'])
-
-    @property
-    def reading_separator(self) -> str:
-        return self['reading_separator']
 
     @property
     def word_separator(self) -> str:

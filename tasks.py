@@ -71,7 +71,6 @@ class AddPitch(DoTask, task_type=ProfilePitch):
             output_format=PitchOutputFormat[self._task.output_format],
             sep_single=cfg.pitch_accent.reading_separator,
             sep_multi=cfg.pitch_accent.word_separator,
-            max_results_per_word=cfg.pitch_accent.maximum_results,
         )
 
 

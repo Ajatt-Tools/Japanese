@@ -8,7 +8,7 @@ from typing import Tuple, Optional, List, Union
 
 from anki.utils import html_to_text_line
 
-from .config_view import config_view as cfg
+from .config_view import config_view as cfg, ReadingsDiscardMode
 from .database import AccentDict, FormattedEntry, AccentDictManager
 from .helpers import *
 from .helpers.common_kana import adjust_reading
@@ -147,20 +147,20 @@ def get_notation(entry: FormattedEntry, mode: PitchOutputFormat) -> str:
 def format_pronunciations(
         pronunciations: AccentDict,
         output_format: PitchOutputFormat = PitchOutputFormat.html,
-        max_results_per_word: int = 0,
         sep_single: str = "・",
         sep_multi: str = "、",
         expr_sep: str = None,
 ) -> str:
     ordered_dict = OrderedDict()
     for word, entries in pronunciations.items():
-        entries = dict.fromkeys(get_notation(entry, output_format) for entry in entries)
-        if max_results_per_word == 0 or len(entries) <= max_results_per_word:
+        entries = list(dict.fromkeys(get_notation(entry, output_format) for entry in entries).keys())
+        entries = discard_extra_readings(entries, cfg.pitch_accent.maximum_results, cfg.pitch_accent.discard_mode)
+        if entries:
             ordered_dict[word] = sep_single.join(entries)
 
     # expr_sep is used to separate entries on lookup
     if expr_sep:
-        txt = sep_multi.join(f"{k}{expr_sep}{v}" for k, v in ordered_dict.items())
+        txt = sep_multi.join(f"{word}{expr_sep}{entries}" for word, entries in ordered_dict.items() if word and entries)
     else:
         txt = sep_multi.join(ordered_dict.values())
 
@@ -211,26 +211,39 @@ def format_furigana_readings(word: str, hiragana_readings: List[str]) -> str:
         )
         for reading in hiragana_readings
     ]
-    if 1 < len(furigana_readings) <= cfg.furigana.maximum_results:
+    if 1 < len(furigana_readings):
         return mingle_readings(furigana_readings, sep=cfg.furigana.reading_separator)
     else:
         return furigana_readings[0]
 
 
-def format_hiragana_readings(readings: List[str], sep: str = ','):
-    """
-    Discard kanji and format the readings as hiragana.
-    """
-    if 1 < len(readings) <= cfg.furigana.maximum_results:
-        return f"({sep.join(map(to_hiragana, readings))})"
+def format_hiragana_readings(readings: List[str]):
+    """ Discard kanji and format the readings as hiragana. """
+    if 1 < len(readings):
+        return f"({cfg.furigana.reading_separator.join(map(to_hiragana, readings))})"
     else:
         return to_hiragana(readings[0])
+
+
+def discard_extra_readings(readings: Sequence, max_results: int, discard_mode: ReadingsDiscardMode):
+    """ Depending on the settings, if there are too many readings, discard some or all but the first. """
+    if max_results <= 0 or len(readings) <= max_results:
+        return readings
+    elif discard_mode == ReadingsDiscardMode.discard_extra:
+        return readings[:max_results]
+    elif discard_mode == ReadingsDiscardMode.keep_first:
+        return readings[:1]
+    elif discard_mode == ReadingsDiscardMode.discard_all:
+        return []
+    else:
+        raise ValueError("No handler for mode.")
 
 
 def format_furigana(out: MecabParsedToken, full_hiragana: bool = False) -> str:
     if is_kana_str(out.word) or cfg.furigana.is_blocklisted(out.word):
         return out.word
     elif readings := list(iter_possible_readings(out)):
+        readings = discard_extra_readings(readings, cfg.furigana.maximum_results, cfg.furigana.discard_mode)
         return (
             format_furigana_readings(out.word, readings)
             if full_hiragana is False
@@ -259,10 +272,10 @@ def try_lookup_full_text(text: str) -> Optional[MecabParsedToken]:
 
 def format_parsed_tokens(tokens: List[Union[MecabParsedToken, Token]], full_hiragana: bool = False) -> Iterable[str]:
     for token in tokens:
-        if isinstance(token, str):
-            yield token
-        elif isinstance(token, MecabParsedToken):
+        if isinstance(token, MecabParsedToken):
             yield format_furigana(token, full_hiragana)
+        elif isinstance(token, str):
+            yield token
         else:
             raise ValueError("Invalid type.")
 
