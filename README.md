@@ -81,7 +81,7 @@ When adding cards manually, fill the `VocabKanji` field and press "Tab" to trigg
 There's a context menu item.
 Select the expression you would like to look up,
 then right-click and choose "NHK pitch accent lookup".
-Alternatively, go ot "Tools" > "NHK pitch accent lookup".
+Alternatively, go to "Tools" > "NHK pitch accent lookup".
 
 When using the Anki Browser, you can mass-generate pitch accents and readings in bulk.
 To do this, select several notes first,
