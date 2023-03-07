@@ -34,6 +34,10 @@ class FormattedEntry(NamedTuple):
     def has_accent(self) -> bool:
         return self.pitch_number != NO_ACCENT
 
+    @property
+    def pitch_number_html(self):
+        return f'<span class="pitch_number">{self.pitch_number}</span>'
+
 
 AccentDict = NewType("AccentDict", Dict[str, Collection[FormattedEntry]])
 

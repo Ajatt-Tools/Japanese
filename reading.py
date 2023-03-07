@@ -139,8 +139,10 @@ def iter_accents(word: str) -> Iterable[FormattedEntry]:
 def get_notation(entry: FormattedEntry, mode: PitchOutputFormat) -> str:
     if mode == PitchOutputFormat.html:
         return update_html(entry.html_notation)
-    if mode == PitchOutputFormat.number:
+    elif mode == PitchOutputFormat.number:
         return entry.pitch_number
+    elif mode == PitchOutputFormat.html_and_number:
+        return update_html(f'{entry.html_notation} {entry.pitch_number_html}')
     raise Exception("Unreachable.")
 
 
