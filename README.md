@@ -75,6 +75,11 @@ and edit your card to learn the right one.
 
 ## Usage
 
+**Note:** It is preferable to use a compatible Note Type with this addon.
+Our [recommended example deck](https://tatsumoto.neocities.org/blog/setting-up-anki#import-an-example-mining-deck)
+contains Note Types for Japanese, Japanese fonts and the helpful templates
+to properly show the generated kanji readings.
+
 When adding cards with AnkiConnect, pronunciations and readings are automatically looked-up and added to the cards.
 When adding cards manually, fill the `VocabKanji` field and press "Tab" to trigger generation.
 
