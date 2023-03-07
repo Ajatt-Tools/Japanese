@@ -27,11 +27,11 @@ def iter_tasks(note: Note, src_field: Optional[str] = None) -> Iterable[Profile]
 
 def do_not_modify_destination_if_have_nothing_to_add(fn: Callable[['DoTask', str], str]):
     @functools.wraps(fn)
-    def wrapper(self: 'DoTask', input_text: str, current_value: str):
+    def wrapper(self: 'DoTask', input_text: str, current_text: str):
         return (
             out
-            if (out := fn(self, input_text)) and (out != input_text or not current_value)
-            else current_value
+            if (out := fn(self, input_text)) and (out != input_text or not current_text)
+            else current_text
         )
 
     return wrapper
