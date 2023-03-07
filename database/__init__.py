@@ -57,11 +57,12 @@ class AccentDictManager:
                 return self._database_init()
         else:
             nhk_db, kanjium_db = NhkDb(), KanjiumDb()
-            # Read kanjium data, then overwrite existing entries with NHK data.
+            # Read kanjium data, then extend existing entries with NHK data.
             # NHK data is more rich, it contains nasal and devoiced positions.
             derivative = kanjium_db.read_derivative()
             for keyword, entries in nhk_db.read_derivative().items():
                 derivative.setdefault(keyword, []).extend(entries)
+                # New data comes last and should overwrite existing data.
                 unique = {(entry.katakana_reading, entry.pitch_number): entry for entry in derivative[keyword]}
                 derivative[keyword] = list(unique.values())
             with open(DERIVATIVE_PICKLE, 'wb') as f:
