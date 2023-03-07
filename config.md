@@ -36,7 +36,9 @@ Default field names match the [TSC](https://ankiweb.net/shared/info/1557722832) 
 
 * `database_lookups`. Whether to perform database lookups or rely entirely on Mecab.
 * `skip_numbers`. Whether to add furigana to numbers or not.
-* `prefer_long_vowel_mark`. The database has readings with the `ー` symbol in place of long vowels. They can be prioritized.
+* `prefer_literal_pronunciation`.
+  The database has readings with the `ー` symbol in place of long vowels.
+  Prioritize them, and use single kana to show equivalent sounds, e.g. `を` and `お`.
 * `reading_separator`.  String used to separate multiple readings of one word. For example, `<br>` or `,`.
 * `blocklisted_words`. Furigana won't be added to these words. Comma-separated.
 * `mecab_only`. A comma-separated list of words that don't need to be looked up in the database.

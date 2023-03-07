@@ -173,7 +173,7 @@ def sorted_accents(headword: str) -> list[FormattedEntry]:
     return sorted(
         iter_accents(headword),
         key=lambda e: LONG_VOWEL_MARK in e.katakana_reading,
-        reverse=cfg.furigana.prefer_long_vowel_mark
+        reverse=cfg.furigana.prefer_literal_pronunciation
     )
 
 
@@ -208,7 +208,7 @@ def format_furigana_readings(word: str, hiragana_readings: List[str]) -> str:
         format_output(
             word,
             reading
-            if cfg.furigana.prefer_long_vowel_mark is False
+            if cfg.furigana.prefer_literal_pronunciation is False
             else unify_repr(reading)
         )
         for reading in hiragana_readings

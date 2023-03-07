@@ -80,8 +80,8 @@ class FuriganaConfigView(PitchAndFuriganaCommon):
     _view_key = 'furigana'
 
     @property
-    def prefer_long_vowel_mark(self) -> bool:
-        return self['prefer_long_vowel_mark'] is True
+    def prefer_literal_pronunciation(self) -> bool:
+        return self['prefer_literal_pronunciation'] is True
 
     @property
     def mecab_only(self) -> List[str]:
