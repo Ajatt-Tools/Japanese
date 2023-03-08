@@ -76,6 +76,16 @@ class ProfileFurigana(Profile, mode="furigana"):
         )
 
 
+@dataclasses.dataclass(frozen=True)
+class ProfileAudio(Profile, mode="audio"):
+    @classmethod
+    def new(cls):
+        return super().new(
+            source="VocabKanji",
+            destination="VocabAudio",
+        )
+
+
 def test():
     import json
 
