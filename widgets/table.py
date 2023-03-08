@@ -3,7 +3,7 @@
 
 import os.path
 import re
-from typing import Collection, Iterable, List, NewType, NamedTuple
+from typing import Collection, Iterable, NewType, NamedTuple
 
 from aqt.qt import *
 from aqt.utils import showInfo
@@ -43,13 +43,15 @@ class ExpandingTableWidget(QTableWidget):
 
     def addDeleteSelectedRowsContextAction(self):
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.ActionsContextMenu)
-        action = self.addAction('Delete selected rows')
+        action = QAction("Delete selected rows", self)
         qconnect(action.triggered, self.deleteSelectedRows)
+        self.addAction(action)
 
     def addPasteContextAction(self):
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.ActionsContextMenu)
-        action = self.addAction('Paste (Ctrl+V)')
+        action = QAction("Paste (Ctrl+V)", self)
         qconnect(action.triggered, self.fillCurrentRow)
+        self.addAction(action)
 
     def deleteSelectedRows(self):
         for index in self.selectedIndexes():
