@@ -154,7 +154,10 @@ class ToolbarConfigView(ConfigViewBase):
     _view_key = 'toolbar'
 
     def __getitem__(self, item) -> ToolbarButtonConfig:
-        return ToolbarButtonConfig(**super().__getitem__(item))
+        try:
+            return ToolbarButtonConfig(**super().__getitem__(item))
+        except TypeError:
+            return ToolbarButtonConfig(True, "", "？")
 
     @property
     def regenerate_all_button(self) -> ToolbarButtonConfig:
