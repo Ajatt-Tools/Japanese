@@ -5,7 +5,6 @@ from typing import cast
 
 from aqt import mw
 from aqt.qt import *
-from aqt.theme import WidgetStyle
 from aqt.utils import tooltip
 
 from .table import PitchOverrideTable
@@ -58,6 +57,11 @@ class PitchOverrideWidget(QWidget):
         qconnect(self._export_button.clicked, write_tsv_file)
 
     def adjust_default_style(self):
+        try:
+            from aqt.theme import WidgetStyle
+        except ImportError:
+            # Running an old version of Anki. No action is necessary.
+            return
         if mw.pm.get_widget_style() == WidgetStyle.ANKI:
             self._table.setStyleSheet("""
                     QTableWidget,
