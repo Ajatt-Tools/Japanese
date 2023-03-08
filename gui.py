@@ -3,21 +3,21 @@
 
 import dataclasses
 from types import SimpleNamespace
-from typing import Optional, Iterable, Dict, Tuple, List
+from typing import Optional, Iterable
 
 from aqt import mw
 from aqt.qt import *
 from aqt.utils import restoreGeom, saveGeom, openLink
 
-from .widgets.enum_selector import EnumSelectCombo
 from .ajt_common.about_menu import tweak_window, menu_root_entry
 from .ajt_common.consts import ADDON_SERIES
 from .ajt_common.grab_key import ShortCutGrabButton
 from .config_view import config_view as cfg, ReadingsDiscardMode
 from .database import UserDb
 from .helpers import ui_translate, split_list
-from .helpers.profiles import Profile, ProfileFurigana, ProfilePitch, PitchOutputFormat
+from .helpers.profiles import Profile, ProfileFurigana, ProfilePitch, PitchOutputFormat, ProfileAudio
 from .reading import acc_dict
+from .widgets.enum_selector import EnumSelectCombo
 from .widgets.pitch_override import PitchOverrideWidget
 
 EDIT_MIN_WIDTH = 100
@@ -165,6 +165,7 @@ class ProfileEditForm(QGroupBox):
 
     def __init__(self, profile_class: type(Profile), *args):
         super().__init__(*args)
+        self.setEnabled(False)
         self._profile_class = profile_class
         self.setTitle("Edit Profile")
         self.setCheckable(False)
@@ -229,6 +230,10 @@ class PitchProfileEditForm(ProfileEditForm, profile_class=ProfilePitch):
         self._form.output_format.setCurrentName(profile.output_format)
 
 
+class AudioProfileEditForm(ProfileEditForm, profile_class=ProfileAudio):
+    pass
+
+
 class ProfileEdit(QWidget):
     def __init_subclass__(cls, **kwargs):
         cls._profile_class: type(Profile) = kwargs.pop('profile_class')  # suppresses ide warning
@@ -238,14 +243,16 @@ class ProfileEdit(QWidget):
         super().__init__(*args, **kwargs)
         self._profile_list = ProfileList(profile_class=self._profile_class)
         self._edit_form = ProfileEditForm(profile_class=self._profile_class)
-
-        self.setLayout(_main_layout := QHBoxLayout())
-        _main_layout.addWidget(self._profile_list)
-        _main_layout.addWidget(self._edit_form)
-        _main_layout.setContentsMargins(0, 0, 0, 0)
-
+        self.setLayout(self._create_layout())
         qconnect(self._profile_list.current_item_changed, self._edit_profile)
         self._profile_list.populate()
+
+    def _create_layout(self):
+        layout = QHBoxLayout()
+        layout.addWidget(self._profile_list)
+        layout.addWidget(self._edit_form)
+        layout.setContentsMargins(0, 0, 0, 0)
+        return layout
 
     def _edit_profile(self, current: QListWidgetItem, previous: QListWidgetItem):
         self._apply_profile(previous)
@@ -271,6 +278,10 @@ class FuriganaProfilesEdit(ProfileEdit, profile_class=ProfileFurigana):
 
 
 class PitchProfilesEdit(ProfileEdit, profile_class=ProfilePitch):
+    pass
+
+
+class AudioProfilesEdit(ProfileEdit, profile_class=ProfileAudio):
     pass
 
 
@@ -495,6 +506,9 @@ class SettingsDialog(QDialog):
         self._pitch_profiles_edit = PitchProfilesEdit()
         self._pitch_settings = PitchSettingsForm()
 
+        # Audio tab
+        self._audio_profiles_edit = AudioProfilesEdit()
+
         # Overrides tab
         self._accents_override = PitchOverrideWidget(self, file_path=UserDb.accent_database)
 
@@ -538,6 +552,12 @@ class SettingsDialog(QDialog):
         layout.addWidget(self._pitch_settings)
         self._tabs.addTab(tab, "Pitch accent")
 
+        # Audio
+        tab = QWidget()
+        tab.setLayout(layout := QVBoxLayout())
+        layout.addWidget(self._audio_profiles_edit)
+        self._tabs.addTab(tab, "Audio")
+
         # Accent DB override
         self._tabs.addTab(self._accents_override, "Overrides")
 
@@ -568,7 +588,8 @@ class SettingsDialog(QDialog):
         cfg['toolbar'].update(self._toolbar_settings.as_dict())
         cfg['profiles'] = [
             *self._furigana_profiles_edit.as_list(),
-            *self._pitch_profiles_edit.as_list()
+            *self._pitch_profiles_edit.as_list(),
+            *self._audio_profiles_edit.as_list(),
         ]
         cfg.write_config()
         self._accents_override.save_to_disk()
