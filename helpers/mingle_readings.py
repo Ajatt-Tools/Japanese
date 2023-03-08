@@ -2,7 +2,7 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import re
-from typing import Optional, NamedTuple, List
+from typing import NamedTuple, List
 
 
 class SplitFurigana(NamedTuple):
@@ -45,7 +45,7 @@ def tie_inside_furigana(s: str) -> str:
     return re.sub(r'\[[^\[\]]+?]', fixup, s)
 
 
-def whitespace_split(furigana_notation: str) -> List[str]:
+def whitespace_split(furigana_notation: str) -> list[str]:
     """
     Splits text by whitespace, except whitespace inside furigana.
     """
@@ -64,11 +64,11 @@ def word_reading(text: str) -> WordReading:
     return WordReading(word, reading) if word != reading else WordReading(text, '')
 
 
-def pairs(seq: List):
+def pairs(seq: list):
     yield from zip(seq, seq[1:])
 
 
-def mingle_readings(readings: List[str], *, sep: str = ', ') -> str:
+def mingle_readings(readings: list[str], *, sep: str = ', ') -> str:
     """
     Takes several furigana notations, packs them into one, with readings separated by sep.
 

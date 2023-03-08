@@ -11,7 +11,7 @@ from .helpers.profiles import Profile
 from .helpers.tokens import RE_FLAGS
 
 
-def split_words(config_value: str) -> List[str]:
+def split_words(config_value: str) -> list[str]:
     """Splits string by comma."""
     return re.split(r'[、, ]+', config_value, flags=RE_FLAGS)
 
@@ -39,7 +39,7 @@ class WordBlockListManager(ConfigViewBase):
         return self['skip_numbers'] is True
 
     @property
-    def blocklisted_words(self) -> List[str]:
+    def blocklisted_words(self) -> list[str]:
         """Returns a user-defined list of blocklisted words."""
         return split_words(self['blocklisted_words'])
 
@@ -84,12 +84,12 @@ class FuriganaConfigView(PitchAndFuriganaCommon):
         return self['prefer_literal_pronunciation'] is True
 
     @property
-    def mecab_only(self) -> List[str]:
+    def mecab_only(self) -> list[str]:
         """Words that shouldn't be looked up in the accent dictionary."""
         return split_words(self['mecab_only'])
 
     @property
-    def counters(self) -> List[str]:
+    def counters(self) -> list[str]:
         """Words that shouldn't be looked up in the accent dictionary."""
         return split_words(self['counters'])
 
@@ -202,7 +202,7 @@ class ConfigView(ConfigViewBase):
         return int(self['cache_lookups'])
 
     @property
-    def styles(self) -> Dict[str, str]:
+    def styles(self) -> dict[str, str]:
         return self['styles']
 
     @property

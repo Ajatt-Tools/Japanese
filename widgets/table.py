@@ -79,7 +79,7 @@ class ExpandingTableWidget(QTableWidget):
             self.setItem(row, column_num, QTableWidgetItem(cell_content))
 
     def addEmptyLastRow(self):
-        return self.addRow(cells=(str() for _column in self._columns), last=True)
+        return self.addRow(cells=('' for _column in self._columns), last=True)
 
     def getRowCells(self, row_number: int) -> TableRow:
         return tuple(self.item(row_number, column_number) for column_number in range(self.columnCount()))
@@ -166,7 +166,7 @@ class PitchOverrideTable(ExpandingTableWidget):
                 self.addRow(row_cells)
         return self
 
-    def as_tsv(self) -> List[str]:
+    def as_tsv(self) -> list[str]:
         return [
             self._column_sep.join(row_cells)
             for row_cells in self.iterateRowTexts()

@@ -17,7 +17,7 @@ def addon_module():
 
 def resolve_relative_path(*paths) -> str:
     """ Return path to file inside the add-on's dir. """
-    for parent_dir in walk_parents(os.path.abspath(__file__)):
+    for parent_dir in walk_parents(__file__):
         if os.path.basename(parent_dir) == addon_module():
             return os.path.join(parent_dir, *paths)
 

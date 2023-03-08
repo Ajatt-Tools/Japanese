@@ -43,7 +43,7 @@ def update_html(html_notation: str) -> str:
 
 
 @functools.lru_cache(maxsize=cfg.cache_lookups)
-def mecab_translate(expr: str) -> Tuple[MecabParsedToken, ...]:
+def mecab_translate(expr: str) -> tuple[MecabParsedToken, ...]:
     return tuple(mecab.translate(expr))
 
 
@@ -199,7 +199,7 @@ def iter_possible_readings(out: MecabParsedToken) -> Iterable[str]:
     return readings.values()
 
 
-def format_furigana_readings(word: str, hiragana_readings: List[str]) -> str:
+def format_furigana_readings(word: str, hiragana_readings: list[str]) -> str:
     """
     Pack all readings into this format: "word[reading<sep>reading, ...]suffix".
     If there are too many readings to pack, discard all but the first.
@@ -219,7 +219,7 @@ def format_furigana_readings(word: str, hiragana_readings: List[str]) -> str:
         return furigana_readings[0]
 
 
-def format_hiragana_readings(readings: List[str]):
+def format_hiragana_readings(readings: list[str]):
     """ Discard kanji and format the readings as hiragana. """
     if 1 < len(readings):
         return f"({cfg.furigana.reading_separator.join(map(to_hiragana, readings))})"
@@ -272,7 +272,7 @@ def try_lookup_full_text(text: str) -> Optional[MecabParsedToken]:
         )
 
 
-def format_parsed_tokens(tokens: List[Union[MecabParsedToken, Token]], full_hiragana: bool = False) -> Iterable[str]:
+def format_parsed_tokens(tokens: list[Union[MecabParsedToken, Token]], full_hiragana: bool = False) -> Iterable[str]:
     for token in tokens:
         if isinstance(token, MecabParsedToken):
             yield format_furigana(token, full_hiragana)

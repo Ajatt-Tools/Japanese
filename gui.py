@@ -69,7 +69,7 @@ class NoteTypeSelector(EditableSelector):
             self.setCurrentIndex(0)
 
 
-def as_config_dict(widgets: Dict[str, QWidget]) -> Dict[str, Union[bool, str, int]]:
+def as_config_dict(widgets: dict[str, QWidget]) -> dict[str, Union[bool, str, int]]:
     d = {}
     for key, widget in widgets.items():
         if isinstance(widget, EnumSelectCombo):
@@ -196,7 +196,7 @@ class ProfileEditForm(QGroupBox):
         self._form.split_morphemes.setChecked(profile.split_morphemes)
         self._repopulate_fields(profile)
 
-    def _as_dict(self) -> Dict[str, str]:
+    def _as_dict(self) -> dict[str, str]:
         return dataclasses.asdict(self._last_used_profile) | as_config_dict(self._form.__dict__)
 
     def _make_layout(self) -> QLayout:
@@ -261,7 +261,7 @@ class ProfileEdit(QWidget):
             item.setData(Qt.ItemDataRole.UserRole, profile)
             item.setText(profile.name)
 
-    def as_list(self) -> List[Dict[str, str]]:
+    def as_list(self) -> list[dict[str, str]]:
         self._apply_profile(self._profile_list.current_item())
         return [dataclasses.asdict(p) for p in self._profile_list.profiles()]
 
@@ -278,7 +278,7 @@ class WordsEdit(QTextEdit):
     _min_height = 32
     _font_size = 16
 
-    def __init__(self, initial_values: Optional[List[str]] = None, *args):
+    def __init__(self, initial_values: Optional[list[str]] = None, *args):
         super().__init__(*args)
         self.setAcceptRichText(False)
         self.set_values(initial_values)
@@ -291,7 +291,7 @@ class WordsEdit(QTextEdit):
         font.setPixelSize(self._font_size)
         self.setFont(font)
 
-    def set_values(self, values: List[str]):
+    def set_values(self, values: list[str]):
         if values:
             self.setPlainText(','.join(dict.fromkeys(values)))
 
@@ -315,10 +315,10 @@ class SettingsForm(QGroupBox):
         """Subclasses add new widgets here."""
         self._widgets.__dict__.update(self._create_checkboxes())
 
-    def as_dict(self) -> Dict[str, Union[bool, str, int]]:
+    def as_dict(self) -> dict[str, Union[bool, str, int]]:
         return as_config_dict(self._widgets.__dict__)
 
-    def _create_checkboxes(self) -> Iterable[Tuple[str, QCheckBox]]:
+    def _create_checkboxes(self) -> Iterable[tuple[str, QCheckBox]]:
         for key, value in self._config.toggleables():
             checkbox = QCheckBox(ui_translate(key))
             checkbox.setChecked(value)
@@ -437,7 +437,7 @@ class ToolbarButtonSettingsForm(QGroupBox):
         self.setText = self._label_edit.setText
         self.setShortcut = self._shortcut_edit.setValue
 
-    def as_dict(self) -> Dict[str, Union[bool, str]]:
+    def as_dict(self) -> dict[str, Union[bool, str]]:
         return {
             "enabled": self.isChecked(),
             "shortcut": self._shortcut_edit.value(),
@@ -469,7 +469,7 @@ class ToolbarSettingsForm(QGroupBox):
             layout.addWidget(widget)
         return layout
 
-    def as_dict(self) -> Dict[str, Dict[str, Union[str, bool]]]:
+    def as_dict(self) -> dict[str, dict[str, Union[str, bool]]]:
         return {
             key: widget.as_dict()
             for key, widget in self._widgets.items()

@@ -21,7 +21,7 @@ def ui_translate(key: str) -> str:
     return key.capitalize().replace('_', ' ')
 
 
-def get_notetype(note: Note) -> Dict[str, Any]:
+def get_notetype(note: Note) -> dict[str, Any]:
     if hasattr(note, 'note_type'):
         return note.note_type()
     else:

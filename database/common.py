@@ -22,7 +22,7 @@ def should_regenerate(file_path: str) -> bool:
     return empty or old
 
 
-def kana_to_moras(kana: str) -> List[str]:
+def kana_to_moras(kana: str) -> list[str]:
     return re.findall(r'.[ァィゥェォャュョぁぃぅぇぉゃゅょ]?', kana)
 
 
@@ -39,7 +39,7 @@ class FormattedEntry(NamedTuple):
         return f'<span class="pitch_number">{self.pitch_number}</span>'
 
 
-AccentDict = NewType("AccentDict", Dict[str, Collection[FormattedEntry]])
+AccentDict = NewType("AccentDict", dict[str, Collection[FormattedEntry]])
 
 
 class AccDbManager(abc.ABC):

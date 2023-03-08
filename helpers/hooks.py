@@ -9,7 +9,7 @@ from anki.notes import Note
 
 
 class CollectionWillAddNote:
-    _hooks: List[Callable[[Note], None]] = []
+    _hooks: list[Callable[[Note], None]] = []
 
     def __init__(self):
         anki.collection.Collection.add_note = anki.hooks.wrap(

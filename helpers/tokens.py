@@ -30,7 +30,7 @@ class ParseableToken(Token):
     pass
 
 
-def split_separators(expr: str) -> List[str]:
+def split_separators(expr: str) -> list[str]:
     """ Split text by common separators (like / or ・) into separate words that can be looked up. """
 
     # Replace all typical separators with a space
@@ -56,7 +56,7 @@ def parts(expr: str, pattern: re.Pattern):
     )
 
 
-def compile_counters(counters: List[str]) -> re.Pattern:
+def compile_counters(counters: list[str]) -> re.Pattern:
     return re.compile(
         r'([0-9０-９一二三四五六七八九十]{1,4}(?:' + r'|'.join(sorted(counters, key=len, reverse=True)) + r'))'
     )
@@ -81,7 +81,7 @@ def _tokenize(expr: str, *, split_regexes: Sequence[re.Pattern], counters: re.Pa
                     yield from _tokenize(part, split_regexes=split_regexes[1:], counters=counters)
 
 
-def tokenize(expr: str, *, counters: List[str]):
+def tokenize(expr: str, *, counters: list[str]):
     """
     Splits expr to tokens.
     Each token can be either parseable with mecab or not.

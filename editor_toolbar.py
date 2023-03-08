@@ -71,7 +71,7 @@ def query_buttons() -> Iterable[ToolbarButton]:
     )
 
 
-def add_toolbar_buttons(html_buttons: List[str], editor: Editor) -> None:
+def add_toolbar_buttons(html_buttons: list[str], editor: Editor) -> None:
     html_buttons.extend(
         editor.addButton(
             icon=None,

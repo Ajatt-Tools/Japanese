@@ -16,7 +16,7 @@ from .reading import generate_furigana
 
 
 class ContextMenuAction(abc.ABC):
-    subclasses: List[Type['ContextMenuAction']] = []
+    subclasses: list[type['ContextMenuAction']] = []
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
