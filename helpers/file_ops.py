@@ -17,7 +17,7 @@ def addon_module():
 
 def resolve_relative_path(*paths) -> str:
     """ Return path to file inside the add-on's dir. """
-    for parent_dir in walk_parents(__file__):
+    for parent_dir in walk_parents(os.path.abspath(__file__)):
         if os.path.basename(parent_dir) == addon_module():
             return os.path.join(parent_dir, *paths)
 
@@ -25,3 +25,14 @@ def resolve_relative_path(*paths) -> str:
 def touch(path):
     with open(path, 'a'):
         os.utime(path, None)
+
+
+def user_files_dir():
+    """ Return path to the user files directory. """
+    for parent_dir in walk_parents(os.path.abspath(__file__)):
+        if os.path.isdir(dir_path := os.path.join(parent_dir, "user_files")):
+            return dir_path
+
+
+if __name__ == '__main__':
+    print(user_files_dir())
