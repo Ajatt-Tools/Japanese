@@ -4,7 +4,7 @@
 import dataclasses
 import enum
 import re
-from typing import List, Dict, Iterable, NamedTuple, final
+from typing import Iterable, NamedTuple, final
 
 from .ajt_common.addon_config import AddonConfigManager
 from .helpers.profiles import Profile
@@ -191,6 +191,15 @@ class ConfigView(ConfigViewBase):
             # load default settings first, then overwrite them.
             default = Profile.class_by_mode(profile_dict['mode']).new()
             yield Profile(**(dataclasses.asdict(default) | profile_dict))
+
+    @property
+    def download_timeout(self) -> int:
+        return self['download_timeout']
+
+    @property
+    def audio_sources(self):
+        # TODO [AudioSource(**source) for source in self._config.audio_sources]
+        return self['audio_sources']
 
     @property
     def generate_on_note_add(self) -> bool:

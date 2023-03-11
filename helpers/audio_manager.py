@@ -5,9 +5,11 @@ import dataclasses
 import json
 import os
 import pickle
+from types import SimpleNamespace
 from typing import Optional, NewType, NamedTuple, Iterable
 
 import anki.httpclient
+import requests
 from requests import RequestException
 
 if __name__ == '__main__':
@@ -30,7 +32,7 @@ FileList = NewType("FileList", list[str])
 
 class FileUrlData(NamedTuple):
     url: str
-    suggested_filename: str
+    desired_filename: str
 
 
 @dataclasses.dataclass
@@ -43,12 +45,22 @@ class AudioSource:
     pronunciation_data: Optional[dict] = dataclasses.field(init=False, default=None, repr=False)
 
     def resolve_file(self, word: str, file_name: str):
+        components = []
+        file_info: FileInfo = self.files[file_name]
+
+        for component in ('pitch_pattern', 'kana_reading'):
+            if component in file_info:
+                components.append(file_info[component])
+                break
+
+        if 'pitch_number' in file_info:
+            components.append(file_info['pitch_number'])
+
         return FileUrlData(
             url=os.path.join(os.path.dirname(self.url), self.rel_media_dir, file_name),
-            suggested_filename='_'.join((
+            desired_filename='_'.join((
                 word,
-                self.files[file_name]['pitch_pattern'] or self.files[file_name]['kana_reading'],
-                self.files[file_name]['pitch_number'],
+                *components,
                 self.name,
             )) + os.path.splitext(file_name)[-1],
         )
@@ -97,7 +109,19 @@ class AudioSource:
     def is_local(self) -> bool:
         return file_exists(self.url)
 
+    @property
+    def original_url(self):
+        self.raise_if_not_ready()
+        return self.pronunciation_data['meta']['original_url']
+
+    @original_url.setter
+    def original_url(self, url: str):
+        self.raise_if_not_ready()
+        self.pronunciation_data['meta']['original_url'] = url
+
     def pickle_self(self):
+        # Remember where the file was downloaded from.
+        self.original_url = self.url
         self.raise_if_not_ready()
         with open(self.cache_path, 'wb') as of:
             # Pickle the dictionary using the highest protocol available.
@@ -114,34 +138,69 @@ class AudioSource:
             self.pronunciation_data = json.load(f)
 
     def download_remote_json(self, client: anki.httpclient.HttpClient):
-        self.pronunciation_data = json.loads(download(client, self.url))
+        self.pronunciation_data = json.loads(download(client, self))
 
 
-def download(client: anki.httpclient.HttpClient, url: str) -> bytes:
-    if (resp := client.get(url)).status_code != 200:
-        raise RequestException(f'{url} download failed with return code {resp.status_code}')
-    return client.stream_content(resp)
+@dataclasses.dataclass
+class AudioManagerException(RequestException):
+    file: AudioSource | FileUrlData
+    explanation: str
+    response: requests.Response | None = None
+    exception: Exception | None = None
+
+    def describe_short(self) -> str:
+        return str(
+            self.exception.__class__.__name__
+            if self.exception
+            else
+            self.response.status_code
+        )
+
+
+def download(client: anki.httpclient.HttpClient, file: AudioSource | FileUrlData) -> bytes:
+    try:
+        response = client.get(file.url)
+    except OSError as ex:
+        raise AudioManagerException(
+            file,
+            f'{file.url} download failed with {ex.__class__.__name__}',
+            exception=ex
+        )
+    if response.status_code != 200:
+        raise AudioManagerException(
+            file,
+            f'{file.url} download failed with return code {response.status_code}',
+            response=response
+        )
+    return client.stream_content(response)
 
 
 class AudioSourceManager:
-    def __init__(self, config: dict):
+    def __init__(self, config: SimpleNamespace):
         self._config = config
         self._audio_sources: list[AudioSource] = []
         self._http_client = anki.httpclient.HttpClient()
-        self._http_client.timeout = self._config['download_timeout']
+        self._http_client.timeout = self._config.download_timeout
 
-    def download(self, url: str):
-        return download(self._http_client, url)
+    def get_file(self, file: FileUrlData):
+        if os.path.isfile(file.url):
+            with open(file.url, 'rb') as f:
+                return f.read()
+        else:
+            return download(self._http_client, file)
 
     def set_sources(self, sources: list[AudioSource]):
         self._audio_sources = sources
 
-    def init_dictionaries(self):
+    def init_dictionaries(self) -> list[AudioSource]:
         sources = []
-        for source in [AudioSource(**source) for source in self._config["audio_sources"]]:
+        for source in [AudioSource(**source) for source in self._config.audio_sources]:
+            if not source.enabled:
+                continue
             try:
                 self._read_pronunciation_data(source)
-            except RequestException:
+            except AudioManagerException as ex:
+                print(f"Ignoring source {source.name}: {ex.describe_short()}.")
                 continue
             else:
                 sources.append(source)
@@ -171,7 +230,7 @@ class AudioSourceManager:
 def main():
     # Used for testing when Anki isn't running.
     with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, 'config.json')) as inf:
-        cfg = json.load(inf)
+        cfg = SimpleNamespace(**json.load(inf))
 
     aud_src_mgr = AudioSourceManager(cfg)
     aud_src_mgr.set_sources(aud_src_mgr.init_dictionaries())

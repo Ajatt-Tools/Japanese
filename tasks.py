@@ -4,13 +4,14 @@
 import functools
 from typing import Optional, Callable
 
-from anki.utils import html_to_text_line
+from anki.utils import html_to_text_line, strip_html_media
 from aqt import mw
 
+from .audio import search_audio, format_audio_tags, download_tags_bg
 from .config_view import config_view as cfg
 from .helpers import *
 from .helpers.hooks import collection_will_add_note
-from .helpers.profiles import Profile, ProfileFurigana, PitchOutputFormat, ProfilePitch
+from .helpers.profiles import Profile, ProfileFurigana, PitchOutputFormat, ProfilePitch, ProfileAudio
 from .reading import format_pronunciations, get_pronunciations, generate_furigana
 
 
@@ -74,6 +75,25 @@ class AddPitch(DoTask, task_type=ProfilePitch):
         )
 
 
+class AddAudio(DoTask, task_type=ProfileAudio):
+    @do_not_modify_destination_if_have_nothing_to_add
+    def run(self, src_text: str):
+        search_results = list(search_audio(src_text, split_morphemes=self._task.split_morphemes))
+        download_tags_bg(search_results)
+        return format_audio_tags(search_results)
+
+
+def html_to_media_line(txt: str) -> str:
+    """ Strip HTML but keep media filenames. """
+    return strip_html_media(
+        txt
+        .replace("<br>", " ")
+        .replace("<br />", " ")
+        .replace("<div>", " ")
+        .replace("\n", " ")
+    ).strip()
+
+
 class DoTasks:
     def __init__(self, note: Note, src_field: Optional[str] = None, overwrite: bool = False):
         self._note = note
@@ -105,8 +125,12 @@ class DoTasks:
         if "No pitch accent data".lower() in self._note[task.destination].lower():
             return True
 
-        # Field is empty or overwrite requested
-        if len(html_to_text_line(self._note[task.destination])) == 0 or self._overwrite is True:
+        # Must overwrite any existing data.
+        if self._overwrite is True:
+            return True
+
+        # Field is empty.
+        if not html_to_media_line(self._note[task.destination]):
             return True
 
         return False
