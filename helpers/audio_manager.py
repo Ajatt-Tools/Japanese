@@ -209,12 +209,15 @@ class AudioSourceManager:
     def _read_pronunciation_data(self, source: AudioSource):
         if source.cache_exists:
             source.read_cache()
-        elif source.is_local:
+            # Check if the URLs mismatch,
+            # e.g. when the user changed the URL without changing the name.
+            if source.url == source.original_url:
+                return
+        if source.is_local:
             source.read_local_json()
-            source.pickle_self()
         else:
             source.download_remote_json(self._http_client)
-            source.pickle_self()
+        source.pickle_self()
 
     def search_word(self, word: str) -> Iterable[FileUrlData]:
         for source in self._audio_sources:
