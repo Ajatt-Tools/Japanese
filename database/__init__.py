@@ -15,7 +15,6 @@ from .user_database import UserDb
 class AccentDictManager:
     def __init__(self):
         self._db: AccentDict = AccentDict({})
-        self.reload_from_disk()
 
     def __contains__(self, item):
         return self._db.__contains__(item)
@@ -29,7 +28,9 @@ class AccentDictManager:
         QueryOp(
             parent=parent or mw,
             op=lambda collection: self._database_init(),
-            success=lambda dictionary: self._reload_dict(dictionary)
+            success=lambda dictionary: self._reload_dict(dictionary),
+        ).with_progress(
+            "Reloading pitch accent database..."
         ).run_in_background()
 
     def _reload_dict(self, new_dict: AccentDict):

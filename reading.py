@@ -4,9 +4,10 @@
 import functools
 import itertools
 from collections import OrderedDict
-from typing import Tuple, Optional, List, Union
+from typing import Optional, Union
 
 from anki.utils import html_to_text_line
+from aqt import gui_hooks
 
 from .config_view import config_view as cfg, ReadingsDiscardMode
 from .database import AccentDict, FormattedEntry, AccentDictManager
@@ -310,3 +311,4 @@ def generate_furigana(src_text: str, split_morphemes: bool = True, full_hiragana
 
 mecab = MecabController(verbose=True)
 acc_dict = AccentDictManager()
+gui_hooks.main_window_did_init.append(acc_dict.reload_from_disk)
