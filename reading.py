@@ -13,7 +13,7 @@ from .config_view import config_view as cfg, ReadingsDiscardMode
 from .database import AccentDict, FormattedEntry, AccentDictManager
 from .helpers import *
 from .helpers.common_kana import adjust_reading
-from .helpers.mingle_readings import mingle_readings, word_reading, strip_non_jp_furigana
+from .helpers.mingle_readings import mingle_readings, word_reading, strip_non_jp_furigana, WordReading
 from .helpers.profiles import PitchOutputFormat
 from .helpers.tokens import tokenize, split_separators, ParseableToken, clean_furigana, Token
 from .helpers.unify_readings import unify_repr
@@ -57,6 +57,18 @@ def lookup_expr_variants(expr: str) -> Iterable[FormattedEntry]:
     ))).keys()
 
 
+def split_possible_furigana(expr: str) -> WordReading:
+    # Sometimes furigana notation is being used by the users to distinguish otherwise duplicate notes.
+    # E.g., テスト[1], テスト[2]
+    expr = strip_non_jp_furigana(expr)
+
+    # If the expression contains furigana, split it.
+    expr, expr_reading = word_reading(expr)
+    expr, expr_reading = clean_furigana(expr), clean_furigana(expr_reading)
+
+    return WordReading(expr, expr_reading)
+
+
 @functools.lru_cache(maxsize=cfg.cache_lookups)
 def get_pronunciations(expr: str, sanitize: bool = True, recurse: bool = True, use_mecab: bool = True) -> AccentDict:
     """
@@ -73,13 +85,8 @@ def get_pronunciations(expr: str, sanitize: bool = True, recurse: bool = True, u
         expr = html_to_text_line(expr)
         sanitize = False
 
-    # Sometimes furigana notation is being used by the users to distinguish otherwise duplicate notes.
-    # E.g., テスト[1], テスト[2]
-    expr = strip_non_jp_furigana(expr)
-
-    # If the expression contains furigana, split it.
-    expr, expr_reading = word_reading(expr)
-    expr, expr_reading = clean_furigana(expr), clean_furigana(expr_reading)
+    # Handle furigana, if present.
+    expr, expr_reading = split_possible_furigana(expr)
 
     # Skip empty strings and user-specified blocklisted words
     if not expr or cfg.pitch_accent.is_blocklisted(expr):
