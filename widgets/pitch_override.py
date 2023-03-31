@@ -12,6 +12,8 @@ from ..config_view import config_view as cfg
 
 
 class PitchOverrideWidget(QWidget):
+    _filename_filter = "TSV Files (*.tsv *.csv);; All Files (*.*)"
+
     def __init__(self, parent, file_path: str, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
         self._file_path = file_path
@@ -34,7 +36,7 @@ class PitchOverrideWidget(QWidget):
                 parent=cast(QWidget, self),
                 caption="Save override table as TSV File",
                 directory=cfg['last_file_save_location'],
-                filter=self._table.filename_filter,
+                filter=self._filename_filter,
             )
             if not name:
                 return tooltip("Aborted.")
@@ -46,7 +48,7 @@ class PitchOverrideWidget(QWidget):
                 parent=cast(QWidget, self),
                 caption='Load override table from TSV File',
                 directory=cfg['last_file_save_location'],
-                filter=self._table.filename_filter,
+                filter=self._filename_filter,
             )
             if not name:
                 return tooltip("Aborted.")

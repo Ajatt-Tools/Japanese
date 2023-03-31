@@ -132,8 +132,6 @@ class PitchOverrideTable(ExpandingTableWidget):
     _sep_regex = re.compile(r"[ \t\n.;。、；・]+", flags=re.IGNORECASE | re.MULTILINE)
     _column_sep = '\t'
 
-    filename_filter = "TSV Files (*.tsv *.csv);; All Files (*.*)"
-
     @classmethod
     def from_tsv(cls, file_path: str, *args):
         return cls(*args).update_from_tsv(file_path)
