@@ -33,7 +33,7 @@ class AccentEntry:
         return self._keyword
 
     @property
-    def moraes(self) -> List[str]:
+    def moraes(self) -> list[str]:
         return self._reading
 
     @property
@@ -46,7 +46,7 @@ class AccentEntry:
         return self._accents != NO_ACCENT
 
 
-def format_entry(moraes: List[str], accent: int) -> str:
+def format_entry(moraes: list[str], accent: int) -> str:
     """ Format an entry from the data in the original database to something that uses html """
 
     result = []

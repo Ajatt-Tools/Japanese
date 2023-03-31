@@ -2,15 +2,10 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import abc
-import os
 import re
-from typing import Dict, List, NamedTuple, Optional, NewType, Collection
+from typing import NamedTuple, Optional, NewType, Collection
 
-# Paths to the database files and this particular file
-THIS_DIR_PATH = os.path.dirname(os.path.normpath(__file__))
-DB_DIR_PATH = os.path.join(THIS_DIR_PATH, "accent_dict")
-DERIVATIVE_PICKLE = os.path.join(DB_DIR_PATH, "pronunciations_combined.pickle")
-NO_ACCENT = "?"
+from .consts import *
 
 
 def should_regenerate(file_path: str) -> bool:

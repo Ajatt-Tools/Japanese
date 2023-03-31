@@ -42,7 +42,7 @@ def make_accent_entry(csv_line: str) -> AccentEntry:
     return AccentEntry(*csv_line.split(','))
 
 
-def format_nasal_or_devoiced_positions(expr: str) -> List[int]:
+def format_nasal_or_devoiced_positions(expr: str) -> list[int]:
     # Sometimes the expr ends with 10
     if expr.endswith('10'):
         expr = expr[:-2]
@@ -74,8 +74,8 @@ def format_entry(e: AccentEntry) -> FormattedEntry:
     # Get the devoiced positions
     devoiced = format_nasal_or_devoiced_positions(e.devoiced_pos)
 
-    result_str: List[str] = []
-    pitch_nums: List[int] = []
+    result_str: list[str] = []
+    pitch_nums: list[int] = []
     overline_flag = False
 
     for idx, acc in enumerate(int(pos) for pos in acc_pattern):
