@@ -3,8 +3,9 @@
 
 import concurrent.futures
 from concurrent.futures import Future
-from typing import Collection, NamedTuple
+from typing import Collection, NamedTuple, Iterable
 
+import anki.collection
 from anki.utils import html_to_text_line
 from aqt import gui_hooks, mw
 from aqt.operations import QueryOp
@@ -26,7 +27,7 @@ def download_tag(audio_file: FileUrlData):
     )
 
 
-def download_tags(hits: Collection[FileUrlData]) -> list[Future]:
+def download_tags(hits: Iterable[FileUrlData]) -> list[Future]:
     """ Download audio files from a remote. """
 
     futures, results = [], []
@@ -73,12 +74,21 @@ def save_files(futures: Collection[Future]):
     report_results(successes, fails)
 
 
+def only_missing(col: anki.collection.Collection, files: Collection[FileUrlData]):
+    """ Returns files that aren't present in the collection already. """
+    return (
+        file
+        for file in files
+        if not col.media.have(file.desired_filename)
+    )
+
+
 def download_tags_bg(hits: Collection[FileUrlData]):
     if not hits:
         return
     QueryOp(
         parent=mw,
-        op=lambda col: download_tags(hits),
+        op=lambda col: download_tags(only_missing(col, hits)),
         success=lambda futures: save_files(futures)
     ).run_in_background()
 
