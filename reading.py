@@ -10,7 +10,7 @@ from anki.utils import html_to_text_line
 from aqt import gui_hooks
 
 from .config_view import config_view as cfg, ReadingsDiscardMode
-from .database import AccentDict, FormattedEntry, AccentDictManager
+from .database.acc_dict_mgr import AccentDict, FormattedEntry, AccentDictManager
 from .helpers import *
 from .helpers.common_kana import adjust_reading
 from .helpers.mingle_readings import mingle_readings, word_reading, strip_non_jp_furigana, WordReading

@@ -9,11 +9,11 @@ from aqt import mw
 from aqt.qt import *
 from aqt.utils import restoreGeom, saveGeom, openLink
 
+from .database.user_database import UserDb
 from .ajt_common.about_menu import tweak_window, menu_root_entry
 from .ajt_common.consts import ADDON_SERIES
 from .ajt_common.grab_key import ShortCutGrabButton
 from .config_view import config_view as cfg, ReadingsDiscardMode
-from .database import UserDb
 from .helpers import ui_translate, split_list
 from .helpers.profiles import Profile, ProfileFurigana, ProfilePitch, PitchOutputFormat, ProfileAudio
 from .reading import acc_dict

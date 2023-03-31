@@ -8,7 +8,10 @@ from typing import Collection, Iterable, NewType, NamedTuple
 from aqt.qt import *
 from aqt.utils import showInfo
 
-from ..database import NO_ACCENT
+try:
+    from ..database.consts import NO_ACCENT
+except ImportError:
+    from database.consts import NO_ACCENT
 
 
 def is_ctrl_v_pressed(event: QKeyEvent) -> bool:
