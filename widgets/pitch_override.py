@@ -3,10 +3,10 @@
 
 from typing import cast
 
-from aqt import mw
 from aqt.qt import *
 from aqt.utils import tooltip
 
+from .anki_style import fix_default_anki_style
 from .table import PitchOverrideTable
 from ..config_view import config_view as cfg
 
@@ -22,7 +22,7 @@ class PitchOverrideWidget(QWidget):
         self._export_button = QPushButton("Export TSV")
         self.init_UI()
         self.connect_buttons()
-        self.adjust_default_style()
+        fix_default_anki_style(self._table)
 
     def init_UI(self):
         self.setLayout(layout := QGridLayout())
@@ -32,6 +32,7 @@ class PitchOverrideWidget(QWidget):
 
     def connect_buttons(self):
         def write_tsv_file():
+            # noinspection PyArgumentList
             name, mime = QFileDialog.getSaveFileName(
                 parent=cast(QWidget, self),
                 caption="Save override table as TSV File",
@@ -44,6 +45,7 @@ class PitchOverrideWidget(QWidget):
             cfg['last_file_save_location'] = name  # may or may not be lost
 
         def read_tsv_file():
+            # noinspection PyArgumentList
             name, mime = QFileDialog.getOpenFileName(
                 parent=cast(QWidget, self),
                 caption='Load override table from TSV File',
@@ -57,29 +59,6 @@ class PitchOverrideWidget(QWidget):
 
         qconnect(self._import_button.clicked, read_tsv_file)
         qconnect(self._export_button.clicked, write_tsv_file)
-
-    def adjust_default_style(self):
-        try:
-            from aqt.theme import WidgetStyle
-        except ImportError:
-            # Running an old version of Anki. No action is necessary.
-            return
-        if mw.pm.get_widget_style() == WidgetStyle.ANKI:
-            self._table.setStyleSheet("""
-                    QTableWidget,
-                    QTableView,
-                    QLineEdit,
-                    QHeaderView,
-                    QHeaderView::section,
-                    QHeaderView::section:last,
-                    QHeaderView::section:first,
-                    QHeaderView::section:only-one,
-                    QHeaderView::section:pressed {
-                        font-size: 16px;
-                        border-radius: 0px;
-                        padding: 0px;
-                    }
-                    """)
 
     def save_to_disk(self):
         self._table.dump(self._file_path)
