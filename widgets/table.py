@@ -18,7 +18,9 @@ def is_ctrl_v_pressed(event: QKeyEvent) -> bool:
     return (event.modifiers() & Qt.KeyboardModifier.ControlModifier) and (event.key() == Qt.Key.Key_V)
 
 
-TableRow = NewType("TableRow", Collection[QTableWidgetItem])
+UNUSED = -1
+CellContent = NewType("CellContent", Union[QTableWidgetItem | QWidget])
+TableRow = NewType("TableRow", Collection[CellContent])
 
 
 class ExpandingTableWidget(QTableWidget):
@@ -27,10 +29,8 @@ class ExpandingTableWidget(QTableWidget):
 
     def __init__(self, *args):
         super().__init__(*args)
-        self.setRowCount(0)
         self.setColumnCount(len(self._columns))
         self.setHorizontalHeaderLabels(self._columns)
-        self.addEmptyLastRow()
         self.addDeleteSelectedRowsContextAction()
         self.addPasteContextAction()
         self.verticalHeader().setVisible(False)
@@ -38,6 +38,12 @@ class ExpandingTableWidget(QTableWidget):
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.setStretchAllColumns()
         qconnect(self.cellChanged, self.onCellChanged)
+        self.setRowCount(0)
+
+    def setRowCount(self, rows: int):
+        super().setRowCount(rows)
+        if rows < 1:
+            self.addEmptyLastRow()
 
     def setStretchAllColumns(self):
         header = self.horizontalHeader()
@@ -61,42 +67,80 @@ class ExpandingTableWidget(QTableWidget):
             self.removeRow(index.row())
 
     def removeRow(self, row: int) -> None:
-        """The table never stays empty. Empty rows are added at the end if needed."""
+        """
+        The table never stays empty. Empty rows are added at the end if needed.
+        """
         super().removeRow(deleted_row := self.currentRow())
         if self.rowCount() < 1 or deleted_row == self.rowCount():
             self.addEmptyLastRow()
 
-    def onCellChanged(self, row_number: int, _col_number: int):
+    def isCellFilled(self, cell: CellContent) -> bool:
+        """
+        When dealing with widgets inside cells,
+        the table has to take them into account.
+
+        Subclasses must override this method to handle other widgets.
+        """
+        return bool(cell.text())
+
+    def onCellChanged(self, row_n: int, _col_n: int = UNUSED):
         """
         If the last row is full, add a new row.
-        If the row is empty, delete it.
+        If the row is empty, and it's not last, delete it.
         """
-        if not all(row_cells := self.getRowCells(row_number)):
-            return
-        elif all(item.text() for item in row_cells) and (row_number + 1) == self.rowCount():
-            self.addEmptyLastRow()
-        elif all(not item.text() for item in row_cells) and self.rowCount() > 1 and (row_number + 1) < self.rowCount():
-            self.removeRow(row_number)
 
-    def addRow(self, cells: Iterable[str], last: bool = False):
-        self.insertRow(row := max(0, self.rowCount() if last else self.rowCount() - 1))
-        for column_num, cell_content in enumerate(cells):
-            self.setItem(row, column_num, QTableWidgetItem(cell_content))
+        def is_full_last_row(row: TableRow) -> bool:
+            return all(self.isCellFilled(item) for item in row) and row_n == self.rowCount() - 1
+
+        def is_empty_not_last_row(row: TableRow) -> bool:
+            return all(not self.isCellFilled(item) for item in row) and self.rowCount() > row_n + 1
+
+        if not all(row_cells := self.getRowCellContents(row_n)):
+            return
+        elif is_full_last_row(row_cells) or self.rowCount() < 1:
+            self.addEmptyLastRow()
+        elif is_empty_not_last_row(row_cells):
+            self.removeRow(row_n)
+
+    def addRow(self, cells: Iterable[str | QWidget], last: bool = False):
+        self.insertRow(row_n := max(0, self.rowCount() if last else self.rowCount() - 1))
+        for col_n, cell_content in enumerate(cells):
+            self.insertCellContent(row_n, col_n, cell_content)
+
+    def insertCellContent(self, row_n: int, col_n: int, content: str | QWidget):
+        """
+        Depending on the type of content, either set a new item, or set a cell widget.
+        """
+        if isinstance(content, str):
+            self.setItem(row_n, col_n, QTableWidgetItem(content))
+        elif isinstance(content, QWidget):
+            self.setCellWidget(row_n, col_n, content)
+        else:
+            raise ValueError("Invalid parameter passed.")
 
     def addEmptyLastRow(self):
         return self.addRow(cells=('' for _column in self._columns), last=True)
 
-    def getRowCells(self, row_number: int) -> TableRow:
-        return tuple(self.item(row_number, column_number) for column_number in range(self.columnCount()))
+    def getCellContent(self, row_n: int, col_n: int) -> CellContent | None:
+        """
+        Return an item inside the cell if there is an item, or a widget if it has been set.
+        """
+        if (item := self.item(row_n, col_n)) is not None:
+            return item
+        if (widget := self.cellWidget(row_n, col_n)) is not None:
+            return widget
+
+    def getRowCellContents(self, row_n: int) -> TableRow:
+        return tuple(self.getCellContent(row_n, col_n) for col_n in range(self.columnCount()))
 
     def iterateRows(self) -> Iterable[TableRow]:
         for row_number in range(self.rowCount()):
-            yield self.getRowCells(row_number)
+            yield self.getRowCellContents(row_number)
 
     def fillCurrentRow(self):
         """
         Takes text from the clipboard, splits it by the defined separators,
-        then maps each part to a cell in the table.
+        then maps each part to a cell in the current row.
         """
 
         def text_parts():
@@ -106,7 +150,10 @@ class ExpandingTableWidget(QTableWidget):
             return range(self.currentColumn(), self.columnCount(), )
 
         for col_number, text in zip(column_iter(), text_parts()):
-            self.item(self.currentRow(), col_number).setText(text)
+            try:
+                self.getCellContent(self.currentRow(), col_number).setText(text)
+            except AttributeError:
+                pass
 
     def keyPressEvent(self, event: QKeyEvent):
         if event.key() == Qt.Key.Key_Delete:
@@ -132,7 +179,7 @@ class PitchAccentTableRow(NamedTuple):
 
 class PitchOverrideTable(ExpandingTableWidget):
     _columns = tuple(s.capitalize() for s in PitchAccentTableRow._fields)
-    _sep_regex = re.compile(r"[ \t\n.;。、；・]+", flags=re.IGNORECASE | re.MULTILINE)
+    _sep_regex = re.compile(r"[ \r\t\n.;。、；・]+", flags=re.IGNORECASE | re.MULTILINE)
     _column_sep = '\t'
 
     @classmethod
