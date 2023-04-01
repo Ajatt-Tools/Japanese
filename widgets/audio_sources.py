@@ -25,6 +25,14 @@ class SourceEnableCheckbox(QCheckBox):
         """)
 
 
+def filter_name(text: str) -> str:
+    """
+    Since sources' names are used as filenames to store cache files on disk,
+    ensure there are no questionable characters that some OSes may panic from.
+    """
+    return re.sub(r'[\n\t\r#%&{}<>*?/$!\'":@+`|=]+', ' ', text, flags=re.MULTILINE).strip()
+
+
 class AudioSourcesTable(ExpandingTableWidget):
     _columns = tuple(field.name.capitalize() for field in dataclasses.fields(AudioSourceConfig))
     # Slightly tightened the separator regex compared to the pitch override widget
@@ -54,6 +62,7 @@ class AudioSourcesTable(ExpandingTableWidget):
         sources = {}
         for row in self.iterateRows():
             if all(row) and (row := pack_back(row)).is_valid:
+                row.name = filter_name(row.name)
                 while row.name in sources:
                     row.name += '(new)'
                 sources[row.name] = row
