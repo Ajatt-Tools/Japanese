@@ -4,7 +4,7 @@
 import functools
 from typing import Optional, Callable
 
-from anki.utils import html_to_text_line, strip_html_media
+from anki.utils import strip_html_media
 from aqt import mw
 
 from .audio import search_audio, format_audio_tags, download_tags_bg
@@ -78,7 +78,10 @@ class AddPitch(DoTask, task_type=ProfilePitch):
 class AddAudio(DoTask, task_type=ProfileAudio):
     @do_not_modify_destination_if_have_nothing_to_add
     def run(self, src_text: str):
-        search_results = list(search_audio(src_text, split_morphemes=self._task.split_morphemes))
+        search_results = list({
+            item.desired_filename: item
+            for item in search_audio(src_text, split_morphemes=self._task.split_morphemes)
+        }.values())
         download_tags_bg(search_results)
         return format_audio_tags(search_results)
 
