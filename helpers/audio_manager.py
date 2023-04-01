@@ -41,6 +41,10 @@ class AudioSourceConfig:
     url: str
     enabled: bool
 
+    @property
+    def is_valid(self) -> str:
+        return self.name and self.url
+
 
 @dataclasses.dataclass
 class AudioSource(AudioSourceConfig):
