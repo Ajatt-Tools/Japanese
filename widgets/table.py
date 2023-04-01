@@ -59,7 +59,7 @@ class ExpandingTableWidget(QTableWidget):
     def addPasteContextAction(self):
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.ActionsContextMenu)
         action = QAction("Paste (Ctrl+V)", self)
-        qconnect(action.triggered, self.fillCurrentRow)
+        qconnect(action.triggered, self.fillCurrentRowFromClipBoard)
         self.addAction(action)
 
     def deleteSelectedRows(self):
@@ -137,7 +137,7 @@ class ExpandingTableWidget(QTableWidget):
         for row_number in range(self.rowCount()):
             yield self.getRowCellContents(row_number)
 
-    def fillCurrentRow(self):
+    def fillCurrentRowFromClipBoard(self):
         """
         Takes text from the clipboard, splits it by the defined separators,
         then maps each part to a cell in the current row.
@@ -149,17 +149,20 @@ class ExpandingTableWidget(QTableWidget):
         def column_iter():
             return range(self.currentColumn(), self.columnCount(), )
 
-        for col_number, text in zip(column_iter(), text_parts()):
-            try:
-                self.getCellContent(self.currentRow(), col_number).setText(text)
-            except AttributeError:
-                pass
+        for col_n, text in zip(column_iter(), text_parts()):
+            self.fillCellContent(self.currentRow(), col_n, text)
+
+    def fillCellContent(self, row_n: int, col_n: int, content: str):
+        try:
+            self.getCellContent(row_n, col_n).setText(content)
+        except AttributeError:
+            pass
 
     def keyPressEvent(self, event: QKeyEvent):
         if event.key() == Qt.Key.Key_Delete:
             self.removeRow(self.currentRow())
         if is_ctrl_v_pressed(event):
-            self.fillCurrentRow()
+            self.fillCurrentRowFromClipBoard()
         return super().keyPressEvent(event)
 
 
