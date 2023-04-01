@@ -36,11 +36,14 @@ class FileUrlData(NamedTuple):
 
 
 @dataclasses.dataclass
-class AudioSource:
+class AudioSourceConfig:
     name: str
     url: str
     enabled: bool
 
+
+@dataclasses.dataclass
+class AudioSource(AudioSourceConfig):
     # current schema has three fields: "meta", "headwords", "files"
     pronunciation_data: Optional[dict] = dataclasses.field(init=False, default=None, repr=False)
 
@@ -232,7 +235,7 @@ class AudioSourceManager:
 
 def main():
     # Used for testing when Anki isn't running.
-    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, 'config.json')) as inf:
+    with open(os.path.join(os.path.dirname(__file__), os.pardir, 'config.json')) as inf:
         cfg = SimpleNamespace(**json.load(inf))
 
     aud_src_mgr = AudioSourceManager(cfg)
