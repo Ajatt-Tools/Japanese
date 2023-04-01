@@ -7,6 +7,7 @@ import re
 from typing import Iterable, NamedTuple, final
 
 from .ajt_common.addon_config import AddonConfigManager
+from .helpers.audio_manager import AudioSourceConfig
 from .helpers.profiles import Profile
 from .helpers.tokens import RE_FLAGS
 
@@ -192,13 +193,16 @@ class ConfigView(ConfigViewBase):
             default = Profile.class_by_mode(profile_dict['mode']).new()
             yield Profile(**(dataclasses.asdict(default) | profile_dict))
 
+    def iter_audio_sources(self) -> Iterable[AudioSourceConfig]:
+        for source_dict in self.audio_sources:
+            yield AudioSourceConfig(**source_dict)
+
     @property
     def download_timeout(self) -> int:
         return self['download_timeout']
 
     @property
     def audio_sources(self):
-        # TODO [AudioSource(**source) for source in self._config.audio_sources]
         return self['audio_sources']
 
     @property

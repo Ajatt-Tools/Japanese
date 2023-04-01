@@ -9,6 +9,8 @@ from aqt import mw
 from aqt.qt import *
 from aqt.utils import restoreGeom, saveGeom, openLink
 
+from .audio import init_audio_dictionaries
+from .widgets.audio_sources import AudioSourcesTable
 from .database.user_database import UserDb
 from .ajt_common.about_menu import tweak_window, menu_root_entry
 from .ajt_common.consts import ADDON_SERIES
@@ -508,6 +510,7 @@ class SettingsDialog(QDialog):
 
         # Audio tab
         self._audio_profiles_edit = AudioProfilesEdit()
+        self._audio_sources_table = AudioSourcesTable().populate(cfg.iter_audio_sources())
 
         # Overrides tab
         self._accents_override = PitchOverrideWidget(self, file_path=UserDb.accent_database)
@@ -556,6 +559,7 @@ class SettingsDialog(QDialog):
         tab = QWidget()
         tab.setLayout(layout := QVBoxLayout())
         layout.addWidget(self._audio_profiles_edit)
+        layout.addWidget(self._audio_sources_table)
         self._tabs.addTab(tab, "Audio")
 
         # Accent DB override
@@ -591,9 +595,16 @@ class SettingsDialog(QDialog):
             *self._pitch_profiles_edit.as_list(),
             *self._audio_profiles_edit.as_list(),
         ]
+        cfg['audio_sources'] = [
+            dataclasses.asdict(source)
+            for source in self._audio_sources_table.iterateConfigs()
+        ]
+        # Write the new data to disk
         cfg.write_config()
         self._accents_override.save_to_disk()
+        # Reload
         acc_dict.reload_from_disk(self)
+        init_audio_dictionaries()
         return super().accept()
 
 
