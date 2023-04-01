@@ -45,21 +45,19 @@ class AudioSourcesTable(ExpandingTableWidget):
 
     def addEmptyLastRow(self):
         """ Redefine this method. """
-        return self.addSource(AudioSourceConfig("", "", True), last=True)
-
-    @staticmethod
-    def pack_back(row: TableRow) -> AudioSourceConfig:
-        def to_json_compatible(item: CellContent):
-            if isinstance(item, QCheckBox):
-                return item.isChecked()
-            return item.text()
-
-        return AudioSourceConfig(*(to_json_compatible(item) for item in row))
+        return self.addSource(AudioSourceConfig("My audio", "", True), last=True)
 
     def iterateConfigs(self) -> Iterable[AudioSourceConfig]:
+        """
+        Return a list of source config objects. Ensure that names don't clash.
+        """
+        sources = {}
         for row in self.iterateRows():
-            if all(row) and (row := self.pack_back(row)).is_valid:
-                yield row
+            if all(row) and (row := pack_back(row)).is_valid:
+                while row.name in sources:
+                    row.name += '(new)'
+                sources[row.name] = row
+        return sources.values()
 
     def populate(self, sources: Iterable[AudioSourceConfig]):
         self.setRowCount(0)
@@ -71,6 +69,15 @@ class AudioSourcesTable(ExpandingTableWidget):
         if isinstance(cell := self.getCellContent(row_n, col_n), QCheckBox):
             return cell.setChecked(any(value in content.lower() for value in ('true', 'yes', 'y')))
         return super().fillCellContent(row_n, col_n, content)
+
+
+def pack_back(row: TableRow) -> AudioSourceConfig:
+    def to_json_compatible(item: CellContent):
+        if isinstance(item, QCheckBox):
+            return item.isChecked()
+        return item.text()
+
+    return AudioSourceConfig(*(to_json_compatible(item) for item in row))
 
 
 class App(QWidget):
