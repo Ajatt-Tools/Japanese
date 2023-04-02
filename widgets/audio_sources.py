@@ -9,10 +9,10 @@ from aqt.qt import *
 
 try:
     from .table import ExpandingTableWidget, CellContent, TableRow
-    from ..helpers.audio_manager import AudioSourceConfig
+    from ..helpers.audio_manager import AudioSourceConfig, filter_name
 except ImportError:
     from table import ExpandingTableWidget, CellContent, TableRow
-    from helpers.audio_manager import AudioSourceConfig
+    from helpers.audio_manager import AudioSourceConfig, filter_name
 
 
 class SourceEnableCheckbox(QCheckBox):
@@ -23,14 +23,6 @@ class SourceEnableCheckbox(QCheckBox):
             padding: 10px;
         }
         """)
-
-
-def filter_name(text: str) -> str:
-    """
-    Since sources' names are used as filenames to store cache files on disk,
-    ensure there are no questionable characters that some OSes may panic from.
-    """
-    return re.sub(r'[\n\t\r#%&{}<>*?/$!\'":@+`|=]+', ' ', text, flags=re.MULTILINE).strip()
 
 
 class AudioSourcesTable(ExpandingTableWidget):

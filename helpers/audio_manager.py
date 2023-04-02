@@ -6,6 +6,7 @@ import io
 import json
 import os
 import pickle
+import re
 import zipfile
 from types import SimpleNamespace
 from typing import Optional, NewType, NamedTuple, Iterable
@@ -26,6 +27,14 @@ def file_exists(file_path: str):
             and os.path.isfile(file_path)
             and os.stat(file_path).st_size > 0
     )
+
+
+def filter_name(text: str) -> str:
+    """
+    Since sources' names are used as filenames to store cache files on disk,
+    ensure there are no questionable characters that some OSes may panic from.
+    """
+    return re.sub(r'[\n\t\r#%&\[\]{}<>*?/$!\'":@+`|=]+', ' ', text, flags=re.MULTILINE).strip()
 
 
 FileInfo = NewType("FileInfo", dict[str, str])
@@ -57,7 +66,7 @@ class AudioSource(AudioSourceConfig):
     # current schema has three fields: "meta", "headwords", "files"
     pronunciation_data: Optional[dict] = dataclasses.field(init=False, default=None, repr=False)
 
-    def resolve_file(self, word: str, file_name: str):
+    def resolve_file(self, word: str, file_name: str) -> FileUrlData:
         components = []
         file_info: FileInfo = self.files[file_name]
 
@@ -69,13 +78,12 @@ class AudioSource(AudioSourceConfig):
         if 'pitch_number' in file_info:
             components.append(file_info['pitch_number'])
 
+        desired_filename = '_'.join((word, *components, self.name,))
+        desired_filename = f'{filter_name(desired_filename)}{os.path.splitext(file_name)[-1]}'
+
         return FileUrlData(
             url=os.path.join(self.media_dir, file_name),
-            desired_filename='_'.join((
-                word,
-                *components,
-                self.name,
-            )) + os.path.splitext(file_name)[-1],
+            desired_filename=desired_filename,
         )
 
     @property
