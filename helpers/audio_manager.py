@@ -37,9 +37,9 @@ class FileUrlData(NamedTuple):
 
 @dataclasses.dataclass
 class AudioSourceConfig:
+    enabled: bool
     name: str
     url: str
-    enabled: bool
 
     @property
     def is_valid(self) -> str:

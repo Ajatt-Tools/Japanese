@@ -45,7 +45,7 @@ class AudioSourcesTable(ExpandingTableWidget):
         return isinstance(cell, QCheckBox) and cell.isChecked() or super().isCellFilled(cell)
 
     def addSource(self, source: AudioSourceConfig, last: bool = False):
-        self.addRow((source.name, source.url, checkbox := SourceEnableCheckbox()), last=last)
+        self.addRow((checkbox := SourceEnableCheckbox(), source.name, source.url,), last=last)
         # The checkbox widget has to notify the table widget when its state changes.
         # Otherwise, the table will not automatically add/remove rows.
         qconnect(checkbox.stateChanged, lambda checked: self.onCellChanged(self.currentRow()))
@@ -53,7 +53,7 @@ class AudioSourcesTable(ExpandingTableWidget):
 
     def addEmptyLastRow(self):
         """ Redefine this method. """
-        return self.addSource(AudioSourceConfig("My audio", "", True), last=True)
+        return self.addSource(AudioSourceConfig(True, "", "", ), last=True)
 
     def iterateConfigs(self) -> Iterable[AudioSourceConfig]:
         """
@@ -102,10 +102,10 @@ class App(QWidget):
         layout.addWidget(self.table)
 
         # example rows
-        self.table.addSource(AudioSourceConfig('NHK1', '/test/nhk/1.json', True))
-        self.table.addSource(AudioSourceConfig('NHK2', '/test/nhk/2.json', False))
-        self.table.addSource(AudioSourceConfig('NHK3', '/test/nhk/3.json', True))
-        self.table.addSource(AudioSourceConfig('NHK4', '/test/nhk/4.json', False))
+        self.table.addSource(AudioSourceConfig(True, 'NHK1', '/test/nhk/1.json', ))
+        self.table.addSource(AudioSourceConfig(False, 'NHK2', '/test/nhk/2.json', ))
+        self.table.addSource(AudioSourceConfig(True, 'NHK3', '/test/nhk/3.json', ))
+        self.table.addSource(AudioSourceConfig(False, 'NHK4', '/test/nhk/4.json', ))
 
 
 def main():
