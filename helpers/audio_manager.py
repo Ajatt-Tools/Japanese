@@ -2,9 +2,11 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import dataclasses
+import io
 import json
 import os
 import pickle
+import zipfile
 from types import SimpleNamespace
 from typing import Optional, NewType, NamedTuple, Iterable
 
@@ -68,7 +70,7 @@ class AudioSource(AudioSourceConfig):
             components.append(file_info['pitch_number'])
 
         return FileUrlData(
-            url=os.path.join(os.path.dirname(self.url), self.rel_media_dir, file_name),
+            url=os.path.join(self.media_dir, file_name),
             desired_filename='_'.join((
                 word,
                 *components,
@@ -88,6 +90,16 @@ class AudioSource(AudioSourceConfig):
     def reported_name(self):
         self.raise_if_not_ready()
         return self.pronunciation_data['meta']['name']
+
+    @property
+    def media_dir(self) -> str:
+        # Meta can specify absolute path to the media dir,
+        # which will be used if set.
+        # Otherwise, fall back to relative path.
+        try:
+            return self.pronunciation_data['meta']['media_dir_abs']
+        except KeyError:
+            return os.path.join(os.path.dirname(self.url), self.rel_media_dir)
 
     @property
     def rel_media_dir(self):
@@ -144,12 +156,26 @@ class AudioSource(AudioSourceConfig):
             self.pronunciation_data = pickle.load(f)
 
     def read_local_json(self):
-        with open(self.url, encoding='utf8') as f:
-            print(f"Reading local json audio source: {self.url}")
-            self.pronunciation_data = json.load(f)
+        if self.url.endswith('.zip'):
+            # Read from a zip file that is expected to contain a json file with audio source data.
+            with zipfile.ZipFile(self.url) as zip_in:
+                print(f"Reading local zip audio source: {self.url}")
+                self.pronunciation_data = json.loads(read_zip(zip_in, self))
+        else:
+            # Read an uncompressed json file.
+            with open(self.url, encoding='utf8') as f:
+                print(f"Reading local json audio source: {self.url}")
+                self.pronunciation_data = json.load(f)
 
     def download_remote_json(self, client: anki.httpclient.HttpClient):
-        self.pronunciation_data = json.loads(download(client, self))
+        print(f"Downloading a remote audio source: {self.url}")
+        bytes_data = download(client, self)
+
+        try:
+            self.pronunciation_data = json.loads(bytes_data)
+        except UnicodeDecodeError:
+            with zipfile.ZipFile(io.BytesIO(bytes_data)) as zip_in:
+                self.pronunciation_data = json.loads(read_zip(zip_in, self))
 
 
 @dataclasses.dataclass
@@ -172,6 +198,20 @@ class AudioManagerException(RequestException):
 class InitResult:
     sources: list[AudioSource]
     errors: list[AudioManagerException]
+
+
+def read_zip(zip_in: zipfile.ZipFile, file: AudioSource) -> bytes:
+    try:
+        return zip_in.read(next(
+            name for name in zip_in.namelist()
+            if name.endswith('.json')
+        ))
+    except (StopIteration, zipfile.BadZipFile) as ex:
+        raise AudioManagerException(
+            file,
+            f"{ex.__class__.__name__}: json data isn't found in zip file {file.url}",
+            exception=ex,
+        )
 
 
 def download(client: anki.httpclient.HttpClient, file: AudioSource | FileUrlData) -> bytes:
