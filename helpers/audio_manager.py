@@ -35,6 +35,10 @@ class FileUrlData(NamedTuple):
     desired_filename: str
 
 
+def is_audio_cache_file(file: os.DirEntry):
+    return file.name.startswith("audio_source_") and file.name.endswith(".pickle")
+
+
 @dataclasses.dataclass
 class AudioSourceConfig:
     enabled: bool
@@ -198,6 +202,7 @@ class AudioSourceManager:
 
     def set_sources(self, sources: list[AudioSource]):
         self._audio_sources = sources
+        self.remove_old_cache_files()
 
     def init_dictionaries(self) -> list[AudioSource]:
         sources = []
@@ -212,6 +217,11 @@ class AudioSourceManager:
             else:
                 sources.append(source)
         return sources
+
+    def remove_old_cache_files(self):
+        for file in os.scandir(user_files_dir()):
+            if is_audio_cache_file(file) and file.path not in self._audio_sources:
+                os.remove(file)
 
     def _read_pronunciation_data(self, source: AudioSource):
         if source.cache_exists:
