@@ -9,10 +9,10 @@ import anki.collection
 from anki.utils import html_to_text_line
 from aqt import gui_hooks, mw
 from aqt.operations import QueryOp
-from aqt.utils import tooltip
+from aqt.utils import tooltip, show_warning
 
 from .config_view import config_view as cfg
-from .helpers.audio_manager import AudioSourceManager, FileUrlData, AudioManagerException
+from .helpers.audio_manager import AudioSourceManager, FileUrlData, AudioManagerException, InitResult
 
 
 class DownloadedData(NamedTuple):
@@ -109,17 +109,27 @@ def format_audio_tags(hits: Collection[FileUrlData]):
     )
 
 
-def init_audio_dictionaries():
-    QueryOp(
-        parent=mw,
-        op=lambda collection: aud_src_mgr.init_dictionaries(),
-        success=lambda sources: aud_src_mgr.set_sources(sources),
-    ).run_in_background()
+class AnkiAudioSourceManager(AudioSourceManager):
+    def init_audio_dictionaries(self):
+        QueryOp(
+            parent=mw,
+            op=lambda collection: self.init_dictionaries(),
+            success=lambda result: self._after_init(result),
+        ).run_in_background()
+
+    def _after_init(self, result: InitResult):
+        self.set_sources(result.sources)
+        self.remove_old_cache_files()
+        if result.errors:
+            show_warning('\n'.join(
+                f"Couldn't download audio source: {error.explanation}."
+                for error in result.errors
+            ))
 
 
 # Entry point
 ##########################################################################
 
 
-aud_src_mgr = AudioSourceManager(cfg)
-gui_hooks.main_window_did_init.append(init_audio_dictionaries)
+aud_src_mgr = AnkiAudioSourceManager(cfg)
+gui_hooks.main_window_did_init.append(aud_src_mgr.init_audio_dictionaries)

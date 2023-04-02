@@ -168,6 +168,12 @@ class AudioManagerException(RequestException):
         )
 
 
+@dataclasses.dataclass
+class InitResult:
+    sources: list[AudioSource]
+    errors: list[AudioManagerException]
+
+
 def download(client: anki.httpclient.HttpClient, file: AudioSource | FileUrlData) -> bytes:
     try:
         response = client.get(file.url)
@@ -202,10 +208,9 @@ class AudioSourceManager:
 
     def set_sources(self, sources: list[AudioSource]):
         self._audio_sources = sources
-        self.remove_old_cache_files()
 
-    def init_dictionaries(self) -> list[AudioSource]:
-        sources = []
+    def init_dictionaries(self) -> InitResult:
+        sources, errors = [], []
         for source in [AudioSource(**source) for source in self._config.audio_sources]:
             if not source.enabled:
                 continue
@@ -213,14 +218,17 @@ class AudioSourceManager:
                 self._read_pronunciation_data(source)
             except AudioManagerException as ex:
                 print(f"Ignoring source {source.name}: {ex.describe_short()}.")
+                errors.append(ex)
                 continue
             else:
                 sources.append(source)
-        return sources
+                print(f"Initialized source: {source.name}")
+        return InitResult(sources, errors)
 
     def remove_old_cache_files(self):
         for file in os.scandir(user_files_dir()):
-            if is_audio_cache_file(file) and file.path not in self._audio_sources:
+            if is_audio_cache_file(file) and file.path not in (source.cache_path for source in self._audio_sources):
+                print(f"Removing unused cache file: {file.name}")
                 os.remove(file)
 
     def _read_pronunciation_data(self, source: AudioSource):
@@ -253,7 +261,7 @@ def main():
         cfg = SimpleNamespace(**json.load(inf))
 
     aud_src_mgr = AudioSourceManager(cfg)
-    aud_src_mgr.set_sources(aud_src_mgr.init_dictionaries())
+    aud_src_mgr.set_sources(aud_src_mgr.init_dictionaries().sources)
     for file in aud_src_mgr.search_word('原'):
         print(file)
 
