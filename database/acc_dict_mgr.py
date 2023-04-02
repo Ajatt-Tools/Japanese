@@ -22,11 +22,11 @@ class AccentDictManager:
     def __getitem__(self, item):
         return self._db.__getitem__(item)
 
-    def reload_from_disk(self, parent: Optional = None):
+    def reload_from_disk(self):
         """ Reads accent database from disk. """
         print("Reading accent database...")
         QueryOp(
-            parent=parent or mw,
+            parent=mw,
             op=lambda collection: self._database_init(),
             success=lambda dictionary: self._reload_dict(dictionary),
         ).with_progress(
