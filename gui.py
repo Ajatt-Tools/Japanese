@@ -9,16 +9,17 @@ from aqt import mw
 from aqt.qt import *
 from aqt.utils import restoreGeom, saveGeom, openLink
 
-from .audio import init_audio_dictionaries
-from .widgets.audio_sources import AudioSourcesTable
-from .database.user_database import UserDb
 from .ajt_common.about_menu import tweak_window, menu_root_entry
 from .ajt_common.consts import ADDON_SERIES
 from .ajt_common.grab_key import ShortCutGrabButton
+from .audio import aud_src_mgr
 from .config_view import config_view as cfg, ReadingsDiscardMode
+from .database.user_database import UserDb
 from .helpers import ui_translate, split_list
 from .helpers.profiles import Profile, ProfileFurigana, ProfilePitch, PitchOutputFormat, ProfileAudio
 from .reading import acc_dict
+from .widgets.anki_style import fix_default_anki_style
+from .widgets.audio_sources import AudioSourcesTable
 from .widgets.enum_selector import EnumSelectCombo
 from .widgets.pitch_override import PitchOverrideWidget
 
@@ -560,6 +561,8 @@ class SettingsDialog(QDialog):
         tab.setLayout(layout := QVBoxLayout())
         layout.addWidget(self._audio_profiles_edit)
         layout.addWidget(self._audio_sources_table)
+        fix_default_anki_style(self._audio_sources_table)
+
         self._tabs.addTab(tab, "Audio")
 
         # Accent DB override
@@ -604,7 +607,7 @@ class SettingsDialog(QDialog):
         self._accents_override.save_to_disk()
         # Reload
         acc_dict.reload_from_disk(self)
-        init_audio_dictionaries()
+        aud_src_mgr.init_audio_dictionaries()
         return super().accept()
 
 
