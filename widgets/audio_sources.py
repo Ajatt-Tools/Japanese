@@ -39,6 +39,10 @@ class AudioSourcesTable(ExpandingTableWidget):
     # since names and file paths can contain a wide range of characters.
     _sep_regex: re.Pattern = re.compile(r"[\r\t\n；;。、・]+", flags=re.IGNORECASE | re.MULTILINE)
 
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
+
     def isCellFilled(self, cell: CellContent) -> bool:
         # A checked checkbox is considered filled,
         # so the user has to uncheck it to trigger an automatic row deletion.
