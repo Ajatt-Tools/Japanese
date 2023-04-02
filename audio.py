@@ -13,6 +13,10 @@ from aqt.utils import tooltip, show_warning
 
 from .config_view import config_view as cfg
 from .helpers.audio_manager import AudioSourceManager, FileUrlData, AudioManagerException, InitResult
+from .helpers.tokens import tokenize, ParseableToken
+from .mecab_controller import to_hiragana
+from .mecab_controller.mecab_controller import MecabParsedToken
+from .reading import mecab_translate
 
 
 class DownloadedData(NamedTuple):
@@ -93,12 +97,26 @@ def download_tags_bg(hits: Collection[FileUrlData]):
     ).run_in_background()
 
 
+def iter_tokens(src_text: str, split_morphemes: bool) -> Iterable[str | MecabParsedToken]:
+    for part in html_to_text_line(src_text).strip().split():
+        yield part
+        for token in tokenize(part, counters=cfg.furigana.counters):
+            if isinstance(token, ParseableToken):
+                yield token
+                if split_morphemes:
+                    yield from mecab_translate(token)
+
+
 def search_audio(src_text: str, split_morphemes: bool) -> list[FileUrlData]:
     hits = []
-    # TODO split morphemes if requested
-    for part in html_to_text_line(src_text).strip().split():
-        for audio_file in aud_src_mgr.search_word(part):
-            hits.append(audio_file)
+    for part in dict.fromkeys(iter_tokens(src_text, split_morphemes)):
+        if isinstance(part, str):
+            hits.extend(aud_src_mgr.search_word(part))
+        else:
+            for variant in (part.headword, part.katakana_reading, to_hiragana(part.katakana_reading)):
+                if files := tuple(aud_src_mgr.search_word(variant)):
+                    hits.extend(files)
+                    break
     return hits
 
 
