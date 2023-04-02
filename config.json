@@ -58,7 +58,6 @@
     "discard_mode": "keep_first"
   },
   "furigana": {
-    "database_lookups": true,
     "skip_numbers": true,
     "prefer_literal_pronunciation": false,
     "reading_separator": ", ",

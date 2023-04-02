@@ -94,12 +94,8 @@ class FuriganaConfigView(PitchAndFuriganaCommon):
         """Words that shouldn't be looked up in the accent dictionary."""
         return split_words(self['counters'])
 
-    @property
-    def database_lookups(self) -> bool:
-        return self['database_lookups'] is True
-
     def can_lookup_in_db(self, word: str) -> bool:
-        return self.database_lookups and word not in self.mecab_only
+        return self.maximum_results > 1 and word not in self.mecab_only
 
 
 @final

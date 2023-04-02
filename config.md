@@ -34,7 +34,6 @@ Default field names match the [TSC](https://ankiweb.net/shared/info/1557722832) 
 
 ### Furigana
 
-* `database_lookups`. Whether to perform database lookups or rely entirely on Mecab.
 * `skip_numbers`. Whether to add furigana to numbers or not.
 * `prefer_literal_pronunciation`.
   The database has readings with the `ー` symbol in place of long vowels.
