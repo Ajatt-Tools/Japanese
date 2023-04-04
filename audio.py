@@ -107,16 +107,24 @@ def iter_tokens(src_text: str, split_morphemes: bool) -> Iterable[str | MecabPar
                     yield from mecab_translate(token)
 
 
+def iter_parsed_variants(token: MecabParsedToken):
+    yield token.headword
+    if token.katakana_reading:
+        yield token.katakana_reading
+        yield to_hiragana(token.katakana_reading)
+
+
 def search_audio(src_text: str, split_morphemes: bool) -> list[FileUrlData]:
     hits = []
     for part in dict.fromkeys(iter_tokens(src_text, split_morphemes)):
-        if isinstance(part, str):
-            hits.extend(aud_src_mgr.search_word(part))
-        else:
-            for variant in (part.headword, part.katakana_reading, to_hiragana(part.katakana_reading)):
+        if isinstance(part, MecabParsedToken):
+            for variant in iter_parsed_variants(part):
                 if files := tuple(aud_src_mgr.search_word(variant)):
                     hits.extend(files)
+                    # If found results, break because all further results will be duplicates.
                     break
+        elif isinstance(part, str):
+            hits.extend(aud_src_mgr.search_word(part))
     return hits
 
 
