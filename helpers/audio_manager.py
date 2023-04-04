@@ -332,18 +332,18 @@ class AudioSourceManager:
             try:
                 self._read_pronunciation_data(source)
             except AudioManagerException as ex:
-                print(f"Ignoring source {source.name}: {ex.describe_short()}.")
+                print(f"Ignoring audio source {source.name}: {ex.describe_short()}.")
                 errors.append(ex)
                 continue
             else:
                 sources.append(source)
-                print(f"Initialized source: {source.name}")
+                print(f"Initialized audio source: {source.name}")
         return InitResult(sources, errors)
 
     def _remove_old_cache_files(self):
         for file in os.scandir(user_files_dir()):
             if is_audio_cache_file(file) and file.path not in (source.cache_path for source in self._audio_sources):
-                print(f"Removing unused cache file: {file.name}")
+                print(f"Removing unused audio cache file: {file.name}")
                 os.remove(file)
 
     def _read_pronunciation_data(self, source: AudioSource):
