@@ -73,6 +73,80 @@ class AudioSourceConfig:
         return self.name and self.url
 
 
+class AudioManagerHttpClient(anki.httpclient.HttpClient):
+    # add some fake headers to convince sites we're not a bot.
+    headers = {
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.5",
+        "Accept-Encoding": "gzip, deflate, br",
+        "DNT": "1",
+        "Connection": "keep-alive",
+        "Upgrade-Insecure-Requests": "1",
+        "Sec-Fetch-Dest": "document",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-Site": "cross-site",
+        "Sec-Fetch-User": "?1",
+        "TE": "trailers",
+    }
+
+    def __init__(
+            self,
+            addon_config: SimpleNamespace,
+            progress_hook: anki.httpclient.ProgressCallback | None = None
+    ) -> None:
+        super().__init__(progress_hook)
+        self._audio_settings = addon_config.audio_settings
+
+    def get(self, url: str, headers: dict[str, str] = None):
+        # Mask the default get function in case it is called by mistake.
+        raise NotImplementedError()
+
+    def _get_with_timeout(self, url: str, timeout: int) -> requests.Response:
+        # Set headers
+        headers = self.headers.copy()
+        headers["User-Agent"] = self._agent_name()
+
+        # Set timeout
+        timeout = timeout or self.timeout
+
+        return self.session.get(
+            url, stream=True, headers=headers, timeout=timeout, verify=self.verify
+        )
+
+    def _get_with_retry(self, url: str, timeout: int, attempts: int) -> requests.Response:
+        for _attempt in range(min(max(0, attempts - 1), 99)):
+            try:
+                return self._get_with_timeout(url, timeout)
+            except requests.Timeout:
+                continue
+        # If other tries timed out.
+        return self._get_with_timeout(url, timeout)
+
+    def download(self, file: AudioSourceConfig | FileUrlData) -> bytes:
+        timeout = (
+            self._audio_settings.dictionary_download_timeout
+            if isinstance(file, AudioSourceConfig)
+            else self._audio_settings.audio_download_timeout
+        )
+        attempts = self._audio_settings.attempts
+
+        try:
+            response = self._get_with_retry(file.url, timeout, attempts)
+        except OSError as ex:
+            raise AudioManagerException(
+                file,
+                f'{file.url} download failed with {ex.__class__.__name__}',
+                exception=ex
+            )
+        if response.status_code != 200:
+            raise AudioManagerException(
+                file,
+                f'{file.url} download failed with return code {response.status_code}',
+                response=response
+            )
+        return self.stream_content(response)
+
+
 @dataclasses.dataclass
 class AudioSource(AudioSourceConfig):
     # current schema has three fields: "meta", "headwords", "files"
@@ -187,9 +261,9 @@ class AudioSource(AudioSourceConfig):
                 print(f"Reading local json audio source: {self.url}")
                 self.pronunciation_data = json.load(f)
 
-    def download_remote_json(self, client: anki.httpclient.HttpClient):
+    def download_remote_json(self, client: AudioManagerHttpClient):
         print(f"Downloading a remote audio source: {self.url}")
-        bytes_data = download(client, self)
+        bytes_data = client.download(self)
 
         try:
             self.pronunciation_data = json.loads(bytes_data)
@@ -234,37 +308,18 @@ def read_zip(zip_in: zipfile.ZipFile, file: AudioSource) -> bytes:
         )
 
 
-def download(client: anki.httpclient.HttpClient, file: AudioSource | FileUrlData) -> bytes:
-    try:
-        response = client.get(file.url)
-    except OSError as ex:
-        raise AudioManagerException(
-            file,
-            f'{file.url} download failed with {ex.__class__.__name__}',
-            exception=ex
-        )
-    if response.status_code != 200:
-        raise AudioManagerException(
-            file,
-            f'{file.url} download failed with return code {response.status_code}',
-            response=response
-        )
-    return client.stream_content(response)
-
-
 class AudioSourceManager:
     def __init__(self, config: SimpleNamespace):
         self._config = config
         self._audio_sources: list[AudioSource] = []
-        self._http_client = anki.httpclient.HttpClient()
-        self._http_client.timeout = self._config.download_timeout
+        self._http_client = AudioManagerHttpClient(self._config)
 
     def get_file(self, file: FileUrlData):
         if os.path.isfile(file.url):
             with open(file.url, 'rb') as f:
                 return f.read()
         else:
-            return download(self._http_client, file)
+            return self._http_client.download(file)
 
     def _set_sources(self, sources: list[AudioSource]):
         self._audio_sources = sources
