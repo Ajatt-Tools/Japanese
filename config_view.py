@@ -174,6 +174,23 @@ class ToolbarConfigView(ConfigViewBase):
 
 
 @final
+class AudioSettingsConfigView(ConfigViewBase):
+    _view_key = 'audio_settings'
+
+    @property
+    def dictionary_download_timeout(self) -> int:
+        return self['dictionary_download_timeout']
+
+    @property
+    def audio_download_timeout(self) -> int:
+        return self['audio_download_timeout']
+
+    @property
+    def attempts(self) -> int:
+        return self['attempts']
+
+
+@final
 class ConfigView(ConfigViewBase):
     def __init__(self):
         super().__init__()
@@ -181,6 +198,7 @@ class ConfigView(ConfigViewBase):
         self._pitch = PitchConfigView()
         self._context_menu = ContextMenuConfigView()
         self._toolbar = ToolbarConfigView()
+        self._audio_settings = AudioSettingsConfigView()
 
     def iter_profiles(self) -> Iterable[Profile]:
         for profile_dict in self['profiles']:
@@ -194,8 +212,8 @@ class ConfigView(ConfigViewBase):
             yield AudioSourceConfig(**source_dict)
 
     @property
-    def download_timeout(self) -> int:
-        return self['download_timeout']
+    def audio_settings(self):
+        return self._audio_settings
 
     @property
     def audio_sources(self):

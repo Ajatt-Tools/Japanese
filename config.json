@@ -3,7 +3,6 @@
   "regenerate_readings": false,
   "cache_lookups": 1024,
   "last_file_save_location": "",
-  "download_timeout": 20,
   "styles": {
     "class=\"overline\"": "style=\"text-decoration:overline;\"",
     "class=\"nopron\"": "style=\"color: royalblue;\"",
@@ -101,5 +100,10 @@
       "name": "NHK",
       "url": "https://github.com/Ajatt-Tools/nhk_pronunciations_index/releases/download/v1.0/NHK_extended.zip"
     }
-  ]
+  ],
+  "audio_settings": {
+    "dictionary_download_timeout": 30,
+    "audio_download_timeout": 6,
+    "attempts": 3
+  }
 }
