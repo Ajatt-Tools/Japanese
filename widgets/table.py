@@ -32,6 +32,7 @@ class ExpandingTableWidget(QTableWidget):
         self.setColumnCount(len(self._columns))
         self.setHorizontalHeaderLabels(self._columns)
         self.addDeleteSelectedRowsContextAction()
+        self.addCreateNewRowContextAction()
         self.addPasteContextAction()
         self.verticalHeader().setVisible(False)
         self.horizontalHeader().setStretchLastSection(True)
@@ -54,6 +55,12 @@ class ExpandingTableWidget(QTableWidget):
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.ActionsContextMenu)
         action = QAction("Delete selected rows", self)
         qconnect(action.triggered, self.deleteSelectedRows)
+        self.addAction(action)
+
+    def addCreateNewRowContextAction(self):
+        self.setContextMenuPolicy(Qt.ContextMenuPolicy.ActionsContextMenu)
+        action = QAction("Add a new empty row", self)
+        qconnect(action.triggered, self.addEmptyLastRow)
         self.addAction(action)
 
     def addPasteContextAction(self):
