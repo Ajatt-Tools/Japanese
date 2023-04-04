@@ -254,10 +254,10 @@ class AudioSourceManager:
         else:
             return download(self._http_client, file)
 
-    def set_sources(self, sources: list[AudioSource]):
+    def _set_sources(self, sources: list[AudioSource]):
         self._audio_sources = sources
 
-    def init_dictionaries(self) -> InitResult:
+    def _init_dictionaries(self) -> InitResult:
         sources, errors = [], []
         for source in [AudioSource(**source) for source in self._config.audio_sources]:
             if not source.enabled:
@@ -273,7 +273,7 @@ class AudioSourceManager:
                 print(f"Initialized source: {source.name}")
         return InitResult(sources, errors)
 
-    def remove_old_cache_files(self):
+    def _remove_old_cache_files(self):
         for file in os.scandir(user_files_dir()):
             if is_audio_cache_file(file) and file.path not in (source.cache_path for source in self._audio_sources):
                 print(f"Removing unused cache file: {file.name}")
@@ -307,9 +307,13 @@ def main():
     # Used for testing when Anki isn't running.
     with open(os.path.join(os.path.dirname(__file__), os.pardir, 'config.json')) as inf:
         cfg = SimpleNamespace(**json.load(inf))
+        cfg.audio_settings = SimpleNamespace(**cfg.audio_settings)  # type: ignore
+
+    def init_audio_dictionaries(self: AudioSourceManager):
+        self._set_sources(self._init_dictionaries().sources)
 
     aud_src_mgr = AudioSourceManager(cfg)
-    aud_src_mgr.set_sources(aud_src_mgr.init_dictionaries().sources)
+    init_audio_dictionaries(aud_src_mgr)
     for file in aud_src_mgr.search_word('原'):
         print(file)
 

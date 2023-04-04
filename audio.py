@@ -140,13 +140,13 @@ class AnkiAudioSourceManager(AudioSourceManager):
     def init_audio_dictionaries(self):
         QueryOp(
             parent=mw,
-            op=lambda collection: self.init_dictionaries(),
+            op=lambda collection: self._init_dictionaries(),
             success=lambda result: self._after_init(result),
         ).run_in_background()
 
     def _after_init(self, result: InitResult):
-        self.set_sources(result.sources)
-        self.remove_old_cache_files()
+        self._set_sources(result.sources)
+        self._remove_old_cache_files()
         if result.errors:
             show_warning('\n'.join(
                 f"Couldn't download audio source: {error.explanation}."
