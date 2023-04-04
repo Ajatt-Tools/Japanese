@@ -97,14 +97,10 @@ def download_tags_bg(hits: Collection[FileUrlData]):
     ).run_in_background()
 
 
-def iter_tokens(src_text: str, split_morphemes: bool) -> Iterable[str | MecabParsedToken]:
-    for part in html_to_text_line(src_text).strip().split():
-        yield part
-        for token in tokenize(part, counters=cfg.furigana.counters):
-            if isinstance(token, ParseableToken):
-                yield token
-                if split_morphemes:
-                    yield from mecab_translate(token)
+def iter_tokens(src_text: str) -> Iterable[ParseableToken]:
+    for token in tokenize(html_to_text_line(src_text), counters=cfg.furigana.counters):
+        if isinstance(token, ParseableToken):
+            yield token
 
 
 def iter_parsed_variants(token: MecabParsedToken):
@@ -114,17 +110,22 @@ def iter_parsed_variants(token: MecabParsedToken):
         yield to_hiragana(token.katakana_reading)
 
 
+def parse_and_search_audio(src_text: ParseableToken) -> Iterable[FileUrlData]:
+    for parsed in mecab_translate(src_text):
+        for variant in iter_parsed_variants(parsed):
+            if files := tuple(aud_src_mgr.search_word(variant)):
+                yield from files
+                # If found results, break because all further results will be duplicates.
+                break
+
+
 def search_audio(src_text: str, split_morphemes: bool) -> list[FileUrlData]:
     hits = []
-    for part in dict.fromkeys(iter_tokens(src_text, split_morphemes)):
-        if isinstance(part, MecabParsedToken):
-            for variant in iter_parsed_variants(part):
-                if files := tuple(aud_src_mgr.search_word(variant)):
-                    hits.extend(files)
-                    # If found results, break because all further results will be duplicates.
-                    break
-        elif isinstance(part, str):
-            hits.extend(aud_src_mgr.search_word(part))
+    for part in dict.fromkeys(iter_tokens(src_text)):
+        if files := tuple(aud_src_mgr.search_word(part)):
+            hits.extend(files)
+        elif split_morphemes:
+            hits.extend(parse_and_search_audio(part))
     return hits
 
 
