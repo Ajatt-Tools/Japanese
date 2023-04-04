@@ -29,12 +29,24 @@ def file_exists(file_path: str):
     )
 
 
-def filter_name(text: str) -> str:
+RE_FILENAME_PROHIBITED = re.compile(r'[\\\n\t\r#%&\[\]{}<>^*?/$!\'":@+`|=]+', flags=re.MULTILINE | re.IGNORECASE)
+MAX_LEN_BYTES = 120 - 4
+
+
+def cut_to_anki_size(text: str) -> str:
+    return text.encode('utf-8')[:MAX_LEN_BYTES].decode('utf-8', errors='ignore')
+
+
+def normalize_filename(text: str) -> str:
     """
     Since sources' names are used as filenames to store cache files on disk,
     ensure there are no questionable characters that some OSes may panic from.
     """
-    return re.sub(r'[\n\t\r#%&\[\]{}<>*?/$!\'":@+`|=]+', ' ', text, flags=re.MULTILINE).strip()
+    import unicodedata
+    text = cut_to_anki_size(text)
+    text = unicodedata.normalize('NFC', text)
+    text = re.sub(RE_FILENAME_PROHIBITED, '_', text)
+    return text.strip()
 
 
 FileInfo = NewType("FileInfo", dict[str, str])
@@ -79,7 +91,7 @@ class AudioSource(AudioSourceConfig):
             components.append(file_info['pitch_number'])
 
         desired_filename = '_'.join((word, *components, self.name,))
-        desired_filename = f'{filter_name(desired_filename)}{os.path.splitext(file_name)[-1]}'
+        desired_filename = f'{normalize_filename(desired_filename)}{os.path.splitext(file_name)[-1]}'
 
         return FileUrlData(
             url=os.path.join(self.media_dir, file_name),

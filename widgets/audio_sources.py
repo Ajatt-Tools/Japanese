@@ -9,10 +9,10 @@ from aqt.qt import *
 
 try:
     from .table import ExpandingTableWidget, CellContent, TableRow
-    from ..helpers.audio_manager import AudioSourceConfig, filter_name
+    from ..helpers.audio_manager import AudioSourceConfig, normalize_filename
 except ImportError:
     from table import ExpandingTableWidget, CellContent, TableRow
-    from helpers.audio_manager import AudioSourceConfig, filter_name
+    from helpers.audio_manager import AudioSourceConfig, normalize_filename
 
 
 class SourceEnableCheckbox(QCheckBox):
@@ -58,7 +58,7 @@ class AudioSourcesTable(ExpandingTableWidget):
         sources = {}
         for row in self.iterateRows():
             if all(row) and (row := pack_back(row)).is_valid:
-                row.name = filter_name(row.name)
+                row.name = normalize_filename(row.name)
                 while row.name in sources:
                     row.name += '(new)'
                 sources[row.name] = row
