@@ -323,11 +323,16 @@ class SettingsForm(QGroupBox):
         self.setCheckable(False)
         self._widgets = SimpleNamespace()
         self._add_widgets()
+        self._add_tooltips()
         self.setLayout(self._make_layout())
 
     def _add_widgets(self):
         """Subclasses add new widgets here."""
         self._widgets.__dict__.update(self._create_checkboxes())
+
+    def _add_tooltips(self):
+        """Subclasses add new tooltips here."""
+        pass
 
     def as_dict(self) -> dict[str, Union[bool, str, int]]:
         return as_config_dict(self._widgets.__dict__)
@@ -352,10 +357,24 @@ class BehaviorSettingsForm(SettingsForm):
     _title = "Behavior"
     _config = cfg
 
+    def _add_tooltips(self):
+        super()._add_tooltips()
+        self._widgets.generate_on_note_add.setToolTip(
+            "Trigger tasks when a new note is added."
+        )
+        self._widgets.regenerate_readings.setToolTip(
+            "The Bulk-add action will ignore already added readings, accents, etc."
+        )
+
 
 class ContextMenuSettingsForm(SettingsForm):
     _title = "Context menu"
     _config = cfg.context_menu
+
+    def _add_tooltips(self):
+        super()._add_tooltips()
+        for action in self._widgets.__dict__.values():
+            action.setToolTip("Show this action in the context menu.")
 
 
 class MultiColumnSettingsForm(SettingsForm):
@@ -417,6 +436,42 @@ class PitchSettingsForm(MultiColumnSettingsForm):
         self._widgets.lookup_shortcut = ShortCutGrabButton(initial_value=self._config.lookup_shortcut)
         self._widgets.blocklisted_words = WordsEdit(initial_values=self._config.blocklisted_words)
 
+    def _add_tooltips(self):
+        super()._add_tooltips()
+        self._widgets.output_hiragana.setToolTip(
+            "Print pitch accents using hiragana.\n"
+            "Normally katakana is used to print pitch accent."
+        )
+        self._widgets.kana_lookups.setToolTip(
+            "Attempt to look up a word using its kana reading\n"
+            "if there's no entry for its kanji form."
+        )
+        self._widgets.skip_numbers.setToolTip(
+            "Don't add pitch accents to numbers."
+        )
+        self._widgets.reading_separator.setToolTip(
+            "String used to separate multiple accents of a word."
+        )
+        self._widgets.word_separator.setToolTip(
+            "String used to separate multiple words."
+        )
+        self._widgets.blocklisted_words.setToolTip(
+            "Words that won't be looked up."
+        )
+        self._widgets.maximum_results.setToolTip(
+            "Maximum number of results to output.\n"
+            "Too many results are not informative and will bloat Anki cards."
+        )
+        self._widgets.discard_mode.setToolTip(
+            "Approach used when the number of results exceeds the maximum number of results.\n"
+            "Keep first — Output only the first accent.\n"
+            "Discard extra — Output the first few accents, no more than the maximum number.\n"
+            "Discard all — Output nothing."
+        )
+        self._widgets.lookup_shortcut.setToolTip(
+            "A keyboard shortcut for looking up selected text."
+        )
+
 
 class FuriganaSettingsForm(MultiColumnSettingsForm):
     _title = "Furigana Options"
@@ -433,6 +488,39 @@ class FuriganaSettingsForm(MultiColumnSettingsForm):
         self._widgets.blocklisted_words = WordsEdit(initial_values=self._config.blocklisted_words)
         self._widgets.mecab_only = WordsEdit(initial_values=self._config.mecab_only)
 
+    def _add_tooltips(self):
+        super()._add_tooltips()
+        self._widgets.skip_numbers.setToolTip(
+            "Don't add furigana to numbers."
+        )
+        self._widgets.prefer_literal_pronunciation.setToolTip(
+            "Print furigana in a way that shows a word's literal pronunciation."
+        )
+        self._widgets.reading_separator.setToolTip(
+            "String used to separate multiple readings of a word.\n"
+            "Note that to show more than one reading over a word\n"
+            "you need to import a compatible Note Type,\n"
+            "like the one suggested by Ajatt-Tools."
+        )
+        self._widgets.blocklisted_words.setToolTip(
+            "Words that won't be looked up.\n"
+            "Furigana won't be added."
+        )
+        self._widgets.mecab_only.setToolTip(
+            "Words that won't be looked up in the bundled dictionary.\n"
+            "However, they will still be looked up using Mecab."
+        )
+        self._widgets.maximum_results.setToolTip(
+            "Maximum number of results to output.\n"
+            "Too many results are not informative and will bloat Anki cards."
+        )
+        self._widgets.discard_mode.setToolTip(
+            "Approach used when the number of results exceeds the maximum number of results.\n"
+            "Keep first — Output only the first accent.\n"
+            "Discard extra — Output the first few accents, no more than the maximum number.\n"
+            "Discard all — Output nothing."
+        )
+
 
 class AudioSettingsForm(MultiColumnSettingsForm):
     _title = "Audio settings"
@@ -448,6 +536,19 @@ class AudioSettingsForm(MultiColumnSettingsForm):
         )
         self._widgets.attempts = NarrowSpinBox(
             initial_value=self._config.attempts
+        )
+
+    def _add_tooltips(self):
+        super()._add_tooltips()
+        self._widgets.dictionary_download_timeout.setToolTip(
+            "Download timeout in seconds."
+        )
+        self._widgets.audio_download_timeout.setToolTip(
+            "Download timeout in seconds."
+        )
+        self._widgets.attempts.setToolTip(
+            "Number of attempts before giving up.\n"
+            "Applies to both dictionary downloads and audio downloads."
         )
 
 
