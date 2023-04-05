@@ -385,9 +385,11 @@ class MultiColumnSettingsForm(SettingsForm):
 
 
 class NarrowSpinBox(QSpinBox):
+    _default_allowed_range = (1, 99)
+
     def __init__(self, initial_value: int = None, *args):
         super().__init__(*args)
-        self.setRange(1, 99)
+        self.setRange(*self._default_allowed_range)
         self.setMaximumWidth(NARROW_WIDGET_MAX_WIDTH)
         if initial_value:
             self.setValue(initial_value)
