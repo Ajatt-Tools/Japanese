@@ -434,6 +434,23 @@ class FuriganaSettingsForm(MultiColumnSettingsForm):
         self._widgets.mecab_only = WordsEdit(initial_values=self._config.mecab_only)
 
 
+class AudioSettingsForm(MultiColumnSettingsForm):
+    _title = "Audio settings"
+    _config = cfg.audio_settings
+
+    def _add_widgets(self):
+        super()._add_widgets()
+        self._widgets.dictionary_download_timeout = NarrowSpinBox(
+            initial_value=self._config.dictionary_download_timeout
+        )
+        self._widgets.audio_download_timeout = NarrowSpinBox(
+            initial_value=self._config.audio_download_timeout
+        )
+        self._widgets.attempts = NarrowSpinBox(
+            initial_value=self._config.attempts
+        )
+
+
 class ToolbarButtonSettingsForm(QGroupBox):
     def __init__(self, *args):
         super().__init__(*args)
@@ -514,6 +531,7 @@ class SettingsDialog(QDialog):
         # Audio tab
         self._audio_profiles_edit = AudioProfilesEdit()
         self._audio_sources_table = AudioSourcesTable().populate(cfg.iter_audio_sources())
+        self._audio_settings = AudioSettingsForm()
 
         # Overrides tab
         self._accents_override = PitchOverrideWidget(self, file_path=UserDb.accent_database)
@@ -563,6 +581,7 @@ class SettingsDialog(QDialog):
         tab.setLayout(layout := QVBoxLayout())
         layout.addWidget(self._audio_profiles_edit)
         layout.addWidget(self._audio_sources_table)
+        layout.addWidget(self._audio_settings)
         fix_default_anki_style(self._audio_sources_table)
 
         self._tabs.addTab(tab, "Audio")
@@ -604,6 +623,7 @@ class SettingsDialog(QDialog):
             dataclasses.asdict(source)
             for source in self._audio_sources_table.iterateConfigs()
         ]
+        cfg['audio_settings'].update(self._audio_settings.as_dict())
         # Write the new data to disk
         cfg.write_config()
         self._accents_override.save_to_disk()
