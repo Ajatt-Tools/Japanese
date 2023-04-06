@@ -497,10 +497,10 @@ class FuriganaSettingsForm(MultiColumnSettingsForm):
             "Print furigana in a way that shows a word's literal pronunciation."
         )
         self._widgets.reading_separator.setToolTip(
-            "String used to separate multiple readings of a word.\n"
+            "String used to separate multiple readings of a word.\n\n"
             "Note that to show more than one reading over a word\n"
             "you need to import a compatible Note Type,\n"
-            "like the one suggested by Ajatt-Tools."
+            "like the one provided by Ajatt-Tools."
         )
         self._widgets.blocklisted_words.setToolTip(
             "Words that won't be looked up.\n"
