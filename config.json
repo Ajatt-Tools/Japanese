@@ -104,6 +104,6 @@
   "audio_settings": {
     "dictionary_download_timeout": 30,
     "audio_download_timeout": 6,
-    "attempts": 3
+    "attempts": 4
   }
 }
