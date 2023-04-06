@@ -15,10 +15,10 @@ import anki.httpclient
 import requests
 from requests import RequestException
 
-if __name__ == '__main__':
-    from file_ops import user_files_dir
-else:
+try:
     from .file_ops import user_files_dir
+except ImportError:
+    from file_ops import user_files_dir
 
 
 def file_exists(file_path: str):

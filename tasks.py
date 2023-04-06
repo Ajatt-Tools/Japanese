@@ -7,12 +7,12 @@ from typing import Optional, Callable
 from anki.utils import strip_html_media
 from aqt import mw
 
-from .helpers.audio_manager import FileUrlData
 from .audio import search_audio, format_audio_tags, download_tags_bg
 from .config_view import config_view as cfg
 from .helpers import *
 from .helpers.hooks import collection_will_add_note
 from .helpers.profiles import Profile, ProfileFurigana, PitchOutputFormat, ProfilePitch, ProfileAudio
+from .helpers.unique_files import ensure_unique_files
 from .reading import format_pronunciations, get_pronunciations, generate_furigana
 
 
@@ -76,14 +76,10 @@ class AddPitch(DoTask, task_type=ProfilePitch):
         )
 
 
-def unique_files(files: list[FileUrlData]):
-    return {item.desired_filename: item for item in files}.values()
-
-
 class AddAudio(DoTask, task_type=ProfileAudio):
     @do_not_modify_destination_if_have_nothing_to_add
     def run(self, src_text: str):
-        search_results = list(unique_files(search_audio(src_text, split_morphemes=self._task.split_morphemes)))
+        search_results = list(ensure_unique_files(search_audio(src_text, split_morphemes=self._task.split_morphemes)))
         download_tags_bg(search_results)
         return format_audio_tags(search_results)
 
