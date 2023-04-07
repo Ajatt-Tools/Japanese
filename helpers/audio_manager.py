@@ -9,7 +9,7 @@ import pickle
 import re
 import zipfile
 from types import SimpleNamespace
-from typing import Optional, NewType, NamedTuple, Iterable
+from typing import Optional, NewType, NamedTuple, Iterable, Union
 
 import anki.httpclient
 import requests
@@ -92,7 +92,7 @@ class AudioManagerHttpClient(anki.httpclient.HttpClient):
     def __init__(
             self,
             addon_config: SimpleNamespace,
-            progress_hook: anki.httpclient.ProgressCallback | None = None
+            progress_hook: Optional[anki.httpclient.ProgressCallback] = None
     ) -> None:
         super().__init__(progress_hook)
         self._audio_settings = addon_config.audio_settings
@@ -122,7 +122,7 @@ class AudioManagerHttpClient(anki.httpclient.HttpClient):
         # If other tries timed out.
         return self._get_with_timeout(url, timeout)
 
-    def download(self, file: AudioSourceConfig | FileUrlData) -> bytes:
+    def download(self, file: Union[AudioSourceConfig, FileUrlData]) -> bytes:
         timeout = (
             self._audio_settings.dictionary_download_timeout
             if isinstance(file, AudioSourceConfig)
@@ -274,10 +274,10 @@ class AudioSource(AudioSourceConfig):
 
 @dataclasses.dataclass
 class AudioManagerException(RequestException):
-    file: AudioSource | FileUrlData
+    file: Union[AudioSource, FileUrlData]
     explanation: str
-    response: requests.Response | None = None
-    exception: Exception | None = None
+    response: Optional[requests.Response] = None
+    exception: Optional[Exception] = None
 
     def describe_short(self) -> str:
         return str(

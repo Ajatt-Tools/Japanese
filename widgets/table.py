@@ -3,7 +3,7 @@
 
 import os.path
 import re
-from typing import Collection, Iterable, NewType, NamedTuple
+from typing import Collection, Iterable, NewType, NamedTuple, Union, Optional
 
 from aqt.qt import *
 from aqt.utils import showInfo
@@ -19,7 +19,7 @@ def is_ctrl_v_pressed(event: QKeyEvent) -> bool:
 
 
 UNUSED = -1
-CellContent = NewType("CellContent", Union[QTableWidgetItem | QWidget])
+CellContent = NewType("CellContent", Union[QTableWidgetItem, QWidget])
 TableRow = NewType("TableRow", Collection[CellContent])
 
 
@@ -109,12 +109,12 @@ class ExpandingTableWidget(QTableWidget):
         elif is_empty_not_last_row(row_cells):
             self.removeRow(row_n)
 
-    def addRow(self, cells: Iterable[str | QWidget], last: bool = False):
+    def addRow(self, cells: Iterable[Union[str, QWidget]], last: bool = False):
         self.insertRow(row_n := max(0, self.rowCount() if last else self.rowCount() - 1))
         for col_n, cell_content in enumerate(cells):
             self.insertCellContent(row_n, col_n, cell_content)
 
-    def insertCellContent(self, row_n: int, col_n: int, content: str | QWidget):
+    def insertCellContent(self, row_n: int, col_n: int, content: Union[str, QWidget]):
         """
         Depending on the type of content, either set a new item, or set a cell widget.
         """
@@ -128,7 +128,7 @@ class ExpandingTableWidget(QTableWidget):
     def addEmptyLastRow(self):
         return self.addRow(cells=('' for _column in self._columns), last=True)
 
-    def getCellContent(self, row_n: int, col_n: int) -> CellContent | None:
+    def getCellContent(self, row_n: int, col_n: int) -> Optional[CellContent]:
         """
         Return an item inside the cell if there is an item, or a widget if it has been set.
         """
