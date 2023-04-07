@@ -120,7 +120,10 @@ def parse_and_search_audio(src_text: ParseableToken) -> Iterable[FileUrlData]:
 
 
 def search_audio(src_text: str, split_morphemes: bool) -> list[FileUrlData]:
-    hits = []
+    src_text = html_to_text_line(src_text)
+    if hits := list(aud_src_mgr.search_word(src_text)):
+        # If full text search succeeded, exit.
+        return hits
     for part in dict.fromkeys(iter_tokens(src_text)):
         if files := tuple(aud_src_mgr.search_word(part)):
             hits.extend(files)
