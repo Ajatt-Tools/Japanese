@@ -6,6 +6,7 @@ import io
 import json
 import os
 import pickle
+import posixpath
 import re
 import zipfile
 from types import SimpleNamespace
@@ -168,7 +169,7 @@ class AudioSource(AudioSourceConfig):
         desired_filename = f'{normalize_filename(desired_filename)}{os.path.splitext(file_name)[-1]}'
 
         return FileUrlData(
-            url=os.path.join(self.media_dir, file_name),
+            url=self.join(self.media_dir, file_name),
             desired_filename=desired_filename,
         )
 
@@ -193,7 +194,16 @@ class AudioSource(AudioSourceConfig):
         try:
             return self.pronunciation_data['meta']['media_dir_abs']
         except KeyError:
-            return os.path.join(os.path.dirname(self.url), self.rel_media_dir)
+            return self.join(os.path.dirname(self.url), self.rel_media_dir)
+
+    def join(self, *args):
+        """ Join multiple paths. """
+        if self.is_local:
+            # Local paths are platform-dependent.
+            return os.path.join(*args)
+        else:
+            # URLs are always joined with '/'.
+            return posixpath.join(*args)
 
     @property
     def rel_media_dir(self):
