@@ -3,15 +3,17 @@
 
 import os.path
 import re
-from typing import Collection, Iterable, NewType, NamedTuple, Union, Optional
+from typing import Collection, Iterable, NewType, NamedTuple, Optional
 
 from aqt.qt import *
 from aqt.utils import showInfo
 
 try:
+    from ..helpers import ui_translate
     from ..database.consts import NO_ACCENT
 except ImportError:
     from database.consts import NO_ACCENT
+    from helpers import ui_translate
 
 
 def is_ctrl_v_pressed(event: QKeyEvent) -> bool:
@@ -188,7 +190,7 @@ class PitchAccentTableRow(NamedTuple):
 
 
 class PitchOverrideTable(ExpandingTableWidget):
-    _columns = tuple(s.capitalize() for s in PitchAccentTableRow._fields)
+    _columns = tuple(ui_translate(s) for s in PitchAccentTableRow._fields)
     _sep_regex = re.compile(r"[ \r\t\n.;。、；・]+", flags=re.IGNORECASE | re.MULTILINE)
     _column_sep = '\t'
 
