@@ -9,7 +9,7 @@ import anki.collection
 from anki.utils import html_to_text_line
 from aqt import gui_hooks, mw
 from aqt.operations import QueryOp
-from aqt.utils import tooltip, show_warning
+from aqt.utils import tooltip, showWarning
 
 from .config_view import config_view as cfg
 from .helpers.audio_manager import AudioSourceManager, FileUrlData, AudioManagerException, InitResult
@@ -151,7 +151,7 @@ class AnkiAudioSourceManager(AudioSourceManager):
         self._set_sources(result.sources)
         self._remove_old_cache_files()
         if result.errors:
-            show_warning('\n'.join(
+            showWarning('\n'.join(
                 f"Couldn't download audio source: {error.explanation}."
                 for error in result.errors
             ))
