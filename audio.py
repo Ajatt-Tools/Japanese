@@ -2,6 +2,7 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import concurrent.futures
+import io
 from concurrent.futures import Future
 from typing import Collection, NamedTuple, Iterable
 
@@ -45,21 +46,17 @@ def download_tags(hits: Iterable[FileUrlData]) -> list[Future]:
 
 
 def report_results(successes: list[DownloadedData], fails: list[AudioManagerException]):
-    if not successes and not fails:
-        return
-
-    txt = (
-            f"<b>Added {len(successes)} files to the collection.</b><ol>"
-            + ''.join(f"<li>{file.desired_filename}</li>" for file in successes)
-            + "</ol>"
-    )
+    txt = io.StringIO()
+    if successes:
+        txt.write(f"<b>Added {len(successes)} files to the collection.</b><ol>")
+        txt.write(''.join(f"<li>{file.desired_filename}</li>" for file in successes))
+        txt.write("</ol>")
     if fails:
-        txt += (
-                f"<b>Failed {len(fails)} files.</b><ol>"
-                + ''.join(f"<li>{file.file.desired_filename}: {file.describe_short()}</li>" for file in fails)
-                + "</ol>"
-        )
-    return tooltip(txt, period=7000)
+        txt.write(f"<b>Failed {len(fails)} files.</b><ol>")
+        txt.write(''.join(f"<li>{fail.file.desired_filename}: {fail.describe_short()}</li>" for fail in fails))
+        txt.write("</ol>")
+    if txt := txt.getvalue():
+        return tooltip(txt, period=7000, y_offset=80 + 18 * (len(successes) + len(fails)))
 
 
 def save_files(futures: Collection[Future]):
