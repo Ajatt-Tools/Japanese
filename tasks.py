@@ -2,7 +2,7 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import functools
-from typing import Optional, Callable
+from typing import Optional, Callable, Dict
 
 from anki.utils import strip_html_media
 from aqt import mw

@@ -243,7 +243,7 @@ def format_hiragana_readings(readings: list[str]):
         return to_hiragana(readings[0])
 
 
-def discard_extra_readings(readings: Sequence, max_results: int, discard_mode: ReadingsDiscardMode):
+def discard_extra_readings(readings: Sequence[str], max_results: int, discard_mode: ReadingsDiscardMode):
     """ Depending on the settings, if there are too many readings, discard some or all but the first. """
     if max_results <= 0 or len(readings) <= max_results:
         return readings
