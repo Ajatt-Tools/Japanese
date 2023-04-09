@@ -57,6 +57,8 @@ FileList = NewType("FileList", list[str])
 class FileUrlData(NamedTuple):
     url: str
     desired_filename: str
+    reading: str
+    pitch_number: str
 
 
 def is_audio_cache_file(file: os.DirEntry):
@@ -171,6 +173,8 @@ class AudioSource(AudioSourceConfig):
         return FileUrlData(
             url=self.join(self.media_dir, file_name),
             desired_filename=desired_filename,
+            reading=file_info.get('kana_reading', ''),
+            pitch_number=file_info.get('pitch_number', '?')
         )
 
     @property
