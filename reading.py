@@ -154,6 +154,16 @@ def get_notation(entry: FormattedEntry, mode: PitchOutputFormat) -> str:
     raise Exception("Unreachable.")
 
 
+def entries_to_html(entries: Sequence[FormattedEntry], output_format: PitchOutputFormat):
+    """
+    Convert entries to HTML, sort and remove duplicates.
+    """
+    entries = sorted(entries, key=lambda entry: (entry.katakana_reading, entry.pitch_number))
+    entries = dict.fromkeys(get_notation(entry, output_format) for entry in entries)
+    entries = discard_extra_readings(entries, cfg.pitch_accent.maximum_results, cfg.pitch_accent.discard_mode)
+    return entries
+
+
 def format_pronunciations(
         pronunciations: AccentDict,
         output_format: PitchOutputFormat = PitchOutputFormat.html,
@@ -163,9 +173,7 @@ def format_pronunciations(
 ) -> str:
     ordered_dict = OrderedDict()
     for word, entries in pronunciations.items():
-        entries = list(dict.fromkeys(get_notation(entry, output_format) for entry in entries).keys())
-        entries = discard_extra_readings(entries, cfg.pitch_accent.maximum_results, cfg.pitch_accent.discard_mode)
-        if entries:
+        if entries := entries_to_html(entries, output_format):
             ordered_dict[word] = sep_single.join(entries)
 
     # expr_sep is used to separate entries on lookup
