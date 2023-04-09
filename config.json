@@ -11,24 +11,6 @@
   },
   "profiles": [
     {
-      "name": "Add pitch accent html",
-      "note_type": "japanese",
-      "source": "VocabKanji",
-      "destination": "VocabPitchPattern",
-      "mode": "pitch",
-      "output_format": "html",
-      "split_morphemes": false
-    },
-    {
-      "name": "Add pitch accent number",
-      "note_type": "japanese",
-      "source": "VocabKanji",
-      "destination": "VocabPitchNum",
-      "mode": "pitch",
-      "output_format": "number",
-      "split_morphemes": false
-    },
-    {
       "name": "Add furigana for sentence",
       "note_type": "japanese",
       "source": "SentKanji",
@@ -43,6 +25,15 @@
       "destination": "VocabFurigana",
       "mode": "furigana",
       "split_morphemes": false
+    },
+    {
+      "name": "Add pitch accent for word",
+      "note_type": "japanese",
+      "source": "VocabKanji",
+      "destination": "VocabPitchPattern",
+      "mode": "pitch",
+      "split_morphemes": false,
+      "output_format": "html_and_number"
     },
     {
       "name": "Add audio for word",
