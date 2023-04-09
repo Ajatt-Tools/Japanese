@@ -17,10 +17,10 @@ except ImportError:
 
 class SourceEnableCheckbox(QCheckBox):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)  # type: ignore
         self.setStyleSheet("""
         QCheckBox {
-            padding: 10px;
+            margin: 0 auto;
         }
         """)
 
@@ -33,7 +33,9 @@ class AudioSourcesTable(ExpandingTableWidget):
 
     def __init__(self, *args):
         super().__init__(*args)
+        # Override the parent class's section resize modes for some columns.
         self.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
+        self.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
 
     def isCellFilled(self, cell: CellContent) -> bool:
         # A checked checkbox is considered filled,
