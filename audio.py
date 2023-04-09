@@ -107,10 +107,20 @@ def iter_parsed_variants(token: MecabParsedToken):
         yield to_hiragana(token.katakana_reading)
 
 
+def search_word_sorted(src_text: str):
+    """
+    Search word and sort the results according to reading and pitch number to ensure determined order of entries.
+    """
+    return sorted(
+        aud_src_mgr.search_word(src_text),
+        key=lambda info: (info.reading, info.pitch_number)
+    )
+
+
 def parse_and_search_audio(src_text: ParseableToken) -> Iterable[FileUrlData]:
     for parsed in mecab_translate(src_text):
         for variant in iter_parsed_variants(parsed):
-            if files := tuple(aud_src_mgr.search_word(variant)):
+            if files := search_word_sorted(variant):
                 yield from files
                 # If found results, break because all further results will be duplicates.
                 break
@@ -118,11 +128,11 @@ def parse_and_search_audio(src_text: ParseableToken) -> Iterable[FileUrlData]:
 
 def search_audio(src_text: str, split_morphemes: bool) -> list[FileUrlData]:
     src_text = html_to_text_line(src_text)
-    if hits := list(aud_src_mgr.search_word(src_text)):
+    if hits := search_word_sorted(src_text):
         # If full text search succeeded, exit.
         return hits
     for part in dict.fromkeys(iter_tokens(src_text)):
-        if files := tuple(aud_src_mgr.search_word(part)):
+        if files := search_word_sorted(part):
             hits.extend(files)
         elif split_morphemes:
             hits.extend(parse_and_search_audio(part))
