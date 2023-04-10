@@ -456,7 +456,7 @@ class PitchSettingsForm(MultiColumnSettingsForm):
             "String used to separate multiple words."
         )
         self._widgets.blocklisted_words.setToolTip(
-            "Words that won't be looked up."
+            "A comma-separated list of words that won't be looked up."
         )
         self._widgets.maximum_results.setToolTip(
             "Maximum number of results to output.\n"
@@ -503,11 +503,11 @@ class FuriganaSettingsForm(MultiColumnSettingsForm):
             "like the one provided by Ajatt-Tools."
         )
         self._widgets.blocklisted_words.setToolTip(
-            "Words that won't be looked up.\n"
+            "A comma-separated list of words that won't be looked up.\n"
             "Furigana won't be added."
         )
         self._widgets.mecab_only.setToolTip(
-            "Words that won't be looked up in the bundled dictionary.\n"
+            "A comma-separted list of words that won't be looked up in the bundled dictionary.\n"
             "However, they will still be looked up using Mecab."
         )
         self._widgets.maximum_results.setToolTip(
