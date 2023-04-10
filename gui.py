@@ -21,7 +21,7 @@ from .reading import acc_dict
 from .widgets.anki_style import fix_default_anki_style
 from .widgets.audio_sources import AudioSourcesTable
 from .widgets.enum_selector import EnumSelectCombo
-from .widgets.pitch_override import PitchOverrideWidget
+from .widgets.pitch_override_widget import PitchOverrideWidget
 
 EDIT_MIN_WIDTH = 100
 NARROW_WIDGET_MAX_WIDTH = 64

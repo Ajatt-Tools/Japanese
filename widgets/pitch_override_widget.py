@@ -7,7 +7,7 @@ from aqt.qt import *
 from aqt.utils import tooltip
 
 from .anki_style import fix_default_anki_style
-from .table import PitchOverrideTable
+from .pitch_override_table import PitchOverrideTable
 from ..config_view import config_view as cfg
 
 
