@@ -33,9 +33,28 @@ class AudioSourcesTable(ExpandingTableWidget):
 
     def __init__(self, *args):
         super().__init__(*args)
+        self.addMoveRowContextActions()
+
         # Override the parent class's section resize modes for some columns.
         self.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
         self.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
+
+    def addMoveRowContextActions(self):
+        self.setContextMenuPolicy(Qt.ContextMenuPolicy.ActionsContextMenu)
+
+        def move_current_row(offset: int):
+            current_row = self.currentRow()
+            current_source_copy = pack_back(self.getRowCellContents(current_row))
+            self.removeRow(current_row)
+            self.addSource(current_source_copy, index=max(0, min(current_row + offset, self.rowCount() - 1)))
+
+        action = QAction("Move row down", self)
+        qconnect(action.triggered, lambda: move_current_row(1))
+        self.addAction(action)
+
+        action = QAction("Move row up", self)
+        qconnect(action.triggered, lambda: move_current_row(-1))
+        self.addAction(action)
 
     def isCellFilled(self, cell: CellContent) -> bool:
         # A checked checkbox is considered filled,
