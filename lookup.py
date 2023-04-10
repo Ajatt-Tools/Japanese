@@ -95,7 +95,8 @@ class ViewPitchAccentsDialog(QDialog):
             self._pronunciations,
             sep_single='、',
             sep_multi='<br>',
-            expr_sep='：'
+            expr_sep='：',
+            max_results=99,
         ))
 
     def lookup(self, search: str):
