@@ -57,8 +57,8 @@ FileList = NewType("FileList", list[str])
 class FileUrlData(NamedTuple):
     url: str
     desired_filename: str
-    reading: str
-    pitch_number: str
+    reading: str = ""
+    pitch_number: str = "?"
 
 
 def is_audio_cache_file(file: os.DirEntry):
