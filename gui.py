@@ -550,6 +550,9 @@ class AudioSettingsForm(MultiColumnSettingsForm):
             "Number of attempts before giving up.\n"
             "Applies to both dictionary downloads and audio downloads."
         )
+        self._widgets.ignore_inflections.setToolTip(
+            "If enabled, audio recordings of inflected readings won't be added."
+        )
 
 
 class ToolbarButtonSettingsForm(QGroupBox):

@@ -189,6 +189,10 @@ class AudioSettingsConfigView(ConfigViewBase):
     def attempts(self) -> int:
         return self['attempts']
 
+    @property
+    def ignore_inflections(self) -> bool:
+        return bool(self['ignore_inflections'])
+
 
 @final
 class ConfigView(ConfigViewBase):
