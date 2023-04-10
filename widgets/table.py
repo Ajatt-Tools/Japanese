@@ -63,15 +63,15 @@ class ExpandingTableWidget(QTableWidget):
         self.addAction(action)
 
     def deleteSelectedRows(self):
-        for index in self.selectedIndexes():
-            self.removeRow(index.row())
+        for row_n in reversed(sorted(index.row() for index in self.selectedIndexes())):
+            self.removeRow(row_n)
 
-    def removeRow(self, row: int) -> None:
+    def removeRow(self, del_row_n: int) -> None:
         """
         The table never stays empty. Empty rows are added at the end if needed.
         """
-        super().removeRow(deleted_row := self.currentRow())
-        if self.rowCount() < 1 or deleted_row == self.rowCount():
+        super().removeRow(del_row_n)
+        if self.rowCount() < 1 or del_row_n == self.rowCount():
             self.addEmptyLastRow()
 
     def isCellFilled(self, cell: CellContent) -> bool:
