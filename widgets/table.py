@@ -102,8 +102,11 @@ class ExpandingTableWidget(QTableWidget):
         elif is_empty_not_last_row(row_cells):
             self.removeRow(row_n)
 
-    def addRow(self, cells: Iterable[Union[str, QWidget]], last: bool = False):
-        self.insertRow(row_n := max(0, self.rowCount() if last else self.rowCount() - 1))
+    def addRow(self, cells: Iterable[Union[str, QWidget]], index: int = None):
+        if index is None:
+            # Insert before the last row, since the last row is always an empty row for new data.
+            index = self.rowCount() - 1
+        self.insertRow(row_n := max(0, index))
         for col_n, cell_content in enumerate(cells):
             self.insertCellContent(row_n, col_n, cell_content)
 
@@ -119,7 +122,7 @@ class ExpandingTableWidget(QTableWidget):
             raise ValueError("Invalid parameter passed.")
 
     def addEmptyLastRow(self):
-        return self.addRow(cells=('' for _column in self._columns), last=True)
+        return self.addRow(cells=('' for _column in self._columns), index=self.rowCount())
 
     def getCellContent(self, row_n: int, col_n: int) -> Optional[CellContent]:
         """

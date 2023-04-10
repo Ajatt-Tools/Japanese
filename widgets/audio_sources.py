@@ -42,8 +42,8 @@ class AudioSourcesTable(ExpandingTableWidget):
         # so the user has to uncheck it to trigger an automatic row deletion.
         return isinstance(cell, QCheckBox) and cell.isChecked() or super().isCellFilled(cell)
 
-    def addSource(self, source: AudioSourceConfig, last: bool = False):
-        self.addRow((checkbox := SourceEnableCheckbox(), source.name, source.url,), last=last)
+    def addSource(self, source: AudioSourceConfig, index: int = None):
+        self.addRow((checkbox := SourceEnableCheckbox(), source.name, source.url,), index=index)
         # The checkbox widget has to notify the table widget when its state changes.
         # Otherwise, the table will not automatically add/remove rows.
         qconnect(checkbox.stateChanged, lambda checked: self.onCellChanged(self.currentRow()))
@@ -51,7 +51,7 @@ class AudioSourcesTable(ExpandingTableWidget):
 
     def addEmptyLastRow(self):
         """ Redefine this method. """
-        return self.addSource(AudioSourceConfig(True, "", "", ), last=True)
+        return self.addSource(AudioSourceConfig(True, "", "", ), index=self.rowCount())
 
     def iterateConfigs(self) -> Iterable[AudioSourceConfig]:
         """
