@@ -383,6 +383,8 @@ class AudioSourceManager:
                     if self._config.audio_settings.ignore_inflections and is_inflected(word, file.reading):
                         continue
                     yield file
+                if self._config.audio_settings.stop_if_one_source_has_results:
+                    break
 
 
 # Entry point

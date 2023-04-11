@@ -193,6 +193,9 @@ class AudioSettingsConfigView(ConfigViewBase):
     def ignore_inflections(self) -> bool:
         return bool(self['ignore_inflections'])
 
+    @property
+    def stop_if_one_source_has_results(self) -> bool:
+        return bool(self['stop_if_one_source_has_results'])
 
 @final
 class ConfigView(ConfigViewBase):

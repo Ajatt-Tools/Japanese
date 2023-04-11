@@ -553,6 +553,10 @@ class AudioSettingsForm(MultiColumnSettingsForm):
         self._widgets.ignore_inflections.setToolTip(
             "If enabled, audio recordings of inflected readings won't be added."
         )
+        self._widgets.stop_if_one_source_has_results.setToolTip(
+            "If enabled, stop searching after audio files were found in at least one source.\n"
+            "The order of sources in the table matters."
+        )
 
 
 class ToolbarButtonSettingsForm(QGroupBox):
