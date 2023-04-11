@@ -27,14 +27,14 @@ class DownloadedData(NamedTuple):
     data: bytes
 
 
-def download_tag(audio_file: FileUrlData):
+def download_tag(audio_file: FileUrlData) -> DownloadedData:
     return DownloadedData(
         audio_file.desired_filename,
         aud_src_mgr.get_file(audio_file),
     )
 
 
-def download_tags(hits: Iterable[FileUrlData]) -> list[Future]:
+def download_tags(hits: Iterable[FileUrlData]) -> list[Future[DownloadedData]]:
     """ Download audio files from a remote. """
 
     futures, results = [], []
@@ -61,11 +61,11 @@ def report_results(successes: list[DownloadedData], fails: list[AudioManagerExce
         return tooltip(txt, period=7000, y_offset=80 + 18 * (len(successes) + len(fails)))
 
 
-def save_files(futures: Collection[Future]):
+def save_files(futures: Collection[Future[DownloadedData]]):
     successes, fails = [], []
     for future in futures:
         try:
-            result: DownloadedData = future.result()
+            result = future.result()
         except AudioManagerException as ex:
             fails.append(ex)
         else:

@@ -326,7 +326,7 @@ class AudioSourceManager:
         self._audio_sources: list[AudioSource] = []
         self._http_client = AudioManagerHttpClient(self._config)
 
-    def get_file(self, file: FileUrlData):
+    def get_file(self, file: FileUrlData) -> bytes:
         if os.path.isfile(file.url):
             with open(file.url, 'rb') as f:
                 return f.read()
