@@ -77,6 +77,10 @@ class AudioSourceConfig:
     def is_valid(self) -> str:
         return self.name and self.url
 
+    @property
+    def cache_path(self):
+        return os.path.join(user_files_dir(), f"audio_source_{self.name}.pickle")
+
 
 class AudioManagerHttpClient(anki.httpclient.HttpClient):
     # add some fake headers to convince sites we're not a bot.
@@ -178,10 +182,6 @@ class AudioSource(AudioSourceConfig):
             reading=file_info.get('kana_reading', ''),
             pitch_number=file_info.get('pitch_number', '?')
         )
-
-    @property
-    def cache_path(self):
-        return os.path.join(user_files_dir(), f"audio_source_{self.name}.pickle")
 
     def raise_if_not_ready(self):
         if not self.is_ready:
