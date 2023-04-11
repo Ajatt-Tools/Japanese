@@ -63,10 +63,6 @@ class FileUrlData(NamedTuple):
     pitch_number: str = "?"
 
 
-def is_audio_cache_file(file: os.DirEntry):
-    return file.name.startswith("audio_source_") and file.name.endswith(".pickle")
-
-
 @dataclasses.dataclass
 class AudioSourceConfig:
     enabled: bool
@@ -355,12 +351,6 @@ class AudioSourceManager:
                 sources.append(source)
                 print(f"Initialized audio source: {source.name}")
         return InitResult(sources, errors)
-
-    def _remove_old_cache_files(self):
-        for file in os.scandir(user_files_dir()):
-            if is_audio_cache_file(file) and file.path not in (source.cache_path for source in self._audio_sources):
-                print(f"Removing unused audio cache file: {file.name}")
-                os.remove(file)
 
     def _read_pronunciation_data(self, source: AudioSource):
         if source.cache_exists:

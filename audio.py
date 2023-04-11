@@ -3,6 +3,7 @@
 
 import concurrent.futures
 import io
+import os
 from concurrent.futures import Future
 from typing import Collection, NamedTuple, Iterable
 
@@ -14,6 +15,7 @@ from aqt.utils import tooltip, showWarning
 
 from .config_view import config_view as cfg
 from .helpers.audio_manager import AudioSourceManager, FileUrlData, AudioManagerException, InitResult
+from .helpers.file_ops import user_files_dir
 from .helpers.tokens import tokenize, ParseableToken
 from .mecab_controller import to_hiragana
 from .mecab_controller.mecab_controller import MecabParsedToken
@@ -146,6 +148,10 @@ def format_audio_tags(hits: Collection[FileUrlData]):
     )
 
 
+def is_audio_cache_file(file: os.DirEntry):
+    return file.name.startswith("audio_source_") and file.name.endswith(".pickle")
+
+
 class AnkiAudioSourceManager(AudioSourceManager):
     def init_audio_dictionaries(self):
         QueryOp(
@@ -162,6 +168,13 @@ class AnkiAudioSourceManager(AudioSourceManager):
                 f"Couldn't download audio source: {error.explanation}."
                 for error in result.errors
             ))
+
+    def _remove_old_cache_files(self):
+        known_source_files = [source.cache_path for source in self._config.iter_audio_sources()]
+        for file in os.scandir(user_files_dir()):
+            if is_audio_cache_file(file) and file.path not in known_source_files:
+                print(f"Removing unused audio cache file: {file.name}")
+                os.remove(file)
 
 
 # Entry point
