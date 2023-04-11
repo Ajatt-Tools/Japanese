@@ -109,6 +109,7 @@
     "dictionary_download_timeout": 30,
     "audio_download_timeout": 6,
     "attempts": 4,
+    "maximum_results": 99,
     "ignore_inflections": false,
     "stop_if_one_source_has_results": false
   }

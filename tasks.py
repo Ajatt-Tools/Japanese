@@ -80,6 +80,7 @@ class AddAudio(DoTask, task_type=ProfileAudio):
     @do_not_modify_destination_if_have_nothing_to_add
     def run(self, src_text: str):
         search_results = list(ensure_unique_files(search_audio(src_text, split_morphemes=self._task.split_morphemes)))
+        search_results = search_results[:cfg.audio_settings.maximum_results]
         download_tags_bg(search_results)
         return format_audio_tags(search_results)
 

@@ -537,6 +537,9 @@ class AudioSettingsForm(MultiColumnSettingsForm):
         self._widgets.attempts = NarrowSpinBox(
             initial_value=self._config.attempts
         )
+        self._widgets.maximum_results = NarrowSpinBox(
+            initial_value=self._config.maximum_results
+        )
 
     def _add_tooltips(self):
         super()._add_tooltips()
@@ -556,6 +559,11 @@ class AudioSettingsForm(MultiColumnSettingsForm):
         self._widgets.stop_if_one_source_has_results.setToolTip(
             "If enabled, stop searching after audio files were found in at least one source.\n"
             "The order of sources in the table matters."
+        )
+        self._widgets.maximum_results.setToolTip(
+            "Maximum number of audio files to add.\n\n"
+            "Note: If a word has several pitch accents,\n"
+            "this setting may result in some of them not being represented."
         )
 
 

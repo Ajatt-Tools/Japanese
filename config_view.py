@@ -190,6 +190,10 @@ class AudioSettingsConfigView(ConfigViewBase):
         return self['attempts']
 
     @property
+    def maximum_results(self) -> int:
+        return self['maximum_results']
+
+    @property
     def ignore_inflections(self) -> bool:
         return bool(self['ignore_inflections'])
 
