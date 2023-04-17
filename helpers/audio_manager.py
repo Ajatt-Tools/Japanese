@@ -18,10 +18,10 @@ from requests import RequestException
 
 try:
     from .file_ops import user_files_dir
-    from ..mecab_controller.kana_conv import is_inflected
+    from .inflections import is_inflected
 except ImportError:
     from file_ops import user_files_dir
-    from mecab_controller.kana_conv import is_inflected
+    from inflections import is_inflected
 
 
 def file_exists(file_path: str):
