@@ -27,26 +27,6 @@ class DownloadedData(NamedTuple):
     data: bytes
 
 
-def download_tag(audio_file: FileUrlData) -> DownloadedData:
-    return DownloadedData(
-        audio_file.desired_filename,
-        aud_src_mgr.get_file(audio_file),
-    )
-
-
-def download_tags(hits: Iterable[FileUrlData]) -> list[Future[DownloadedData]]:
-    """ Download audio files from a remote. """
-
-    futures, results = [], []
-
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        for audio_file in hits:
-            futures.append(executor.submit(download_tag, audio_file=audio_file))
-        for future in concurrent.futures.as_completed(futures):
-            results.append(future)
-    return results
-
-
 def report_results(successes: list[DownloadedData], fails: list[AudioManagerException]):
     txt = io.StringIO()
     if successes:
@@ -86,16 +66,6 @@ def only_missing(col: anki.collection.Collection, files: Collection[FileUrlData]
     )
 
 
-def download_tags_bg(hits: Collection[FileUrlData]):
-    if not hits:
-        return
-    QueryOp(
-        parent=mw,
-        op=lambda col: download_tags(only_missing(col, hits)),
-        success=lambda futures: save_files(futures)
-    ).run_in_background()
-
-
 def iter_tokens(src_text: str) -> Iterable[ParseableToken]:
     for token in tokenize(html_to_text_line(src_text), counters=cfg.furigana.counters):
         if isinstance(token, ParseableToken):
@@ -107,38 +77,6 @@ def iter_parsed_variants(token: MecabParsedToken):
     if token.katakana_reading:
         yield token.katakana_reading
         yield to_hiragana(token.katakana_reading)
-
-
-def search_word_sorted(src_text: str):
-    """
-    Search word and sort the results according to reading and pitch number to ensure determined order of entries.
-    """
-    return sorted(
-        aud_src_mgr.search_word(src_text),
-        key=lambda info: (info.reading, info.pitch_number)
-    )
-
-
-def parse_and_search_audio(src_text: ParseableToken) -> Iterable[FileUrlData]:
-    for parsed in mecab_translate(src_text):
-        for variant in iter_parsed_variants(parsed):
-            if files := search_word_sorted(variant):
-                yield from files
-                # If found results, break because all further results will be duplicates.
-                break
-
-
-def search_audio(src_text: str, split_morphemes: bool) -> list[FileUrlData]:
-    src_text = html_to_text_line(src_text)
-    if hits := search_word_sorted(src_text):
-        # If full text search succeeded, exit.
-        return hits
-    for part in dict.fromkeys(iter_tokens(src_text)):
-        if files := search_word_sorted(part):
-            hits.extend(files)
-        elif split_morphemes:
-            hits.extend(parse_and_search_audio(part))
-    return hits
 
 
 def format_audio_tags(hits: Collection[FileUrlData]):
@@ -159,6 +97,63 @@ class AnkiAudioSourceManager(AudioSourceManager):
             op=lambda collection: self._init_dictionaries(),
             success=lambda result: self._after_init(result),
         ).run_in_background()
+
+    def search_audio(self, src_text: str, split_morphemes: bool) -> list[FileUrlData]:
+        src_text = html_to_text_line(src_text)
+        if hits := self._search_word_sorted(src_text):
+            # If full text search succeeded, exit.
+            return hits
+        for part in dict.fromkeys(iter_tokens(src_text)):
+            if files := self._search_word_sorted(part):
+                hits.extend(files)
+            elif split_morphemes:
+                hits.extend(self._parse_and_search_audio(part))
+        return hits
+
+    def download_tags_bg(self, hits: Collection[FileUrlData]):
+        if not hits:
+            return
+        QueryOp(
+            parent=mw,
+            op=lambda col: self._download_tags(only_missing(col, hits)),
+            success=lambda futures: save_files(futures)
+        ).run_in_background()
+
+    def _search_word_sorted(self, src_text: str):
+        """
+        Search word and sort the results according to reading and pitch number
+        to ensure determined order of entries.
+        """
+        return sorted(
+            self.search_word(src_text),
+            key=lambda info: (info.reading, info.pitch_number)
+        )
+
+    def _parse_and_search_audio(self, src_text: ParseableToken) -> Iterable[FileUrlData]:
+        for parsed in mecab_translate(src_text):
+            for variant in iter_parsed_variants(parsed):
+                if files := self._search_word_sorted(variant):
+                    yield from files
+                    # If found results, break because all further results will be duplicates.
+                    break
+
+    def _download_tags(self, hits: Iterable[FileUrlData]) -> list[Future[DownloadedData]]:
+        """ Download audio files from a remote. """
+
+        futures, results = [], []
+
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            for audio_file in hits:
+                futures.append(executor.submit(self._download_tag, audio_file=audio_file))
+            for future in concurrent.futures.as_completed(futures):
+                results.append(future)
+        return results
+
+    def _download_tag(self, audio_file: FileUrlData) -> DownloadedData:
+        return DownloadedData(
+            audio_file.desired_filename,
+            self.get_file(audio_file),
+        )
 
     def _after_init(self, result: InitResult):
         self._set_sources(result.sources)

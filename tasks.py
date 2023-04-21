@@ -7,7 +7,7 @@ from typing import Optional, Callable, Dict
 from anki.utils import strip_html_media
 from aqt import mw
 
-from .audio import search_audio, format_audio_tags, download_tags_bg
+from .audio import format_audio_tags, aud_src_mgr
 from .config_view import config_view as cfg
 from .helpers import *
 from .helpers.hooks import collection_will_add_note
@@ -79,9 +79,10 @@ class AddPitch(DoTask, task_type=ProfilePitch):
 class AddAudio(DoTask, task_type=ProfileAudio):
     @do_not_modify_destination_if_have_nothing_to_add
     def run(self, src_text: str):
-        search_results = list(ensure_unique_files(search_audio(src_text, split_morphemes=self._task.split_morphemes)))
+        search_results = aud_src_mgr.search_audio(src_text, split_morphemes=self._task.split_morphemes)
+        search_results = list(ensure_unique_files(search_results))
         search_results = search_results[:cfg.audio_settings.maximum_results]
-        download_tags_bg(search_results)
+        aud_src_mgr.download_tags_bg(search_results)
         return format_audio_tags(search_results)
 
 
