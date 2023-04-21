@@ -67,6 +67,10 @@ def split_possible_furigana(expr: str) -> WordReading:
     expr, expr_reading = word_reading(expr)
     expr, expr_reading = clean_furigana(expr), clean_furigana(expr_reading)
 
+    # If there are numbers or multiple readings present, ignore all of them.
+    if expr_reading and (expr_reading.isnumeric() or cfg.furigana.reading_separator in expr_reading):
+        expr_reading = ''
+
     return WordReading(expr, expr_reading)
 
 
@@ -92,10 +96,6 @@ def get_pronunciations(expr: str, sanitize: bool = True, recurse: bool = True, u
     # Skip empty strings and user-specified blocklisted words
     if not expr or cfg.pitch_accent.is_blocklisted(expr):
         return ret
-
-    # If there are numbers or multiple readings present, ignore all of them.
-    if expr_reading and (expr_reading.isnumeric() or cfg.furigana.reading_separator in expr_reading):
-        expr_reading = ''
 
     # Look up the main expression.
     if lookup_main := lookup_expr_variants(expr):
