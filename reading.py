@@ -16,6 +16,7 @@ from .helpers.common_kana import adjust_reading
 from .helpers.mingle_readings import mingle_readings, word_reading, strip_non_jp_furigana, WordReading
 from .helpers.profiles import PitchOutputFormat
 from .helpers.tokens import tokenize, split_separators, ParseableToken, clean_furigana, Token
+from .helpers.unify_readings import literal_pronunciation as pr
 from .helpers.unify_readings import unify_repr
 from .mecab_controller import MecabController
 from .mecab_controller import format_output, is_kana_str
@@ -102,7 +103,7 @@ def get_pronunciations(expr: str, sanitize: bool = True, recurse: bool = True, u
             entry
             for entry in lookup_main
             # if there's furigana, and it doesn't match the entry, skip.
-            if not expr_reading or to_katakana(entry.katakana_reading) == to_katakana(expr_reading)
+            if not expr_reading or pr(entry.katakana_reading) == pr(expr_reading)
         )
 
     # If there's furigana, e.g. when using the VocabFurigana field as the source,

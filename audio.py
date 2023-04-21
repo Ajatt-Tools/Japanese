@@ -13,6 +13,7 @@ from aqt import gui_hooks, mw
 from aqt.operations import QueryOp
 from aqt.utils import tooltip, showWarning
 
+from .helpers.unify_readings import literal_pronunciation as pr
 from .config_view import config_view as cfg
 from .helpers.audio_manager import AudioSourceManager, FileUrlData, AudioManagerException, InitResult
 from .helpers.file_ops import user_files_dir
@@ -106,7 +107,7 @@ class AnkiAudioSourceManager(AudioSourceManager):
             return (
                 hits
                 if not src_text_reading
-                else [hit for hit in hits if hit.reading == src_text_reading]
+                else [hit for hit in hits if pr(hit.reading) == pr(src_text_reading)]
             )
         if src_text_reading and (hits := self._search_word_sorted(src_text_reading)):
             # If there are results for reading, exit.
