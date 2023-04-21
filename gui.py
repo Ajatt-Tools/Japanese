@@ -26,6 +26,7 @@ from .widgets.pitch_override_widget import PitchOverrideWidget
 EDIT_MIN_WIDTH = 100
 NARROW_WIDGET_MAX_WIDTH = 64
 EXAMPLE_DECK_ANKIWEB_URL = "https://ankiweb.net/shared/info/1557722832"
+ADDON_SETUP_GUIDE = "https://tatsumoto-ren.github.io/blog/anki-japanese-support.html"
 
 
 def adjust_to_contents(widget: QWidget):
@@ -654,8 +655,13 @@ class SettingsDialog(QDialog):
 
         # Finish layout
         self._tabs = QTabWidget()
-        self._button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
+        self._button_box = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok |
+            QDialogButtonBox.StandardButton.Cancel |
+            QDialogButtonBox.StandardButton.Help
+        )
         self._setup_tabs()
+        self._add_tooltips()
         self._setup_ui()
 
         # Show window
@@ -713,9 +719,21 @@ class SettingsDialog(QDialog):
         self.setLayout(self.make_layout())
         self.connect_widgets()
 
+    def _add_tooltips(self):
+        self._button_box.button(QDialogButtonBox.StandardButton.Ok).setToolTip(
+            "Save settings and close the dialog."
+        )
+        self._button_box.button(QDialogButtonBox.StandardButton.Cancel).setToolTip(
+            "Discard settings and close the dialog."
+        )
+        self._button_box.button(QDialogButtonBox.StandardButton.Help).setToolTip(
+            "Open Guide."
+        )
+
     def connect_widgets(self):
         qconnect(self._button_box.accepted, self.accept)
         qconnect(self._button_box.rejected, self.reject)
+        qconnect(self._button_box.helpRequested, lambda: openLink(ADDON_SETUP_GUIDE))
 
     def make_layout(self) -> QLayout:
         layout = QVBoxLayout()
