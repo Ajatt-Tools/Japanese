@@ -19,7 +19,7 @@ from .helpers.file_ops import user_files_dir
 from .helpers.tokens import tokenize, ParseableToken
 from .mecab_controller import to_hiragana
 from .mecab_controller.mecab_controller import MecabParsedToken
-from .reading import mecab_translate
+from .reading import mecab_translate, split_possible_furigana
 
 
 class DownloadedData(NamedTuple):
@@ -99,9 +99,17 @@ class AnkiAudioSourceManager(AudioSourceManager):
         ).run_in_background()
 
     def search_audio(self, src_text: str, split_morphemes: bool) -> list[FileUrlData]:
-        src_text = html_to_text_line(src_text)
+        src_text, src_text_reading = split_possible_furigana(html_to_text_line(src_text))
         if hits := self._search_word_sorted(src_text):
             # If full text search succeeded, exit.
+            # If reading is present, erase results that don't match the reading.
+            return (
+                hits
+                if not src_text_reading
+                else [hit for hit in hits if hit.reading == src_text_reading]
+            )
+        if src_text_reading and (hits := self._search_word_sorted(src_text_reading)):
+            # If there are results for reading, exit.
             return hits
         for part in dict.fromkeys(iter_tokens(src_text)):
             if files := self._search_word_sorted(part):
