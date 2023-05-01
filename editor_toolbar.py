@@ -2,7 +2,7 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import functools
-from typing import List, Callable, Any, NamedTuple, Iterable
+from typing import Callable, Any, NamedTuple, Iterable
 
 from anki.notes import Note
 from aqt import gui_hooks
@@ -22,6 +22,7 @@ class ToolbarButton(NamedTuple):
 
 
 def modify_field(func: Callable[[str], str]) -> Callable[[Editor], None]:
+    @functools.wraps(func)
     def decorator(editor: Editor) -> None:
         if (note := editor.note) and (field_n := editor.currentField) is not None:
             note.fields[field_n] = func(note.fields[field_n])
@@ -31,6 +32,7 @@ def modify_field(func: Callable[[str], str]) -> Callable[[Editor], None]:
 
 
 def modify_note(func: Callable[[Note], Any]) -> Callable[[Editor], None]:
+    @functools.wraps(func)
     def decorator(editor: Editor) -> None:
         if note := editor.note:
             func(note)
