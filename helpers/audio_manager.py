@@ -161,11 +161,13 @@ class AudioSource(AudioSourceConfig):
         components = []
         file_info: FileInfo = self.files[file_name]
 
-        for component in ('pitch_pattern', 'kana_reading'):
-            if component in file_info:
-                components.append(file_info[component])
-                break
+        # Append either pitch pattern or kana reading, preferring pitch pattern.
+        if 'pitch_pattern' in file_info:
+            components.append(file_info['pitch_pattern'])
+        elif 'kana_reading' in file_info:
+            components.append(file_info['kana_reading'])
 
+        # If pitch number is present, append it after reading.
         if 'pitch_number' in file_info:
             components.append(file_info['pitch_number'])
 
