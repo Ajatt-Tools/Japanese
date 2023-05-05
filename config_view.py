@@ -201,6 +201,7 @@ class AudioSettingsConfigView(ConfigViewBase):
     def stop_if_one_source_has_results(self) -> bool:
         return bool(self['stop_if_one_source_has_results'])
 
+
 @final
 class ConfigView(ConfigViewBase):
     def __init__(self):
@@ -215,8 +216,7 @@ class ConfigView(ConfigViewBase):
         for profile_dict in self['profiles']:
             # In case new options are added in the future,
             # load default settings first, then overwrite them.
-            default = Profile.class_by_mode(profile_dict['mode']).new()
-            yield Profile(**(dataclasses.asdict(default) | profile_dict))
+            yield dataclasses.replace(Profile.get_default(profile_dict['mode']), **profile_dict)
 
     def iter_audio_sources(self) -> Iterable[AudioSourceConfig]:
         for source_dict in self.audio_sources:

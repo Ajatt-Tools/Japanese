@@ -49,6 +49,10 @@ class Profile:
         )
 
     @classmethod
+    def get_default(cls, mode: str):
+        return cls.class_by_mode(mode).new()
+
+    @classmethod
     def clone(cls, profile: 'Profile'):
         return cls(**dataclasses.asdict(profile))
 
