@@ -13,12 +13,12 @@ from aqt import gui_hooks, mw
 from aqt.operations import QueryOp
 from aqt.utils import tooltip, showWarning
 
-from .helpers.unify_readings import literal_pronunciation as pr
 from .config_view import config_view as cfg
 from .helpers.audio_manager import AudioSourceManager, FileUrlData, AudioManagerException, InitResult
 from .helpers.file_ops import user_files_dir
 from .helpers.tokens import tokenize, ParseableToken
-from .mecab_controller import to_hiragana
+from .helpers.unify_readings import literal_pronunciation as pr
+from .mecab_controller import to_hiragana, to_katakana
 from .mecab_controller.mecab_controller import MecabParsedToken
 from .reading import mecab_translate, split_possible_furigana
 
@@ -101,7 +101,7 @@ class AnkiAudioSourceManager(AudioSourceManager):
 
     def search_audio(self, src_text: str, split_morphemes: bool) -> list[FileUrlData]:
         src_text, src_text_reading = split_possible_furigana(html_to_text_line(src_text))
-        if hits := self._search_word_sorted(src_text):
+        if hits := self._search_word_variants(src_text):
             # If full text search succeeded, exit.
             # If reading is present, erase results that don't match the reading.
             return (
@@ -109,11 +109,11 @@ class AnkiAudioSourceManager(AudioSourceManager):
                 if not src_text_reading
                 else [hit for hit in hits if pr(hit.reading) == pr(src_text_reading)]
             )
-        if src_text_reading and (hits := self._search_word_sorted(src_text_reading)):
+        if src_text_reading and (hits := self._search_word_variants(src_text_reading)):
             # If there are results for reading, exit.
             return hits
         for part in dict.fromkeys(iter_tokens(src_text)):
-            if files := self._search_word_sorted(part):
+            if files := self._search_word_variants(part):
                 hits.extend(files)
             elif split_morphemes:
                 hits.extend(self._parse_and_search_audio(part))
@@ -136,6 +136,17 @@ class AnkiAudioSourceManager(AudioSourceManager):
         return sorted(
             self.search_word(src_text),
             key=lambda info: (info.reading, info.pitch_number)
+        )
+
+    def _search_word_variants(self, src_text: str):
+        """
+        Search word.
+        If nothing is found, try searching in hiragana and katakana.
+        """
+        return (
+                self._search_word_sorted(src_text)
+                or self._search_word_sorted(to_hiragana(src_text))
+                or self._search_word_sorted(to_katakana(src_text))
         )
 
     def _parse_and_search_audio(self, src_text: ParseableToken) -> Iterable[FileUrlData]:
