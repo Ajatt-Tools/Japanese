@@ -16,10 +16,10 @@ class AccentDictManager:
     def __init__(self):
         self._db: AccentDict = AccentDict({})
 
-    def __contains__(self, item):
+    def __contains__(self, item: str):
         return self._db.__contains__(item)
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: str) -> Collection[FormattedEntry]:
         return self._db.__getitem__(item)
 
     def reload_from_disk(self):
