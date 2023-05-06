@@ -5,7 +5,10 @@ import abc
 import re
 from typing import NamedTuple, Optional, NewType, Collection
 
-from .consts import *
+try:
+    from .consts import *
+except ImportError:
+    from consts import *
 
 
 def should_regenerate(file_path: str) -> bool:
