@@ -10,7 +10,7 @@ import posixpath
 import re
 import zipfile
 from types import SimpleNamespace
-from typing import Optional, NewType, NamedTuple, Iterable, Union
+from typing import Optional, NewType, NamedTuple, Iterable, Union, TypedDict
 
 import anki.httpclient
 import requests
@@ -50,10 +50,6 @@ def normalize_filename(text: str) -> str:
     text = unicodedata.normalize('NFC', text)
     text = re.sub(RE_FILENAME_PROHIBITED, '_', text)
     return text.strip()
-
-
-FileInfo = NewType("FileInfo", dict[str, str])
-FileList = NewType("FileList", list[str])
 
 
 class FileUrlData(NamedTuple):
@@ -152,10 +148,33 @@ class AudioManagerHttpClient(anki.httpclient.HttpClient):
         return self.stream_content(response)
 
 
+FileList = NewType("FileList", list[str])
+
+
+class FileInfo(TypedDict):
+    kana_reading: str
+    pitch_pattern: str
+    pitch_number: str
+
+
+class SourceMeta(TypedDict):
+    name: str
+    year: int
+    version: int
+    media_dir: str
+    media_dir_abs: str
+
+
+class SourceIndex(TypedDict):
+    meta: SourceMeta
+    headwords: dict[str, FileList]
+    files: dict[str, FileInfo]
+
+
 @dataclasses.dataclass
 class AudioSource(AudioSourceConfig):
     # current schema has three fields: "meta", "headwords", "files"
-    pronunciation_data: Optional[dict] = dataclasses.field(init=False, default=None, repr=False)
+    pronunciation_data: Optional[SourceIndex] = dataclasses.field(init=False, default=None, repr=False)
 
     def resolve_file(self, word: str, file_name: str) -> FileUrlData:
         components = []
@@ -394,7 +413,7 @@ def main():
 
     aud_src_mgr = AudioSourceManager(cfg)
     init_audio_dictionaries(aud_src_mgr)
-    for file in aud_src_mgr.search_word('原'):
+    for file in aud_src_mgr.search_word('ひらがな'):
         print(file)
 
 
