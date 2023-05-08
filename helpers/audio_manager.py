@@ -17,9 +17,11 @@ import requests
 from requests import RequestException
 
 try:
+    from ..mecab_controller import to_katakana
     from .file_ops import user_files_dir
     from .inflections import is_inflected
 except ImportError:
+    from mecab_controller import to_katakana
     from file_ops import user_files_dir
     from inflections import is_inflected
 
@@ -177,14 +179,14 @@ class AudioSource(AudioSourceConfig):
     pronunciation_data: Optional[SourceIndex] = dataclasses.field(init=False, default=None, repr=False)
 
     def resolve_file(self, word: str, file_name: str) -> FileUrlData:
-        components = []
+        components: list[str] = []
         file_info: FileInfo = self.files[file_name]
 
         # Append either pitch pattern or kana reading, preferring pitch pattern.
         if 'pitch_pattern' in file_info:
-            components.append(file_info['pitch_pattern'])
+            components.append(to_katakana(file_info['pitch_pattern']))
         elif 'kana_reading' in file_info:
-            components.append(file_info['kana_reading'])
+            components.append(to_katakana(file_info['kana_reading']))
 
         # If pitch number is present, append it after reading.
         if 'pitch_number' in file_info:
