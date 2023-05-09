@@ -92,11 +92,11 @@ def is_audio_cache_file(file: os.DirEntry):
 
 
 class AnkiAudioSourceManager(AudioSourceManager):
-    def init_audio_dictionaries(self):
+    def init_audio_dictionaries(self, notify_on_finish: bool = False):
         QueryOp(
             parent=mw,
             op=lambda collection: self._init_dictionaries(),
-            success=lambda result: self._after_init(result),
+            success=lambda result: self._after_init(result, notify_on_finish),
         ).run_in_background()
 
     def search_audio(self, src_text: str, split_morphemes: bool) -> list[FileUrlData]:
@@ -175,7 +175,7 @@ class AnkiAudioSourceManager(AudioSourceManager):
             self.get_file(audio_file),
         )
 
-    def _after_init(self, result: InitResult):
+    def _after_init(self, result: InitResult, notify_on_finish: bool):
         self._set_sources(result.sources)
         self._remove_old_cache_files()
         if result.errors:
@@ -183,6 +183,8 @@ class AnkiAudioSourceManager(AudioSourceManager):
                 f"Couldn't download audio source: {error.explanation}."
                 for error in result.errors
             ))
+        elif notify_on_finish and result.sources:
+            tooltip("Initialized audio sources.")
 
     def _remove_old_cache_files(self):
         known_source_files = [source.cache_path for source in self._config.iter_audio_sources()]

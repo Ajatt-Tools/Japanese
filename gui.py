@@ -763,7 +763,7 @@ class SettingsDialog(QDialog):
         self._accents_override.save_to_disk()
         # Reload
         acc_dict.reload_from_disk()
-        aud_src_mgr.init_audio_dictionaries()
+        aud_src_mgr.init_audio_dictionaries(notify_on_finish=True)
         return super().accept()
 
 
