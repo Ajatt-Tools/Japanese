@@ -214,9 +214,12 @@ class ConfigView(ConfigViewBase):
 
     def iter_profiles(self) -> Iterable[Profile]:
         for profile_dict in self['profiles']:
-            # In case new options are added in the future,
+            # In case new options are added or removed in the future,
             # load default settings first, then overwrite them.
-            yield dataclasses.replace(Profile.get_default(profile_dict['mode']), **profile_dict)
+            yield dataclasses.replace(
+                default := Profile.get_default(profile_dict['mode']),
+                **{key: profile_dict[key] for key in dataclasses.asdict(default).keys()},
+            )
 
     def iter_audio_sources(self) -> Iterable[AudioSourceConfig]:
         for source_dict in self.audio_sources:
