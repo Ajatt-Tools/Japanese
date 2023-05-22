@@ -218,7 +218,7 @@ class ConfigView(ConfigViewBase):
             # load default settings first, then overwrite them.
             yield dataclasses.replace(
                 default := Profile.get_default(profile_dict['mode']),
-                **{key: profile_dict[key] for key in dataclasses.asdict(default).keys()},
+                **{key: profile_dict[key] for key in (dataclasses.asdict(default).keys() & profile_dict.keys())},
             )
 
     def iter_audio_sources(self) -> Iterable[AudioSourceConfig]:
