@@ -16,7 +16,8 @@
       "source": "SentKanji",
       "destination": "SentFurigana",
       "mode": "furigana",
-      "split_morphemes": true
+      "split_morphemes": true,
+      "triggered_by": "focus_lost,toolbar_button,note_added,bulk_add"
     },
     {
       "name": "Add furigana for word",
@@ -24,7 +25,8 @@
       "source": "VocabKanji",
       "destination": "VocabFurigana",
       "mode": "furigana",
-      "split_morphemes": false
+      "split_morphemes": false,
+      "triggered_by": "focus_lost,toolbar_button,note_added,bulk_add"
     },
     {
       "name": "Add pitch accent for word",
@@ -33,7 +35,8 @@
       "destination": "VocabPitchPattern",
       "mode": "pitch",
       "split_morphemes": false,
-      "output_format": "html_and_number"
+      "output_format": "html_and_number",
+      "triggered_by": "focus_lost,toolbar_button,note_added,bulk_add"
     },
     {
       "name": "Add audio for word",
@@ -41,7 +44,8 @@
       "source": "VocabKanji",
       "destination": "VocabAudio",
       "mode": "audio",
-      "split_morphemes": false
+      "split_morphemes": false,
+      "triggered_by": "focus_lost,toolbar_button,note_added,bulk_add"
     }
   ],
   "pitch_accent": {
