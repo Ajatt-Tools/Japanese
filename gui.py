@@ -3,20 +3,21 @@
 
 import dataclasses
 from types import SimpleNamespace
-from typing import Optional, Iterable
+from typing import Optional, Iterable, Collection
 
 from aqt import mw
 from aqt.qt import *
 from aqt.utils import restoreGeom, saveGeom, openLink
 
 from .ajt_common.about_menu import tweak_window, menu_root_entry
+from .ajt_common.checkable_combobox import CheckableComboBox
 from .ajt_common.consts import ADDON_SERIES
 from .ajt_common.grab_key import ShortCutGrabButton
 from .audio import aud_src_mgr
 from .config_view import config_view as cfg, ReadingsDiscardMode
 from .database.user_database import UserDb
 from .helpers import ui_translate, split_list
-from .helpers.profiles import Profile, ProfileFurigana, ProfilePitch, PitchOutputFormat, ProfileAudio
+from .helpers.profiles import Profile, ProfileFurigana, ProfilePitch, PitchOutputFormat, ProfileAudio, TaskCaller
 from .reading import acc_dict
 from .widgets.anki_style import fix_default_anki_style
 from .widgets.audio_sources import AudioSourcesTable
@@ -76,7 +77,9 @@ class NoteTypeSelector(EditableSelector):
 def as_config_dict(widgets: dict[str, QWidget]) -> dict[str, Union[bool, str, int]]:
     d = {}
     for key, widget in widgets.items():
-        if isinstance(widget, EnumSelectCombo):
+        if isinstance(widget, TriggeredBySelector):
+            d[key] = widget.comma_separated_callers()
+        elif isinstance(widget, EnumSelectCombo):
             d[key] = widget.currentName()
         elif isinstance(widget, QComboBox):
             d[key] = widget.currentText()
@@ -155,6 +158,22 @@ class ProfileList(QGroupBox):
         self._list_widget.setCurrentRow(count)
 
 
+class TriggeredBySelector(CheckableComboBox):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._populate_options()
+
+    def _populate_options(self):
+        for caller in TaskCaller:
+            self.addCheckableItem(ui_translate(caller.name), caller)
+
+    def set_enabled_callers(self, callers: Collection[TaskCaller]):
+        return self.setCheckedData(callers)
+
+    def comma_separated_callers(self):
+        return ','.join(caller.name for caller in self.checkedData())
+
+
 class ProfileEditForm(QGroupBox):
     _subclasses_map = {}  # e.g. ProfileFurigana => FuriganaProfileEditForm
 
@@ -179,6 +198,7 @@ class ProfileEditForm(QGroupBox):
             source=EditableSelector(),
             destination=EditableSelector(),
             split_morphemes=QCheckBox(),
+            triggered_by=TriggeredBySelector(),
         )
         self._expand_form()
         self._last_used_profile: Optional[Profile] = None
@@ -199,6 +219,7 @@ class ProfileEditForm(QGroupBox):
         self._form.name.setText(profile.name)
         self._form.note_type.repopulate(profile.note_type)
         self._form.split_morphemes.setChecked(profile.split_morphemes)
+        self._form.triggered_by.set_enabled_callers(profile.enabled_callers())
         self._repopulate_fields(profile)
 
     def _as_dict(self) -> dict[str, str]:

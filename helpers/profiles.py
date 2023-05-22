@@ -3,14 +3,30 @@
 
 import dataclasses
 import enum
+from typing import Iterable
 
 
-# noinspection PyArgumentList
 @enum.unique
 class PitchOutputFormat(enum.Enum):
     number = enum.auto()
     html = enum.auto()
     html_and_number = enum.auto()
+
+
+@enum.unique
+class TaskCaller(enum.Enum):
+    focus_lost = enum.auto()
+    toolbar_button = enum.auto()
+    note_added = enum.auto()
+    bulk_add = enum.auto()
+
+    @classmethod
+    def all_names(cls):
+        return (caller.name for caller in cls)
+
+    @classmethod
+    def all_comma_separated_names(cls):
+        return ','.join(cls.all_names())
 
 
 @dataclasses.dataclass(frozen=True)
@@ -21,6 +37,7 @@ class Profile:
     destination: str
     mode: str
     split_morphemes: bool
+    triggered_by: str
 
     _subclasses_map = {}  # "furigana" (str) -> ProfileFurigana
 
@@ -34,6 +51,13 @@ class Profile:
         subclass = cls._subclasses_map[mode]
         return object.__new__(subclass)
 
+    def enabled_callers(self) -> list[TaskCaller]:
+        return [
+            TaskCaller[name]
+            for name in self.triggered_by.split(',')
+            if name
+        ]
+
     @classmethod
     def class_by_mode(cls, mode: str):
         return cls._subclasses_map[mode]
@@ -45,6 +69,7 @@ class Profile:
             name="New profile",
             note_type="Japanese",
             split_morphemes=True,
+            triggered_by=TaskCaller.all_comma_separated_names(),
             **kwargs,
         )
 
