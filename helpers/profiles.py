@@ -3,7 +3,6 @@
 
 import dataclasses
 import enum
-from typing import Iterable
 
 
 @enum.unique
@@ -57,6 +56,9 @@ class Profile:
             for name in self.triggered_by.split(',')
             if name
         ]
+
+    def should_answer_to(self, caller: TaskCaller) -> bool:
+        return caller in self.enabled_callers()
 
     @classmethod
     def class_by_mode(cls, mode: str):

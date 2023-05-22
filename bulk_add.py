@@ -13,6 +13,7 @@ from aqt.utils import showInfo
 
 from .config_view import config_view as cfg
 from .helpers import NoteId
+from .helpers.profiles import TaskCaller
 from .tasks import DoTasks
 
 ACTION_NAME = "AJT: Bulk-generate"
@@ -22,7 +23,7 @@ def update_notes_op(col: Collection, notes: Sequence[Note]):
     pos = col.add_custom_undo_entry(f"AJT: Add data to {len(notes)} notes.")
     to_update = []
     for note in notes:
-        changed = DoTasks(note=note, overwrite=cfg.regenerate_readings).run()
+        changed = DoTasks(note=note, caller=TaskCaller.bulk_add, overwrite=cfg.regenerate_readings).run()
         if changed:
             to_update.append(note)
     col.update_notes(to_update)

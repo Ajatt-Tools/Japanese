@@ -11,7 +11,7 @@ from .audio import format_audio_tags, aud_src_mgr
 from .config_view import config_view as cfg
 from .helpers import *
 from .helpers.hooks import collection_will_add_note
-from .helpers.profiles import Profile, ProfileFurigana, PitchOutputFormat, ProfilePitch, ProfileAudio
+from .helpers.profiles import Profile, ProfileFurigana, PitchOutputFormat, ProfilePitch, ProfileAudio, TaskCaller
 from .helpers.unique_files import ensure_unique_files
 from .reading import format_pronunciations, get_pronunciations, generate_furigana
 
@@ -98,14 +98,16 @@ def html_to_media_line(txt: str) -> str:
 
 
 class DoTasks:
-    def __init__(self, note: Note, src_field: Optional[str] = None, overwrite: bool = False):
+    def __init__(self, note: Note, *, caller: TaskCaller, src_field: Optional[str] = None, overwrite: bool = False):
         self._note = note
+        self._caller = caller
         self._tasks = iter_tasks(note, src_field)
         self._overwrite = overwrite
 
     def run(self, changed: bool = False) -> bool:
         for task in self._tasks:
-            changed = self.do_task(task) or changed
+            if task.should_answer_to(self._caller):
+                changed = self.do_task(task) or changed
         return changed
 
     def do_task(self, task: Profile) -> bool:
@@ -142,6 +144,7 @@ class DoTasks:
 def on_focus_lost(changed: bool, note: Note, field_idx: int) -> bool:
     return DoTasks(
         note=note,
+        caller=TaskCaller.focus_lost,
         src_field=note.keys()[field_idx],
     ).run(changed=changed)
 
@@ -157,7 +160,10 @@ def should_generate(note: Note) -> bool:
 
 def on_add_note(note: Note) -> None:
     if should_generate(note):
-        DoTasks(note=note).run()
+        DoTasks(
+            note=note,
+            caller=TaskCaller.note_added,
+        ).run()
 
 
 # Entry point

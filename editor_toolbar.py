@@ -9,6 +9,7 @@ from aqt import gui_hooks
 from aqt.editor import Editor
 
 from .config_view import config_view as cfg, ToolbarButtonConfig
+from .helpers.profiles import TaskCaller
 from .helpers.tokens import clean_furigana
 from .reading import generate_furigana
 from .tasks import DoTasks
@@ -48,7 +49,7 @@ def query_buttons() -> Iterable[ToolbarButton]:
     return (
         ToolbarButton(
             id='regenerate_all_button',
-            on_press=modify_note(lambda note: DoTasks(note, overwrite=True).run()),
+            on_press=modify_note(lambda note: DoTasks(note, caller=TaskCaller.toolbar_button, overwrite=True).run()),
             tip='Regenerate all fields',
             conf=cfg.toolbar.regenerate_all_button
         ),
