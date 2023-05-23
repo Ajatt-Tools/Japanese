@@ -617,15 +617,23 @@ class ToolbarButtonSettingsForm(QGroupBox):
 
 
 class ToolbarSettingsForm(QGroupBox):
+    """
+    This form lists settings of each Browser Toolbar button.
+    The user can enable or disable a button,
+    change its label and keyboard shortcut.
+    """
+
+    _columns = 2
+
     def __init__(self, *args):
         super().__init__(*args)
         self.setTitle("Toolbar")
         self.setCheckable(False)
         self._widgets = {}
-        self._add_widgets()
+        self._create_widgets()
         self.setLayout(self._make_layout())
 
-    def _add_widgets(self):
+    def _create_widgets(self):
         for key, button_config in cfg.toolbar.items():
             widget = ToolbarButtonSettingsForm()
             widget.setTitle(ui_translate(key))
@@ -635,9 +643,11 @@ class ToolbarSettingsForm(QGroupBox):
             self._widgets[key] = widget
 
     def _make_layout(self) -> QLayout:
-        layout = QVBoxLayout()
-        for key, widget in self._widgets.items():
-            layout.addWidget(widget)
+        layout = QGridLayout()
+        for row_n, chunk in enumerate(split_list(list(self._widgets.values()), self._columns)):
+            for col_n, widget in enumerate(chunk):
+                # row: int, column: int, rowSpan: int, columnSpan: int
+                layout.addWidget(widget, row_n + 1, col_n + 1)
         return layout
 
     def as_dict(self) -> dict[str, dict[str, Union[str, bool]]]:
@@ -726,7 +736,6 @@ class SettingsDialog(QDialog):
         layout.addWidget(self._audio_sources_table)
         layout.addWidget(self._audio_settings)
         fix_default_anki_style(self._audio_sources_table)
-
         self._tabs.addTab(tab, "Audio")
 
         # Accent DB override
