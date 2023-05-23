@@ -2,7 +2,7 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import functools
-from typing import Callable, Any, NamedTuple, Iterable
+from typing import Callable, NamedTuple, Iterable
 
 from anki.notes import Note
 from aqt import gui_hooks
@@ -32,7 +32,7 @@ def modify_field(func: Callable[[str], str]) -> Callable[[Editor], None]:
     return decorator
 
 
-def modify_note(func: Callable[[Note], Any]) -> Callable[[Editor], None]:
+def modify_note(func: Callable[[Note], object]) -> Callable[[Editor], None]:
     @functools.wraps(func)
     def decorator(editor: Editor) -> None:
         if note := editor.note:

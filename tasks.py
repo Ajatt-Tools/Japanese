@@ -2,7 +2,7 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import functools
-from typing import Optional, Callable, Dict
+from typing import Optional, Callable, Any
 
 from anki.utils import strip_html_media
 from aqt import mw
@@ -16,7 +16,7 @@ from .helpers.unique_files import ensure_unique_files
 from .reading import format_pronunciations, get_pronunciations, generate_furigana
 
 
-def note_type_matches(note_type: Dict[str, Any], profile: Profile) -> bool:
+def note_type_matches(note_type: dict[str, Any], profile: Profile) -> bool:
     return profile.note_type.lower() in note_type['name'].lower()
 
 

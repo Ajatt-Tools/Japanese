@@ -2,7 +2,7 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import math
-from typing import NewType, Any, TypeVar, Sequence, Iterable
+from typing import NewType, TypeVar, Sequence, Iterable
 
 import aqt
 
@@ -21,7 +21,7 @@ def ui_translate(key: str) -> str:
     return key.capitalize().replace('_', ' ')
 
 
-def get_notetype(note: Note) -> dict[str, Any]:
+def get_notetype(note: Note) -> dict[str, object]:
     if hasattr(note, 'note_type'):
         return note.note_type()
     else:

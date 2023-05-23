@@ -3,7 +3,7 @@
 
 import dataclasses
 from types import SimpleNamespace
-from typing import Optional, Iterable, Collection
+from typing import Optional, Iterable, Collection, TypedDict
 
 from aqt import mw
 from aqt.qt import *
@@ -589,6 +589,12 @@ class AudioSettingsForm(MultiColumnSettingsForm):
         )
 
 
+class ToolbarButtonConfig(TypedDict):
+    enabled: bool
+    shortcut: str
+    text: str
+
+
 class ToolbarButtonSettingsForm(QGroupBox):
     def __init__(self, *args):
         super().__init__(*args)
@@ -609,7 +615,7 @@ class ToolbarButtonSettingsForm(QGroupBox):
     def setButtonKeyboardShortcut(self, shortcut: str):
         return self._shortcut_edit.setValue(shortcut)
 
-    def as_dict(self) -> dict[str, Union[bool, str]]:
+    def as_dict(self) -> ToolbarButtonConfig:
         return {
             "enabled": self.isChecked(),
             "shortcut": self._shortcut_edit.value(),
@@ -651,7 +657,7 @@ class ToolbarSettingsForm(QGroupBox):
                 layout.addWidget(widget, row_n + 1, col_n + 1)
         return layout
 
-    def as_dict(self) -> dict[str, dict[str, Union[str, bool]]]:
+    def as_dict(self) -> dict[str, ToolbarButtonConfig]:
         return {
             key: widget.as_dict()
             for key, widget in self._widgets.items()
