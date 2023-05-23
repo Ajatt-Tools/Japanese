@@ -596,7 +596,6 @@ class ToolbarButtonSettingsForm(QGroupBox):
         self._shortcut_edit = ShortCutGrabButton()
         self._label_edit = QLineEdit()
         self.setLayout(self._make_layout())
-        self._pass_methods()
 
     def _make_layout(self) -> QLayout:
         layout = QFormLayout()
@@ -604,9 +603,11 @@ class ToolbarButtonSettingsForm(QGroupBox):
         layout.addRow("Label", self._label_edit)
         return layout
 
-    def _pass_methods(self):
-        self.setText = self._label_edit.setText
-        self.setShortcut = self._shortcut_edit.setValue
+    def setButtonLabel(self, label: str):
+        return self._label_edit.setText(label)
+
+    def setButtonKeyboardShortcut(self, shortcut: str):
+        return self._shortcut_edit.setValue(shortcut)
 
     def as_dict(self) -> dict[str, Union[bool, str]]:
         return {
@@ -638,8 +639,8 @@ class ToolbarSettingsForm(QGroupBox):
             widget = ToolbarButtonSettingsForm()
             widget.setTitle(ui_translate(key))
             widget.setChecked(button_config.enabled)
-            widget.setShortcut(button_config.shortcut)
-            widget.setText(button_config.text)
+            widget.setButtonKeyboardShortcut(button_config.shortcut)
+            widget.setButtonLabel(button_config.text)
             self._widgets[key] = widget
 
     def _make_layout(self) -> QLayout:
