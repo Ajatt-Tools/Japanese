@@ -10,7 +10,7 @@ import posixpath
 import re
 import zipfile
 from types import SimpleNamespace
-from typing import Optional, NewType, NamedTuple, Iterable, Union, TypedDict
+from typing import Optional, NewType, Iterable, Union, TypedDict
 
 import anki.httpclient
 import requests
@@ -22,8 +22,8 @@ try:
     from .inflections import is_inflected
 except ImportError:
     from mecab_controller import to_katakana
-    from file_ops import user_files_dir
-    from inflections import is_inflected
+    from helpers.file_ops import user_files_dir
+    from helpers.inflections import is_inflected
 
 
 def file_exists(file_path: str):
