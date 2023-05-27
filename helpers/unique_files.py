@@ -1,6 +1,7 @@
 # Copyright: Ren Tatsumoto <tatsu at autistici.org> and contributors
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
+import dataclasses
 import os
 from typing import Iterable
 
@@ -29,10 +30,7 @@ def ensure_unique_names(files: Iterable[FileUrlData]) -> Iterable[FileUrlData]:
         name, ext = os.path.splitext(file.desired_filename)
         idx = 1
         while file.desired_filename in unique_names:
-            file = FileUrlData(
-                url=file.url,
-                desired_filename=f"{name}({idx}){ext}",
-            )
+            file = dataclasses.replace(file, desired_filename=f"{name}({idx}){ext}")
             idx += 1
         unique_names[file.desired_filename] = file
     return unique_names.values()

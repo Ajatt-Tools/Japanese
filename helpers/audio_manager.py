@@ -54,7 +54,8 @@ def normalize_filename(text: str) -> str:
     return text.strip()
 
 
-class FileUrlData(NamedTuple):
+@dataclasses.dataclass(frozen=True)
+class FileUrlData:
     url: str
     desired_filename: str
     reading: str = ""
