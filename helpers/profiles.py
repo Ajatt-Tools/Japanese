@@ -37,6 +37,7 @@ class Profile:
     mode: str
     split_morphemes: bool
     triggered_by: str
+    overwrite_destination: bool
 
     _subclasses_map = {}  # "furigana" (str) -> ProfileFurigana
 
@@ -72,6 +73,7 @@ class Profile:
             note_type="Japanese",
             split_morphemes=True,
             triggered_by=TaskCaller.all_comma_separated_names(),
+            overwrite_destination=False,
             **kwargs,
         )
 

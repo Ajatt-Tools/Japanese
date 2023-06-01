@@ -131,7 +131,7 @@ class DoTasks:
             return True
 
         # Must overwrite any existing data.
-        if self._overwrite is True:
+        if self._overwrite is True or task.overwrite_destination is True:
             return True
 
         # Field is empty.

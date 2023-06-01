@@ -199,6 +199,7 @@ class ProfileEditForm(QGroupBox):
             destination=EditableSelector(),
             split_morphemes=QCheckBox(),
             triggered_by=TriggeredBySelector(),
+            overwrite_destination=QCheckBox(),
         )
         self._expand_form()
         self._last_used_profile: Optional[Profile] = None
@@ -220,6 +221,7 @@ class ProfileEditForm(QGroupBox):
         self._form.note_type.repopulate(profile.note_type)
         self._form.split_morphemes.setChecked(profile.split_morphemes)
         self._form.triggered_by.set_enabled_callers(profile.enabled_callers())
+        self._form.overwrite_destination.setChecked(profile.overwrite_destination)
         self._repopulate_fields(profile)
 
     def _as_dict(self) -> dict[str, str]:
