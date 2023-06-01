@@ -11,9 +11,6 @@
   in the Anki Browser,
   readings for each card will be regenerated
   even if destination is already filled.
-* `generate_on_note_add`.
-  Automatically add readings and pronunciations to cards created via AnkiConnect.
-  For example, cards created with Mpvacious, Yomichan, Rikaikun.
 * `cache_lookups`.
   Size of cache.
   Used internally.

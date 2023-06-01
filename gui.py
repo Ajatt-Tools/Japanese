@@ -381,9 +381,6 @@ class BehaviorSettingsForm(SettingsForm):
 
     def _add_tooltips(self):
         super()._add_tooltips()
-        self._widgets.generate_on_note_add.setToolTip(
-            "Trigger tasks when a new note is added."
-        )
         self._widgets.regenerate_readings.setToolTip(
             "The Bulk-add action will ignore already added readings, accents, etc."
         )

@@ -234,10 +234,6 @@ class ConfigView(ConfigViewBase):
         return self['audio_sources']
 
     @property
-    def generate_on_note_add(self) -> bool:
-        return self['generate_on_note_add'] is True
-
-    @property
     def regenerate_readings(self) -> bool:
         return self['regenerate_readings'] is True
 

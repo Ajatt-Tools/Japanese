@@ -1,5 +1,4 @@
 {
-  "generate_on_note_add": true,
   "regenerate_readings": false,
   "cache_lookups": 1024,
   "last_file_save_location": "",

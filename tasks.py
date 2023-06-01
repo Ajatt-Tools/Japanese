@@ -152,8 +152,7 @@ def on_focus_lost(changed: bool, note: Note, field_idx: int) -> bool:
 def should_generate(note: Note) -> bool:
     """ Generate when a new note is added by Yomichan or Mpvacious. """
     return (
-            cfg.generate_on_note_add is True
-            and mw.app.activeWindow() is None
+            mw.app.activeWindow() is None
             and note.id == 0
     )
 
