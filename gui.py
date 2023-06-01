@@ -197,8 +197,8 @@ class ProfileEditForm(QGroupBox):
             note_type=NoteTypeSelector(),
             source=EditableSelector(),
             destination=EditableSelector(),
-            split_morphemes=QCheckBox(),
             triggered_by=TriggeredBySelector(),
+            split_morphemes=QCheckBox(),
             overwrite_destination=QCheckBox(),
         )
         self._expand_form()
@@ -207,10 +207,34 @@ class ProfileEditForm(QGroupBox):
         adjust_to_contents(self)
         self.setMinimumWidth(EDIT_MIN_WIDTH)
         qconnect(self._form.note_type.currentIndexChanged, lambda index: self._repopulate_fields())
+        self._add_tooltips()
 
     def _expand_form(self):
         """Subclasses add new widgets here."""
         pass
+
+    def _add_tooltips(self):
+        """Subclasses add new tooltips here."""
+        self._form.note_type.setToolTip(
+            "Profile will be triggered for Note Type names that contain this string.\n"
+            "Note Type name matching is case-insensitive."
+        )
+        self._form.source.setToolTip(
+            "Name of the field to get data from, i.e. the raw expression."
+        )
+        self._form.destination.setToolTip(
+            "Name of the field to place generated data to."
+        )
+        self._form.triggered_by.setToolTip(
+            "Names of Anki actions that can trigger this profile's task."
+        )
+        self._form.split_morphemes.setToolTip(
+            "If the source field contains multiple words, try to identify and parse each word.\n"
+            "Recommended to disable for vocabulary fields."
+        )
+        self._form.overwrite_destination.setToolTip(
+            "When triggered, always replace existing data in the destination field."
+        )
 
     def as_profile(self) -> Profile:
         return Profile(**self._as_dict())
