@@ -59,6 +59,10 @@ class Profile:
         ]
 
     def should_answer_to(self, caller: TaskCaller) -> bool:
+        """
+        When a task starts, it can refuse to run
+        if the caller isn't listed among the callers that the task can be triggered by.
+        """
         return caller in self.enabled_callers()
 
     @classmethod
