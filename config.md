@@ -6,11 +6,6 @@
 
 ### General
 
-* `regenerate_readings`.
-  When you run "Edit" > "Bulk-add readings"
-  in the Anki Browser,
-  readings for each card will be regenerated
-  even if destination is already filled.
 * `cache_lookups`.
   Size of cache.
   Used internally.

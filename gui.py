@@ -401,15 +401,7 @@ class SettingsForm(QGroupBox):
         return layout
 
 
-class BehaviorSettingsForm(SettingsForm):
-    _title = "Behavior"
-    _config = cfg
 
-    def _add_tooltips(self):
-        super()._add_tooltips()
-        self._widgets.regenerate_readings.setToolTip(
-            "The Bulk-add action will ignore already added readings, accents, etc."
-        )
 
 
 class ContextMenuSettingsForm(SettingsForm):
@@ -694,7 +686,6 @@ class SettingsDialog(QDialog):
         super().__init__(*args)
 
         # General tab
-        self._behavior_settings = BehaviorSettingsForm()
         self._context_menu_settings = ContextMenuSettingsForm()
         self._toolbar_settings = ToolbarSettingsForm()
 
@@ -736,13 +727,9 @@ class SettingsDialog(QDialog):
     def _setup_tabs(self):
         # General
         tab = QWidget()
-        tab.setLayout(layout := QGridLayout())
-        # row, column, rowSpan, columnSpan
-        layout.addWidget(self._behavior_settings, 1, 1)
-        layout.addWidget(self._context_menu_settings, 2, 1)
-        layout.addWidget(self._toolbar_settings, 1, 2, 2, 1)
-        for column in (1, 2):
-            layout.setColumnStretch(column, 1)
+        tab.setLayout(layout := QVBoxLayout())
+        layout.addWidget(self._toolbar_settings)
+        layout.addWidget(self._context_menu_settings)
         self._tabs.addTab(tab, "General")
 
         # Furigana
@@ -803,7 +790,6 @@ class SettingsDialog(QDialog):
         return layout
 
     def accept(self) -> None:
-        cfg.update(self._behavior_settings.as_dict())
         cfg['pitch_accent'].update(self._pitch_settings.as_dict())
         cfg['furigana'].update(self._furigana_settings.as_dict())
         cfg['context_menu'].update(self._context_menu_settings.as_dict())

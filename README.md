@@ -92,7 +92,7 @@ When using the Anki Browser, you can mass-generate pitch accents and readings in
 To do this, select several notes first,
 and then choose "Edit" > "AJT: Bulk-generate".
 By default, the "bulk generate" feature will not overwrite the destination fields if they are already filled,
-but you can change this by setting `regenerate_readings` to `True` in the config.
+but you can change this by setting `overwrite readings` on per-profie basis.
 
 If the add-on can't find any pitch accent data for the word spelled in kanji,
 it tries searching using the kana reading of the word.

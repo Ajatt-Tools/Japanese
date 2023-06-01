@@ -23,7 +23,7 @@ def update_notes_op(col: Collection, notes: Sequence[Note]):
     pos = col.add_custom_undo_entry(f"AJT: Add data to {len(notes)} notes.")
     to_update = []
     for note in notes:
-        changed = DoTasks(note=note, caller=TaskCaller.bulk_add, overwrite=cfg.regenerate_readings).run()
+        changed = DoTasks(note=note, caller=TaskCaller.bulk_add).run()
         if changed:
             to_update.append(note)
     col.update_notes(to_update)

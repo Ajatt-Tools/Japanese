@@ -238,10 +238,6 @@ class ConfigView(ConfigViewBase):
         return self['audio_sources']
 
     @property
-    def regenerate_readings(self) -> bool:
-        return self['regenerate_readings'] is True
-
-    @property
     def cache_lookups(self) -> int:
         return int(self['cache_lookups'])
 
