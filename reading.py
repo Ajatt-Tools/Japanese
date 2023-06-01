@@ -13,7 +13,7 @@ from .config_view import config_view as cfg, ReadingsDiscardMode
 from .database.acc_dict_mgr import AccentDict, FormattedEntry, AccentDictManager
 from .helpers import *
 from .helpers.common_kana import adjust_reading
-from .helpers.mingle_readings import mingle_readings, word_reading, strip_non_jp_furigana, WordReading
+from .helpers.mingle_readings import *
 from .helpers.profiles import PitchOutputFormat
 from .helpers.tokens import tokenize, split_separators, ParseableToken, clean_furigana, Token
 from .helpers.unify_readings import literal_pronunciation as pr
@@ -58,6 +58,17 @@ def lookup_expr_variants(expr: str) -> Iterable[FormattedEntry]:
     ))).keys()
 
 
+def is_reading_unparseable(expr_reading: str) -> bool:
+    """
+    Don't bother handling readings that contain multiple different words or readings that are numbers.
+    """
+    return (
+            expr_reading.isnumeric()
+            or cfg.furigana.reading_separator.strip() in expr_reading
+            or MULTIPLE_READING_SEP in expr_reading
+    )
+
+
 def split_possible_furigana(expr: str) -> WordReading:
     # Sometimes furigana notation is being used by the users to distinguish otherwise duplicate notes.
     # E.g., テスト[1], テスト[2]
@@ -68,7 +79,7 @@ def split_possible_furigana(expr: str) -> WordReading:
     expr, expr_reading = clean_furigana(expr), clean_furigana(expr_reading)
 
     # If there are numbers or multiple readings present, ignore all of them.
-    if expr_reading and (expr_reading.isnumeric() or cfg.furigana.reading_separator in expr_reading):
+    if expr_reading and is_reading_unparseable(expr_reading):
         expr_reading = ''
 
     return WordReading(expr, expr_reading)

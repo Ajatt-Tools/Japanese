@@ -2,7 +2,9 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import re
-from typing import NamedTuple
+from typing import NamedTuple, Final
+
+MULTIPLE_READING_SEP: Final[str] = '・'
 
 
 class SplitFurigana(NamedTuple):
@@ -40,7 +42,7 @@ def decompose_word(text: str) -> SplitFurigana:
 
 def tie_inside_furigana(s: str) -> str:
     def fixup(m: re.Match):
-        return m.group().replace(' ', '・')
+        return m.group().replace(' ', MULTIPLE_READING_SEP)
 
     return re.sub(r'\[[^\[\]]+?]', fixup, s)
 
