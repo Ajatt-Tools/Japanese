@@ -157,6 +157,10 @@ class ToolbarConfigView(ConfigViewBase):
             return ToolbarButtonConfig(True, "", "？")
 
     @property
+    def generate_all_button(self) -> ToolbarButtonConfig:
+        return self['generate_all_button']
+
+    @property
     def regenerate_all_button(self) -> ToolbarButtonConfig:
         return self['regenerate_all_button']
 

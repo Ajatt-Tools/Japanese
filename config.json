@@ -79,9 +79,14 @@
     "literal_pronunciation": true
   },
   "toolbar": {
-    "regenerate_all_button": {
+    "generate_all_button": {
       "enabled": true,
       "shortcut": "Alt+P",
+      "text": "入"
+    },
+    "regenerate_all_button": {
+      "enabled": true,
+      "shortcut": "Alt+;",
       "text": "再"
     },
     "furigana_button": {

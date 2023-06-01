@@ -48,9 +48,15 @@ def modify_note(func: Callable[[Note], object]) -> Callable[[Editor], None]:
 def query_buttons() -> Iterable[ToolbarButton]:
     return (
         ToolbarButton(
+            id='generate_all_button',
+            on_press=modify_note(lambda note: DoTasks(note, caller=TaskCaller.toolbar_button, overwrite=False).run()),
+            tip='Generate all fields',
+            conf=cfg.toolbar.generate_all_button
+        ),
+        ToolbarButton(
             id='regenerate_all_button',
             on_press=modify_note(lambda note: DoTasks(note, caller=TaskCaller.toolbar_button, overwrite=True).run()),
-            tip='Regenerate all fields',
+            tip='Regenerate all fields (overwrite existing data)',
             conf=cfg.toolbar.regenerate_all_button
         ),
         ToolbarButton(
