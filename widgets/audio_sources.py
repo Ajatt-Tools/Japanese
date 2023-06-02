@@ -2,15 +2,19 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import dataclasses
+import io
+import os.path
 import re
 from typing import Iterable
 
 from aqt.qt import *
 
 try:
+    from ..helpers.file_ops import iter_audio_cache_files
     from .table import ExpandingTableWidget, CellContent, TableRow
     from ..helpers.audio_manager import AudioSourceConfig, normalize_filename
 except ImportError:
+    from helpers.file_ops import iter_audio_cache_files
     from table import ExpandingTableWidget, CellContent, TableRow
     from helpers.audio_manager import AudioSourceConfig, normalize_filename
 
@@ -25,6 +29,21 @@ class SourceEnableCheckbox(QCheckBox):
         """)
 
 
+def tooltip_cache_remove_complete(removed: list[AudioSourceConfig]):
+    from aqt.utils import tooltip
+
+    msg = io.StringIO()
+    if removed:
+        msg.write(f"<b>Removed {len(removed)} cache files:</b>")
+        msg.write("<ol>")
+        for source in removed:
+            msg.write(f"<li>{source.name}</li>")
+        msg.write("</ol>")
+    else:
+        msg.write("No cache files to remove")
+    tooltip(msg.getvalue(), period=5000)
+
+
 class AudioSourcesTable(ExpandingTableWidget):
     _columns = tuple(field.name.capitalize() for field in dataclasses.fields(AudioSourceConfig))
     # Slightly tightened the separator regex compared to the pitch override widget
@@ -34,10 +53,31 @@ class AudioSourcesTable(ExpandingTableWidget):
     def __init__(self, *args):
         super().__init__(*args)
         self.addMoveRowContextActions()
+        self.addClearCacheContextAction()
 
         # Override the parent class's section resize modes for some columns.
         self.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
         self.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
+
+    def addClearCacheContextAction(self):
+        self.setContextMenuPolicy(Qt.ContextMenuPolicy.ActionsContextMenu)
+        action = QAction("Clear cache for selected sources", self)
+        qconnect(action.triggered, self.clearCacheForSelectedSources)
+        self.addAction(action)
+
+    def clearCacheForSelectedSources(self):
+        """
+        Remove cache files for the selected audio sources.
+        Missing cache files are skipped.
+        """
+        existing_cache_paths = [file.path for file in iter_audio_cache_files()]
+        removed: list[AudioSourceConfig] = []
+        for source in self.iterateSelectedConfigs():
+            if source.cache_path in existing_cache_paths:
+                os.remove(source.cache_path)
+                removed.append(source)
+                print(f"Removed cache file: {source.cache_path}")
+        tooltip_cache_remove_complete(removed)
 
     def addMoveRowContextActions(self):
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.ActionsContextMenu)
@@ -84,6 +124,12 @@ class AudioSourcesTable(ExpandingTableWidget):
                     row.name += '(new)'
                 sources[row.name] = row
         return sources.values()
+
+    def iterateSelectedConfigs(self) -> Iterable[AudioSourceConfig]:
+        selected_row_numbers = sorted(index.row() for index in self.selectedIndexes())
+        for index, config in enumerate(self.iterateConfigs()):
+            if index in selected_row_numbers:
+                yield config
 
     def populate(self, sources: Iterable[AudioSourceConfig]):
         self.setRowCount(0)
