@@ -330,6 +330,20 @@ class InitResult:
     errors: list[AudioManagerException]
 
 
+@dataclasses.dataclass(frozen=True)
+class AudioStats:
+    source_name: str
+    num_files: int
+    num_headwords: int
+
+
+@dataclasses.dataclass(frozen=True)
+class TotalAudioStats:
+    unique_headwords: int
+    unique_files: int
+    sources: list[AudioStats]
+
+
 def read_zip(zip_in: zipfile.ZipFile, file: AudioSource) -> bytes:
     try:
         return zip_in.read(next(
@@ -389,6 +403,22 @@ class AudioSourceManager:
             source.download_remote_json(self._http_client)
         source.pickle_self()
 
+    def total_stats(self) -> TotalAudioStats:
+        unique_files, unique_headwords, stats = set(), set(), list()
+        for source in self._audio_sources:
+            stats.append(AudioStats(
+                source_name=source.name,
+                num_files=len(source.files),
+                num_headwords=len(source.headwords)
+            ))
+            unique_files.update(source.files)
+            unique_headwords.update(source.headwords)
+        return TotalAudioStats(
+            unique_files=len(unique_files),
+            unique_headwords=len(unique_headwords),
+            sources=stats,
+        )
+
     def search_word(self, word: str) -> Iterable[FileUrlData]:
         for source in self._audio_sources:
             if word in source.headwords:
@@ -413,6 +443,9 @@ def main():
 
     def init_audio_dictionaries(self: AudioSourceManager):
         self._set_sources(self._init_dictionaries().sources)
+        stats = self.total_stats()
+        print(f"Unique audio files: {stats.unique_files}")
+        print(f"Unique headwords: {stats.unique_headwords}")
 
     aud_src_mgr = AudioSourceManager(cfg)
     init_audio_dictionaries(aud_src_mgr)

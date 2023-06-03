@@ -180,7 +180,13 @@ class AnkiAudioSourceManager(AudioSourceManager):
                 for error in result.errors
             ))
         elif notify_on_finish and result.sources:
-            tooltip("Initialized audio sources.")
+            stats = self.total_stats()
+            tooltip(
+                "<b>Initialized audio sources.</b><ul>"
+                f"<li>Unique audio files: <code>{stats.unique_files}</code></li>"
+                f"<li>Unique headwords: <code>{stats.unique_headwords}</code></li></ul>",
+                period=5000,
+            )
 
     def _remove_old_cache_files(self):
         known_source_files = [source.cache_path for source in self._config.iter_audio_sources()]
