@@ -174,6 +174,9 @@ class AnkiAudioSourceManager(AudioSourceManager):
     def _after_init(self, result: InitResult, notify_on_finish: bool):
         self._set_sources(result.sources)
         self._remove_old_cache_files()
+        self._report_init_results(result, notify_on_finish)
+
+    def _report_init_results(self, result: InitResult, notify_on_finish: bool):
         if result.errors:
             showWarning('\n'.join(
                 f"Couldn't download audio source: {error.explanation}."
