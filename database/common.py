@@ -21,7 +21,7 @@ def should_regenerate(file_path: str) -> bool:
 
 
 def kana_to_moras(kana: str) -> list[str]:
-    return re.findall(r'.[ァィゥェォャュョぁぃぅぇぉゃゅょ]?', kana)
+    return re.findall(r'.゚?[ァィゥェォャュョぁぃぅぇぉゃゅょ]?', kana)
 
 
 class FormattedEntry(NamedTuple):
