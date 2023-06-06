@@ -142,7 +142,7 @@ class AudioSearchDialog(QDialog):
         self.setLayout(main_layout)
 
         # connect search button to search function
-        qconnect(self._search_bar.search_committed, self.search)
+        qconnect(self._search_bar.search_committed, lambda: self.search())
         qconnect(self._button_box.accepted, self.accept)
         qconnect(self._button_box.rejected, self.reject)
 
@@ -162,15 +162,12 @@ class AudioSearchDialog(QDialog):
     def table(self):
         return self._table_widget
 
-    def set_search_text(self, search_text: str):
-        return self._search_bar.set_text(search_text)
-
     def files_to_add(self):
         return self._table_widget.files_to_add()
 
-    def search(self):
-        search_text = self._search_bar.current_text().lower()
+    def search(self, search_text: typing.Optional[str] = None):
         self._table_widget.clear()
+        self._search_bar.set_text(search_text := (search_text or self._search_bar.current_text()))
         if not search_text:
             return
         # repopulate with new data
@@ -205,8 +202,7 @@ def main():
 
     app = QApplication(sys.argv)
     dialog = AudioSearchDialog(MockAudioManager())
-    dialog.set_search_text("test")
-    dialog.search()
+    dialog.search("test")
     dialog.show()
     app.exec()
     for file in dialog.files_to_add():
