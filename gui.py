@@ -401,9 +401,6 @@ class SettingsForm(QGroupBox):
         return layout
 
 
-
-
-
 class ContextMenuSettingsForm(SettingsForm):
     _title = "Context menu"
     _config = cfg.context_menu
@@ -725,13 +722,6 @@ class SettingsDialog(QDialog):
         return super().done(*args, **kwargs)
 
     def _setup_tabs(self):
-        # General
-        tab = QWidget()
-        tab.setLayout(layout := QVBoxLayout())
-        layout.addWidget(self._toolbar_settings)
-        layout.addWidget(self._context_menu_settings)
-        self._tabs.addTab(tab, "General")
-
         # Furigana
         tab = QWidget()
         tab.setLayout(layout := QVBoxLayout())
@@ -757,6 +747,13 @@ class SettingsDialog(QDialog):
 
         # Accent DB override
         self._tabs.addTab(self._accents_override, "Overrides")
+
+        # Menus
+        tab = QWidget()
+        tab.setLayout(layout := QVBoxLayout())
+        layout.addWidget(self._toolbar_settings)
+        layout.addWidget(self._context_menu_settings)
+        self._tabs.addTab(tab, "Menus")
 
     def _setup_ui(self) -> None:
         self.setWindowModality(Qt.WindowModality.ApplicationModal)
