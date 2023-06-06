@@ -127,6 +127,7 @@ class AudioSearchDialog(QDialog):
 
         # create widgets
         self._search_bar = SearchBar()
+        self._field_selector = QComboBox()
         self._table_widget = SearchResultsTable()
         self._button_box = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok |
@@ -135,7 +136,7 @@ class AudioSearchDialog(QDialog):
 
         # add search bar, button, and table to main layout
         main_layout = QVBoxLayout()
-        main_layout.addWidget(self._search_bar)
+        main_layout.addLayout(self._create_top_layout())
         main_layout.addWidget(self._table_widget)
         main_layout.addWidget(self._button_box)
         self.setLayout(main_layout)
@@ -144,6 +145,18 @@ class AudioSearchDialog(QDialog):
         qconnect(self._search_bar.search_committed, self.search)
         qconnect(self._button_box.accepted, self.accept)
         qconnect(self._button_box.rejected, self.reject)
+
+    def _create_top_layout(self):
+        layout = QHBoxLayout()
+        layout.addWidget(QLabel("Destination:"))
+        layout.addWidget(self._field_selector)
+        layout.addWidget(QLabel("Search:"))
+        layout.addWidget(self._search_bar)
+        self._field_selector.setMinimumWidth(150)
+        self._field_selector.setMaximumWidth(200)
+        self._field_selector.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
+        self._search_bar.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum)
+        return layout
 
     @property
     def table(self):
