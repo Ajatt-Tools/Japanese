@@ -35,11 +35,12 @@ def modify_field(func: Callable[[str], str]) -> Callable[[Editor], None]:
     return decorator
 
 
-def modify_note(func: Callable[[Note], object]) -> Callable[[Editor], None]:
+def modify_note(func: Callable[[Editor], object]) -> Callable[[Editor], None]:
     @functools.wraps(func)
     def decorator(editor: Editor) -> None:
-        if note := editor.note:
-            func(note)
+        if editor.note:
+            # Note must be set to proceed.
+            func(editor)
             if editor.currentField is None:
                 editor.loadNote(focusTo=0)
             else:
@@ -48,16 +49,16 @@ def modify_note(func: Callable[[Note], object]) -> Callable[[Editor], None]:
     return decorator
 
 
-def search_audio(note: Note):
+def search_audio(editor: Editor):
     dialog = AudioSearchDialog(aud_src_mgr)
     fix_default_anki_style(dialog.table)
-    dialog.set_note_fields(note.keys(), selected_field_name=cfg.audio_settings.search_dialog_field_name)
-    # dialog.search("test") todo
+    dialog.set_note_fields(editor.note.keys(), selected_field_name=cfg.audio_settings.search_dialog_field_name)
+    dialog.search(editor.web.selectedText())
     if not dialog.exec():
         return
     results = dialog.files_to_add()
     cfg.audio_settings.search_dialog_field_name = dialog.destination_field_name()
-    note[dialog.destination_field_name()] += format_audio_tags(results)
+    editor.note[dialog.destination_field_name()] += format_audio_tags(results)
     # search_results = list(ensure_unique_files(search_results)) todo
     aud_src_mgr.download_tags_bg(results)
     cfg.write_config()
@@ -67,13 +68,21 @@ def query_buttons() -> Iterable[ToolbarButton]:
     return (
         ToolbarButton(
             id='generate_all_button',
-            on_press=modify_note(lambda note: DoTasks(note, caller=TaskCaller.toolbar_button, overwrite=False).run()),
+            on_press=modify_note(lambda editor: DoTasks(
+                editor.note,
+                caller=TaskCaller.toolbar_button,
+                overwrite=False,
+            ).run()),
             tip='Generate all fields',
             conf=cfg.toolbar.generate_all_button
         ),
         ToolbarButton(
             id='regenerate_all_button',
-            on_press=modify_note(lambda note: DoTasks(note, caller=TaskCaller.toolbar_button, overwrite=True).run()),
+            on_press=modify_note(lambda editor: DoTasks(
+                editor.note,
+                caller=TaskCaller.toolbar_button,
+                overwrite=True,
+            ).run()),
             tip='Regenerate all fields (overwrite existing data)',
             conf=cfg.toolbar.regenerate_all_button
         ),
