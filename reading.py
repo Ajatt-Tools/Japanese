@@ -58,14 +58,19 @@ def lookup_expr_variants(expr: str) -> Iterable[FormattedEntry]:
     ))).keys()
 
 
-def is_reading_unparseable(expr_reading: str) -> bool:
+def should_ignore_incorrect_reading(expr_reading: str) -> bool:
     """
     Don't bother handling readings that contain multiple different words or readings that are numbers.
+    Sometimes the reading starts with x or ×, like 明後日[×あさって].
+    Used to indicate that one of the two possible readings is not the answer.
+    https://tatsumoto-ren.github.io/blog/discussing-various-card-templates.html#distinguishing-readings
     """
     return (
             expr_reading.isnumeric()
             or cfg.furigana.reading_separator.strip() in expr_reading
             or MULTIPLE_READING_SEP in expr_reading
+            or expr_reading.startswith('x')
+            or expr_reading.startswith('×')
     )
 
 
@@ -79,7 +84,7 @@ def split_possible_furigana(expr: str) -> WordReading:
     expr, expr_reading = clean_furigana(expr), clean_furigana(expr_reading)
 
     # If there are numbers or multiple readings present, ignore all of them.
-    if expr_reading and is_reading_unparseable(expr_reading):
+    if expr_reading and should_ignore_incorrect_reading(expr_reading):
         expr_reading = ''
 
     return WordReading(expr, expr_reading)
