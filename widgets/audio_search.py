@@ -162,7 +162,7 @@ class AudioSearchDialog(QDialog):
     def table(self):
         return self._table_widget
 
-    def files_to_add(self):
+    def files_to_add(self) -> list[FileUrlData]:
         return self._table_widget.files_to_add()
 
     def search(self, search_text: typing.Optional[str] = None):
@@ -175,17 +175,18 @@ class AudioSearchDialog(QDialog):
 
 
 def main():
-    def get_rand_file():
+    def get_rand_file() -> FileUrlData:
         import string
 
         def gen_rand_str(length: int = 10):
             return ''.join(random.choices(string.ascii_lowercase + string.digits, k=length))
 
         return FileUrlData(
-            f"https://example.com/{gen_rand_str()}.ogg",
-            f"{gen_rand_str()}.ogg",
-            gen_rand_str(),
-            f"src{gen_rand_str()}")
+            url=f"https://example.com/{gen_rand_str()}.ogg",
+            desired_filename=f"{gen_rand_str()}.ogg",
+            word=gen_rand_str(),
+            source_name=f"src{gen_rand_str()}",
+        )
 
     class MockAudioManager:
         # noinspection PyMethodMayBeStatic
