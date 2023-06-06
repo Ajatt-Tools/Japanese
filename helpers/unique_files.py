@@ -45,11 +45,11 @@ def ensure_unique_files(files: Iterable[FileUrlData]) -> Iterable[FileUrlData]:
 
 def main():
     examples = [
-        FileUrlData("/mnt/data/file1.png", "file1.png"),
-        FileUrlData("/mnt/data/file1.png", "file2.png"),
-        FileUrlData("/mnt/data/file1.png", "file1.png"),
-        FileUrlData("/mnt/data/file2.png", "file2.png"),
-        FileUrlData("/mnt/data/file2.png", "file1.png"),
+        FileUrlData("/mnt/data/file1.png", "file1.png", "単語", "NHK"),
+        FileUrlData("/mnt/data/file1.png", "file2.png", "単語", "NHK"),
+        FileUrlData("/mnt/data/file1.png", "file1.png", "単語", "NHK"),
+        FileUrlData("/mnt/data/file2.png", "file2.png", "単語", "NHK"),
+        FileUrlData("/mnt/data/file2.png", "file1.png", "単語", "NHK"),
     ]
     for file in ensure_unique_files(examples):
         print(file)

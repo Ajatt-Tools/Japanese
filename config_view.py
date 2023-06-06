@@ -176,6 +176,10 @@ class ToolbarConfigView(ConfigViewBase):
     def clean_furigana_button(self) -> ToolbarButtonConfig:
         return self['clean_furigana_button']
 
+    @property
+    def audio_search_button(self) -> ToolbarButtonConfig:
+        return self['audio_search_button']
+
 
 @final
 class AudioSettingsConfigView(ConfigViewBase):

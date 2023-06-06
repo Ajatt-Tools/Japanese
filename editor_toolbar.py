@@ -8,11 +8,14 @@ from anki.notes import Note
 from aqt import gui_hooks
 from aqt.editor import Editor
 
+from .audio import aud_src_mgr, format_audio_tags
 from .config_view import config_view as cfg, ToolbarButtonConfig
 from .helpers.profiles import TaskCaller
 from .helpers.tokens import clean_furigana
 from .reading import generate_furigana
 from .tasks import DoTasks
+from .widgets.anki_style import fix_default_anki_style
+from .widgets.audio_search import AudioSearchDialog
 
 
 class ToolbarButton(NamedTuple):
@@ -43,6 +46,19 @@ def modify_note(func: Callable[[Note], object]) -> Callable[[Editor], None]:
                 editor.loadNoteKeepingFocus()
 
     return decorator
+
+
+def search_audio(note: Note):
+    dialog = AudioSearchDialog(aud_src_mgr)
+    fix_default_anki_style(dialog.table)
+    # dialog.set_search_text("test")
+    # dialog.search()
+    if not dialog.exec():
+        return
+    results = dialog.files_to_add()
+    note['VocabAudio'] += format_audio_tags(results)  # todo configure
+    # search_results = list(ensure_unique_files(search_results)) todo
+    aud_src_mgr.download_tags_bg(results)
 
 
 def query_buttons() -> Iterable[ToolbarButton]:
@@ -76,6 +92,12 @@ def query_buttons() -> Iterable[ToolbarButton]:
             on_press=modify_field(clean_furigana),
             tip='Clean furigana in the field',
             conf=cfg.toolbar.clean_furigana_button
+        ),
+        ToolbarButton(
+            id='audio_search_button',
+            on_press=modify_note(search_audio),
+            tip='Search audio files to add to note',
+            conf=cfg.toolbar.audio_search_button
         ),
     )
 

@@ -102,6 +102,11 @@
       "enabled": false,
       "shortcut": "",
       "text": "削"
+    },
+    "audio_search_button": {
+      "enabled": true,
+      "shortcut": "",
+      "text": "検"
     }
   },
   "audio_sources": [

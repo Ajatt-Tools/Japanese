@@ -58,6 +58,8 @@ def normalize_filename(text: str) -> str:
 class FileUrlData:
     url: str
     desired_filename: str
+    word: str
+    source_name: str
     reading: str = ""
     pitch_number: str = "?"
 
@@ -199,6 +201,8 @@ class AudioSource(AudioSourceConfig):
         return FileUrlData(
             url=self.join(self.media_dir, file_name),
             desired_filename=desired_filename,
+            word=word,
+            source_name=self.name,
             reading=file_info.get('kana_reading', ''),
             pitch_number=file_info.get('pitch_number', '?')
         )
