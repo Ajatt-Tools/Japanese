@@ -173,6 +173,14 @@ class AudioSearchDialog(QDialog):
         # repopulate with new data
         self._table_widget.populate_with_results(self._audio_manager.search_audio(search_text, split_morphemes=True))
 
+    def set_note_fields(self, field_names: list[str], selected_field_name: str):
+        self._field_selector.clear()
+        self._field_selector.addItems(field_names)
+        self._field_selector.setCurrentText(selected_field_name)
+
+    def destination_field(self) -> str:
+        return self._field_selector.currentText()
+
 
 def main():
     def get_rand_file() -> FileUrlData:
@@ -203,11 +211,14 @@ def main():
 
     app = QApplication(sys.argv)
     dialog = AudioSearchDialog(MockAudioManager())
+    dialog.set_note_fields(["Question", "Answer", "Audio", "Image", ], selected_field_name="Audio")
     dialog.search("test")
     dialog.show()
     app.exec()
+    print("chosen:")
     for file in dialog.files_to_add():
         print(file)
+    print(f"destination: {dialog.destination_field()}")
 
 
 if __name__ == '__main__':
