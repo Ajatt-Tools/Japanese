@@ -55,6 +55,7 @@ class SearchBar(QWidget):
         hbox.setSpacing(3)
         hbox.addWidget(self._search_line)
         hbox.addWidget(self._search_button)
+        self._search_line.setPlaceholderText("Word to look up...")
         self.setLayout(hbox)
 
 
@@ -123,7 +124,7 @@ class AudioSearchDialog(QDialog):
         super().__init__(parent)
         self._audio_manager = audio_manager
         self.setMinimumSize(600, 400)
-        self.setWindowTitle("Audio search")
+        self.setWindowTitle("AJT Japanese - Audio search")
 
         # create widgets
         self._search_bar = SearchBar()
@@ -178,7 +179,7 @@ class AudioSearchDialog(QDialog):
         self._field_selector.addItems(field_names)
         self._field_selector.setCurrentText(selected_field_name)
 
-    def destination_field(self) -> str:
+    def destination_field_name(self) -> str:
         return self._field_selector.currentText()
 
 
@@ -218,7 +219,7 @@ def main():
     print("chosen:")
     for file in dialog.files_to_add():
         print(file)
-    print(f"destination: {dialog.destination_field()}")
+    print(f"destination: {dialog.destination_field_name()}")
 
 
 if __name__ == '__main__':

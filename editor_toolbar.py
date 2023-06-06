@@ -51,14 +51,16 @@ def modify_note(func: Callable[[Note], object]) -> Callable[[Editor], None]:
 def search_audio(note: Note):
     dialog = AudioSearchDialog(aud_src_mgr)
     fix_default_anki_style(dialog.table)
-    # dialog.set_search_text("test")
-    # dialog.search()
+    dialog.set_note_fields(note.keys(), selected_field_name=cfg.audio_settings.search_dialog_field_name)
+    # dialog.search("test") todo
     if not dialog.exec():
         return
     results = dialog.files_to_add()
-    note['VocabAudio'] += format_audio_tags(results)  # todo configure
+    cfg.audio_settings.search_dialog_field_name = dialog.destination_field_name()
+    note[dialog.destination_field_name()] += format_audio_tags(results)
     # search_results = list(ensure_unique_files(search_results)) todo
     aud_src_mgr.download_tags_bg(results)
+    cfg.write_config()
 
 
 def query_buttons() -> Iterable[ToolbarButton]:

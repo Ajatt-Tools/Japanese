@@ -132,6 +132,7 @@
     "attempts": 4,
     "maximum_results": 99,
     "ignore_inflections": false,
-    "stop_if_one_source_has_results": false
+    "stop_if_one_source_has_results": false,
+    "search_dialog_field_name": "VocabAudio"
   }
 }
