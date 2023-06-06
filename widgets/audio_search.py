@@ -107,13 +107,14 @@ class SearchResultsTable(QTableWidget):
         for row_n, file in enumerate(results):
             self.insertRow(row_n)
             self.setCellWidget(row_n, SearchResultsTableColumns.add_to_note.value, SourceEnableCheckbox())
-            self.setItem(row_n, SearchResultsTableColumns.source_name.value,
-                         source := QTableWidgetItem(file.source_name))
-            self.setItem(row_n, SearchResultsTableColumns.url.value, url := QTableWidgetItem(file.url))
-            self.setItem(row_n, SearchResultsTableColumns.filename.value,
-                         filename := QTableWidgetItem(file.desired_filename))
-            self.setItem(row_n, SearchResultsTableColumns.word.value, word := QTableWidgetItem(file.word))
-            for item in (source, url, filename, word,):
+            row_map = {
+                SearchResultsTableColumns.source_name: file.source_name,
+                SearchResultsTableColumns.url: file.url,
+                SearchResultsTableColumns.filename: file.desired_filename,
+                SearchResultsTableColumns.word: file.word,
+            }
+            for column, field in row_map.items():
+                self.setItem(row_n, column.value, item := QTableWidgetItem(field))
                 item.setFlags(item.flags() ^ Qt.ItemFlag.ItemIsEditable)
 
 
