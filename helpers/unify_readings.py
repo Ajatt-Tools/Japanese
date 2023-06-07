@@ -86,17 +86,35 @@ def unify_repr(reading: str):
     return reading
 
 
+def replace_handakuten(reading: str):
+    # corner cases for some entries present in the NHK 2016 audio source
+    return (
+        reading
+        .replace('か゚', 'が')
+        .replace('カ゚', 'ガ')
+        .replace('き゚', 'ぎ')
+        .replace('キ゚', 'ギ')
+        .replace('く゚', 'ぐ')
+        .replace('ク゚', 'グ')
+        .replace('け゚', 'げ')
+        .replace('ケ゚', 'ゲ')
+        .replace('こ゚', 'ご')
+        .replace('コ゚', 'ゴ')
+    )
+
+
 def literal_pronunciation(text: str) -> str:
-    return to_katakana(unify_repr(text))
+    return to_katakana(unify_repr(replace_handakuten(text)))
 
 
-def test():
+def main():
     assert unify_repr('おおうなばら') == 'おーうなばら'
     assert unify_repr('おはよう') == 'おはよー'
     assert unify_repr('おお') == 'おー'
     assert unify_repr('よじょうはん') == 'よじょーはん'
     assert literal_pronunciation('がっこう') == 'ガッコー'
+    print("Ok.")
 
 
 if __name__ == '__main__':
-    test()
+    main()

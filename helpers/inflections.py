@@ -17,23 +17,6 @@ def longest_kana_suffix(word: str) -> Optional[str]:
             return substr
 
 
-def replace_handakuten(reading: str):
-    # corner cases for some entries present in the NHK 2016 audio source
-    return (
-        reading
-        .replace('か゚', 'が')
-        .replace('カ゚', 'ガ')
-        .replace('き゚', 'ぎ')
-        .replace('キ゚', 'ギ')
-        .replace('く゚', 'ぐ')
-        .replace('ク゚', 'グ')
-        .replace('け゚', 'げ')
-        .replace('ケ゚', 'ゲ')
-        .replace('こ゚', 'ご')
-        .replace('コ゚', 'ゴ')
-    )
-
-
 def is_inflected(headword: str, reading: str) -> bool:
     """
     Test if a reading of a verb/adjective is inflected, e.g. 臭くて, 臭かった.
@@ -41,7 +24,7 @@ def is_inflected(headword: str, reading: str) -> bool:
     """
     return bool(
         (kana_suffix := longest_kana_suffix(headword))
-        and pr(kana_suffix) != pr(replace_handakuten(reading)[-len(kana_suffix):])
+        and pr(kana_suffix) != pr(reading)[-len(kana_suffix):]
     )
 
 
