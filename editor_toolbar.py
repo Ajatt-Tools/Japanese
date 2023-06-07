@@ -15,7 +15,7 @@ from .helpers.tokens import clean_furigana
 from .reading import generate_furigana
 from .tasks import DoTasks
 from .widgets.anki_style import fix_default_anki_style
-from .widgets.audio_search import AudioSearchDialog
+from .widgets.audio_search import AnkiAudioSearchDialog
 
 
 class ToolbarButton(NamedTuple):
@@ -50,7 +50,7 @@ def modify_note(func: Callable[[Editor], object]) -> Callable[[Editor], None]:
 
 
 def search_audio(editor: Editor):
-    dialog = AudioSearchDialog(aud_src_mgr)
+    dialog = AnkiAudioSearchDialog(aud_src_mgr)
     fix_default_anki_style(dialog.table)
     dialog.set_note_fields(editor.note.keys(), selected_field_name=cfg.audio_settings.search_dialog_field_name)
     dialog.search(editor.web.selectedText())

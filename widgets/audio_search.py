@@ -6,6 +6,7 @@ import random
 import typing
 
 from aqt.qt import *
+from aqt.utils import restoreGeom, saveGeom
 
 try:
     from ..helpers import ui_translate
@@ -183,6 +184,19 @@ class AudioSearchDialog(QDialog):
 
     def destination_field_name(self) -> str:
         return self._field_selector.currentText()
+
+
+class AnkiAudioSearchDialog(AudioSearchDialog):
+    name = "ajt__audio_search_dialog"
+
+    def __init__(self, audio_manager: AudioManager, parent=None):
+        super().__init__(audio_manager, parent)
+        # Restore previous geom
+        restoreGeom(self, self.name, adjustSize=True)
+
+    def done(self, *args, **kwargs) -> None:
+        saveGeom(self, self.name)
+        return super().done(*args, **kwargs)
 
 
 def main():
