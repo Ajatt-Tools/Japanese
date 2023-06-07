@@ -19,7 +19,7 @@ except ImportError:
 
 
 class AudioManager(typing.Protocol):
-    def search_audio(self, src_text: str, split_morphemes: bool) -> list[FileUrlData]:
+    def search_audio(self, src_text: str, *, split_morphemes: bool, ignore_inflections: bool) -> list[FileUrlData]:
         ...
 
 
@@ -175,7 +175,11 @@ class AudioSearchDialog(QDialog):
         if not search_text:
             return
         # repopulate with new data
-        self._table_widget.populate_with_results(self._audio_manager.search_audio(search_text, split_morphemes=True))
+        self._table_widget.populate_with_results(self._audio_manager.search_audio(
+            search_text,
+            split_morphemes=True,
+            ignore_inflections=False,
+        ))
 
     def set_note_fields(self, field_names: list[str], selected_field_name: str):
         self._field_selector.clear()
@@ -217,7 +221,7 @@ def main():
     class MockAudioManager:
         # noinspection PyMethodMayBeStatic
         # noinspection PyUnusedLocal
-        def search_audio(self, src_text: str, split_morphemes: bool) -> list[FileUrlData]:
+        def search_audio(self, src_text: str, split_morphemes: bool, ignore_inflections: bool) -> list[FileUrlData]:
             """
             Used for testing purposes.
             """

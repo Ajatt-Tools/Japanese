@@ -79,7 +79,11 @@ class AddPitch(DoTask, task_type=ProfilePitch):
 class AddAudio(DoTask, task_type=ProfileAudio):
     @do_not_modify_destination_if_have_nothing_to_add
     def run(self, src_text: str):
-        search_results = aud_src_mgr.search_audio(src_text, split_morphemes=self._task.split_morphemes)
+        search_results = aud_src_mgr.search_audio(
+            src_text,
+            split_morphemes=self._task.split_morphemes,
+            ignore_inflections=cfg.audio_settings.ignore_inflections,
+        )
         search_results = search_results[:cfg.audio_settings.maximum_results]
         aud_src_mgr.download_tags_bg(search_results)
         return format_audio_tags(search_results)

@@ -13,12 +13,13 @@ from aqt import gui_hooks, mw
 from aqt.operations import QueryOp
 from aqt.utils import tooltip, showWarning
 
-from .helpers.unique_files import ensure_unique_files
+from .helpers.inflections import is_inflected
 from .config_view import config_view as cfg
 from .helpers.audio_manager import AudioSourceManager, FileUrlData, AudioManagerException, InitResult
 from .helpers.file_ops import iter_audio_cache_files
 from .helpers.tokens import tokenize, ParseableToken
 from .helpers.unify_readings import literal_pronunciation as pr
+from .helpers.unique_files import ensure_unique_files
 from .mecab_controller import to_hiragana, to_katakana
 from .mecab_controller.mecab_controller import MecabParsedToken
 from .reading import mecab_translate, split_possible_furigana
@@ -104,7 +105,7 @@ class AnkiAudioSourceManager(AudioSourceManager):
             success=lambda result: self._after_init(result, notify_on_finish),
         ).run_in_background()
 
-    def search_audio(self, src_text: str, split_morphemes: bool) -> list[FileUrlData]:
+    def search_audio(self, src_text: str, *, split_morphemes: bool, ignore_inflections: bool) -> list[FileUrlData]:
         """
         Search audio files (pronunciations) for words contained in search text.
         """
@@ -129,6 +130,10 @@ class AnkiAudioSourceManager(AudioSourceManager):
                     hits.extend(files)
                 elif split_morphemes:
                     hits.extend(self._parse_and_search_audio(part))
+
+        # Filter out inflections if the user wants to.
+        if ignore_inflections:
+            hits = [hit for hit in hits if not is_inflected(hit.word, hit.reading)]
 
         return sorted_files(ensure_unique_files(hits))
 
