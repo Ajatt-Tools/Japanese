@@ -88,6 +88,14 @@ def format_audio_tags(hits: Collection[FileUrlData]):
     )
 
 
+def sorted_files(hits: Iterable[FileUrlData]):
+    """
+    Sort the audio search results according to reading and pitch number
+    to ensure determined order of entries.
+    """
+    return sorted(hits, key=lambda info: (info.reading, info.pitch_number))
+
+
 class AnkiAudioSourceManager(AudioSourceManager):
     def init_audio_dictionaries(self, notify_on_finish: bool = False):
         QueryOp(
@@ -117,12 +125,12 @@ class AnkiAudioSourceManager(AudioSourceManager):
         # Try to split the source text in various ways, trying mecab if everything fails.
         if not hits:
             for part in dict.fromkeys(iter_tokens(src_text)):
-                if files := self._search_word_variants(part):
+                if files := tuple(self._search_word_variants(part)):
                     hits.extend(files)
                 elif split_morphemes:
                     hits.extend(self._parse_and_search_audio(part))
 
-        return list(ensure_unique_files(hits))
+        return sorted_files(ensure_unique_files(hits))
 
     def download_tags_bg(self, hits: Collection[FileUrlData]):
         if not hits:
@@ -133,31 +141,21 @@ class AnkiAudioSourceManager(AudioSourceManager):
             success=lambda futures: save_files(futures)
         ).run_in_background()
 
-    def _search_word_sorted(self, src_text: str):
-        """
-        Search word and sort the results according to reading and pitch number
-        to ensure determined order of entries.
-        """
-        return sorted(
-            self.search_word(src_text),
-            key=lambda info: (info.reading, info.pitch_number)
-        )
-
     def _search_word_variants(self, src_text: str):
         """
         Search word.
         If nothing is found, try searching in hiragana and katakana.
         """
         return (
-                self._search_word_sorted(src_text)
-                or self._search_word_sorted(to_hiragana(src_text))
-                or self._search_word_sorted(to_katakana(src_text))
+                self.search_word(src_text)
+                or self.search_word(to_hiragana(src_text))
+                or self.search_word(to_katakana(src_text))
         )
 
     def _parse_and_search_audio(self, src_text: ParseableToken) -> Iterable[FileUrlData]:
         for parsed in mecab_translate(src_text):
             for variant in iter_parsed_variants(parsed):
-                if files := self._search_word_sorted(variant):
+                if files := tuple(self.search_word(variant)):
                     yield from files
                     # If found results, break because all further results will be duplicates.
                     break
