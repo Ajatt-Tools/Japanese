@@ -13,6 +13,7 @@ from aqt import gui_hooks, mw
 from aqt.operations import QueryOp
 from aqt.utils import tooltip, showWarning
 
+from .helpers.unique_files import ensure_unique_files
 from .config_view import config_view as cfg
 from .helpers.audio_manager import AudioSourceManager, FileUrlData, AudioManagerException, InitResult
 from .helpers.file_ops import iter_audio_cache_files
@@ -96,24 +97,32 @@ class AnkiAudioSourceManager(AudioSourceManager):
         ).run_in_background()
 
     def search_audio(self, src_text: str, split_morphemes: bool) -> list[FileUrlData]:
+        """
+        Search audio files (pronunciations) for words contained in search text.
+        """
+        hits: list[FileUrlData] = []
         src_text, src_text_reading = split_possible_furigana(html_to_text_line(src_text))
-        if hits := self._search_word_variants(src_text):
-            # If full text search succeeded, exit.
-            # If reading is present, erase results that don't match the reading.
-            return (
-                hits
-                if not src_text_reading
-                else [hit for hit in hits if pr(hit.reading) == pr(src_text_reading)]
-            )
-        if src_text_reading and (hits := self._search_word_variants(src_text_reading)):
-            # If there are results for reading, exit.
-            return hits
-        for part in dict.fromkeys(iter_tokens(src_text)):
-            if files := self._search_word_variants(part):
-                hits.extend(files)
-            elif split_morphemes:
-                hits.extend(self._parse_and_search_audio(part))
-        return hits
+
+        # Try full text search.
+        hits.extend(self._search_word_variants(src_text))
+
+        # If reading was specified, erase results that don't match the reading.
+        if src_text_reading:
+            hits = [hit for hit in hits if pr(hit.reading) == pr(src_text_reading)]
+
+        # If reading was specified, try searching by the reading only.
+        if not hits and src_text_reading:
+            hits.extend(self._search_word_variants(src_text_reading))
+
+        # Try to split the source text in various ways, trying mecab if everything fails.
+        if not hits:
+            for part in dict.fromkeys(iter_tokens(src_text)):
+                if files := self._search_word_variants(part):
+                    hits.extend(files)
+                elif split_morphemes:
+                    hits.extend(self._parse_and_search_audio(part))
+
+        return list(ensure_unique_files(hits))
 
     def download_tags_bg(self, hits: Collection[FileUrlData]):
         if not hits:

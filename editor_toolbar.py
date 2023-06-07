@@ -59,7 +59,6 @@ def search_audio(editor: Editor):
     results = dialog.files_to_add()
     cfg.audio_settings.search_dialog_field_name = dialog.destination_field_name()
     editor.note[dialog.destination_field_name()] += format_audio_tags(results)
-    # search_results = list(ensure_unique_files(search_results)) todo
     aud_src_mgr.download_tags_bg(results)
     cfg.write_config()
 
