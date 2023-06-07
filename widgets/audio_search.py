@@ -69,7 +69,7 @@ class SearchResultsTableColumns(enum.Enum):
     filename = enum.auto()
 
     @classmethod
-    def count(cls):
+    def column_count(cls):
         return sum(1 for _ in cls)
 
 
@@ -80,7 +80,7 @@ class SearchResultsTable(QTableWidget):
         self.verticalHeader().setVisible(False)
         self.horizontalHeader().setStretchLastSection(True)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        self.setColumnCount(SearchResultsTableColumns.count())
+        self.setColumnCount(SearchResultsTableColumns.column_count())
         self.setHorizontalHeaderLabels(ui_translate(item.name) for item in SearchResultsTableColumns)
         self.setSectionResizeModes()
 
