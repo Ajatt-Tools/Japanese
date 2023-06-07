@@ -62,9 +62,10 @@ class SearchBar(QWidget):
 class SearchResultsTableColumns(enum.Enum):
     add_to_note = 0
     source_name = enum.auto()
-    url = enum.auto()
-    filename = enum.auto()
     word = enum.auto()
+    reading = enum.auto()
+    pitch_number = enum.auto()
+    filename = enum.auto()
 
     @classmethod
     def count(cls):
@@ -110,9 +111,10 @@ class SearchResultsTable(QTableWidget):
             self.setCellWidget(row_n, SearchResultsTableColumns.add_to_note.value, SourceEnableCheckbox())
             row_map = {
                 SearchResultsTableColumns.source_name: file.source_name,
-                SearchResultsTableColumns.url: file.url,
-                SearchResultsTableColumns.filename: file.desired_filename,
                 SearchResultsTableColumns.word: file.word,
+                SearchResultsTableColumns.reading: file.reading,
+                SearchResultsTableColumns.pitch_number: file.pitch_number,
+                SearchResultsTableColumns.filename: file.desired_filename,
             }
             for column, field in row_map.items():
                 self.setItem(row_n, column.value, item := QTableWidgetItem(field))
@@ -194,6 +196,7 @@ def main():
             url=f"https://example.com/{gen_rand_str()}.ogg",
             desired_filename=f"{gen_rand_str()}.ogg",
             word=gen_rand_str(),
+            reading="あいうえお",
             source_name=f"src{gen_rand_str()}",
         )
 
