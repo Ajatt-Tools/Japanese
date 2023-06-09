@@ -5,6 +5,6 @@ import os
 
 # Paths to the database files and this particular file
 THIS_DIR_PATH = os.path.dirname(os.path.normpath(__file__))
-DB_DIR_PATH = os.path.join(THIS_DIR_PATH, "accent_dict")
-DERIVATIVE_PICKLE = os.path.join(DB_DIR_PATH, "pronunciations_combined.pickle")
+DB_DIR_PATH = os.path.join(THIS_DIR_PATH, "res")
+DERIVATIVE_PICKLE = os.path.join(DB_DIR_PATH, "formatted_accents_combined.pickle")
 NO_ACCENT = "?"

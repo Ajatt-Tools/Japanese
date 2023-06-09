@@ -115,11 +115,11 @@ def format_entry(e: AccentEntry) -> FormattedEntry:
 
 
 class NhkDb(AccDbManager):
-    accent_database = os.path.join(DB_DIR_PATH, "nhk_data.csv")
-    derivative_database = os.path.join(DB_DIR_PATH, "nhk_pronunciation.csv")
+    _source_csv_path = os.path.join(DB_DIR_PATH, "nhk_source.csv")
+    _formatted_csv_path = os.path.join(DB_DIR_PATH, "nhk_formatted.csv")
 
     def read_entries(self) -> Iterable[AccentEntry]:
-        with open(self.accent_database, encoding="utf-8") as f:
+        with open(self._source_csv_path, encoding="utf-8") as f:
             for line in f:
                 yield make_accent_entry(line)
 

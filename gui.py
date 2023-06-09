@@ -700,7 +700,7 @@ class SettingsDialog(QDialog):
         self._audio_settings = AudioSettingsForm()
 
         # Overrides tab
-        self._accents_override = PitchOverrideWidget(self, file_path=UserDb.accent_database)
+        self._accents_override = PitchOverrideWidget(self, file_path=UserDb.source_csv_path())
 
         # Finish layout
         self._tabs = QTabWidget()
