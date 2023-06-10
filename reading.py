@@ -275,7 +275,7 @@ def discard_extra_readings(readings: list[str], max_results: int, discard_mode: 
     elif discard_mode == ReadingsDiscardMode.discard_all:
         return []
     else:
-        raise ValueError("No handler for mode.")
+        raise ValueError(f"No handler for mode {discard_mode}.")
 
 
 def try_lookup_full_text(text: str) -> Iterable[AccDbParsedToken]:
@@ -293,20 +293,22 @@ def try_lookup_full_text(text: str) -> Iterable[AccDbParsedToken]:
             )
 
 
-def sorted_readings(readings: list[str]) -> list[str]:
-    """
-    Sort readings according to the user's preferences.
-    The long vowel symbol is used to identify readings that resemble literal pronunciation.
-    """
-    return sorted(
-        readings,
-        key=(lambda reading: LONG_VOWEL_MARK in reading),
-        reverse=(not cfg.furigana.prefer_literal_pronunciation),
-    )
-
-
 def unique_readings(readings: list[str]) -> list[str]:
-    return list({pr(reading): reading for reading in readings}.values())
+    """
+    Return a list of readings without repetitions.
+    """
+    def sorted_readings() -> list[str]:
+        """
+        Sort readings according to the user's preferences.
+        The long vowel symbol is used to identify readings that resemble literal pronunciation.
+        """
+        return sorted(
+            readings,
+            key=(lambda reading: LONG_VOWEL_MARK in reading),
+            reverse=(not cfg.furigana.prefer_literal_pronunciation),
+        )
+
+    return list({pr(reading): reading for reading in sorted_readings()}.values())
 
 
 def format_acc_db_result(out: AccDbParsedToken, full_hiragana: bool = False) -> str:
@@ -317,7 +319,7 @@ def format_acc_db_result(out: AccDbParsedToken, full_hiragana: bool = False) -> 
         return out.word
 
     readings = discard_extra_readings(
-        unique_readings(sorted_readings(out.hiragana_readings)),
+        unique_readings(out.hiragana_readings),
         max_results=cfg.furigana.maximum_results,
         discard_mode=cfg.furigana.discard_mode,
     )
