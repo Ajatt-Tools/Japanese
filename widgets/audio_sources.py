@@ -96,6 +96,14 @@ class AudioSourcesTable(ExpandingTableWidget):
         qconnect(action.triggered, lambda: move_current_row(-1))
         self.addAction(action)
 
+        action = QAction("Move row to start", self)
+        qconnect(action.triggered, lambda: move_current_row(-self.rowCount()))
+        self.addAction(action)
+
+        action = QAction("Move row to end", self)
+        qconnect(action.triggered, lambda: move_current_row(self.rowCount()))
+        self.addAction(action)
+
     def isCellFilled(self, cell: CellContent) -> bool:
         # A checked checkbox is considered filled,
         # so the user has to uncheck it to trigger an automatic row deletion.
