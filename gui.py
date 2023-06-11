@@ -676,6 +676,36 @@ class ToolbarSettingsForm(QGroupBox):
         }
 
 
+class AudioSourcesGroup(QGroupBox):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setTitle("Audio sources")
+        self.setCheckable(False)
+        self._audio_sources_table = AudioSourcesTable().populate(cfg.iter_audio_sources())
+        self._bottom_label = QLabel()
+        self.setLayout(self._make_layout())
+        self._populate()
+
+    def _make_layout(self):
+        layout = QVBoxLayout()
+        layout.setContentsMargins(4, 0, 4, 0)  # left, top, right, and bottom
+        layout.setSpacing(8)
+        layout.addWidget(self._audio_sources_table)
+        layout.addWidget(self._bottom_label)
+        fix_default_anki_style(self._audio_sources_table)
+        return layout
+
+    def _populate(self):
+        audio_stats = aud_src_mgr.total_stats()
+        self._bottom_label.setText(
+            f"<strong>Unique files</strong>: {audio_stats.unique_files}. "
+            f"<strong>Unique headwords</strong>: {audio_stats.unique_headwords}."
+        )
+
+    def iterateConfigs(self):
+        return self._audio_sources_table.iterateConfigs()
+
+
 class SettingsDialog(QDialog):
     name = 'Japanese Options'
 
@@ -696,7 +726,7 @@ class SettingsDialog(QDialog):
 
         # Audio tab
         self._audio_profiles_edit = AudioProfilesEdit()
-        self._audio_sources_table = AudioSourcesTable().populate(cfg.iter_audio_sources())
+        self._audio_sources_edit = AudioSourcesGroup()
         self._audio_settings = AudioSettingsForm()
 
         # Overrides tab
@@ -740,9 +770,8 @@ class SettingsDialog(QDialog):
         tab = QWidget()
         tab.setLayout(layout := QVBoxLayout())
         layout.addWidget(self._audio_profiles_edit)
-        layout.addWidget(self._audio_sources_table)
+        layout.addWidget(self._audio_sources_edit)
         layout.addWidget(self._audio_settings)
-        fix_default_anki_style(self._audio_sources_table)
         self._tabs.addTab(tab, "Audio")
 
         # Accent DB override
@@ -798,7 +827,7 @@ class SettingsDialog(QDialog):
         ]
         cfg['audio_sources'] = [
             dataclasses.asdict(source)
-            for source in self._audio_sources_table.iterateConfigs()
+            for source in self._audio_sources_edit.iterateConfigs()
         ]
         cfg['audio_settings'].update(self._audio_settings.as_dict())
         # Write the new data to disk
