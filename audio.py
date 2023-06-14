@@ -99,6 +99,17 @@ def sorted_files(hits: Iterable[FileUrlData]):
     return sorted(hits, key=lambda info: (pr(info.reading), info.pitch_number))
 
 
+def exclude_inflections(hits: dict[str, list[FileUrlData]]):
+    for word, word_hits in hits.items():
+        hits[word] = [hit for hit in word_hits if not is_inflected(hit.word, hit.reading)]
+
+
+def take_first_source(hits: dict[str, list[FileUrlData]]):
+    for word, word_hits in hits.items():
+        if len(word_hits) > 1:
+            hits[word] = [hit for hit in word_hits if hit.source_name == word_hits[0].source_name]
+
+
 class AnkiAudioSourceManager(AudioSourceManager):
     def init_audio_dictionaries(self, notify_on_finish: bool = False):
         QueryOp(
@@ -142,15 +153,12 @@ class AnkiAudioSourceManager(AudioSourceManager):
 
         # Filter out inflections if the user wants to.
         if ignore_inflections:
-            for word, word_hits in hits.items():
-                hits[word] = [hit for hit in word_hits if not is_inflected(hit.word, hit.reading)]
+            exclude_inflections(hits)
 
         # Keep only items where the name of the source is equal to the name
         # of the first source that has yielded matches.
         if stop_if_one_source_has_results:
-            for word, word_hits in hits.items():
-                if len(word_hits) > 1:
-                    hits[word] = [hit for hit in word_hits if hit.source_name == word_hits[0].source_name]
+            take_first_source(hits)
 
         return sorted_files(ensure_unique_files(itertools.chain(*hits.values())))
 
