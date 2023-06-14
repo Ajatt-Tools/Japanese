@@ -96,7 +96,7 @@ def sorted_files(hits: Iterable[FileUrlData]):
     Sort the audio search results according to reading and pitch number
     to ensure determined order of entries.
     """
-    return sorted(hits, key=lambda info: (info.reading, info.pitch_number))
+    return sorted(hits, key=lambda info: (pr(info.reading), info.pitch_number))
 
 
 class AnkiAudioSourceManager(AudioSourceManager):
