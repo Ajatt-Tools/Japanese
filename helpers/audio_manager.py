@@ -428,8 +428,6 @@ class AudioSourceManager:
             if word in source.headwords:
                 for audio_file in source.headwords[word]:
                     yield source.resolve_file(word, audio_file)
-                if self._config.audio_settings.stop_if_one_source_has_results:
-                    break
 
 
 # Entry point

@@ -83,6 +83,7 @@ class AddAudio(DoTask, task_type=ProfileAudio):
             src_text,
             split_morphemes=self._task.split_morphemes,
             ignore_inflections=cfg.audio_settings.ignore_inflections,
+            stop_if_one_source_has_results=cfg.audio_settings.stop_if_one_source_has_results,
         )
         search_results = search_results[:cfg.audio_settings.maximum_results]
         aud_src_mgr.download_tags_bg(search_results)

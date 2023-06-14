@@ -1,8 +1,10 @@
 # Copyright: Ren Tatsumoto <tatsu at autistici.org> and contributors
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
+import collections
 import concurrent.futures
 import io
+import itertools
 import os
 from concurrent.futures import Future
 from typing import Collection, NamedTuple, Iterable
@@ -13,10 +15,10 @@ from aqt import gui_hooks, mw
 from aqt.operations import QueryOp
 from aqt.utils import tooltip, showWarning
 
-from .helpers.inflections import is_inflected
 from .config_view import config_view as cfg
 from .helpers.audio_manager import AudioSourceManager, FileUrlData, AudioManagerException, InitResult
 from .helpers.file_ops import iter_audio_cache_files
+from .helpers.inflections import is_inflected
 from .helpers.tokens import tokenize, ParseableToken
 from .helpers.unify_readings import literal_pronunciation as pr
 from .helpers.unique_files import ensure_unique_files
@@ -105,37 +107,52 @@ class AnkiAudioSourceManager(AudioSourceManager):
             success=lambda result: self._after_init(result, notify_on_finish),
         ).run_in_background()
 
-    def search_audio(self, src_text: str, *, split_morphemes: bool, ignore_inflections: bool) -> list[FileUrlData]:
+    def search_audio(
+            self,
+            src_text: str,
+            *,
+            split_morphemes: bool,
+            ignore_inflections: bool,
+            stop_if_one_source_has_results: bool
+    ) -> list[FileUrlData]:
         """
         Search audio files (pronunciations) for words contained in search text.
         """
-        hits: list[FileUrlData] = []
+        hits: dict[str, list[FileUrlData]] = collections.defaultdict(list)
         src_text, src_text_reading = split_possible_furigana(html_to_text_line(src_text))
 
         # Try full text search.
-        hits.extend(self._search_word_variants(src_text))
+        hits[src_text].extend(self._search_word_variants(src_text))
 
         # If reading was specified, erase results that don't match the reading.
-        if src_text_reading:
-            hits = [hit for hit in hits if pr(hit.reading) == pr(src_text_reading)]
+        if hits[src_text] and src_text_reading:
+            hits[src_text] = [hit for hit in hits[src_text] if pr(hit.reading) == pr(src_text_reading)]
 
         # If reading was specified, try searching by the reading only.
-        if not hits and src_text_reading:
-            hits.extend(self._search_word_variants(src_text_reading))
+        if not hits[src_text] and src_text_reading:
+            hits[src_text].extend(self._search_word_variants(src_text_reading))
 
         # Try to split the source text in various ways, trying mecab if everything fails.
         if not hits:
             for part in dict.fromkeys(iter_tokens(src_text)):
                 if files := tuple(self._search_word_variants(part)):
-                    hits.extend(files)
+                    hits[part].extend(files)
                 elif split_morphemes:
-                    hits.extend(self._parse_and_search_audio(part))
+                    hits.update(self._parse_and_search_audio(part))
 
         # Filter out inflections if the user wants to.
         if ignore_inflections:
-            hits = [hit for hit in hits if not is_inflected(hit.word, hit.reading)]
+            for word, word_hits in hits.items():
+                hits[word] = [hit for hit in word_hits if not is_inflected(hit.word, hit.reading)]
 
-        return sorted_files(ensure_unique_files(hits))
+        # Keep only items where the name of the source is equal to the name
+        # of the first source that has yielded matches.
+        if stop_if_one_source_has_results:
+            for word, word_hits in hits.items():
+                if len(word_hits) > 1:
+                    hits[word] = [hit for hit in word_hits if hit.source_name == word_hits[0].source_name]
+
+        return sorted_files(ensure_unique_files(itertools.chain(*hits.values())))
 
     def download_tags_bg(self, hits: Collection[FileUrlData]):
         if not hits:
@@ -146,7 +163,7 @@ class AnkiAudioSourceManager(AudioSourceManager):
             success=lambda futures: save_files(futures)
         ).run_in_background()
 
-    def _search_word_variants(self, src_text: str):
+    def _search_word_variants(self, src_text: str) -> Iterable[FileUrlData]:
         """
         Search word.
         If nothing is found, try searching in hiragana and katakana.
@@ -157,13 +174,15 @@ class AnkiAudioSourceManager(AudioSourceManager):
                 or self.search_word(to_katakana(src_text))
         )
 
-    def _parse_and_search_audio(self, src_text: ParseableToken) -> Iterable[FileUrlData]:
+    def _parse_and_search_audio(self, src_text: ParseableToken) -> dict[str, list[FileUrlData]]:
+        hits: dict[str, list[FileUrlData]] = collections.defaultdict(list)
         for parsed in mecab_translate(src_text):
             for variant in iter_parsed_variants(parsed):
                 if files := tuple(self.search_word(variant)):
-                    yield from files
+                    hits[parsed.headword].extend(files)
                     # If found results, break because all further results will be duplicates.
                     break
+        return hits
 
     def _download_tags(self, hits: Iterable[FileUrlData]) -> list[Future[DownloadedData]]:
         """ Download audio files from a remote. """
