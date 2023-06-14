@@ -376,6 +376,7 @@ class AudioSourceManager:
             return self._http_client.download(file)
 
     def _set_sources(self, sources: list[AudioSource]):
+        self._audio_sources.clear()
         self._audio_sources = sources
 
     def _init_dictionaries(self) -> InitResult:
