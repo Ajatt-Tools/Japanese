@@ -86,12 +86,10 @@ class SearchResultsTable(QTableWidget):
 
     def setSectionResizeModes(self):
         contents = QHeaderView.ResizeMode.ResizeToContents
-        stretch = QHeaderView.ResizeMode.Stretch
         hor_header = self.horizontalHeader()
 
         for column_number in (item.value for item in SearchResultsTableColumns):
-            hor_header.setSectionResizeMode(column_number, stretch)
-        hor_header.setSectionResizeMode(SearchResultsTableColumns.add_to_note.value, contents)
+            hor_header.setSectionResizeMode(column_number, contents)
 
     def clear(self):
         self.setRowCount(0)
