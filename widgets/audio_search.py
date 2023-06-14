@@ -2,9 +2,12 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import enum
+import functools
 import random
 import typing
 
+from anki.sound import SoundOrVideoTag
+from aqt import sound, mw
 from aqt.qt import *
 from aqt.utils import restoreGeom, saveGeom
 
@@ -20,6 +23,9 @@ except ImportError:
 
 class AudioManager(typing.Protocol):
     def search_audio(self, src_text: str, **kwargs) -> list[FileUrlData]:
+        ...
+
+    def download_tags_bg(self, hits: typing.Sequence[FileUrlData], play_on_finish: bool = False):
         ...
 
 
@@ -62,6 +68,7 @@ class SearchBar(QWidget):
 
 class SearchResultsTableColumns(enum.Enum):
     add_to_note = 0
+    play_audio = enum.auto()
     source_name = enum.auto()
     word = enum.auto()
     reading = enum.auto()
@@ -74,6 +81,8 @@ class SearchResultsTableColumns(enum.Enum):
 
 
 class SearchResultsTable(QTableWidget):
+    play_requested = pyqtSignal(FileUrlData)
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self._last_results: list[FileUrlData] = []
@@ -108,6 +117,7 @@ class SearchResultsTable(QTableWidget):
         for row_n, file in enumerate(results):
             self.insertRow(row_n)
             self.setCellWidget(row_n, SearchResultsTableColumns.add_to_note.value, SourceEnableCheckbox())
+            self.setCellWidget(row_n, SearchResultsTableColumns.play_audio.value, pb := QPushButton("Play"))
             row_map = {
                 SearchResultsTableColumns.source_name: file.source_name,
                 SearchResultsTableColumns.word: file.word,
@@ -118,6 +128,7 @@ class SearchResultsTable(QTableWidget):
             for column, field in row_map.items():
                 self.setItem(row_n, column.value, item := QTableWidgetItem(field))
                 item.setFlags(item.flags() ^ Qt.ItemFlag.ItemIsEditable)
+            qconnect(pb.clicked, functools.partial(self.play_requested.emit, file))  # type:ignore
 
 
 class AudioSearchDialog(QDialog):
@@ -147,6 +158,13 @@ class AudioSearchDialog(QDialog):
         qconnect(self._search_bar.search_committed, lambda: self.search())
         qconnect(self._button_box.accepted, self.accept)
         qconnect(self._button_box.rejected, self.reject)
+        qconnect(self._table_widget.play_requested, self._play_audio_file)
+
+    def _play_audio_file(self, file: FileUrlData):
+        """
+        This method requires Anki to be running.
+        """
+        pass
 
     def _create_top_layout(self):
         layout = QHBoxLayout()
@@ -197,6 +215,14 @@ class AnkiAudioSearchDialog(AudioSearchDialog):
         # Restore previous geom
         restoreGeom(self, self.name, adjustSize=True)
 
+    def _play_audio_file(self, file: FileUrlData):
+        if os.path.isfile(file.url):
+            return sound.av_player.play_tags([SoundOrVideoTag(filename=file.url), ])
+        elif mw.col.media.have(file.desired_filename):
+            return sound.av_player.play_tags([SoundOrVideoTag(filename=file.desired_filename), ])
+        else:
+            return self._audio_manager.download_tags_bg([file, ], play_on_finish=True)
+
     def done(self, *args, **kwargs) -> None:
         saveGeom(self, self.name)
         return super().done(*args, **kwargs)
@@ -229,6 +255,9 @@ def main():
                 for _ in range(random.randint(1, 10)):
                     output.append(get_rand_file())
             return output
+
+        def download_tags_bg(self, *args):
+            pass
 
     app = QApplication(sys.argv)
     dialog = AudioSearchDialog(MockAudioManager())

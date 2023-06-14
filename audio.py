@@ -7,11 +7,12 @@ import io
 import itertools
 import os
 from concurrent.futures import Future
-from typing import Collection, NamedTuple, Iterable
+from typing import Collection, NamedTuple, Iterable, Sequence
 
 import anki.collection
+from anki.sound import SoundOrVideoTag
 from anki.utils import html_to_text_line
-from aqt import gui_hooks, mw
+from aqt import gui_hooks, mw, sound
 from aqt.operations import QueryOp
 from aqt.utils import tooltip, showWarning
 
@@ -46,7 +47,7 @@ def report_results(successes: list[DownloadedData], fails: list[AudioManagerExce
         return tooltip(txt, period=7000, y_offset=80 + 18 * (len(successes) + len(fails)))
 
 
-def save_files(futures: Collection[Future[DownloadedData]]):
+def save_files(futures: Collection[Future[DownloadedData]], play_on_finish: bool = False):
     successes, fails = [], []
     for future in futures:
         try:
@@ -60,6 +61,8 @@ def save_files(futures: Collection[Future[DownloadedData]]):
             )
             successes.append(result)
     report_results(successes, fails)
+    if play_on_finish is True:
+        sound.av_player.play_tags([SoundOrVideoTag(filename=result.desired_filename) for result in successes])
 
 
 def only_missing(col: anki.collection.Collection, files: Collection[FileUrlData]):
@@ -162,13 +165,13 @@ class AnkiAudioSourceManager(AudioSourceManager):
 
         return sorted_files(ensure_unique_files(itertools.chain(*hits.values())))
 
-    def download_tags_bg(self, hits: Collection[FileUrlData]):
+    def download_tags_bg(self, hits: Sequence[FileUrlData], play_on_finish: bool = False):
         if not hits:
             return
         QueryOp(
             parent=mw,
             op=lambda col: self._download_tags(only_missing(col, hits)),
-            success=lambda futures: save_files(futures)
+            success=lambda futures: save_files(futures, play_on_finish=play_on_finish),
         ).run_in_background()
 
     def _search_word_variants(self, src_text: str) -> Iterable[FileUrlData]:
