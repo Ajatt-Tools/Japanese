@@ -92,8 +92,8 @@ def create_formatted(entry: AccentEntry) -> Collection[FormattedEntry]:
 
 
 class KanjiumDb(AccDbManager):
-    _source_csv_path = os.path.join(DB_DIR_PATH, "kanjium_source.csv")
-    _formatted_csv_path = os.path.join(DB_DIR_PATH, "kanjium_formatted.csv")
+    _source_csv_path = os.path.join(RES_DIR_PATH, "kanjium_source.csv")
+    _formatted_csv_path = os.path.join(RES_DIR_PATH, "kanjium_formatted.csv")
 
     def read_entries(self) -> Iterable[AccentEntry]:
         with open(self._source_csv_path, encoding="utf-8") as f:
