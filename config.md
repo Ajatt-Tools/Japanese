@@ -33,7 +33,6 @@ Default field names match the [TSC](https://ankiweb.net/shared/info/1557722832) 
 * `reading_separator`.  String used to separate multiple readings of one word. For example, `<br>` or `,`.
 * `blocklisted_words`. Furigana won't be added to these words. Comma-separated.
 * `mecab_only`. A comma-separated list of words that don't need to be looked up in the database.
-* `counters`. List of counters. Used internally.
 * `maximum_results`. Used when database lookups are enabled. Will abort if fetched more results than this number.
 
 ### Pitch accent

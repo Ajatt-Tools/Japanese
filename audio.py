@@ -80,7 +80,7 @@ def only_missing(col: anki.collection.Collection, files: Collection[FileUrlData]
 
 
 def iter_tokens(src_text: str) -> Iterable[ParseableToken]:
-    for token in tokenize(html_to_text_line(src_text), counters=cfg.furigana.counters):
+    for token in tokenize(html_to_text_line(src_text)):
         if isinstance(token, ParseableToken):
             yield token
 

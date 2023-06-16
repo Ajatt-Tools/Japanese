@@ -349,7 +349,7 @@ def format_parsed_tokens(
 
 def generate_furigana(src_text: str, split_morphemes: bool = True, full_hiragana: bool = False) -> str:
     substrings = []
-    for token in tokenize(src_text, counters=cfg.furigana.counters):
+    for token in tokenize(src_text):
         if not isinstance(token, ParseableToken) or is_kana_str(token):
             # Skip tokens that can't be parsed (non-japanese text).
             # Skip full-kana tokens (no furigana is needed).
