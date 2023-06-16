@@ -47,7 +47,7 @@ class AccentEntry:
 
 
 def format_entry(moraes: list[str], accent: int) -> str:
-    """ Format an entry from the data in the original database to something that uses html """
+    """ Format an entry from the data in the original pitch accents file to something that uses html """
 
     result = []
     overline_flag = False
@@ -102,7 +102,7 @@ class KanjiumDb(AccDbManager):
                     yield AccentEntry(*line.split('\t'))
 
     def create_derivative(self) -> AccentDict:
-        """ Build the derived database from the original database and save it as *.csv """
+        """ Build the derived pitch accents file from the original pitch accents file and save it as *.csv """
         temp_dict = {}
         for entry in self.read_entries():
             temp_dict.setdefault(entry.keyword, dict()).update(create_formatted(entry))

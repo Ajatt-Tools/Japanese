@@ -10,11 +10,11 @@ from aqt.utils import showInfo
 
 try:
     from .table import ExpandingTableWidget
-    from ..database.consts import NO_ACCENT
+    from ..pitch_accents.consts import NO_ACCENT
     from ..helpers import ui_translate
 except ImportError:
     from table import ExpandingTableWidget
-    from database.consts import NO_ACCENT
+    from pitch_accents.consts import NO_ACCENT
     from helpers import ui_translate
 
 

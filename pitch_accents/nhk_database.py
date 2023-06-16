@@ -63,7 +63,7 @@ def calculate_drop(katakana_reading: str, idx: int) -> int:
 
 
 def format_entry(e: AccentEntry) -> FormattedEntry:
-    """ Format an entry from the data in the original database to something that uses html """
+    """ Format an entry from the data in the original pitch accents file to something that uses html """
     katakana_reading, acc_pattern = e.katakana_reading_alt, e.accent
 
     # Fix accent notation by prepending zeros for moraes where accent info is omitted in the CSV.
@@ -124,7 +124,7 @@ class NhkDb(AccDbManager):
                 yield make_accent_entry(line)
 
     def create_derivative(self) -> AccentDict:
-        """ Build the derived database from the original database and save it as *.csv """
+        """ Build the derived pitch accents from the original pitch accents and save it as *.csv """
         temp_dict = {}
 
         for entry in self.read_entries():

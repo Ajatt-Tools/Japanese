@@ -76,7 +76,7 @@ EQUIVALENT_SOUNDS |= {to_katakana(key): to_katakana(val) for key, val in EQUIVAL
 
 def unify_repr(reading: str):
     """
-    NHK database contains entries with redundant readings.
+    NHK pitch accents file contains entries with redundant readings.
     They only differ by the use of 'ー' or kana characters that sound the same.
     Try to de-duplicate them.
     """

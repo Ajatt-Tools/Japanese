@@ -10,7 +10,7 @@ from anki.utils import html_to_text_line
 from aqt import gui_hooks
 
 from .config_view import config_view as cfg, ReadingsDiscardMode
-from .database.acc_dict_mgr import AccentDict, FormattedEntry, AccentDictManager
+from .pitch_accents.acc_dict_mgr import AccentDict, FormattedEntry, AccentDictManager
 from .helpers import *
 from .helpers.common_kana import adjust_reading
 from .helpers.mingle_readings import *
@@ -144,7 +144,7 @@ def get_pronunciations(expr: str, sanitize: bool = True, recurse: bool = True, u
                 ret.update(get_pronunciations(out.headword, sanitize, recurse=False))
 
                 # If everything failed, try katakana lookups.
-                # Katakana lookups are possible because of the additional key in the database.
+                # Katakana lookups are possible because of the additional key in the pitch accents dictionary.
                 # If the word was in conjugated form, this lookup will also fail.
                 if (
                         out.headword not in ret
@@ -219,7 +219,7 @@ class AccDbParsedToken(NamedTuple):
 def gather_possible_readings(out: MecabParsedToken) -> AccDbParsedToken:
     """
     Return all possible hiragana readings for the word, e.g. [そそぐ, すすぐ, ゆすぐ].
-    If the user doesn't want to look up readings in the database,
+    If the user doesn't want to look up readings in the pitch accents dictionary,
     return back the one reading contained in the parsed token, which may be empty.
     """
     readings = []

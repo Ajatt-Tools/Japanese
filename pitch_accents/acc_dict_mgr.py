@@ -14,7 +14,7 @@ from .user_database import UserDb
 
 def accents_dict_init() -> AccentDict:
     if not os.path.isdir(RES_DIR_PATH):
-        raise OSError("Accent database folder is missing!")
+        raise OSError("Pitch accents folder is missing!")
 
     # If a pickle exists of the derivative file, use that.
     # Otherwise, read from the derivative file and generate a pickle.
@@ -63,19 +63,19 @@ class AccentDictManager:
         return self._db.__getitem__(item)
 
     def reload_from_disk(self):
-        """ Reads accent database from disk. """
-        print("Reading accent database...")
+        """ Reads pitch accents file from disk. """
+        print("Reading pitch accents file...")
         QueryOp(
             parent=mw,
             op=lambda collection: accents_dict_init(),
             success=lambda dictionary: self._reload_dict(dictionary),
         ).with_progress(
-            "Reloading pitch accent database..."
+            "Reloading pitch accent dictionary..."
         ).run_in_background()
 
     def _reload_dict(self, new_dict: AccentDict):
         """ Reloads accent db (e.g. when the user changed settings). """
-        print("Reloading accent database...")
+        print("Reloading accent dictionary...")
         self._db.clear()
         self._db = new_dict
         print(f"Total pitch accent entries: {len(self._db)}.")

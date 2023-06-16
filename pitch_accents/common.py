@@ -64,11 +64,11 @@ class AccDbManager(abc.ABC):
         print('Equal.' if are_equal else 'Not equal!')
 
     def self_check(self):
-        # First check that the original database is present.
+        # First check that the original pitch accents csv file is present.
         if not os.path.isfile(self._source_csv_path):
             raise OSError("Could not locate the source csv file!")
 
-        # Generate the derivative database if it does not exist yet or needs updating.
+        # Generate the derivative pitch accents file if it does not exist yet or needs updating.
         if not os.path.isfile(db := self._formatted_csv_path) or should_regenerate(db):
             print("Will be rebuilt: ", os.path.basename(db))
             self.build_derivative()
@@ -88,7 +88,7 @@ class AccDbManager(abc.ABC):
 
     @abc.abstractmethod
     def create_derivative(self) -> AccentDict:
-        """ Produce the derived database. """
+        """ Produce the derived pitch accents dictionary. """
         raise NotImplementedError()
 
     def build_derivative(self) -> None:
