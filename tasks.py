@@ -12,7 +12,6 @@ from .config_view import config_view as cfg
 from .helpers import *
 from .helpers.hooks import collection_will_add_note
 from .helpers.profiles import Profile, ProfileFurigana, PitchOutputFormat, ProfilePitch, ProfileAudio, TaskCaller
-from .helpers.unique_files import ensure_unique_files
 from .reading import format_pronunciations, get_pronunciations, generate_furigana
 
 
@@ -48,12 +47,13 @@ class DoTask:
         super().__init_subclass__(**kwargs)
         cls._subclasses_map[task_type] = cls
 
-    def __new__(cls, task: Profile):
+    def __new__(cls, task: Profile, *args, **kwargs):
         subclass = cls._subclasses_map[type(task)]
         return object.__new__(subclass)
 
-    def __init__(self, task):
+    def __init__(self, task, caller: TaskCaller):
         self._task = task
+        self._caller = caller
 
     def run(self, *args, **kwargs):
         raise NotImplementedError()
@@ -86,7 +86,7 @@ class AddAudio(DoTask, task_type=ProfileAudio):
             stop_if_one_source_has_results=cfg.audio_settings.stop_if_one_source_has_results,
         )
         search_results = search_results[:cfg.audio_settings.maximum_results]
-        aud_src_mgr.download_tags_bg(search_results)
+        aud_src_mgr.download_tags_bg(search_results, notify_on_finish=(self._caller != TaskCaller.bulk_add))
         return format_audio_tags(search_results)
 
 
@@ -117,7 +117,7 @@ class DoTasks:
     def do_task(self, task: Profile) -> bool:
         changed = False
         if self.can_fill_destination(task) and (src_text := mw.col.media.strip(self._note[task.source]).strip()):
-            self._note[task.destination] = DoTask(task).run(src_text, self._note[task.destination])
+            self._note[task.destination] = DoTask(task, self._caller).run(src_text, self._note[task.destination])
             changed = True
         return changed
 
