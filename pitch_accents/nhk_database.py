@@ -5,9 +5,11 @@ import re
 from typing import Iterable
 
 try:
+    from .mecab_controller.kana_conv import kana_to_moras
     from .common import *
 except ImportError:
     from common import *
+    from mecab_controller.kana_conv import kana_to_moras
 
 
 class AccentEntry(NamedTuple):

@@ -21,10 +21,10 @@ from .helpers.audio_manager import AudioSourceManager, FileUrlData, AudioManager
 from .helpers.file_ops import iter_audio_cache_files
 from .helpers.inflections import is_inflected
 from .helpers.tokens import tokenize, ParseableToken
-from .helpers.unify_readings import literal_pronunciation as pr
 from .helpers.unique_files import ensure_unique_files
 from .mecab_controller import to_hiragana, to_katakana
 from .mecab_controller.mecab_controller import MecabParsedToken
+from .mecab_controller.unify_readings import literal_pronunciation as pr
 from .reading import mecab_translate, split_possible_furigana
 
 

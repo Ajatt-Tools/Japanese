@@ -20,10 +20,6 @@ def should_regenerate(file_path: str) -> bool:
     return empty or old
 
 
-def kana_to_moras(kana: str) -> list[str]:
-    return re.findall(r'.゚?[ァィゥェォャュョぁぃぅぇぉゃゅょ]?', kana)
-
-
 class FormattedEntry(NamedTuple):
     katakana_reading: str
     html_notation: str

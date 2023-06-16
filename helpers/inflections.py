@@ -5,10 +5,10 @@ from typing import Optional
 
 try:
     from ..mecab_controller import is_kana_str
-    from .unify_readings import literal_pronunciation as pr
+    from .mecab_controller.unify_readings import literal_pronunciation as pr
 except ImportError:
     from mecab_controller import is_kana_str
-    from helpers.unify_readings import literal_pronunciation as pr
+    from mecab_controller.unify_readings import literal_pronunciation as pr
 
 
 def longest_kana_suffix(word: str) -> Optional[str]:

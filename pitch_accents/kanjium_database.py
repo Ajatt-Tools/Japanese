@@ -4,14 +4,15 @@
 # Data source:
 # https://raw.githubusercontent.com/mifunetoshiro/kanjium/master/data/source_files/raw/accents.txt
 
+import re
 from typing import Iterable
 
 try:
     from .common import *
-    from ..mecab_controller import to_katakana
+    from ..mecab_controller.kana_conv import to_katakana, kana_to_moras
 except ImportError:
     from common import *
-    from mecab_controller import to_katakana
+    from mecab_controller.kana_conv import to_katakana, kana_to_moras
 
 
 def search_pitch_accent_numbers(accents: str):

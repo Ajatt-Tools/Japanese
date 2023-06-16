@@ -9,7 +9,7 @@ from aqt.qt import *
 from aqt.utils import tooltip
 
 from .config_view import config_view as cfg
-from .helpers.unify_readings import literal_pronunciation
+from .mecab_controller.unify_readings import literal_pronunciation
 from .mecab_controller import to_katakana, to_hiragana
 from .reading import generate_furigana
 
