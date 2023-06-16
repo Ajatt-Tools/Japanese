@@ -5,7 +5,7 @@
 # https://raw.githubusercontent.com/mifunetoshiro/kanjium/master/data/source_files/raw/accents.txt
 
 import re
-from typing import Iterable
+from typing import Iterable, Collection
 
 try:
     from .common import *
@@ -93,7 +93,7 @@ def create_formatted(entry: AccentEntry) -> Collection[FormattedEntry]:
 
 
 class KanjiumDb(AccDbManager):
-    _source_csv_path = os.path.join(RES_DIR_PATH, "kanjium_source.csv")
+    _source_csv_path = None
     _formatted_csv_path = os.path.join(RES_DIR_PATH, "kanjium_formatted.csv")
 
     def read_entries(self) -> Iterable[AccentEntry]:

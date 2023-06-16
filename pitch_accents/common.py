@@ -2,8 +2,7 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import abc
-import re
-from typing import NamedTuple, Optional, NewType, Collection
+from typing import NamedTuple, Optional, NewType, Sequence
 
 try:
     from .consts import *
@@ -33,7 +32,7 @@ class FormattedEntry(NamedTuple):
         return f'<span class="pitch_number">{self.pitch_number}</span>'
 
 
-AccentDict = NewType("AccentDict", dict[str, Collection[FormattedEntry]])
+AccentDict = NewType("AccentDict", dict[str, Sequence[FormattedEntry]])
 
 
 class AccDbManager(abc.ABC):

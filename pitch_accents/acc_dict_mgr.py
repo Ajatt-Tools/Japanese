@@ -1,15 +1,27 @@
 # Copyright: Ren Tatsumoto <tatsu at autistici.org>
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
+import collections
 import pickle
 
 from aqt import mw
 from aqt.operations import QueryOp
 
 from .common import *
-from .kanjium_database import KanjiumDb
-from .nhk_database import NhkDb
 from .user_database import UserDb
+
+
+def read_formatted_accents() -> AccentDict:
+    """ Read the formatted pitch accents file to memory. """
+    acc_dict = collections.defaultdict(list)
+    with open(FORMATTED_ACCENTS_TSV, encoding="utf-8") as f:
+        for line in f:
+            word, kana, *pitch_data = line.strip().split('\t')
+            for key in (word, kana):
+                entry = FormattedEntry(kana, *pitch_data)
+                if entry not in acc_dict[key]:
+                    acc_dict[key].append(entry)
+    return AccentDict(acc_dict)
 
 
 def accents_dict_init() -> AccentDict:
@@ -20,36 +32,18 @@ def accents_dict_init() -> AccentDict:
     # Otherwise, read from the derivative file and generate a pickle.
     if should_regenerate(FORMATTED_ACCENTS_PICKLE):
         print("The pickle needs updating.")
-        derivative = generate_formatted_accents()
+        acc_dict = read_formatted_accents()
         with open(FORMATTED_ACCENTS_PICKLE, 'wb') as f:
             # Pickle the dictionary using the highest protocol available.
-            pickle.dump(derivative, f, pickle.HIGHEST_PROTOCOL)
+            pickle.dump(acc_dict, f, pickle.HIGHEST_PROTOCOL)
     else:
         print("Reading from existing accents pickle.")
         with open(FORMATTED_ACCENTS_PICKLE, 'rb') as f:
-            derivative = pickle.load(f)
+            acc_dict = pickle.load(f)
 
     # Finally, patch with user-defined entries.
-    derivative.update(UserDb().create_derivative())
-    return derivative
-
-
-def generate_formatted_accents() -> AccentDict:
-    nhk_db, kanjium_db = NhkDb(), KanjiumDb()
-    freq_list = ReadingsFreq()
-    # Read kanjium data, then extend existing entries with NHK data.
-    # NHK data is more rich, it contains nasal and devoiced positions.
-    derivative = kanjium_db.read_derivative()
-    for keyword, entries in nhk_db.read_derivative().items():
-        derivative.setdefault(keyword, []).extend(entries)
-        # New data comes last and should overwrite existing data.
-        unique = {(entry.katakana_reading, entry.pitch_number): entry for entry in derivative[keyword]}
-        derivative[keyword] = sorted(
-            unique.values(),
-            key=lambda entry: freq_list[FreqLookUpKey(keyword, entry.katakana_reading)],
-            reverse=True,
-        )
-    return derivative
+    acc_dict.update(UserDb().create_derivative())
+    return acc_dict
 
 
 class AccentDictManager:
@@ -59,7 +53,7 @@ class AccentDictManager:
     def __contains__(self, item: str):
         return self._db.__contains__(item)
 
-    def __getitem__(self, item: str) -> Collection[FormattedEntry]:
+    def __getitem__(self, item: str) -> Sequence[FormattedEntry]:
         return self._db.__getitem__(item)
 
     def reload_from_disk(self):
