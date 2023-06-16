@@ -15,7 +15,7 @@ from .ajt_common.consts import ADDON_SERIES
 from .ajt_common.grab_key import ShortCutGrabButton
 from .audio import aud_src_mgr
 from .config_view import config_view as cfg, ReadingsDiscardMode
-from .pitch_accents.user_database import UserDb
+from .pitch_accents.user_accents import UserAccentData
 from .helpers import ui_translate, split_list
 from .helpers.profiles import Profile, ProfileFurigana, ProfilePitch, PitchOutputFormat, ProfileAudio, TaskCaller
 from .reading import acc_dict
@@ -730,7 +730,7 @@ class SettingsDialog(QDialog):
         self._audio_settings = AudioSettingsForm()
 
         # Overrides tab
-        self._accents_override = PitchOverrideWidget(self, file_path=UserDb.source_csv_path())
+        self._accents_override = PitchOverrideWidget(self, file_path=UserAccentData.source_csv_path)
 
         # Finish layout
         self._tabs = QTabWidget()

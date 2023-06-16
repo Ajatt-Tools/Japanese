@@ -133,7 +133,7 @@ This add-on uses two databases to generate pronunciations from:
 2) Kanjium data. The repository can be found
    [here](https://github.com/mifunetoshiro/kanjium/).
 
-The two databases produce 229285 entries total.
+The two databases produce 229295 entries total.
 
 ## Acknowledgements
 

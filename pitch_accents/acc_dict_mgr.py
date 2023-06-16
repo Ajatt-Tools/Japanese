@@ -8,12 +8,12 @@ from aqt import mw
 from aqt.operations import QueryOp
 
 from .common import *
-from .user_database import UserDb
+from .user_accents import UserAccentData
 
 
 def read_formatted_accents() -> AccentDict:
     """ Read the formatted pitch accents file to memory. """
-    acc_dict = collections.defaultdict(list)
+    acc_dict: AccentDict = collections.defaultdict(list)
     with open(FORMATTED_ACCENTS_TSV, encoding="utf-8") as f:
         for line in f:
             word, kana, *pitch_data = line.strip().split('\t')
@@ -21,6 +21,8 @@ def read_formatted_accents() -> AccentDict:
                 entry = FormattedEntry(kana, *pitch_data)
                 if entry not in acc_dict[key]:
                     acc_dict[key].append(entry)
+    for key in acc_dict:
+        acc_dict[key] = tuple(acc_dict[key])
     return AccentDict(acc_dict)
 
 
@@ -42,7 +44,7 @@ def accents_dict_init() -> AccentDict:
             acc_dict = pickle.load(f)
 
     # Finally, patch with user-defined entries.
-    acc_dict.update(UserDb().create_derivative())
+    acc_dict.update(UserAccentData().create_formatted())
     return acc_dict
 
 

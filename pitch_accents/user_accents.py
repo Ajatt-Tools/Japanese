@@ -1,0 +1,118 @@
+# Copyright: Ren Tatsumoto <tatsu at autistici.org>
+# License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
+
+import collections
+from typing import Iterable, Collection, Union
+
+try:
+    from .common import *
+    from ..helpers.file_ops import touch, user_files_dir
+    from ..mecab_controller.kana_conv import to_katakana, kana_to_moras
+except ImportError:
+    from common import *
+    from helpers.file_ops import touch, user_files_dir
+    from mecab_controller.kana_conv import to_katakana, kana_to_moras
+
+
+def search_pitch_accent_numbers(accents: str) -> Iterable[Union[str, int]]:
+    return (
+        (int(pos) if pos != NO_ACCENT else NO_ACCENT)
+        for pos in accents.split(',')
+    )
+
+
+class AccentEntry(NamedTuple):
+    """ Represents a parsed entry in the user TSV file. """
+    headword: str
+    moras: tuple[str, ...]
+    accents: tuple[Union[str, int], ...]
+
+    def has_accent(self):
+        return self.accents != NO_ACCENT
+
+    @classmethod
+    def from_csv_line(cls, line: str):
+        headword, reading, accents = line.split('\t')
+        return cls(
+            headword=headword,
+            moras=tuple(kana_to_moras(to_katakana(reading or headword))),
+            accents=tuple(dict.fromkeys(search_pitch_accent_numbers(accents))),
+        )
+
+
+def format_entry(moras: Sequence[str], accent: Union[str, int]) -> str:
+    """ Format an entry from the data in the original pitch accents file to something that uses html """
+
+    if type(accent) != int and not accent.isnumeric():
+        return ''.join(moras)
+
+    accent = int(accent)
+    result = []
+    overline_flag = False
+
+    for idx, morae in enumerate(moras):
+        # Start or end overline when necessary
+        if not overline_flag and ((idx == 1 and (accent == 0 or accent > 1)) or (idx == 0 and accent == 1)):
+            result.append('<span class="overline">')
+            overline_flag = True
+
+        result.append(morae)
+
+        if overline_flag and idx == accent - 1:
+            result.append('</span>&#42780;')
+            overline_flag = False
+
+    # Close the overline if it's still open
+    if overline_flag:
+        result.append("</span>")
+
+    return ''.join(result)
+
+
+def create_formatted(entry: AccentEntry) -> Collection[FormattedEntry]:
+    return dict.fromkeys(
+        FormattedEntry(
+            katakana_reading=''.join(entry.moras),
+            html_notation=format_entry(entry.moras, pitch_num),
+            pitch_number=str(pitch_num),
+        )
+        for pitch_num in entry.accents
+    )
+
+
+class UserAccentData:
+    source_csv_path = os.path.join(user_files_dir(), "user_data.tsv")
+
+    def __init__(self):
+        self.self_check()
+
+    def self_check(self):
+        if not os.path.isfile(self.source_csv_path):
+            touch(self.source_csv_path)
+            print(f"Created file: {self.source_csv_path}")
+
+    def read_entries(self) -> Iterable[AccentEntry]:
+        with open(self.source_csv_path, encoding="utf-8") as f:
+            for line in f:
+                if line := line.strip():
+                    yield AccentEntry.from_csv_line(line)
+
+    def create_formatted(self) -> AccentDict:
+        """ Build the derived pitch accents file from the original pitch accents file and save it as *.csv """
+        temp_dict: AccentDict = collections.defaultdict(dict)
+        for entry in self.read_entries():
+            temp_dict[entry.headword].update(create_formatted(entry))
+        for key in temp_dict:
+            temp_dict[key] = tuple(temp_dict[key])
+        return AccentDict(temp_dict)
+
+
+def main():
+    data = UserAccentData()
+    formatted = data.create_formatted()
+    for key, value in formatted.items():
+        print(f"{key=}; {value=}")
+
+
+if __name__ == '__main__':
+    main()
