@@ -4,10 +4,10 @@
 from typing import Optional
 
 try:
-    from ..mecab_controller import is_kana_str
-    from .mecab_controller.unify_readings import literal_pronunciation as pr
+    from ..mecab_controller.kana_conv import is_kana_str
+    from ..mecab_controller.unify_readings import literal_pronunciation as pr
 except ImportError:
-    from mecab_controller import is_kana_str
+    from mecab_controller.kana_conv import is_kana_str
     from mecab_controller.unify_readings import literal_pronunciation as pr
 
 

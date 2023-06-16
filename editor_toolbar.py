@@ -4,7 +4,6 @@
 import functools
 from typing import Callable, NamedTuple, Iterable
 
-from anki.notes import Note
 from aqt import gui_hooks
 from aqt.editor import Editor
 

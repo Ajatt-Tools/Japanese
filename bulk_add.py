@@ -11,7 +11,6 @@ from aqt.operations import CollectionOp
 from aqt.qt import *
 from aqt.utils import showInfo
 
-from .config_view import config_view as cfg
 from .helpers import NoteId
 from .helpers.profiles import TaskCaller
 from .tasks import DoTasks

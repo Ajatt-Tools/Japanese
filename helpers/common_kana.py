@@ -2,9 +2,9 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 try:
-    from ..mecab_controller import to_katakana as _
+    from ..mecab_controller.kana_conv import to_katakana as _
 except ImportError:
-    from mecab_controller import to_katakana as _
+    from mecab_controller.kana_conv import to_katakana as _
 
 
 def adjust_reading(raw_word: str, headword: str, headword_reading: str):

@@ -17,13 +17,13 @@ import requests
 from requests import RequestException
 
 try:
-    from ..mecab_controller import to_katakana
+    from ..mecab_controller.kana_conv import to_katakana
     from .file_ops import user_files_dir
     from .inflections import is_inflected
 except ImportError:
-    from mecab_controller import to_katakana
-    from helpers.file_ops import user_files_dir
-    from helpers.inflections import is_inflected
+    from mecab_controller.kana_conv import to_katakana
+    from file_ops import user_files_dir
+    from inflections import is_inflected
 
 
 def file_exists(file_path: str):

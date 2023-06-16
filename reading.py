@@ -15,10 +15,9 @@ from .helpers.common_kana import adjust_reading
 from .helpers.mingle_readings import *
 from .helpers.profiles import PitchOutputFormat
 from .helpers.tokens import tokenize, split_separators, ParseableToken, clean_furigana, Token
-from .mecab_controller import MecabController
-from .mecab_controller import format_output, is_kana_str
-from .mecab_controller import to_hiragana, to_katakana
-from .mecab_controller.mecab_controller import MecabParsedToken
+from .mecab_controller.format import format_output
+from .mecab_controller.kana_conv import is_kana_str, to_hiragana, to_katakana
+from .mecab_controller.mecab_controller import MecabController, MecabParsedToken
 from .mecab_controller.unify_readings import literal_pronunciation as pr, unify_repr
 from .pitch_accents.acc_dict_mgr import AccentDict, FormattedEntry, AccentDictManager
 
@@ -296,6 +295,7 @@ def unique_readings(readings: list[str]) -> list[str]:
     """
     Return a list of readings without repetitions.
     """
+
     def sorted_readings() -> list[str]:
         """
         Sort readings according to the user's preferences.
