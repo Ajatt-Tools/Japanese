@@ -43,7 +43,7 @@ class AccentEntry(NamedTuple):
 def format_entry(moras: Sequence[str], accent: Union[str, int]) -> str:
     """ Format an entry from the data in the original pitch accents file to something that uses html """
 
-    if type(accent) != int and not accent.isnumeric():
+    if accent == NO_ACCENT:
         return ''.join(moras)
 
     accent = int(accent)
