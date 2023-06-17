@@ -21,9 +21,11 @@ def read_formatted_accents() -> AccentDict:
                 entry = FormattedEntry(kana, *pitch_data)
                 if entry not in acc_dict[key]:
                     acc_dict[key].append(entry)
-    for key in acc_dict:
-        acc_dict[key] = tuple(acc_dict[key])
-    return AccentDict(acc_dict)
+    acc_dict = AccentDict({
+        headword: tuple(entries)
+        for headword, entries in acc_dict.items()
+    })
+    return acc_dict
 
 
 def accents_dict_init() -> AccentDict:
