@@ -121,11 +121,15 @@ def get_pronunciations(expr: str, sanitize: bool = True, recurse: bool = True, u
         )
 
     # If there's furigana, e.g. when using the VocabFurigana field as the source,
-    # and the user wants to perform kana lookups,
-    # try the reading.
-    if not ret and expr_reading and cfg.pitch_accent.kana_lookups:
-        if lookup_reading := lookup_expr_variants(expr_reading):
-            ret.setdefault(expr_reading, []).extend(lookup_reading)
+    # or if the kana reading of the full expression can be sourced from mecab,
+    # and the user wants to perform kana lookups, then try the reading.
+    if not ret and cfg.pitch_accent.kana_lookups:
+        expr_reading = (
+            expr_reading
+            or ''.join(token.katakana_reading for token in mecab_translate(expr) if token.katakana_reading)
+        )
+        if expr_reading and (lookup_reading := lookup_expr_variants(expr_reading)):
+            ret.setdefault(expr, []).extend(lookup_reading)
 
     # Try to split the expression in various ways (punctuation, whitespace, etc.),
     # and check if any of those brings results.
