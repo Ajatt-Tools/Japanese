@@ -123,6 +123,11 @@
       "enabled": true,
       "name": "Shinmeikai-8",
       "url": "https://github.com/Ajatt-Tools/shinmeikai_8_pronunciations_index/releases/download/v1.3/Shinmeikai-8_main.zip"
+    },
+    {
+      "enabled": true,
+      "name": "TAAS",
+      "url": "https://github.com/Ajatt-Tools/taas_pronunciations_index/releases/download/v1.0/TAAS_main.zip"
     }
   ],
   "audio_settings": {
