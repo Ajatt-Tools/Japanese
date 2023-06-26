@@ -35,6 +35,7 @@ def file_exists(file_path: str):
 
 
 RE_FILENAME_PROHIBITED = re.compile(r'[\\\n\t\r#%&\[\]{}<>^*?/$!\'":@+`|=]+', flags=re.MULTILINE | re.IGNORECASE)
+RE_PITCH_NUM = re.compile(r'\d+|\?')
 MAX_LEN_BYTES = 120 - 4
 
 
@@ -176,6 +177,13 @@ class SourceIndex(TypedDict):
     files: dict[str, FileInfo]
 
 
+def norm_pitch_numbers(s: str) -> str:
+    """
+    Ensure that all pitch numbers of a word are presented as comma-separated string.
+    """
+    return ','.join(re.findall(RE_PITCH_NUM, s)) or '?'
+
+
 @dataclasses.dataclass
 class AudioSource(AudioSourceConfig):
     # current schema has three fields: "meta", "headwords", "files"
@@ -193,7 +201,7 @@ class AudioSource(AudioSourceConfig):
 
         # If pitch number is present, append it after reading.
         if 'pitch_number' in file_info:
-            components.append(file_info['pitch_number'])
+            components.append(norm_pitch_numbers(file_info['pitch_number']))
 
         desired_filename = '_'.join((word, *components, self.name,))
         desired_filename = f'{normalize_filename(desired_filename)}{os.path.splitext(file_name)[-1]}'
