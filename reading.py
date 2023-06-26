@@ -88,6 +88,15 @@ def split_possible_furigana(expr: str) -> WordReading:
     return WordReading(expr, expr_reading)
 
 
+def single_word_reading(word: str):
+    """
+    Try to look up the reading of a single word using mecab.
+    """
+    if len(tokens := mecab_translate(word)) == 1 and (token := tokens[-1]).katakana_reading:
+        return token.katakana_reading
+    return ""
+
+
 @functools.lru_cache(maxsize=cfg.cache_lookups)
 def get_pronunciations(expr: str, sanitize: bool = True, recurse: bool = True, use_mecab: bool = True) -> AccentDict:
     """
@@ -124,10 +133,7 @@ def get_pronunciations(expr: str, sanitize: bool = True, recurse: bool = True, u
     # or if the kana reading of the full expression can be sourced from mecab,
     # and the user wants to perform kana lookups, then try the reading.
     if not ret and cfg.pitch_accent.kana_lookups:
-        expr_reading = (
-            expr_reading
-            or ''.join(token.katakana_reading for token in mecab_translate(expr) if token.katakana_reading)
-        )
+        expr_reading = (expr_reading or single_word_reading(expr))
         if expr_reading and (lookup_reading := lookup_expr_variants(expr_reading)):
             ret.setdefault(expr, []).extend(lookup_reading)
 
