@@ -356,7 +356,7 @@ class TotalAudioStats:
     sources: list[AudioStats]
 
 
-def read_zip(zip_in: zipfile.ZipFile, file: AudioSource) -> bytes:
+def read_zip(zip_in: zipfile.ZipFile, audio_source: AudioSource) -> bytes:
     try:
         return zip_in.read(next(
             name for name in zip_in.namelist()
@@ -364,8 +364,8 @@ def read_zip(zip_in: zipfile.ZipFile, file: AudioSource) -> bytes:
         ))
     except (StopIteration, zipfile.BadZipFile) as ex:
         raise AudioManagerException(
-            file,
-            f"{ex.__class__.__name__}: json data isn't found in zip file {file.url}",
+            audio_source,
+            f"{ex.__class__.__name__}: json data isn't found in zip file {audio_source.url}",
             exception=ex,
         )
 
