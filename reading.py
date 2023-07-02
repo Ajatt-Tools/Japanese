@@ -257,6 +257,7 @@ def format_furigana_readings(word: str, hiragana_readings: list[str]) -> str:
             ),
         )
         for reading in hiragana_readings
+        if reading
     ]
     if 1 < len(furigana_readings):
         return mingle_readings(furigana_readings, sep=cfg.furigana.reading_separator)
