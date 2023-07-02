@@ -20,19 +20,11 @@ from .mecab_controller.kana_conv import is_kana_str, to_hiragana, to_katakana
 from .mecab_controller.mecab_controller import MecabController, MecabParsedToken
 from .mecab_controller.unify_readings import literal_pronunciation as pr, unify_repr
 from .pitch_accents.acc_dict_mgr import AccentDict, FormattedEntry, AccentDictManager
+from .pitch_accents.styles import convert_to_inline_style
 
 
 # Lookup
 ##########################################################################
-
-
-def convert_to_inline_style(txt: str) -> str:
-    """ Map style classes to their user-configured inline versions. """
-
-    for k, v in cfg.styles.items():
-        txt = txt.replace(k, v)
-
-    return txt
 
 
 def update_html(html_notation: str) -> str:

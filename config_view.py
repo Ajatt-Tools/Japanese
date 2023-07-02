@@ -61,6 +61,13 @@ class ReadingsDiscardMode(enum.Enum):
     discard_all = enum.auto()
 
 
+@enum.unique
+class PitchPatternStyle(enum.Enum):
+    javdejong = enum.auto()
+    u_biq = enum.auto()
+    none = enum.auto()
+
+
 class PitchAndFuriganaCommon(WordBlockListManager):
     @property
     def maximum_results(self) -> int:
@@ -111,6 +118,10 @@ class PitchConfigView(PitchAndFuriganaCommon):
     @property
     def word_separator(self) -> str:
         return self['word_separator']
+
+    @property
+    def style(self) -> PitchPatternStyle:
+        return PitchPatternStyle[self['style']]
 
 
 @final

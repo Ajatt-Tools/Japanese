@@ -59,7 +59,8 @@
     "word_separator": "; ",
     "blocklisted_words": "こと,へ,か,よ,ん,だ,び,の,や,ね,ば,て,と,た,が,に,な,は,も,ます,から,いる,たち,てる,う,ましょ,たい,する,です,ない",
     "maximum_results": 3,
-    "discard_mode": "discard_extra"
+    "discard_mode": "discard_extra",
+    "style": "javdejong"
   },
   "furigana": {
     "skip_numbers": true,

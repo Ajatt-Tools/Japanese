@@ -14,7 +14,7 @@ from .ajt_common.checkable_combobox import CheckableComboBox
 from .ajt_common.consts import ADDON_SERIES
 from .ajt_common.grab_key import ShortCutGrabButton
 from .audio import aud_src_mgr
-from .config_view import config_view as cfg, ReadingsDiscardMode
+from .config_view import config_view as cfg, ReadingsDiscardMode, PitchPatternStyle
 from .pitch_accents.user_accents import UserAccentData
 from .helpers import ui_translate, split_list
 from .helpers.profiles import Profile, ProfileFurigana, ProfilePitch, PitchOutputFormat, ProfileAudio, TaskCaller
@@ -464,6 +464,10 @@ class PitchSettingsForm(MultiColumnSettingsForm):
         self._widgets.discard_mode = EnumSelectCombo(
             enum_type=ReadingsDiscardMode,
             initial_value=self._config.discard_mode
+        )
+        self._widgets.style = EnumSelectCombo(
+            enum_type=PitchPatternStyle,
+            initial_value=self._config.style
         )
         self._widgets.reading_separator = NarrowLineEdit(self._config.reading_separator)
         self._widgets.word_separator = NarrowLineEdit(self._config.word_separator)
