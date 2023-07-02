@@ -152,7 +152,7 @@ class AnkiAudioSourceManager(AudioSourceManager):
             hits[src_text].extend(self._search_word_variants(src_text_reading))
 
         # Try to split the source text in various ways, trying mecab if everything fails.
-        if not hits:
+        if not hits[src_text]:
             for part in dict.fromkeys(iter_tokens(src_text)):
                 if files := tuple(self._search_word_variants(part)):
                     hits[part].extend(files)
