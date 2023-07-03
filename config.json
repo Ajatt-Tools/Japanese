@@ -1,12 +1,6 @@
 {
   "cache_lookups": 1024,
   "last_file_save_location": "",
-  "styles": {
-    "class=\"overline\"": "style=\"text-decoration:overline;\"",
-    "class=\"nopron\"": "style=\"color: royalblue;\"",
-    "class=\"nasal\"": "style=\"color: red;\"",
-    "&#42780;": "&#42780;"
-  },
   "profiles": [
     {
       "name": "Add furigana for sentence",

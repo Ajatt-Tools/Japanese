@@ -259,10 +259,6 @@ class ConfigView(ConfigViewBase):
         return int(self['cache_lookups'])
 
     @property
-    def styles(self) -> dict[str, str]:
-        return self['styles']
-
-    @property
     def furigana(self) -> FuriganaConfigView:
         return self._furigana
 

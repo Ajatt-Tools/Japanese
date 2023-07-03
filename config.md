@@ -9,8 +9,6 @@
 * `cache_lookups`.
   Size of cache.
   Used internally.
-* `styles`.
-  Style mappings. Edit this if you want different colors, etc.
 
 ### Profiles
 
