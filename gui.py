@@ -509,6 +509,11 @@ class PitchSettingsForm(MultiColumnSettingsForm):
         self._widgets.lookup_shortcut.setToolTip(
             "A keyboard shortcut for looking up selected text."
         )
+        self._widgets.style.setToolTip(
+            "Style of pitch accent patterns.\n"
+            "If set to \"none\", you can configure your own styles\n"
+            "in the Styling section of your card type using CSS class names."
+        )
 
 
 class FuriganaSettingsForm(MultiColumnSettingsForm):
