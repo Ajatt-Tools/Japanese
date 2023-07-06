@@ -15,9 +15,9 @@ from .ajt_common.consts import ADDON_SERIES
 from .ajt_common.grab_key import ShortCutGrabButton
 from .audio import aud_src_mgr
 from .config_view import config_view as cfg, ReadingsDiscardMode, PitchPatternStyle
-from .pitch_accents.user_accents import UserAccentData
 from .helpers import ui_translate, split_list
 from .helpers.profiles import Profile, ProfileFurigana, ProfilePitch, PitchOutputFormat, ProfileAudio, TaskCaller
+from .pitch_accents.user_accents import UserAccentData
 from .reading import acc_dict
 from .widgets.anki_style import fix_default_anki_style
 from .widgets.audio_sources import AudioSourcesTable
