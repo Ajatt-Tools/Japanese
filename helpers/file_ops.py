@@ -2,7 +2,10 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import os
+import subprocess
 from typing import Iterable
+
+from anki.utils import no_bundled_libs
 
 
 def walk_parents(current_dir: str) -> Iterable[str]:
@@ -49,6 +52,23 @@ def iter_audio_cache_files() -> Iterable[os.DirEntry]:
     )
 
 
+def open_file(path: str) -> None:
+    """
+    Select file in lf, the preferred terminal file manager, or open it with xdg-open.
+    """
+    from aqt.qt import QDesktopServices, QUrl
+    from distutils.spawn import find_executable
+
+    if (terminal := os.getenv("TERMINAL")) and (lf := (os.getenv("FILE") or find_executable("lf"))):
+        subprocess.Popen([terminal, "-e", lf, path, ], shell=False)
+    elif opener := find_executable("xdg-open"):
+        subprocess.Popen([opener, f"file://{path}", ], shell=False)
+    else:
+        with no_bundled_libs():
+            QDesktopServices.openUrl(QUrl(f"file://{path}"))
+
+
 if __name__ == '__main__':
     print(user_files_dir())
     print(list(iter_audio_cache_files()))
+    print(open_file('/etc/hosts'))
