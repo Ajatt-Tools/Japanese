@@ -16,14 +16,15 @@ import anki.httpclient
 import requests
 from requests import RequestException
 
+
 try:
-    from ..mecab_controller.kana_conv import to_katakana
     from .file_ops import user_files_dir
+    from ..mecab_controller.kana_conv import to_katakana
     from .inflections import is_inflected
 except ImportError:
+    from helpers.file_ops import user_files_dir
+    from helpers.inflections import is_inflected
     from mecab_controller.kana_conv import to_katakana
-    from file_ops import user_files_dir
-    from inflections import is_inflected
 
 
 def file_exists(file_path: str):
@@ -179,9 +180,11 @@ class SourceIndex(TypedDict):
 
 def norm_pitch_numbers(s: str) -> str:
     """
-    Ensure that all pitch numbers of a word are presented as comma-separated string.
+    Ensure that all pitch numbers of a word (pronunciation) are presented as a dash-separated string.
+    When an audio file has more than one accent, it basically represents two or more words chained together.
+    E.g., かも-知れない (1-0), 黒い-霧 (2-0), 作用,反作用の,法則 (1-3-0), 八幡,大菩薩 (2-3), 入り代わり-立ち代わり (0-0), 七転,八起き (3-1)
     """
-    return ','.join(re.findall(RE_PITCH_NUM, s)) or '?'
+    return '-'.join(re.findall(RE_PITCH_NUM, s)) or '?'
 
 
 @dataclasses.dataclass
