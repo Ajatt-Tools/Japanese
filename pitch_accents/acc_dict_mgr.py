@@ -2,6 +2,7 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import collections
+import csv
 import pickle
 
 from aqt import mw
@@ -12,13 +13,19 @@ from .user_accents import UserAccentData
 
 
 def read_formatted_accents() -> AccentDict:
-    """ Read the formatted pitch accents file to memory. """
+    """
+    Read the formatted pitch accents file to memory.
+    Place items in a list to retain the provided order of readings.
+
+    Example entry as it appears in the formatted file:
+    新年会 シンネンカイ <low_rise>シ</low_rise><high_drop>ンネ</high_drop><low>ンカイ</low> 3
+    """
     acc_dict: AccentDict = collections.defaultdict(list)
-    with open(FORMATTED_ACCENTS_TSV, encoding="utf-8") as f:
-        for line in f:
-            word, kana, *pitch_data = line.strip().split('\t')
+    with open(FORMATTED_ACCENTS_TSV, newline="", encoding="utf-8") as f:
+        reader = csv.reader(f, delimiter='\t', quoting=csv.QUOTE_NONE)
+        for word, kana, *pitch_data in reader:
+            entry = FormattedEntry(kana, *pitch_data)
             for key in (word, kana):
-                entry = FormattedEntry(kana, *pitch_data)
                 if entry not in acc_dict[key]:
                     acc_dict[key].append(entry)
     acc_dict = AccentDict({
