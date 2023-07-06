@@ -85,7 +85,7 @@ def iter_tokens(src_text: str) -> Iterable[ParseableToken]:
             yield token
 
 
-def iter_parsed_variants(token: MecabParsedToken):
+def iter_mecab_variants(token: MecabParsedToken):
     yield token.headword
     if token.katakana_reading:
         yield token.katakana_reading
@@ -194,17 +194,15 @@ class AnkiAudioSourceManager(AudioSourceManager):
         Search word.
         If nothing is found, try searching in hiragana and katakana.
         """
-        return (
-                self.search_word(src_text)
-                or self.search_word(to_hiragana(src_text))
-                or self.search_word(to_katakana(src_text))
-        )
+        yield from self.search_word(src_text)
+        yield from self.search_word(to_hiragana(src_text))
+        yield from self.search_word(to_katakana(src_text))
 
     def _parse_and_search_audio(self, src_text: ParseableToken) -> dict[str, list[FileUrlData]]:
         hits: dict[str, list[FileUrlData]] = collections.defaultdict(list)
         for parsed in mecab_translate(src_text):
-            for variant in iter_parsed_variants(parsed):
-                if files := tuple(self.search_word(variant)):
+            for variant in iter_mecab_variants(parsed):
+                if files := tuple(self._search_word_variants(variant)):
                     hits[parsed.headword].extend(files)
                     # If found results, break because all further results will be duplicates.
                     break
