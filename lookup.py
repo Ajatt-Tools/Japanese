@@ -54,6 +54,10 @@ def html_page(body_content: str):
             margin-top: 0px;
             margin-bottom: 0px;
         }
+
+        li + li {
+            margin-top: 0.5rem;
+        }
     </style>
     """
 
