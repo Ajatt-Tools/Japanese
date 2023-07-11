@@ -6,12 +6,14 @@ from typing import Iterable, Collection, Union
 
 try:
     from .common import *
+    from .format_accents import format_entry
     from ..helpers.file_ops import touch, user_files_dir
     from ..mecab_controller.kana_conv import to_katakana, kana_to_moras
 except ImportError:
     from common import *
     from helpers.file_ops import touch, user_files_dir
     from mecab_controller.kana_conv import to_katakana, kana_to_moras
+    from format_accents import format_entry
 
 
 def search_pitch_accent_numbers(accents: str) -> Iterable[Union[str, int]]:
@@ -38,35 +40,6 @@ class AccentEntry(NamedTuple):
             moras=tuple(kana_to_moras(to_katakana(reading or headword))),
             accents=tuple(dict.fromkeys(search_pitch_accent_numbers(accents))),
         )
-
-
-def format_entry(moras: Sequence[str], accent: Union[str, int]) -> str:
-    """ Format an entry from the data in the original pitch accents file to something that uses html """
-
-    if accent == NO_ACCENT:
-        return ''.join(moras)
-
-    accent = int(accent)
-    result = []
-    overline_flag = False
-
-    for idx, morae in enumerate(moras):
-        # Start or end overline when necessary
-        if not overline_flag and ((idx == 1 and (accent == 0 or accent > 1)) or (idx == 0 and accent == 1)):
-            result.append('<span class="overline">')
-            overline_flag = True
-
-        result.append(morae)
-
-        if overline_flag and idx == accent - 1:
-            result.append('</span>&#42780;')
-            overline_flag = False
-
-    # Close the overline if it's still open
-    if overline_flag:
-        result.append("</span>")
-
-    return ''.join(result)
 
 
 def create_formatted(entry: AccentEntry) -> Collection[FormattedEntry]:

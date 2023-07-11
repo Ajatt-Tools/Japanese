@@ -1,4 +1,14 @@
-from ..config_view import PitchPatternStyle, config_view as cfg
+# Copyright: Ren Tatsumoto <tatsu at autistici.org> and contributors
+# License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
+
+import enum
+
+
+@enum.unique
+class PitchPatternStyle(enum.Enum):
+    javdejong = enum.auto()
+    u_biq = enum.auto()
+    none = enum.auto()
 
 
 class XmlTags:
@@ -92,11 +102,3 @@ STYLE_MAP = {
     }
 }
 
-
-def convert_to_inline_style(txt: str) -> str:
-    """ Map style classes to their user-configured inline versions. """
-
-    for k, v in STYLE_MAP[cfg.pitch_accent.style].items():
-        txt = txt.replace(k, v)
-
-    return txt

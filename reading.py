@@ -2,7 +2,6 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import functools
-import itertools
 from collections import OrderedDict
 from typing import Union
 
@@ -16,15 +15,22 @@ from .helpers.mingle_readings import *
 from .helpers.profiles import PitchOutputFormat
 from .helpers.tokens import tokenize, split_separators, ParseableToken, clean_furigana, Token
 from .mecab_controller.format import format_output
-from .mecab_controller.kana_conv import is_kana_str, to_hiragana, to_katakana
+from .mecab_controller.kana_conv import is_kana_str, to_hiragana
 from .mecab_controller.mecab_controller import MecabController, MecabParsedToken
 from .mecab_controller.unify_readings import literal_pronunciation as pr, unify_repr
 from .pitch_accents.acc_dict_mgr import AccentDict, FormattedEntry, AccentDictManager
-from .pitch_accents.styles import convert_to_inline_style
+from .pitch_accents.styles import STYLE_MAP
 
 
 # Lookup
 ##########################################################################
+
+
+def convert_to_inline_style(txt: str) -> str:
+    """ Map style classes to their user-configured inline versions. """
+    for k, v in STYLE_MAP[cfg.pitch_accent.style].items():
+        txt = txt.replace(k, v)
+    return txt
 
 
 def update_html(html_notation: str) -> str:
@@ -37,7 +43,6 @@ def update_html(html_notation: str) -> str:
 @functools.lru_cache(maxsize=cfg.cache_lookups)
 def mecab_translate(expr: str) -> tuple[MecabParsedToken, ...]:
     return tuple(mecab.translate(expr))
-
 
 
 def should_ignore_incorrect_reading(expr_reading: str) -> bool:

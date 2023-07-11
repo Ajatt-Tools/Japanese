@@ -11,6 +11,7 @@ from .helpers.audio_manager import AudioSourceConfig
 from .helpers.profiles import Profile
 from .helpers.tokens import RE_FLAGS
 from .mecab_controller.kana_conv import to_katakana
+from .pitch_accents.styles import PitchPatternStyle
 
 
 def split_words(config_value: str) -> list[str]:
@@ -59,13 +60,6 @@ class ReadingsDiscardMode(enum.Enum):
     keep_first = enum.auto()
     discard_extra = enum.auto()
     discard_all = enum.auto()
-
-
-@enum.unique
-class PitchPatternStyle(enum.Enum):
-    javdejong = enum.auto()
-    u_biq = enum.auto()
-    none = enum.auto()
 
 
 class PitchAndFuriganaCommon(WordBlockListManager):
