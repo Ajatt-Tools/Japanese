@@ -4,12 +4,14 @@
 import collections
 import csv
 import pickle
+from typing import Optional
 
 from aqt import mw
 from aqt.operations import QueryOp
 
 from .common import *
 from .user_accents import UserAccentData
+from ..mecab_controller.kana_conv import to_katakana, to_hiragana
 
 
 def read_formatted_accents() -> AccentDict:
@@ -66,6 +68,15 @@ class AccentDictManager:
 
     def __getitem__(self, item: str) -> Sequence[FormattedEntry]:
         return self._db.__getitem__(item)
+
+    def lookup(self, expr: str) -> Optional[Sequence[FormattedEntry]]:
+        """
+        Look up various forms of expr in accent db.
+        Return None if there's no pitch accent for expr.
+        """
+        for variant in (expr, to_katakana(expr), to_hiragana(expr)):
+            if variant in self:
+                return self[variant]
 
     def reload_from_disk(self):
         """ Reads pitch accents file from disk. """

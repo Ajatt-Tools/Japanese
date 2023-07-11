@@ -39,14 +39,6 @@ def mecab_translate(expr: str) -> tuple[MecabParsedToken, ...]:
     return tuple(mecab.translate(expr))
 
 
-def lookup_expr_variants(expr: str) -> Iterable[FormattedEntry]:
-    """Look up various forms of expr in accent db."""
-    return dict.fromkeys(itertools.chain(*(
-        acc_dict[variant]
-        for variant in (expr, to_katakana(expr), to_hiragana(expr))
-        if variant in acc_dict
-    ))).keys()
-
 
 def should_ignore_incorrect_reading(expr_reading: str) -> bool:
     """
@@ -113,7 +105,7 @@ def get_pronunciations(expr: str, sanitize: bool = True, recurse: bool = True, u
         return ret
 
     # Look up the main expression.
-    if lookup_main := lookup_expr_variants(expr):
+    if lookup_main := acc_dict.lookup(expr):
         ret.setdefault(expr, []).extend(
             entry
             for entry in lookup_main
@@ -126,7 +118,7 @@ def get_pronunciations(expr: str, sanitize: bool = True, recurse: bool = True, u
     # and the user wants to perform kana lookups, then try the reading.
     if not ret and cfg.pitch_accent.kana_lookups:
         expr_reading = (expr_reading or single_word_reading(expr))
-        if expr_reading and (lookup_reading := lookup_expr_variants(expr_reading)):
+        if expr_reading and (lookup_reading := acc_dict.lookup(expr_reading)):
             ret.setdefault(expr, []).extend(lookup_reading)
 
     # Try to split the expression in various ways (punctuation, whitespace, etc.),
