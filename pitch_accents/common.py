@@ -1,8 +1,8 @@
 # Copyright: Ren Tatsumoto <tatsu at autistici.org>
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
-from typing import NamedTuple, NewType
 from collections.abc import Sequence
+from typing import NamedTuple, NewType
 
 try:
     from .consts import *
@@ -10,14 +10,20 @@ except ImportError:
     from consts import *
 
 
+def is_dunder(name: str) -> bool:
+    """ Returns whether name is a dunder name. """
+    return name.startswith("__") and name.endswith("__")
+
+
 def is_old(file_path: str) -> bool:
     """
-    Return True if the pickle file pointed by file_path is older than the py files.
+    Return True if the file pointed by file_path is older than the other files.
     """
     return any(
-        os.path.getmtime(f.path) > os.path.getmtime(file_path)
-        for f in os.scandir(THIS_DIR_PATH)
-        if f.name.endswith('.py')
+        os.path.getmtime(os.path.join(root, file)) > os.path.getmtime(file_path)
+        for root, dirs, files in os.walk(THIS_DIR_PATH)
+        if is_dunder(os.path.basename(root)) is False
+        for file in files
     )
 
 
@@ -27,7 +33,7 @@ def should_regenerate(file_path: str) -> bool:
     """
     return (
             not os.path.isfile(file_path)
-            or not os.path.getsize(file_path)
+            or os.path.getsize(file_path) < 1
             or is_old(file_path)
     )
 
