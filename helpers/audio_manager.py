@@ -10,7 +10,8 @@ import posixpath
 import re
 import zipfile
 from types import SimpleNamespace
-from typing import Optional, NewType, Iterable, Union, TypedDict
+from typing import Optional, NewType, Union, TypedDict
+from collections.abc import Iterable
 
 import anki.httpclient
 import requests

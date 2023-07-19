@@ -2,7 +2,7 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import re
-from typing import Iterable, Sequence
+from collections.abc import Iterable, Sequence
 
 RE_FLAGS = re.MULTILINE | re.IGNORECASE
 HTML_AND_MEDIA_REGEX = re.compile(

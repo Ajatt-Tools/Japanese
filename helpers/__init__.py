@@ -2,7 +2,8 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import math
-from typing import NewType, TypeVar, Sequence, Iterable
+from typing import NewType, TypeVar
+from collections.abc import Sequence, Iterable
 
 import aqt
 

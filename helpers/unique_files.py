@@ -3,7 +3,7 @@
 
 import dataclasses
 import os
-from typing import Iterable
+from collections.abc import Iterable
 
 try:
     from .audio_manager import FileUrlData

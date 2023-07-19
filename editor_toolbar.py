@@ -2,7 +2,8 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import functools
-from typing import Callable, NamedTuple, Iterable
+from typing import Callable, NamedTuple
+from collections.abc import Iterable
 
 from aqt import gui_hooks
 from aqt.editor import Editor

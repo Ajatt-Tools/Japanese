@@ -1,7 +1,8 @@
 # Copyright: Ren Tatsumoto <tatsu at autistici.org> and contributors
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
-from typing import Sequence
+from typing import Union
+from collections.abc import Sequence
 
 try:
     from .styles import XmlTags
@@ -90,7 +91,7 @@ def format_nakadaka(moras: Sequence[str], accent: int) -> str:
     ))
 
 
-def format_entry(moras: Sequence[str], accent: int | str) -> str:
+def format_entry(moras: Sequence[str], accent: Union[int, str]) -> str:
     """ Format an entry from the data in the original pitch accents file to something that uses html """
 
     if type(accent) != int:

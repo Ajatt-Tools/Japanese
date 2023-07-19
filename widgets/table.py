@@ -2,7 +2,8 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import re
-from typing import Collection, Iterable, NewType, Optional
+from typing import NewType, Optional
+from collections.abc import Collection, Iterable
 
 from aqt.qt import *
 

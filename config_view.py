@@ -4,7 +4,8 @@
 import dataclasses
 import enum
 import re
-from typing import Iterable, NamedTuple, final
+from typing import NamedTuple, final
+from collections.abc import Iterable
 
 from .ajt_common.addon_config import AddonConfigManager
 from .helpers.audio_manager import AudioSourceConfig

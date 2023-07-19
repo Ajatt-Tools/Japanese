@@ -5,7 +5,7 @@ import dataclasses
 import io
 import os.path
 import re
-from typing import Iterable
+from collections.abc import Iterable
 
 from aqt.qt import *
 

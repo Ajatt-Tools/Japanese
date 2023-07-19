@@ -3,7 +3,8 @@
 
 import dataclasses
 from types import SimpleNamespace
-from typing import Optional, Iterable, Collection, TypedDict
+from typing import Optional, TypedDict
+from collections.abc import Iterable, Collection
 
 from aqt import mw
 from aqt.qt import *

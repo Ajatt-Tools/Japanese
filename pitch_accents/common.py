@@ -1,7 +1,8 @@
 # Copyright: Ren Tatsumoto <tatsu at autistici.org>
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
-from typing import NamedTuple, NewType, Sequence
+from typing import NamedTuple, NewType
+from collections.abc import Sequence
 
 try:
     from .consts import *
@@ -10,6 +11,9 @@ except ImportError:
 
 
 def is_old(file_path: str) -> bool:
+    """
+    Return True if the pickle file pointed by file_path is older than the py files.
+    """
     return any(
         os.path.getmtime(f.path) > os.path.getmtime(file_path)
         for f in os.scandir(THIS_DIR_PATH)
@@ -18,6 +22,9 @@ def is_old(file_path: str) -> bool:
 
 
 def should_regenerate(file_path: str) -> bool:
+    """
+    Return True if the pickle file pointed by file_path needs to be regenerated.
+    """
     return (
             not os.path.isfile(file_path)
             or not os.path.getsize(file_path)

@@ -2,7 +2,8 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import collections
-from typing import Iterable, Collection, Union
+from typing import Union
+from collections.abc import Iterable, Collection
 
 try:
     from .common import *

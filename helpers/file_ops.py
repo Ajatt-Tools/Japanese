@@ -3,7 +3,7 @@
 
 import os
 import subprocess
-from typing import Iterable
+from collections.abc import Iterable
 
 from anki.utils import no_bundled_libs
 

@@ -3,7 +3,8 @@
 
 import os.path
 import re
-from typing import Collection, Iterable, NamedTuple
+from typing import NamedTuple
+from collections.abc import Collection, Iterable
 
 from aqt.qt import *
 from aqt.utils import showInfo
