@@ -4,10 +4,11 @@
 import dataclasses
 import enum
 import re
-from typing import NamedTuple, final
 from collections.abc import Iterable
+from typing import NamedTuple, final
 
 from .ajt_common.addon_config import AddonConfigManager
+from .definitions import DictName, SearchType
 from .helpers.audio_manager import AudioSourceConfig
 from .helpers.profiles import Profile
 from .helpers.tokens import RE_FLAGS
@@ -180,6 +181,10 @@ class ToolbarConfigView(ConfigViewBase):
     def audio_search_button(self) -> ToolbarButtonConfig:
         return self['audio_search_button']
 
+    @property
+    def add_definition_button(self) -> ToolbarButtonConfig:
+        return self['add_definition_button']
+
 
 @final
 class AudioSettingsConfigView(ConfigViewBase):
@@ -219,6 +224,35 @@ class AudioSettingsConfigView(ConfigViewBase):
 
 
 @final
+class DefinitionsConfigView(ConfigViewBase):
+    _view_key = 'definitions'
+
+    @property
+    def timeout(self) -> int:
+        return self['timeout']
+
+    @property
+    def remove_marks(self) -> bool:
+        return bool(self['remove_marks'])
+
+    @property
+    def dict_name(self) -> DictName:
+        return DictName[self['dict_name']]
+
+    @property
+    def search_type(self) -> SearchType:
+        return SearchType[self['search_type']]
+
+    @property
+    def source(self) -> str:
+        return self['source']
+
+    @property
+    def destination(self) -> str:
+        return self['destination']
+
+
+@final
 class ConfigView(ConfigViewBase):
     def __init__(self):
         super().__init__()
@@ -227,6 +261,7 @@ class ConfigView(ConfigViewBase):
         self._context_menu = ContextMenuConfigView()
         self._toolbar = ToolbarConfigView()
         self._audio_settings = AudioSettingsConfigView()
+        self._definitions = DefinitionsConfigView()
 
     def iter_profiles(self) -> Iterable[Profile]:
         for profile_dict in self['profiles']:
@@ -269,5 +304,8 @@ class ConfigView(ConfigViewBase):
     def toolbar(self) -> ToolbarConfigView:
         return self._toolbar
 
+    @property
+    def definitions(self) -> DefinitionsConfigView:
+        return self._definitions
 
 config_view = ConfigView()

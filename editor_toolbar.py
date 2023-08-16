@@ -2,14 +2,15 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import functools
-from typing import Callable, NamedTuple
 from collections.abc import Iterable
+from typing import Callable, NamedTuple
 
 from aqt import gui_hooks
 from aqt.editor import Editor
 
 from .audio import aud_src_mgr, format_audio_tags
 from .config_view import config_view as cfg, ToolbarButtonConfig
+from .definitions import SakuraParisClient
 from .helpers.profiles import TaskCaller
 from .helpers.tokens import clean_furigana
 from .reading import generate_furigana
@@ -109,6 +110,12 @@ def query_buttons() -> Iterable[ToolbarButton]:
             tip='Search audio files to add to note',
             conf=cfg.toolbar.audio_search_button
         ),
+        ToolbarButton(
+            id='add_definition_button',
+            on_press=modify_note(sakura_client.add_definition),
+            tip='Add dictionary definition',
+            conf=cfg.toolbar.add_definition_button
+        ),
     )
 
 
@@ -128,3 +135,6 @@ def add_toolbar_buttons(html_buttons: list[str], editor: Editor) -> None:
 
 def init():
     gui_hooks.editor_did_init_buttons.append(add_toolbar_buttons)
+
+
+sakura_client = SakuraParisClient(cfg.definitions)

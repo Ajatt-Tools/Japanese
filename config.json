@@ -101,6 +101,11 @@
       "enabled": true,
       "shortcut": "",
       "text": "検"
+    },
+    "add_definition_button": {
+      "enabled": true,
+      "shortcut": "",
+      "text": "意"
     }
   },
   "audio_sources": [
@@ -133,5 +138,13 @@
     "ignore_inflections": false,
     "stop_if_one_source_has_results": false,
     "search_dialog_field_name": "VocabAudio"
+  },
+  "definitions": {
+    "timeout": 10,
+    "remove_marks": true,
+    "dict_name": "meikyou",
+    "search_type": "exact",
+    "source": "VocabKanji",
+    "destination": "VocabDef"
   }
 }
