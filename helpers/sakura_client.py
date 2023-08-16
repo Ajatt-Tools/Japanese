@@ -63,14 +63,15 @@ class SakuraParisClient(anki.httpclient.HttpClient):
 
     def fetch_def(self, headword: str, *, dict_name: DictName = None, search_type: SearchType = None) -> str:
         self.timeout = self._config.timeout
-        r = self.get(format_get_url(
+        url = format_get_url(
             headword,
             dict_name=(dict_name or self._config.dict_name),
             search_type=(search_type or self._config.search_type),
-        ))
-        if r.status_code != requests.codes.ok:
-            return ""
-        return DEF_SEP.join(self._parse_result(r.text))
+        )
+        with self.get(url) as r:
+            if r.status_code != requests.codes.ok:
+                return ""
+            return DEF_SEP.join(self._parse_result(r.text))
 
     def _parse_result(self, html_page: str) -> str:
         soup = BeautifulSoup(html_page, "html.parser")
