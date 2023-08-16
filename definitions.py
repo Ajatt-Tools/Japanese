@@ -15,7 +15,10 @@ class SakuraParisAnkiClient(SakuraParisClient):
         Interaction with Anki's editor.
         """
         from aqt.utils import tooltip
-
+        if self._config.source not in editor.note:
+            return tooltip(f"Note doesn't have field \"{self._config.source}\".")
+        if not editor.note[self._config.source]:
+            return tooltip(f"Field \"{self._config.source}\" is empty.")
         try:
             definition = self.fetch_def(editor.note[self._config.source])
         except requests.exceptions.ConnectionError:
