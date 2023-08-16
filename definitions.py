@@ -5,11 +5,10 @@ import requests
 from aqt.editor import Editor
 
 from .config_view import config_view as cfg
-from .helpers.sakura_client import SakuraParisClient
+from .helpers.sakura_client import SakuraParisClient, AddDefBehavior, DEF_SEP
 
 
 class SakuraParisAnkiClient(SakuraParisClient):
-
     def add_definition(self, editor: Editor):
         """
         Interaction with Anki's editor.
@@ -24,10 +23,15 @@ class SakuraParisAnkiClient(SakuraParisClient):
         except requests.exceptions.ConnectionError:
             return tooltip("Connection error.")
         else:
-            if definition:
-                editor.note[self._config.destination] = definition
-            else:
+            if not definition:
                 return tooltip("Nothing found.")
+            editor.note[self._config.destination] = (
+                definition
+                if self._config.behavior == AddDefBehavior.replace
+                else f"{editor.note[self._config.destination]}{DEF_SEP}{definition}"
+                if self._config.behavior == AddDefBehavior.append
+                else f"{definition}{DEF_SEP}{editor.note[self._config.destination]}"
+            ).removeprefix(DEF_SEP).removesuffix(DEF_SEP)
 
 
 # Entry point

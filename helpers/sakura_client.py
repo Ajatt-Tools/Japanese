@@ -11,7 +11,7 @@ import bs4
 import requests
 from bs4 import BeautifulSoup
 
-DEF_SEP = "<br><br>"
+DEF_SEP = "<br>"
 SITE_URL = "https://sakura-paris.org"
 
 
@@ -32,6 +32,13 @@ class DictName(enum.StrEnum):
     shinjirin = "ハイブリッド新辞林"
 
 
+@enum.unique
+class AddDefBehavior(enum.IntEnum):
+    append = enum.auto()
+    prepend = enum.auto()
+    replace = enum.auto()
+
+
 def format_get_url(headword: str, dict_name: DictName, search_type: SearchType):
     return f"{SITE_URL}/dict/{dict_name.value}/{search_type.name}/{headword}"
 
@@ -43,6 +50,7 @@ class SakuraParisConfig(typing.Protocol):
     search_type: SearchType
     source: str
     destination: str
+    behavior: AddDefBehavior
 
 
 class SakuraParisClient(anki.httpclient.HttpClient):
@@ -69,7 +77,7 @@ class SakuraParisClient(anki.httpclient.HttpClient):
         for node in soup.find_all('div', class_="content"):
             del node["class"]
             self._trim_node(node)
-            yield str(node).strip().replace('\n', '<br>')
+            yield str(node).strip().replace("\n", DEF_SEP)
 
     def _trim_node(self, doc: bs4.Tag):
         if self._config.remove_marks:

@@ -145,6 +145,7 @@
     "dict_name": "meikyou",
     "search_type": "exact",
     "source": "VocabKanji",
-    "destination": "VocabDef"
+    "destination": "VocabDef",
+    "behavior": "append"
   }
 }
