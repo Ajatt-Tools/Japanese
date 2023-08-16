@@ -2,9 +2,9 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/copyleft/gpl.html
 
 import dataclasses
+from collections.abc import Iterable, Collection
 from types import SimpleNamespace
 from typing import Optional, TypedDict
-from collections.abc import Iterable, Collection
 
 from aqt import mw
 from aqt.qt import *
@@ -18,6 +18,7 @@ from .audio import aud_src_mgr
 from .config_view import config_view as cfg, ReadingsDiscardMode, PitchPatternStyle
 from .helpers import ui_translate, split_list
 from .helpers.profiles import Profile, ProfileFurigana, ProfilePitch, PitchOutputFormat, ProfileAudio, TaskCaller
+from .helpers.sakura_client import DictName, SearchType, AddDefBehavior
 from .pitch_accents.user_accents import UserAccentData
 from .reading import acc_dict
 from .widgets.anki_style import fix_default_anki_style
@@ -49,7 +50,7 @@ class ControlPanel(QHBoxLayout):
         self.addWidget(self.clone_btn)
 
 
-def relevant_field_names(note_type_name_fuzzy: Optional[str]) -> Iterable[str]:
+def relevant_field_names(note_type_name_fuzzy: Optional[str] = None) -> Iterable[str]:
     """
     Return an iterable of field names present in note types whose names contain the first parameter.
     """
@@ -63,6 +64,15 @@ class EditableSelector(QComboBox):
     def __init__(self, *args):
         super().__init__(*args)
         self.setEditable(True)
+
+
+class FieldNameSelector(EditableSelector):
+    def __init__(self, initial_value: Optional[str] = None, *args):
+        super().__init__(*args)
+        self.clear()
+        self.addItems(dict.fromkeys(relevant_field_names()))
+        if initial_value:
+            self.setCurrentText(initial_value)
 
 
 class NoteTypeSelector(EditableSelector):
@@ -412,6 +422,36 @@ class ContextMenuSettingsForm(SettingsForm):
             action.setToolTip("Show this action in the context menu.")
 
 
+class DefinitionsSettingsForm(SettingsForm):
+    _title = "Add definition"
+    _config = cfg.definitions
+
+    def _add_widgets(self):
+        super()._add_widgets()
+        self._widgets.source = FieldNameSelector(
+            initial_value=self._config.source
+        )
+        self._widgets.destination = FieldNameSelector(
+            initial_value=self._config.destination
+        )
+        self._widgets.dict_name = EnumSelectCombo(
+            enum_type=DictName,
+            initial_value=self._config.dict_name,
+            show_values=True,
+        )
+        self._widgets.search_type = EnumSelectCombo(
+            enum_type=SearchType,
+            initial_value=self._config.search_type
+        )
+        self._widgets.behavior = EnumSelectCombo(
+            enum_type=AddDefBehavior,
+            initial_value=self._config.behavior
+        )
+        self._widgets.timeout = NarrowSpinBox(
+            initial_value=self._config.timeout
+        )
+
+
 class MultiColumnSettingsForm(SettingsForm):
     _columns = 3
     _alignment = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop
@@ -722,10 +762,6 @@ class SettingsDialog(QDialog):
     def __init__(self, *args):
         super().__init__(*args)
 
-        # General tab
-        self._context_menu_settings = ContextMenuSettingsForm()
-        self._toolbar_settings = ToolbarSettingsForm()
-
         # Furigana tab
         self._furigana_profiles_edit = FuriganaProfilesEdit()
         self._furigana_settings = FuriganaSettingsForm()
@@ -738,6 +774,11 @@ class SettingsDialog(QDialog):
         self._audio_profiles_edit = AudioProfilesEdit()
         self._audio_sources_edit = AudioSourcesGroup()
         self._audio_settings = AudioSettingsForm()
+
+        # Menus tab
+        self._context_menu_settings = ContextMenuSettingsForm()
+        self._toolbar_settings = ToolbarSettingsForm()
+        self._definitions_settings = DefinitionsSettingsForm()
 
         # Overrides tab
         self._accents_override = PitchOverrideWidget(self, file_path=UserAccentData.source_csv_path)
@@ -789,9 +830,11 @@ class SettingsDialog(QDialog):
 
         # Menus
         tab = QWidget()
-        tab.setLayout(layout := QVBoxLayout())
-        layout.addWidget(self._toolbar_settings)
-        layout.addWidget(self._context_menu_settings)
+        tab.setLayout(layout := QGridLayout())
+        # int fromRow, int fromColumn, int rowSpan, int columnSpan
+        layout.addWidget(self._toolbar_settings, 0, 0, 1, -1)
+        layout.addWidget(self._context_menu_settings, 1, 0)
+        layout.addWidget(self._definitions_settings, 1, 1)
         self._tabs.addTab(tab, "Menus")
 
     def _setup_ui(self) -> None:
@@ -829,6 +872,7 @@ class SettingsDialog(QDialog):
         cfg['pitch_accent'].update(self._pitch_settings.as_dict())
         cfg['furigana'].update(self._furigana_settings.as_dict())
         cfg['context_menu'].update(self._context_menu_settings.as_dict())
+        cfg['definitions'].update(self._definitions_settings.as_dict())
         cfg['toolbar'].update(self._toolbar_settings.as_dict())
         cfg['profiles'] = [
             *self._furigana_profiles_edit.as_list(),
