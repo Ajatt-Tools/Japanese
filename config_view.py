@@ -8,7 +8,7 @@ from collections.abc import Iterable
 from typing import NamedTuple, final
 
 from .ajt_common.addon_config import AddonConfigManager
-from .definitions import DictName, SearchType
+from .helpers.sakura_client import DictName, SearchType
 from .helpers.audio_manager import AudioSourceConfig
 from .helpers.profiles import Profile
 from .helpers.tokens import RE_FLAGS

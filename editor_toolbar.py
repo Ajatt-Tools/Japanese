@@ -10,7 +10,7 @@ from aqt.editor import Editor
 
 from .audio import aud_src_mgr, format_audio_tags
 from .config_view import config_view as cfg, ToolbarButtonConfig
-from .definitions import SakuraParisClient
+from .definitions import sakura_client
 from .helpers.profiles import TaskCaller
 from .helpers.tokens import clean_furigana
 from .reading import generate_furigana
@@ -135,6 +135,3 @@ def add_toolbar_buttons(html_buttons: list[str], editor: Editor) -> None:
 
 def init():
     gui_hooks.editor_did_init_buttons.append(add_toolbar_buttons)
-
-
-sakura_client = SakuraParisClient(cfg.definitions)
