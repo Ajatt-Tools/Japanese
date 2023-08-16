@@ -55,19 +55,19 @@ class DoTask:
         self._task = task
         self._caller = caller
 
-    def run(self, *args, **kwargs):
+    def run(self, *args, **kwargs) -> str:
         raise NotImplementedError()
 
 
 class AddFurigana(DoTask, task_type=ProfileFurigana):
     @do_not_modify_destination_if_have_nothing_to_add
-    def run(self, src_text: str):
+    def run(self, src_text: str) -> str:
         return generate_furigana(src_text, split_morphemes=self._task.split_morphemes)
 
 
 class AddPitch(DoTask, task_type=ProfilePitch):
     @do_not_modify_destination_if_have_nothing_to_add
-    def run(self, src_text: str):
+    def run(self, src_text: str) -> str:
         return format_pronunciations(
             pronunciations=get_pronunciations(src_text, use_mecab=self._task.split_morphemes),
             output_format=PitchOutputFormat[self._task.output_format],
@@ -78,7 +78,7 @@ class AddPitch(DoTask, task_type=ProfilePitch):
 
 class AddAudio(DoTask, task_type=ProfileAudio):
     @do_not_modify_destination_if_have_nothing_to_add
-    def run(self, src_text: str):
+    def run(self, src_text: str) -> str:
         search_results = aud_src_mgr.search_audio(
             src_text,
             split_morphemes=self._task.split_morphemes,
