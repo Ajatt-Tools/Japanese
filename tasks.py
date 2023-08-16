@@ -111,17 +111,20 @@ class DoTasks:
     def run(self, changed: bool = False) -> bool:
         for task in self._tasks:
             if task.should_answer_to(self._caller):
-                changed = self.do_task(task) or changed
+                changed = self._do_task(task) or changed
         return changed
 
-    def do_task(self, task: Profile) -> bool:
+    def _do_task(self, task: Profile) -> bool:
         changed = False
-        if self.can_fill_destination(task) and (src_text := mw.col.media.strip(self._note[task.source]).strip()):
+        if self._can_fill_destination(task) and (src_text := self._src_text(task)):
             self._note[task.destination] = DoTask(task, self._caller).run(src_text, self._note[task.destination])
             changed = True
         return changed
 
-    def can_fill_destination(self, task: Profile) -> bool:
+    def _src_text(self, task: Profile) -> str:
+        return mw.col.media.strip(self._note[task.source]).strip()
+
+    def _can_fill_destination(self, task: Profile) -> bool:
         # Field names are empty or None
         if not task.source or not task.destination:
             return False
