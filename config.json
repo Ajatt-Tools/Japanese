@@ -83,7 +83,7 @@
       "text": "再"
     },
     "furigana_button": {
-      "enabled": true,
+      "enabled": false,
       "shortcut": "",
       "text": "振"
     },
