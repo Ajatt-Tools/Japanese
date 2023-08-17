@@ -451,6 +451,29 @@ class DefinitionsSettingsForm(SettingsForm):
             initial_value=self._config.timeout
         )
 
+    def _add_tooltips(self):
+        super()._add_tooltips()
+        self._widgets.timeout.setToolTip(
+            "Download timeout in seconds."
+        )
+        self._widgets.remove_marks.setToolTip(
+            "Strip all <mark> tags from definitions.\n"
+            "Usually <mark> tags simply repeat the headword and are not needed."
+        )
+        self._widgets.dict_name.setToolTip(
+            "Dictionary to fetch definitions from."
+        )
+        self._widgets.search_type.setToolTip(
+            "How to search.\n"
+            "Prefix — headwords starting with the search string.\n"
+            "Suffix — headwords ending with the search string.\n"
+            "Exact — headwords equal to the search string."
+        )
+        self._widgets.behavior.setToolTip(
+            "How to add fetched definitions.\n"
+            "Replace existing definitions, append or prepend."
+        )
+
 
 class MultiColumnSettingsForm(SettingsForm):
     _columns = 3
