@@ -33,10 +33,13 @@ class DictName(enum.StrEnum):
 
 
 @enum.unique
-class AddDefBehavior(enum.IntEnum):
-    append = enum.auto()
-    prepend = enum.auto()
-    replace = enum.auto()
+class AddDefBehavior(enum.Enum):
+    append = enum.auto(), lambda field_value, fetched_value: f"{field_value}{DEF_SEP}{fetched_value}"
+    prepend = enum.auto(), lambda field_value, fetched_value: f"{fetched_value}{DEF_SEP}{field_value}"
+    replace = enum.auto(), lambda field_value, fetched_value: fetched_value
+
+    def format(self, field_value: str, fetched_value: str):
+        return self.value[-1](field_value, fetched_value).removeprefix(DEF_SEP).removesuffix(DEF_SEP)
 
 
 def format_get_url(headword: str, dict_name: DictName, search_type: SearchType):

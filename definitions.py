@@ -80,13 +80,10 @@ class SakuraParisAnkiClient(SakuraParisClient):
             elif not result.text:
                 return tooltip("Nothing found.")
             else:
-                editor.note[self._config.destination] = (
-                    result.text
-                    if self._config.behavior == AddDefBehavior.replace
-                    else f"{editor.note[self._config.destination]}{DEF_SEP}{result.text}"
-                    if self._config.behavior == AddDefBehavior.append
-                    else f"{result.text}{DEF_SEP}{editor.note[self._config.destination]}"
-                ).removeprefix(DEF_SEP).removesuffix(DEF_SEP)
+                editor.note[self._config.destination] = self._config.behavior.format(
+                    field_value=editor.note[self._config.destination],
+                    fetched_value=result.text,
+                )
                 return tooltip("Done.")
 
         # Set up
