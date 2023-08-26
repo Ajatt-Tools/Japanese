@@ -16,14 +16,14 @@ SITE_URL = "https://sakura-paris.org"
 
 
 @enum.unique
-class SearchType(enum.StrEnum):
+class SearchType(enum.Enum):
     prefix = "前方一致"
     suffix = "後方一致"
     exact = "完全一致"
 
 
 @enum.unique
-class DictName(enum.StrEnum):
+class DictName(enum.Enum):
     meikyou = "明鏡国語辞典"
     daijirin = "大辞林"
     daijisen = "大辞泉"
