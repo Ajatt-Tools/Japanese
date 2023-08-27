@@ -224,7 +224,7 @@ class AnkiAudioSourceManager(AudioSourceManager):
     def _download_tag(self, audio_file: FileUrlData) -> DownloadedData:
         return DownloadedData(
             audio_file.desired_filename,
-            self.get_file(audio_file),
+            self._get_file(audio_file),
         )
 
     def _after_init(self, result: InitResult, notify_on_finish: bool):
