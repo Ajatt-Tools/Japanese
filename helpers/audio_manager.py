@@ -16,14 +16,18 @@ import anki.httpclient
 import requests
 from requests import RequestException
 
-from .audio_json_schema import FileInfo
-from .sqlite3_buddy import Sqlite3Buddy
 
 try:
+    from .audio_json_schema import FileInfo
+    from .sqlite3_buddy import Sqlite3Buddy
+
     from .file_ops import user_files_dir
     from ..mecab_controller.kana_conv import to_katakana
     from .inflections import is_inflected
 except ImportError:
+    from audio_json_schema import FileInfo
+    from sqlite3_buddy import Sqlite3Buddy
+
     from helpers.file_ops import user_files_dir
     from helpers.inflections import is_inflected
     from mecab_controller.kana_conv import to_katakana
@@ -267,6 +271,12 @@ class AudioSource(AudioSourceConfig):
     def drop_cache(self) -> None:
         return self.db.remove_data(self.name)
 
+    def distinct_file_count(self) -> int:
+        return self.db.distinct_file_count(self.name)
+
+    def distinct_headword_count(self) -> int:
+        return self.db.distinct_headword_count(self.name)
+
 
 @dataclasses.dataclass
 class AudioManagerException(RequestException):
@@ -372,22 +382,23 @@ class AudioSourceManager:
         source.update_original_url()
 
     def total_stats(self) -> TotalAudioStats:
-        unique_files, unique_headwords, stats = set(), set(), list()
-        for source in self._audio_sources:
-            stats.append(AudioStats(
+        stats = [
+            AudioStats(
                 source_name=source.name,
-                num_files=source.num_files(),
-                num_headwords=source.num_headwords(),
-            ))
-            unique_files.update(source.all_files())
-            unique_headwords.update(source.all_headwords())
+                num_files=source.distinct_file_count(),
+                num_headwords=source.distinct_headword_count(),
+            )
+            for source in self._audio_sources
+        ]
         return TotalAudioStats(
-            unique_files=len(unique_files),
-            unique_headwords=len(unique_headwords),
+            unique_files=self._db.distinct_file_count(),
+            unique_headwords=self._db.distinct_headword_count(),
             sources=stats,
         )
 
     def search_word(self, word: str) -> Iterable[FileUrlData]:
+        if not self._db.can_execute:
+            return
         for source in self._audio_sources:
             for audio_file in source.search_files(word):
                 yield source.resolve_file(word, audio_file)

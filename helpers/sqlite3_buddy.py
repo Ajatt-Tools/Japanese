@@ -7,8 +7,12 @@ from collections.abc import Iterable
 from types import NoneType
 from typing import Optional
 
-from .audio_json_schema import SourceIndex, FileInfo
-from .file_ops import user_files_dir
+try:
+    from .audio_json_schema import SourceIndex, FileInfo
+    from .file_ops import user_files_dir
+except ImportError:
+    from audio_json_schema import SourceIndex, FileInfo
+    from file_ops import user_files_dir
 
 DB_PATH = os.path.join(user_files_dir(), "audio_sources.sqlite3")
 
@@ -18,10 +22,14 @@ class Sqlite3Buddy:
 
     def __init__(self):
         self._con: Optional[sqlite3.Connection] = None
-        self._prepare_tables()
+
+    @property
+    def can_execute(self):
+        return self._con is not None
 
     def start_session(self):
         self._con: sqlite3.Connection = sqlite3.connect(DB_PATH)
+        self._prepare_tables()
 
     def end_session(self):
         self._con.commit()
@@ -186,3 +194,27 @@ class Sqlite3Buddy:
         for query in queries:
             cur.execute(query, (source_name,))
         self._con.commit()
+
+    def distinct_file_count(self, source_name: Optional[str] = None) -> int:
+        cur = self._con.cursor()
+        if source_name:
+            return cur.execute(
+                """ SELECT COUNT(*) FROM (SELECT DISTINCT file_name FROM files WHERE source_name = ?); """,
+                (source_name, )
+            ).fetchone()[0]
+        else:
+            return cur.execute(
+                """ SELECT COUNT(*) FROM (SELECT DISTINCT file_name FROM files); """
+            ).fetchone()[0]
+
+    def distinct_headword_count(self, source_name: Optional[str] = None) -> int:
+        cur = self._con.cursor()
+        if source_name:
+            return cur.execute(
+                """ SELECT COUNT(*) FROM (SELECT DISTINCT headword FROM headwords WHERE source_name = ?); """,
+                (source_name, )
+            ).fetchone()[0]
+        else:
+            return cur.execute(
+                """ SELECT COUNT(*) FROM (SELECT DISTINCT headword FROM headwords); """
+            ).fetchone()[0]
