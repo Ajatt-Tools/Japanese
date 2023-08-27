@@ -37,21 +37,6 @@ def user_files_dir():
             return dir_path
 
 
-def is_audio_cache_file(file: os.DirEntry):
-    return file.name.startswith("audio_source_") and file.name.endswith(".pickle")
-
-
-def iter_audio_cache_files() -> Iterable[os.DirEntry]:
-    """
-    Iterates over all stored audio source *.pickle files
-    """
-    return (
-        file
-        for file in os.scandir(user_files_dir())
-        if is_audio_cache_file(file)
-    )
-
-
 def open_file(path: str) -> None:
     """
     Select file in lf, the preferred terminal file manager, or open it with xdg-open.
@@ -70,5 +55,4 @@ def open_file(path: str) -> None:
 
 if __name__ == '__main__':
     print(user_files_dir())
-    print(list(iter_audio_cache_files()))
     print(open_file('/etc/hosts'))

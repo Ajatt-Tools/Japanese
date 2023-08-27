@@ -5,18 +5,19 @@ import dataclasses
 import io
 import json
 import os
-import pickle
 import posixpath
 import re
 import zipfile
-from types import SimpleNamespace
-from typing import Optional, NewType, Union, TypedDict
 from collections.abc import Iterable
+from types import SimpleNamespace
+from typing import Optional, Union
 
 import anki.httpclient
 import requests
 from requests import RequestException
 
+from .audio_json_schema import FileInfo
+from .sqlite3_buddy import Sqlite3Buddy
 
 try:
     from .file_ops import user_files_dir
@@ -76,10 +77,6 @@ class AudioSourceConfig:
     @property
     def is_valid(self) -> str:
         return self.name and self.url
-
-    @property
-    def cache_path(self):
-        return os.path.join(user_files_dir(), f"audio_source_{self.name}.pickle")
 
 
 class AudioManagerHttpClient(anki.httpclient.HttpClient):
@@ -156,29 +153,6 @@ class AudioManagerHttpClient(anki.httpclient.HttpClient):
         return self.stream_content(response)
 
 
-FileList = NewType("FileList", list[str])
-
-
-class FileInfo(TypedDict):
-    kana_reading: str
-    pitch_pattern: str
-    pitch_number: str
-
-
-class SourceMeta(TypedDict):
-    name: str
-    year: int
-    version: int
-    media_dir: str
-    media_dir_abs: str
-
-
-class SourceIndex(TypedDict):
-    meta: SourceMeta
-    headwords: dict[str, FileList]
-    files: dict[str, FileInfo]
-
-
 def norm_pitch_numbers(s: str) -> str:
     """
     Ensure that all pitch numbers of a word (pronunciation) are presented as a dash-separated string.
@@ -191,20 +165,20 @@ def norm_pitch_numbers(s: str) -> str:
 @dataclasses.dataclass
 class AudioSource(AudioSourceConfig):
     # current schema has three fields: "meta", "headwords", "files"
-    pronunciation_data: Optional[SourceIndex] = dataclasses.field(init=False, default=None, repr=False)
+    db: Sqlite3Buddy
 
     def resolve_file(self, word: str, file_name: str) -> FileUrlData:
         components: list[str] = []
-        file_info: FileInfo = self.files[file_name]
+        file_info: FileInfo = self.db.get_file_info(self.name, file_name)
 
         # Append either pitch pattern or kana reading, preferring pitch pattern.
-        if 'pitch_pattern' in file_info:
+        if file_info['pitch_pattern']:
             components.append(to_katakana(file_info['pitch_pattern']))
-        elif 'kana_reading' in file_info:
+        elif file_info['kana_reading']:
             components.append(to_katakana(file_info['kana_reading']))
 
         # If pitch number is present, append it after reading.
-        if 'pitch_number' in file_info:
+        if file_info['pitch_number']:
             components.append(norm_pitch_numbers(file_info['pitch_number']))
 
         desired_filename = '_'.join((word, *components, self.name,))
@@ -215,28 +189,24 @@ class AudioSource(AudioSourceConfig):
             desired_filename=desired_filename,
             word=word,
             source_name=self.name,
-            reading=file_info.get('kana_reading', ''),
-            pitch_number=file_info.get('pitch_number', '?')
+            reading=(file_info['kana_reading'] or ""),
+            pitch_number=(file_info['pitch_number'] or "?"),
         )
 
     def raise_if_not_ready(self):
-        if not self.is_ready:
+        if not self.is_cached:
             raise RuntimeError("Attempt to access property of an uninitialized source.")
-
-    @property
-    def reported_name(self):
-        self.raise_if_not_ready()
-        return self.pronunciation_data['meta']['name']
 
     @property
     def media_dir(self) -> str:
         # Meta can specify absolute path to the media dir,
         # which will be used if set.
         # Otherwise, fall back to relative path.
+        self.raise_if_not_ready()
         try:
-            return self.pronunciation_data['meta']['media_dir_abs']
+            return self.db.get_media_dir_abs(self.name)
         except KeyError:
-            return self.join(os.path.dirname(self.url), self.rel_media_dir)
+            return self.join(os.path.dirname(self.url), self.db.get_media_dir_rel(self.name))
 
     def join(self, *args):
         """ Join multiple paths. """
@@ -247,32 +217,12 @@ class AudioSource(AudioSourceConfig):
             # URLs are always joined with '/'.
             return posixpath.join(*args)
 
-    @property
-    def rel_media_dir(self):
-        self.raise_if_not_ready()
-        return self.pronunciation_data['meta']['media_dir']
+    def search_files(self, headword: str) -> Iterable[str]:
+        return self.db.search_files(self.name, headword)
 
     @property
-    def headwords(self) -> dict[str, FileList]:
-        self.raise_if_not_ready()
-        return self.pronunciation_data['headwords']
-
-    @property
-    def files(self) -> dict[str, FileInfo]:
-        self.raise_if_not_ready()
-        return self.pronunciation_data['files']
-
-    @property
-    def is_ready(self):
-        return (
-                self.pronunciation_data is not None
-                and isinstance(self.pronunciation_data, dict)
-                and 'meta' in self.pronunciation_data
-        )
-
-    @property
-    def cache_exists(self):
-        return file_exists(self.cache_path)
+    def is_cached(self) -> bool:
+        return self.db.is_source_cached(self.name)
 
     @property
     def is_local(self) -> bool:
@@ -281,47 +231,41 @@ class AudioSource(AudioSourceConfig):
     @property
     def original_url(self):
         self.raise_if_not_ready()
-        return self.pronunciation_data['meta']['original_url']
+        return self.db.get_original_url(self.name)
 
     @original_url.setter
-    def original_url(self, url: str):
+    def original_url(self, url: str) -> None:
         self.raise_if_not_ready()
-        self.pronunciation_data['meta']['original_url'] = url
+        self.db.set_original_url(self.name, url)
 
-    def pickle_self(self):
+    def update_original_url(self):
         # Remember where the file was downloaded from.
         self.original_url = self.url
-        self.raise_if_not_ready()
-        with open(self.cache_path, 'wb') as of:
-            # Pickle the dictionary using the highest protocol available.
-            pickle.dump(self.pronunciation_data, of, pickle.HIGHEST_PROTOCOL)
-
-    def read_cache(self):
-        with open(self.cache_path, 'rb') as f:
-            print(f"Reading cached audio source: {self.cache_path}")
-            self.pronunciation_data = pickle.load(f)
 
     def read_local_json(self):
         if self.url.endswith('.zip'):
             # Read from a zip file that is expected to contain a json file with audio source data.
             with zipfile.ZipFile(self.url) as zip_in:
                 print(f"Reading local zip audio source: {self.url}")
-                self.pronunciation_data = json.loads(read_zip(zip_in, self))
+                self.db.insert_data(self.name, json.loads(read_zip(zip_in, self)))
         else:
             # Read an uncompressed json file.
             with open(self.url, encoding='utf8') as f:
                 print(f"Reading local json audio source: {self.url}")
-                self.pronunciation_data = json.load(f)
+                self.db.insert_data(self.name, json.load(f))
 
     def download_remote_json(self, client: AudioManagerHttpClient):
         print(f"Downloading a remote audio source: {self.url}")
         bytes_data = client.download(self)
 
         try:
-            self.pronunciation_data = json.loads(bytes_data)
+            self.db.insert_data(self.name, json.loads(bytes_data))
         except UnicodeDecodeError:
             with zipfile.ZipFile(io.BytesIO(bytes_data)) as zip_in:
-                self.pronunciation_data = json.loads(read_zip(zip_in, self))
+                self.db.insert_data(self.name, json.loads(read_zip(zip_in, self)))
+
+    def drop_cache(self) -> None:
+        return self.db.remove_data(self.name)
 
 
 @dataclasses.dataclass
@@ -379,6 +323,11 @@ class AudioSourceManager:
         self._config = config
         self._audio_sources: list[AudioSource] = []
         self._http_client = AudioManagerHttpClient(self._config)
+        self._db = Sqlite3Buddy()
+
+    def end_db_session(self):
+        """This method should be tied to a gui hook in Anki."""
+        self._db.end_session()
 
     def get_file(self, file: FileUrlData) -> bytes:
         if os.path.isfile(file.url):
@@ -392,8 +341,9 @@ class AudioSourceManager:
         self._audio_sources = sources
 
     def _init_dictionaries(self) -> InitResult:
+        self._db.start_session()
         sources, errors = [], []
-        for source in [AudioSource(**source) for source in self._config.audio_sources]:
+        for source in [AudioSource(**source, db=self._db) for source in self._config.audio_sources]:
             if not source.enabled:
                 continue
             try:
@@ -408,28 +358,29 @@ class AudioSourceManager:
         return InitResult(sources, errors)
 
     def _read_pronunciation_data(self, source: AudioSource):
-        if source.cache_exists:
-            source.read_cache()
+        if source.is_cached:
             # Check if the URLs mismatch,
             # e.g. when the user changed the URL without changing the name.
             if source.url == source.original_url:
                 return
+            else:
+                source.drop_cache()
         if source.is_local:
             source.read_local_json()
         else:
             source.download_remote_json(self._http_client)
-        source.pickle_self()
+        source.update_original_url()
 
     def total_stats(self) -> TotalAudioStats:
         unique_files, unique_headwords, stats = set(), set(), list()
         for source in self._audio_sources:
             stats.append(AudioStats(
                 source_name=source.name,
-                num_files=len(source.files),
-                num_headwords=len(source.headwords)
+                num_files=source.num_files(),
+                num_headwords=source.num_headwords(),
             ))
-            unique_files.update(source.files)
-            unique_headwords.update(source.headwords)
+            unique_files.update(source.all_files())
+            unique_headwords.update(source.all_headwords())
         return TotalAudioStats(
             unique_files=len(unique_files),
             unique_headwords=len(unique_headwords),
@@ -438,9 +389,8 @@ class AudioSourceManager:
 
     def search_word(self, word: str) -> Iterable[FileUrlData]:
         for source in self._audio_sources:
-            if word in source.headwords:
-                for audio_file in source.headwords[word]:
-                    yield source.resolve_file(word, audio_file)
+            for audio_file in source.search_files(word):
+                yield source.resolve_file(word, audio_file)
 
 
 # Entry point
@@ -463,6 +413,7 @@ def main():
     init_audio_dictionaries(aud_src_mgr)
     for file in aud_src_mgr.search_word('ひらがな'):
         print(file)
+    aud_src_mgr.end_db_session()
 
 
 if __name__ == '__main__':

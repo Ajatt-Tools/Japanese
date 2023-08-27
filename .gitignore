@@ -2,6 +2,9 @@
 __pycache__
 .idea
 *.pickle
+*.db
+*.sqlite
+*.sqlite3
 /meta.json
 /manifest.json
 /*.ankiaddon

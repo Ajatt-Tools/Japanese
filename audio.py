@@ -6,9 +6,9 @@ import concurrent.futures
 import io
 import itertools
 import os
+from collections.abc import Collection, Iterable, Sequence
 from concurrent.futures import Future
 from typing import NamedTuple
-from collections.abc import Collection, Iterable, Sequence
 
 import anki.collection
 from anki.sound import SoundOrVideoTag
