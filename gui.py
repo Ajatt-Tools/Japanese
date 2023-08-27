@@ -754,7 +754,7 @@ class AudioSourcesGroup(QGroupBox):
         super().__init__(parent)
         self.setTitle("Audio sources")
         self.setCheckable(False)
-        self._audio_sources_table = AudioSourcesTable().populate(cfg.iter_audio_sources())
+        self._audio_sources_table = AudioSourcesTable(aud_src_mgr).populate(cfg.iter_audio_sources())
         self._bottom_label = QLabel()
         self.setLayout(self._make_layout())
         self._populate()

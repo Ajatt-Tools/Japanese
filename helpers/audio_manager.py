@@ -16,7 +16,6 @@ import anki.httpclient
 import requests
 from requests import RequestException
 
-
 try:
     from .audio_json_schema import FileInfo
     from .sqlite3_buddy import Sqlite3Buddy
@@ -25,8 +24,8 @@ try:
     from ..mecab_controller.kana_conv import to_katakana
     from .inflections import is_inflected
 except ImportError:
-    from audio_json_schema import FileInfo
-    from sqlite3_buddy import Sqlite3Buddy
+    from helpers.audio_json_schema import FileInfo
+    from helpers.sqlite3_buddy import Sqlite3Buddy
 
     from helpers.file_ops import user_files_dir
     from helpers.inflections import is_inflected
@@ -207,10 +206,10 @@ class AudioSource(AudioSourceConfig):
         # which will be used if set.
         # Otherwise, fall back to relative path.
         self.raise_if_not_ready()
-        try:
-            return self.db.get_media_dir_abs(self.name)
-        except KeyError:
-            return self.join(os.path.dirname(self.url), self.db.get_media_dir_rel(self.name))
+        return (
+            self.db.get_media_dir_abs(self.name)
+            or self.join(os.path.dirname(self.url), self.db.get_media_dir_rel(self.name))
+        )
 
     def join(self, *args):
         """ Join multiple paths. """
@@ -335,6 +334,14 @@ class AudioSourceManager:
         self._http_client = AudioManagerHttpClient(self._config)
         self._db = Sqlite3Buddy()
 
+    @property
+    def audio_sources(self) -> list[AudioSource]:
+        return self._audio_sources
+
+    def start_db_session(self):
+        """This method should be tied to a gui hook in Anki."""
+        self._db.start_session()
+
     def end_db_session(self):
         """This method should be tied to a gui hook in Anki."""
         self._db.end_session()
@@ -351,21 +358,21 @@ class AudioSourceManager:
         self._audio_sources = sources
 
     def _init_dictionaries(self) -> InitResult:
-        self._db.start_session()
-        sources, errors = [], []
-        for source in [AudioSource(**source, db=self._db) for source in self._config.audio_sources]:
-            if not source.enabled:
-                continue
-            try:
-                self._read_pronunciation_data(source)
-            except AudioManagerException as ex:
-                print(f"Ignoring audio source {source.name}: {ex.describe_short()}.")
-                errors.append(ex)
-                continue
-            else:
-                sources.append(source)
-                print(f"Initialized audio source: {source.name}")
-        return InitResult(sources, errors)
+        with self._db.new_session():
+            sources, errors = [], []
+            for source in [AudioSource(**source, db=self._db) for source in self._config.audio_sources]:
+                if not source.enabled:
+                    continue
+                try:
+                    self._read_pronunciation_data(source)
+                except AudioManagerException as ex:
+                    print(f"Ignoring audio source {source.name}: {ex.describe_short()}.")
+                    errors.append(ex)
+                    continue
+                else:
+                    sources.append(source)
+                    print(f"Initialized audio source: {source.name}")
+            return InitResult(sources, errors)
 
     def _read_pronunciation_data(self, source: AudioSource):
         if source.is_cached:
@@ -398,10 +405,18 @@ class AudioSourceManager:
 
     def search_word(self, word: str) -> Iterable[FileUrlData]:
         if not self._db.can_execute:
-            return
+            self._db.start_session()
         for source in self._audio_sources:
             for audio_file in source.search_files(word):
                 yield source.resolve_file(word, audio_file)
+
+
+def init_testing_audio_manager():
+    # Used for testing when Anki isn't running.
+    with open(os.path.join(os.path.dirname(__file__), os.pardir, 'config.json')) as inf:
+        cfg = SimpleNamespace(**json.load(inf))
+        cfg.audio_settings = SimpleNamespace(**cfg.audio_settings)  # type: ignore
+    return AudioSourceManager(cfg)
 
 
 # Entry point
@@ -409,22 +424,20 @@ class AudioSourceManager:
 
 
 def main():
-    # Used for testing when Anki isn't running.
-    with open(os.path.join(os.path.dirname(__file__), os.pardir, 'config.json')) as inf:
-        cfg = SimpleNamespace(**json.load(inf))
-        cfg.audio_settings = SimpleNamespace(**cfg.audio_settings)  # type: ignore
-
     def init_audio_dictionaries(self: AudioSourceManager):
         self._set_sources(self._init_dictionaries().sources)
-        stats = self.total_stats()
+
+    aud_src_mgr = init_testing_audio_manager()
+    init_audio_dictionaries(aud_src_mgr)
+
+    with aud_src_mgr._db.new_session():
+        stats = aud_src_mgr.total_stats()
         print(f"Unique audio files: {stats.unique_files}")
         print(f"Unique headwords: {stats.unique_headwords}")
-
-    aud_src_mgr = AudioSourceManager(cfg)
-    init_audio_dictionaries(aud_src_mgr)
-    for file in aud_src_mgr.search_word('ひらがな'):
-        print(file)
-    aud_src_mgr.end_db_session()
+        for file in aud_src_mgr.search_word('ひらがな'):
+            print(file)
+        for source in aud_src_mgr.audio_sources:
+            print(f"source {source.name} media dir {source.media_dir}")
 
 
 if __name__ == '__main__':

@@ -5,7 +5,6 @@ import collections
 import concurrent.futures
 import io
 import itertools
-import os
 from collections.abc import Collection, Iterable, Sequence
 from concurrent.futures import Future
 from typing import NamedTuple
@@ -19,7 +18,6 @@ from aqt.utils import tooltip, showWarning
 
 from .config_view import config_view as cfg
 from .helpers.audio_manager import AudioSourceManager, FileUrlData, AudioManagerException, InitResult
-from .helpers.file_ops import iter_audio_cache_files
 from .helpers.inflections import is_inflected
 from .helpers.tokens import tokenize, ParseableToken
 from .helpers.unique_files import ensure_unique_files
@@ -228,9 +226,11 @@ class AnkiAudioSourceManager(AudioSourceManager):
         )
 
     def _after_init(self, result: InitResult, notify_on_finish: bool):
+        self._db.start_session()
         self._set_sources(result.sources)
-        self._remove_old_cache_files()
+        self._remove_unused_audio_data()
         self._report_init_results(result, notify_on_finish)
+        print("Initialized all audio sources.")
 
     def _report_init_results(self, result: InitResult, notify_on_finish: bool):
         if result.errors:
@@ -247,12 +247,12 @@ class AnkiAudioSourceManager(AudioSourceManager):
                 period=5000,
             )
 
-    def _remove_old_cache_files(self):
-        known_source_files = [source.cache_path for source in self._config.iter_audio_sources()]
-        for file in iter_audio_cache_files():
-            if file.path not in known_source_files:
-                print(f"Removing unused audio cache file: {file.name}")
-                os.remove(file)
+    def _remove_unused_audio_data(self):
+        user_specified_source_names = [source.name for source in self._config.iter_audio_sources()]
+        for source in aud_src_mgr.audio_sources:
+            if source.name not in user_specified_source_names:
+                print(f"Removing unused cache data for audio source: {source.name}")
+                source.drop_cache()
 
 
 # Entry point
@@ -260,4 +260,6 @@ class AnkiAudioSourceManager(AudioSourceManager):
 
 
 aud_src_mgr = AnkiAudioSourceManager(cfg)
-gui_hooks.main_window_did_init.append(aud_src_mgr.init_audio_dictionaries)
+# react to anki's state changes
+gui_hooks.profile_did_open.append(aud_src_mgr.init_audio_dictionaries)
+gui_hooks.profile_will_close.append(aud_src_mgr.end_db_session)

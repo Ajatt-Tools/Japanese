@@ -4,6 +4,7 @@
 import os
 import sqlite3
 from collections.abc import Iterable
+from contextlib import contextmanager
 from types import NoneType
 from typing import Optional
 
@@ -27,22 +28,31 @@ class Sqlite3Buddy:
     def can_execute(self):
         return self._con is not None
 
+    @contextmanager
+    def new_session(self):
+        self.start_session()
+        assert self.can_execute
+        yield
+        self.end_session()
+
     def start_session(self):
+        if self.can_execute:
+            self.end_session()
         self._con: sqlite3.Connection = sqlite3.connect(DB_PATH)
         self._prepare_tables()
 
     def end_session(self):
-        self._con.commit()
-        self._con.close()
-        self._con = None
+        if self.can_execute:
+            self._con.commit()
+            self._con.close()
+            self._con = None
 
     def get_media_dir_abs(self, source_name: str) -> Optional[str]:
         cur = self._con.cursor()
         query = """ SELECT media_dir_abs FROM meta WHERE source_name = ? LIMIT 1; """
         result = cur.execute(query, (source_name,)).fetchone()
-        assert type(result) == tuple and len(result) in (0, 1) and all((type(val) == str) for val in result)
-        if result:
-            return ''.join(result)
+        assert type(result) == tuple and len(result) == 1 and (type(result[0]) in (str, NoneType))
+        return result[0]
 
     def get_media_dir_rel(self, source_name: str) -> str:
         cur = self._con.cursor()

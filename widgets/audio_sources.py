@@ -3,20 +3,23 @@
 
 import dataclasses
 import io
-import os.path
 import re
 from collections.abc import Iterable
 
 from aqt.qt import *
 
 try:
-    from ..helpers.file_ops import iter_audio_cache_files
     from .table import ExpandingTableWidget, CellContent, TableRow
-    from ..helpers.audio_manager import AudioSourceConfig, normalize_filename
+    from ..helpers.audio_manager import (
+        AudioSourceConfig, normalize_filename, AudioSourceManager,
+        init_testing_audio_manager
+    )
 except ImportError:
-    from helpers.file_ops import iter_audio_cache_files
     from table import ExpandingTableWidget, CellContent, TableRow
-    from helpers.audio_manager import AudioSourceConfig, normalize_filename
+    from helpers.audio_manager import (
+        AudioSourceConfig, normalize_filename, AudioSourceManager,
+        init_testing_audio_manager
+    )
 
 
 class SourceEnableCheckbox(QCheckBox):
@@ -31,6 +34,7 @@ class SourceEnableCheckbox(QCheckBox):
 
 def tooltip_cache_remove_complete(removed: list[AudioSourceConfig]):
     from aqt.utils import tooltip
+    from aqt import mw
 
     msg = io.StringIO()
     if removed:
@@ -41,7 +45,8 @@ def tooltip_cache_remove_complete(removed: list[AudioSourceConfig]):
         msg.write("</ol>")
     else:
         msg.write("No cache files to remove")
-    tooltip(msg.getvalue(), period=5000)
+    if mw:
+        tooltip(msg.getvalue(), period=5000)
 
 
 class AudioSourcesTable(ExpandingTableWidget):
@@ -50,8 +55,9 @@ class AudioSourcesTable(ExpandingTableWidget):
     # since names and file paths can contain a wide range of characters.
     _sep_regex: re.Pattern = re.compile(r"[\r\t\n；;。、・]+", flags=re.IGNORECASE | re.MULTILINE)
 
-    def __init__(self, *args):
+    def __init__(self, audio_mgr: AudioSourceManager, *args):
         super().__init__(*args)
+        self._audio_mgr = audio_mgr
         self.addMoveRowContextActions()
         self.addClearCacheContextAction()
 
@@ -70,13 +76,15 @@ class AudioSourcesTable(ExpandingTableWidget):
         Remove cache files for the selected audio sources.
         Missing cache files are skipped.
         """
-        existing_cache_paths = [file.path for file in iter_audio_cache_files()]
         removed: list[AudioSourceConfig] = []
-        for source in self.iterateSelectedConfigs():
-            if source.cache_path in existing_cache_paths:
-                os.remove(source.cache_path)
-                removed.append(source)
-                print(f"Removed cache file: {source.cache_path}")
+        gui_selected_sources = [(selected.name, selected.url) for selected in self.iterateSelectedConfigs()]
+        for cached in self._audio_mgr.audio_sources:
+            if (cached.name, cached.url) in gui_selected_sources:
+                cached.drop_cache()
+                removed.append(cached)
+                print(f"Removed cache for source: {cached.name} ({cached.url})")
+            else:
+                print(f"Source isn't cached: {cached.name} ({cached.url})")
         tooltip_cache_remove_complete(removed)
 
     def addMoveRowContextActions(self):
@@ -164,7 +172,7 @@ class App(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Test")
-        self.table = AudioSourcesTable(self)
+        self.table = AudioSourcesTable(init_testing_audio_manager(), self)
         self.initUI()
 
     def initUI(self):
