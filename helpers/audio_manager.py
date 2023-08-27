@@ -207,8 +207,8 @@ class AudioSource(AudioSourceConfig):
         # Otherwise, fall back to relative path.
         self.raise_if_not_ready()
         return (
-            self.db.get_media_dir_abs(self.name)
-            or self.join(os.path.dirname(self.url), self.db.get_media_dir_rel(self.name))
+                self.db.get_media_dir_abs(self.name)
+                or self.join(os.path.dirname(self.url), self.db.get_media_dir_rel(self.name))
         )
 
     def join(self, *args):
@@ -355,12 +355,17 @@ class AudioSourceManager:
 
     def _set_sources(self, sources: list[AudioSource]):
         self._audio_sources.clear()
-        self._audio_sources = sources
+        # Replace db links as they still use the db from a different thread.
+        self._audio_sources = [dataclasses.replace(source, db=self._db) for source in sources]
 
     def _init_dictionaries(self) -> InitResult:
-        with self._db.new_session():
+        """
+        This method is normally run in a different thread.
+        A separate db connection is used.
+        """
+        with self._db.new_session() as db_session:
             sources, errors = [], []
-            for source in [AudioSource(**source, db=self._db) for source in self._config.audio_sources]:
+            for source in [AudioSource(**source, db=db_session) for source in self._config.audio_sources]:
                 if not source.enabled:
                     continue
                 try:
@@ -430,14 +435,17 @@ def main():
     aud_src_mgr = init_testing_audio_manager()
     init_audio_dictionaries(aud_src_mgr)
 
-    with aud_src_mgr._db.new_session():
-        stats = aud_src_mgr.total_stats()
-        print(f"Unique audio files: {stats.unique_files}")
-        print(f"Unique headwords: {stats.unique_headwords}")
-        for file in aud_src_mgr.search_word('ひらがな'):
-            print(file)
-        for source in aud_src_mgr.audio_sources:
-            print(f"source {source.name} media dir {source.media_dir}")
+    aud_src_mgr.start_db_session()
+
+    stats = aud_src_mgr.total_stats()
+    print(f"Unique audio files: {stats.unique_files}")
+    print(f"Unique headwords: {stats.unique_headwords}")
+    for file in aud_src_mgr.search_word('ひらがな'):
+        print(file)
+    for source in aud_src_mgr.audio_sources:
+        print(f"source {source.name} media dir {source.media_dir}")
+
+    aud_src_mgr.end_db_session()
 
 
 if __name__ == '__main__':

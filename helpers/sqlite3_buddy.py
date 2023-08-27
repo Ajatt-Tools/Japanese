@@ -28,12 +28,19 @@ class Sqlite3Buddy:
     def can_execute(self):
         return self._con is not None
 
+    @classmethod
     @contextmanager
-    def new_session(self):
-        self.start_session()
-        assert self.can_execute
-        yield
-        self.end_session()
+    def new_session(cls):
+        """
+        Create, use, then clean up a temporary connection.
+        Use when working in a different thread since the same connection can't be reused in another thread.
+        """
+        ins = cls()
+        ins.start_session()
+        assert ins.can_execute
+        yield ins
+        ins.end_session()
+        del ins
 
     def start_session(self):
         if self.can_execute:
@@ -157,17 +164,28 @@ class Sqlite3Buddy:
                 headword TEXT not null,
                 file_name TEXT not null
             );
-            """)
+        """)
         cur.execute("""
-              CREATE TABLE IF NOT EXISTS files(
-                  source_name TEXT not null,
-                  file_name TEXT not null,
-                  kana_reading TEXT not null,
-                  pitch_pattern TEXT,
-                  pitch_number TEXT
-              );
-              """)
+            CREATE TABLE IF NOT EXISTS files(
+                source_name TEXT not null,
+                file_name TEXT not null,
+                kana_reading TEXT not null,
+                pitch_pattern TEXT,
+                pitch_number TEXT
+            );
+        """)
+        cur.execute("""
+            CREATE INDEX IF NOT EXISTS index_names ON meta(source_name);
+        """)
+        cur.execute("""
+            CREATE INDEX IF NOT EXISTS index_file_names ON headwords(source_name, headword);
+        """)
+        cur.execute("""
+            CREATE INDEX IF NOT EXISTS index_file_info ON files(source_name, file_name);
+        """)
+
         self._con.commit()
+        cur.close()
 
     def search_files(self, source_name: str, headword: str) -> Iterable[str]:
         cur = self._con.cursor()
