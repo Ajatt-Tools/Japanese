@@ -1,6 +1,7 @@
 # Copyright: Ren Tatsumoto <tatsu at autistici.org> and contributors
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
+import contextlib
 import os
 import sqlite3
 from collections.abc import Iterable
@@ -53,6 +54,12 @@ class Sqlite3Buddy:
             self._con.commit()
             self._con.close()
             self._con = None
+
+    def remove_database_file(self):
+        if self.can_execute:
+            raise RuntimeError("Connection must be closed.")
+        with contextlib.suppress(FileNotFoundError):
+            os.remove(DB_PATH)
 
     def get_media_dir_abs(self, source_name: str) -> Optional[str]:
         cur = self._con.cursor()

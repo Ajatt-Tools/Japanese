@@ -756,16 +756,25 @@ class AudioSourcesGroup(QGroupBox):
         self.setCheckable(False)
         self._audio_sources_table = AudioSourcesTable(aud_src_mgr).populate(cfg.iter_audio_sources())
         self._bottom_label = QLabel()
+        self._purge_button = QPushButton("Purge database")
         self.setLayout(self._make_layout())
         self._populate()
+        qconnect(self._purge_button.clicked, self._on_purge_db_clicked)
 
     def _make_layout(self):
         layout = QVBoxLayout()
         layout.setContentsMargins(4, 0, 4, 0)  # left, top, right, and bottom
         layout.setSpacing(8)
         layout.addWidget(self._audio_sources_table)
-        layout.addWidget(self._bottom_label)
+        layout.addLayout(self._make_bottom_layout())
         fix_default_anki_style(self._audio_sources_table)
+        return layout
+
+    def _make_bottom_layout(self) -> QLayout:
+        layout = QHBoxLayout()
+        layout.addWidget(self._bottom_label)
+        layout.addStretch(1)
+        layout.addWidget(self._purge_button)
         return layout
 
     def _populate(self):
@@ -774,6 +783,10 @@ class AudioSourcesGroup(QGroupBox):
             f"<strong>Unique files</strong>: {audio_stats.unique_files}. "
             f"<strong>Unique headwords</strong>: {audio_stats.unique_headwords}."
         )
+
+    def _on_purge_db_clicked(self):
+        aud_src_mgr.purge_everything()
+        self._populate()
 
     def iterateConfigs(self):
         return self._audio_sources_table.iterateConfigs()

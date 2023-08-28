@@ -361,6 +361,12 @@ class AudioSourceManager:
         """This method should be tied to a gui hook in Anki."""
         self._db.end_session()
 
+    def purge_everything(self):
+        self._audio_sources = []
+        self._db.end_session()
+        self._db.remove_database_file()
+        self._db.start_session()
+
     def _get_file(self, file: FileUrlData) -> bytes:
         if os.path.isfile(file.url):
             with open(file.url, 'rb') as f:
