@@ -327,6 +327,21 @@ def read_zip(zip_in: zipfile.ZipFile, audio_source: AudioSource) -> bytes:
         )
 
 
+def read_pronunciation_data(source: AudioSource, http_client: AudioManagerHttpClient):
+    if source.is_cached:
+        # Check if the URLs mismatch,
+        # e.g. when the user changed the URL without changing the name.
+        if source.url == source.original_url:
+            return
+        else:
+            source.drop_cache()
+    if source.is_local:
+        source.read_local_json()
+    else:
+        source.download_remote_json(http_client)
+    source.update_original_url()
+
+
 class AudioSourceManager:
     def __init__(self, config: SimpleNamespace):
         self._config = config
@@ -369,7 +384,7 @@ class AudioSourceManager:
                 if not source.enabled:
                     continue
                 try:
-                    self._read_pronunciation_data(source)
+                    read_pronunciation_data(source, self._http_client)
                 except AudioManagerException as ex:
                     print(f"Ignoring audio source {source.name}: {ex.describe_short()}.")
                     errors.append(ex)
@@ -378,20 +393,6 @@ class AudioSourceManager:
                     sources.append(source)
                     print(f"Initialized audio source: {source.name}")
             return InitResult(sources, errors)
-
-    def _read_pronunciation_data(self, source: AudioSource):
-        if source.is_cached:
-            # Check if the URLs mismatch,
-            # e.g. when the user changed the URL without changing the name.
-            if source.url == source.original_url:
-                return
-            else:
-                source.drop_cache()
-        if source.is_local:
-            source.read_local_json()
-        else:
-            source.download_remote_json(self._http_client)
-        source.update_original_url()
 
     def total_stats(self) -> TotalAudioStats:
         stats = [
