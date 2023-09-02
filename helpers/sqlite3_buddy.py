@@ -6,7 +6,7 @@ import os
 import sqlite3
 from collections.abc import Iterable
 from contextlib import contextmanager
-from types import NoneType
+
 from typing import Optional
 
 try:
@@ -17,6 +17,7 @@ except ImportError:
     from file_ops import user_files_dir
 
 DB_PATH = os.path.join(user_files_dir(), "audio_sources.sqlite3")
+NoneType = type(None)  # fix for the official binary bundle
 
 
 class Sqlite3Buddy:
