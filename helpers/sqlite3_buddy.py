@@ -235,7 +235,7 @@ class Sqlite3Buddy:
         if source_name:
             return cur.execute(
                 """ SELECT COUNT(*) FROM (SELECT DISTINCT file_name FROM files WHERE source_name = ?); """,
-                (source_name, )
+                (source_name,)
             ).fetchone()[0]
         else:
             return cur.execute(
@@ -247,9 +247,19 @@ class Sqlite3Buddy:
         if source_name:
             return cur.execute(
                 """ SELECT COUNT(*) FROM (SELECT DISTINCT headword FROM headwords WHERE source_name = ?); """,
-                (source_name, )
+                (source_name,)
             ).fetchone()[0]
         else:
             return cur.execute(
                 """ SELECT COUNT(*) FROM (SELECT DISTINCT headword FROM headwords); """
             ).fetchone()[0]
+
+
+def main():
+    with Sqlite3Buddy.new_session() as s:
+        print(f"word count: {s.distinct_headword_count()}")
+        print(f"file count: {s.distinct_file_count()}")
+
+
+if __name__ == '__main__':
+    main()
