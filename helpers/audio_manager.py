@@ -353,6 +353,11 @@ class AudioSourceManager:
     def audio_sources(self) -> list[AudioSource]:
         return self._audio_sources
 
+    def new_db_context(self):
+        instance = type(self)(self._config)
+        instance._set_sources(self._audio_sources)
+        return instance
+
     def start_db_session(self):
         """This method should be tied to a gui hook in Anki."""
         self._db.start_session()

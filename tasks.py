@@ -2,12 +2,13 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import functools
+from contextlib import contextmanager
 from typing import Optional, Callable, Any
 
 from anki.utils import strip_html_media
 from aqt import mw
 
-from .audio import format_audio_tags, aud_src_mgr
+from .audio import format_audio_tags, AnkiAudioSourceManager
 from .config_view import config_view as cfg
 from .helpers import *
 from .helpers.hooks import collection_will_add_note
@@ -51,9 +52,10 @@ class DoTask:
         subclass = cls._subclasses_map[type(task)]
         return object.__new__(subclass)
 
-    def __init__(self, task, caller: TaskCaller):
+    def __init__(self, task, caller: TaskCaller, aud_src_mgr: AnkiAudioSourceManager):
         self._task = task
         self._caller = caller
+        self._aud_src_mgr = aud_src_mgr
 
     def run(self, *args, **kwargs) -> str:
         raise NotImplementedError()
@@ -79,14 +81,14 @@ class AddPitch(DoTask, task_type=ProfilePitch):
 class AddAudio(DoTask, task_type=ProfileAudio):
     @do_not_modify_destination_if_have_nothing_to_add
     def run(self, src_text: str) -> str:
-        search_results = aud_src_mgr.search_audio(
+        search_results = self._aud_src_mgr.search_audio(
             src_text,
             split_morphemes=self._task.split_morphemes,
             ignore_inflections=cfg.audio_settings.ignore_inflections,
             stop_if_one_source_has_results=cfg.audio_settings.stop_if_one_source_has_results,
         )
         search_results = search_results[:cfg.audio_settings.maximum_results]
-        aud_src_mgr.download_tags_bg(search_results, notify_on_finish=(self._caller != TaskCaller.bulk_add))
+        self._aud_src_mgr.download_tags_bg(search_results, notify_on_finish=(self._caller != TaskCaller.bulk_add))
         return format_audio_tags(search_results)
 
 
@@ -102,22 +104,50 @@ def html_to_media_line(txt: str) -> str:
 
 
 class DoTasks:
-    def __init__(self, note: Note, *, caller: TaskCaller, src_field: Optional[str] = None, overwrite: bool = False):
+    def __init__(
+            self,
+            note: Note,
+            *,
+            caller: TaskCaller,
+            src_field: Optional[str] = None,
+            overwrite: bool = False,
+            change_db_con: bool = False
+    ):
         self._note = note
         self._caller = caller
         self._tasks = iter_tasks(note, src_field)
         self._overwrite = overwrite
+        self._change_db_con = change_db_con
+
+    @contextmanager
+    def _prepare_aud_mgr(self):
+        """
+        If tasks are being done in a different thread, prepare a new db connection
+        to avoid sqlite3 throwing an instance of sqlite3.ProgrammingError.
+        """
+        from .audio import aud_src_mgr as global_aud_src_mgr
+
+        if self._change_db_con:
+            mgr = global_aud_src_mgr.new_db_context()
+            mgr.start_db_session()
+            yield mgr
+            mgr.end_db_session()
+        else:
+            yield global_aud_src_mgr
 
     def run(self, changed: bool = False) -> bool:
-        for task in self._tasks:
-            if task.should_answer_to(self._caller):
-                changed = self._do_task(task) or changed
-        return changed
+        with self._prepare_aud_mgr() as aud_mgr:
+            for task in self._tasks:
+                if task.should_answer_to(self._caller):
+                    changed = self._do_task(task, aud_mgr=aud_mgr) or changed
+            return changed
 
-    def _do_task(self, task: Profile) -> bool:
+    def _do_task(self, task: Profile, aud_mgr: AnkiAudioSourceManager) -> bool:
         changed = False
         if self._can_fill_destination(task) and (src_text := self._src_text(task)):
-            self._note[task.destination] = DoTask(task, self._caller).run(src_text, self._note[task.destination])
+            self._note[task.destination] = DoTask(
+                task, self._caller, aud_mgr,
+            ).run(src_text, self._note[task.destination])
             changed = True
         return changed
 
