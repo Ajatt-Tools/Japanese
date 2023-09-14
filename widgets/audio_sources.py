@@ -12,8 +12,8 @@ try:
     from .table import ExpandingTableWidget, CellContent, TableRow
     from ..helpers.audio_manager import (
         AudioSourceConfig, normalize_filename, AudioSourceManager,
-        init_testing_audio_manager
-    )
+        init_testing_audio_manager, AudioSourceManagerFactory
+)
 except ImportError:
     from table import ExpandingTableWidget, CellContent, TableRow
     from helpers.audio_manager import (
@@ -55,7 +55,7 @@ class AudioSourcesTable(ExpandingTableWidget):
     # since names and file paths can contain a wide range of characters.
     _sep_regex: re.Pattern = re.compile(r"[\r\t\n；;。、・]+", flags=re.IGNORECASE | re.MULTILINE)
 
-    def __init__(self, audio_mgr: AudioSourceManager, *args):
+    def __init__(self, audio_mgr: AudioSourceManagerFactory, *args):
         super().__init__(*args)
         self._audio_mgr = audio_mgr
         self.addMoveRowContextActions()
@@ -78,13 +78,14 @@ class AudioSourcesTable(ExpandingTableWidget):
         """
         removed: list[AudioSourceConfig] = []
         gui_selected_sources = [(selected.name, selected.url) for selected in self.iterateSelectedConfigs()]
-        for cached in self._audio_mgr.audio_sources:
-            if (cached.name, cached.url) in gui_selected_sources:
-                cached.drop_cache()
-                removed.append(cached)
-                print(f"Removed cache for source: {cached.name} ({cached.url})")
-            else:
-                print(f"Source isn't cached: {cached.name} ({cached.url})")
+        with self._audio_mgr.request_new_session() as session:
+            for cached in session.audio_sources:
+                if (cached.name, cached.url) in gui_selected_sources:
+                    cached.drop_cache()
+                    removed.append(cached)
+                    print(f"Removed cache for source: {cached.name} ({cached.url})")
+                else:
+                    print(f"Source isn't cached: {cached.name} ({cached.url})")
         tooltip_cache_remove_complete(removed)
 
     def addMoveRowContextActions(self):

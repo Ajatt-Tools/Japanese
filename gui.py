@@ -778,11 +778,12 @@ class AudioSourcesGroup(QGroupBox):
         return layout
 
     def _populate(self):
-        audio_stats = aud_src_mgr.total_stats()
-        self._bottom_label.setText(
-            f"<strong>Unique files</strong>: {audio_stats.unique_files}. "
-            f"<strong>Unique headwords</strong>: {audio_stats.unique_headwords}."
-        )
+        with aud_src_mgr.request_new_session() as session:
+            audio_stats = session.total_stats()
+            self._bottom_label.setText(
+                f"<strong>Unique files</strong>: {audio_stats.unique_files}. "
+                f"<strong>Unique headwords</strong>: {audio_stats.unique_headwords}."
+            )
 
     def _on_purge_db_clicked(self):
         aud_src_mgr.purge_everything()
@@ -925,7 +926,7 @@ class SettingsDialog(QDialog):
         self._accents_override.save_to_disk()
         # Reload
         acc_dict.reload_from_disk()
-        aud_src_mgr.init_audio_dictionaries(notify_on_finish=True)
+        aud_src_mgr.init_sources(notify_on_finish=True)
         return super().accept()
 
 

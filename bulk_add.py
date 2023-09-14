@@ -22,7 +22,7 @@ def update_notes_op(col: Collection, notes: Sequence[Note]):
     pos = col.add_custom_undo_entry(f"AJT: Add data to {len(notes)} notes.")
     to_update = []
     for note in notes:
-        changed = DoTasks(note=note, caller=TaskCaller.bulk_add, change_db_con=True).run()
+        changed = DoTasks(note=note, caller=TaskCaller.bulk_add).run()
         if changed:
             to_update.append(note)
     col.update_notes(to_update)
@@ -35,7 +35,7 @@ def bulk_add_readings(nids: Sequence[NoteId], parent: Browser):
     ).success(
         lambda out: showInfo(
             parent=parent,
-            title="Task done",
+            title="Tasks done",
             textFormat="rich",
             text=f"Added data to {len(nids)} selected notes."
         )

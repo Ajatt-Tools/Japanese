@@ -17,7 +17,13 @@ from aqt.operations import QueryOp
 from aqt.utils import tooltip, showWarning
 
 from .config_view import config_view as cfg
-from .helpers.audio_manager import AudioSourceManager, FileUrlData, AudioManagerException, InitResult
+from .helpers.audio_manager import (
+    AudioSourceManager,
+    FileUrlData,
+    AudioManagerException,
+    InitResult,
+    AudioSourceManagerFactory
+)
 from .helpers.inflections import is_inflected
 from .helpers.tokens import tokenize, ParseableToken
 from .helpers.unique_files import ensure_unique_files
@@ -118,20 +124,13 @@ def take_first_source(hits: dict[str, list[FileUrlData]]):
 
 
 class AnkiAudioSourceManager(AudioSourceManager):
-    def init_audio_dictionaries(self, notify_on_finish: bool = False):
-        QueryOp(
-            parent=mw,
-            op=lambda collection: self._init_dictionaries(),
-            success=lambda result: self._after_init(result, notify_on_finish),
-        ).run_in_background()
-
     def search_audio(
             self,
             src_text: str,
             *,
             split_morphemes: bool,
             ignore_inflections: bool,
-            stop_if_one_source_has_results: bool
+            stop_if_one_source_has_results: bool,
     ) -> list[FileUrlData]:
         """
         Search audio files (pronunciations) for words contained in search text.
@@ -225,14 +224,7 @@ class AnkiAudioSourceManager(AudioSourceManager):
             self._get_file(audio_file),
         )
 
-    def _after_init(self, result: InitResult, notify_on_finish: bool):
-        self._db.start_session()
-        self._set_sources(result.sources)
-        self._remove_unused_audio_data()
-        self._report_init_results(result, notify_on_finish)
-        print("Initialized all audio sources.")
-
-    def _report_init_results(self, result: InitResult, notify_on_finish: bool):
+    def report_init_results(self, result: InitResult, notify_on_finish: bool):
         if result.errors:
             showWarning('\n'.join(
                 f"Couldn't download audio source: {error.explanation}."
@@ -247,19 +239,34 @@ class AnkiAudioSourceManager(AudioSourceManager):
                 period=5000,
             )
 
-    def _remove_unused_audio_data(self):
+    def remove_unused_audio_data(self):
         user_specified_source_names = [source.name for source in self._config.iter_audio_sources()]
-        for source in aud_src_mgr.audio_sources:
+        for source in self.audio_sources:
             if source.name not in user_specified_source_names:
                 print(f"Removing unused cache data for audio source: {source.name}")
                 source.drop_cache()
+
+
+class AnkiAudioSourceManagerFactory(AudioSourceManagerFactory):
+    def init_sources(self, notify_on_finish: bool = False):
+        QueryOp(
+            parent=mw,
+            op=lambda collection: self._get_sources(),
+            success=lambda result: self._after_init(result, notify_on_finish),
+        ).run_in_background()
+
+    def _after_init(self, result: InitResult, notify_on_finish: bool):
+        self._set_sources(result.sources)
+        with self.request_new_session() as session:
+            session.remove_unused_audio_data()
+            session.report_init_results(result, notify_on_finish)
+        print("Initialized all audio sources.")
 
 
 # Entry point
 ##########################################################################
 
 
-aud_src_mgr = AnkiAudioSourceManager(cfg)
+aud_src_mgr = AnkiAudioSourceManagerFactory(cfg, AnkiAudioSourceManager)
 # react to anki's state changes
-gui_hooks.profile_did_open.append(aud_src_mgr.init_audio_dictionaries)
-gui_hooks.profile_will_close.append(aud_src_mgr.end_db_session)
+gui_hooks.profile_did_open.append(aud_src_mgr.init_sources)

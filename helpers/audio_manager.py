@@ -1,6 +1,6 @@
 # Copyright: Ren Tatsumoto <tatsu at autistici.org> and contributors
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
-
+import contextlib
 import dataclasses
 import io
 import json
@@ -9,8 +9,9 @@ import posixpath
 import re
 import zipfile
 from collections.abc import Iterable
+from contextlib import contextmanager
 from types import SimpleNamespace
-from typing import Optional, Union
+from typing import Optional, Union, Type
 
 import anki.httpclient
 import requests
@@ -168,33 +169,7 @@ def norm_pitch_numbers(s: str) -> str:
 @dataclasses.dataclass
 class AudioSource(AudioSourceConfig):
     # current schema has three fields: "meta", "headwords", "files"
-    db: Sqlite3Buddy
-
-    def resolve_file(self, word: str, file_name: str) -> FileUrlData:
-        components: list[str] = []
-        file_info: FileInfo = self.db.get_file_info(self.name, file_name)
-
-        # Append either pitch pattern or kana reading, preferring pitch pattern.
-        if file_info['pitch_pattern']:
-            components.append(to_katakana(file_info['pitch_pattern']))
-        elif file_info['kana_reading']:
-            components.append(to_katakana(file_info['kana_reading']))
-
-        # If pitch number is present, append it after reading.
-        if file_info['pitch_number']:
-            components.append(norm_pitch_numbers(file_info['pitch_number']))
-
-        desired_filename = '_'.join((word, *components, self.name,))
-        desired_filename = f'{normalize_filename(desired_filename)}{os.path.splitext(file_name)[-1]}'
-
-        return FileUrlData(
-            url=self.join(self.media_dir, file_name),
-            desired_filename=desired_filename,
-            word=word,
-            source_name=self.name,
-            reading=(file_info['kana_reading'] or ""),
-            pitch_number=(file_info['pitch_number'] or "?"),
-        )
+    db: Optional[Sqlite3Buddy]
 
     def raise_if_not_ready(self):
         if not self.is_cached:
@@ -219,9 +194,6 @@ class AudioSource(AudioSourceConfig):
         else:
             # URLs are always joined with '/'.
             return posixpath.join(*args)
-
-    def search_files(self, headword: str) -> Iterable[str]:
-        return self.db.search_files(self.name, headword)
 
     @property
     def is_cached(self) -> bool:
@@ -343,34 +315,23 @@ def read_pronunciation_data(source: AudioSource, http_client: AudioManagerHttpCl
 
 
 class AudioSourceManager:
-    def __init__(self, config: SimpleNamespace):
+    def __init__(
+            self, config: SimpleNamespace,
+            http_client: Optional[AudioManagerHttpClient],
+            db: Sqlite3Buddy,
+            audio_sources: list[AudioSource],
+    ):
         self._config = config
-        self._audio_sources: list[AudioSource] = []
-        self._http_client = AudioManagerHttpClient(self._config)
-        self._db = Sqlite3Buddy()
+        self._http_client = http_client
+        self._db: Sqlite3Buddy = db
+        self._audio_sources: dict[str, AudioSource] = {
+            source.name: dataclasses.replace(source, db=self._db)
+            for source in audio_sources
+        }
 
     @property
-    def audio_sources(self) -> list[AudioSource]:
-        return self._audio_sources
-
-    def new_db_context(self):
-        instance = type(self)(self._config)
-        instance._set_sources(self._audio_sources)
-        return instance
-
-    def start_db_session(self):
-        """This method should be tied to a gui hook in Anki."""
-        self._db.start_session()
-
-    def end_db_session(self):
-        """This method should be tied to a gui hook in Anki."""
-        self._db.end_session()
-
-    def purge_everything(self):
-        self._audio_sources = []
-        self._db.end_session()
-        self._db.remove_database_file()
-        self._db.start_session()
+    def audio_sources(self) -> Iterable[AudioSource]:
+        return self._audio_sources.values()
 
     def _get_file(self, file: FileUrlData) -> bytes:
         if os.path.isfile(file.url):
@@ -379,19 +340,99 @@ class AudioSourceManager:
         else:
             return self._http_client.download(file)
 
-    def _set_sources(self, sources: list[AudioSource]):
-        self._audio_sources.clear()
-        # Replace db links as they still use the db from a different thread.
-        self._audio_sources = [dataclasses.replace(source, db=self._db) for source in sources]
+    def total_stats(self) -> TotalAudioStats:
+        stats = [
+            AudioStats(
+                source_name=source.name,
+                num_files=source.distinct_file_count(),
+                num_headwords=source.distinct_headword_count(),
+            )
+            for source in self.audio_sources
+        ]
+        return TotalAudioStats(
+            unique_files=self._db.distinct_file_count(),
+            unique_headwords=self._db.distinct_headword_count(),
+            sources=stats,
+        )
 
-    def _init_dictionaries(self) -> InitResult:
+    def resolve_file(self, source: AudioSource, word: str, file_name: str) -> FileUrlData:
+        components: list[str] = []
+        file_info: FileInfo = self._db.get_file_info(source.name, file_name)
+
+        # Append either pitch pattern or kana reading, preferring pitch pattern.
+        if file_info['pitch_pattern']:
+            components.append(to_katakana(file_info['pitch_pattern']))
+        elif file_info['kana_reading']:
+            components.append(to_katakana(file_info['kana_reading']))
+
+        # If pitch number is present, append it after reading.
+        if file_info['pitch_number']:
+            components.append(norm_pitch_numbers(file_info['pitch_number']))
+
+        desired_filename = '_'.join((word, *components, source.name,))
+        desired_filename = f'{normalize_filename(desired_filename)}{os.path.splitext(file_name)[-1]}'
+
+        return FileUrlData(
+            url=source.join(source.media_dir, file_name),
+            desired_filename=desired_filename,
+            word=word,
+            source_name=source.name,
+            reading=(file_info['kana_reading'] or ""),
+            pitch_number=(file_info['pitch_number'] or "?"),
+        )
+
+    def search_word(self, word: str) -> Iterable[FileUrlData]:
+        for file_name, source_name in self._db.search_files(word):
+            with contextlib.suppress(KeyError):
+                yield self.resolve_file(self._audio_sources[source_name], word, file_name)
+
+
+class AudioSourceManagerFactory:
+    def __new__(cls, *args, **kwargs):
+        try:
+            obj = cls._instance  # type: ignore
+        except AttributeError:
+            obj = cls._instance = super().__new__(cls)
+        return obj
+
+    def __init__(self, config: SimpleNamespace, mgr_class: Type):
+        self._mgr_class = mgr_class
+        self._config = config
+        self._http_client = AudioManagerHttpClient(self._config)
+        self._audio_sources: list[AudioSource] = []
+
+    def purge_everything(self):
+        self._audio_sources = []
+        Sqlite3Buddy.remove_database_file()
+
+    @contextmanager
+    def request_new_session(self):
+        """
+        If tasks are being done in a different thread, prepare a new db connection
+        to avoid sqlite3 throwing an instance of sqlite3.ProgrammingError.
+        """
+        with Sqlite3Buddy.new_session() as db:
+            yield self._mgr_class(
+                config=self._config,
+                http_client=self._http_client,
+                db=db,
+                audio_sources=self._audio_sources
+            )
+
+    def init_sources(self):
+        self._set_sources(self._get_sources().sources)
+
+    def _set_sources(self, sources: list[AudioSource]):
+        self._audio_sources = [dataclasses.replace(source, db=None) for source in sources]
+
+    def _get_sources(self) -> InitResult:
         """
         This method is normally run in a different thread.
         A separate db connection is used.
         """
-        with self._db.new_session() as db_session:
-            sources, errors = [], []
-            for source in [AudioSource(**source, db=db_session) for source in self._config.audio_sources]:
+        sources, errors = [], []
+        with Sqlite3Buddy.new_session() as db:
+            for source in [AudioSource(**source, db=db) for source in self._config.audio_sources]:
                 if not source.enabled:
                     continue
                 try:
@@ -405,27 +446,9 @@ class AudioSourceManager:
                     print(f"Initialized audio source: {source.name}")
             return InitResult(sources, errors)
 
-    def total_stats(self) -> TotalAudioStats:
-        stats = [
-            AudioStats(
-                source_name=source.name,
-                num_files=source.distinct_file_count(),
-                num_headwords=source.distinct_headword_count(),
-            )
-            for source in self._audio_sources
-        ]
-        return TotalAudioStats(
-            unique_files=self._db.distinct_file_count(),
-            unique_headwords=self._db.distinct_headword_count(),
-            sources=stats,
-        )
 
-    def search_word(self, word: str) -> Iterable[FileUrlData]:
-        if not self._db.can_execute:
-            self._db.start_session()
-        for source in self._audio_sources:
-            for audio_file in source.search_files(word):
-                yield source.resolve_file(word, audio_file)
+# Debug
+##########################################################################
 
 
 def init_testing_audio_manager():
@@ -433,31 +456,21 @@ def init_testing_audio_manager():
     with open(os.path.join(os.path.dirname(__file__), os.pardir, 'config.json')) as inf:
         cfg = SimpleNamespace(**json.load(inf))
         cfg.audio_settings = SimpleNamespace(**cfg.audio_settings)  # type: ignore
-    return AudioSourceManager(cfg)
-
-
-# Entry point
-##########################################################################
+    return AudioSourceManagerFactory(cfg, AudioSourceManager)
 
 
 def main():
-    def init_audio_dictionaries(self: AudioSourceManager):
-        self._set_sources(self._init_dictionaries().sources)
+    factory = init_testing_audio_manager()
+    factory.init_sources()
 
-    aud_src_mgr = init_testing_audio_manager()
-    init_audio_dictionaries(aud_src_mgr)
-
-    aud_src_mgr.start_db_session()
-
-    stats = aud_src_mgr.total_stats()
-    print(f"Unique audio files: {stats.unique_files}")
-    print(f"Unique headwords: {stats.unique_headwords}")
-    for file in aud_src_mgr.search_word('ひらがな'):
-        print(file)
-    for source in aud_src_mgr.audio_sources:
-        print(f"source {source.name} media dir {source.media_dir}")
-
-    aud_src_mgr.end_db_session()
+    with factory.request_new_session() as aud_mgr:
+        stats = aud_mgr.total_stats()
+        print(f"Unique audio files: {stats.unique_files}")
+        print(f"Unique headwords: {stats.unique_headwords}")
+        for file in aud_mgr.search_word('ひらがな'):
+            print(file)
+        for source in aud_mgr.audio_sources:
+            print(f"source {source.name} media dir {source.media_dir}")
 
 
 if __name__ == '__main__':

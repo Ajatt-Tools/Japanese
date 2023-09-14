@@ -2,7 +2,6 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import functools
-from contextlib import contextmanager
 from typing import Optional, Callable, Any
 
 from anki.utils import strip_html_media
@@ -111,32 +110,16 @@ class DoTasks:
             caller: TaskCaller,
             src_field: Optional[str] = None,
             overwrite: bool = False,
-            change_db_con: bool = False
     ):
         self._note = note
         self._caller = caller
         self._tasks = iter_tasks(note, src_field)
         self._overwrite = overwrite
-        self._change_db_con = change_db_con
-
-    @contextmanager
-    def _prepare_aud_mgr(self):
-        """
-        If tasks are being done in a different thread, prepare a new db connection
-        to avoid sqlite3 throwing an instance of sqlite3.ProgrammingError.
-        """
-        from .audio import aud_src_mgr as global_aud_src_mgr
-
-        if self._change_db_con:
-            mgr = global_aud_src_mgr.new_db_context()
-            mgr.start_db_session()
-            yield mgr
-            mgr.end_db_session()
-        else:
-            yield global_aud_src_mgr
 
     def run(self, changed: bool = False) -> bool:
-        with self._prepare_aud_mgr() as aud_mgr:
+        from .audio import aud_src_mgr
+
+        with aud_src_mgr.request_new_session() as aud_mgr:
             for task in self._tasks:
                 if task.should_answer_to(self._caller):
                     changed = self._do_task(task, aud_mgr=aud_mgr) or changed

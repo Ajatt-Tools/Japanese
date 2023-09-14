@@ -7,7 +7,7 @@ import sqlite3
 from collections.abc import Iterable
 from contextlib import contextmanager
 
-from typing import Optional
+from typing import Optional, NamedTuple
 
 try:
     from .audio_json_schema import SourceIndex, FileInfo
@@ -16,12 +16,17 @@ except ImportError:
     from audio_json_schema import SourceIndex, FileInfo
     from file_ops import user_files_dir
 
-DB_PATH = os.path.join(user_files_dir(), "audio_sources.sqlite3")
 NoneType = type(None)  # fix for the official binary bundle
+
+
+class NameFile(NamedTuple):
+    file_name: str
+    source_name: str
 
 
 class Sqlite3Buddy:
     """ Db holds three tables: ('meta', 'headwords', 'files') """
+    _db_path = os.path.join(user_files_dir(), "audio_sources.sqlite3")
 
     def __init__(self):
         self._con: Optional[sqlite3.Connection] = None
@@ -47,7 +52,7 @@ class Sqlite3Buddy:
     def start_session(self):
         if self.can_execute:
             self.end_session()
-        self._con: sqlite3.Connection = sqlite3.connect(DB_PATH)
+        self._con: sqlite3.Connection = sqlite3.connect(self._db_path)
         self._prepare_tables()
 
     def end_session(self):
@@ -56,11 +61,10 @@ class Sqlite3Buddy:
             self._con.close()
             self._con = None
 
-    def remove_database_file(self):
-        if self.can_execute:
-            raise RuntimeError("Connection must be closed.")
+    @classmethod
+    def remove_database_file(cls):
         with contextlib.suppress(FileNotFoundError):
-            os.remove(DB_PATH)
+            os.remove(cls._db_path)
 
     def get_media_dir_abs(self, source_name: str) -> Optional[str]:
         cur = self._con.cursor()
@@ -195,7 +199,7 @@ class Sqlite3Buddy:
         self._con.commit()
         cur.close()
 
-    def search_files(self, source_name: str, headword: str) -> Iterable[str]:
+    def search_files_in_source(self, source_name: str, headword: str) -> Iterable[str]:
         cur = self._con.cursor()
         query = """
         SELECT file_name FROM headwords
@@ -204,6 +208,16 @@ class Sqlite3Buddy:
         results = cur.execute(query, (source_name, headword)).fetchall()
         assert type(results) == list
         return (result_tup[0] for result_tup in results)
+
+    def search_files(self, headword: str) -> Iterable[NameFile]:
+        cur = self._con.cursor()
+        query = """
+        SELECT file_name, source_name FROM headwords
+        WHERE headword = ?;
+        """
+        results = cur.execute(query, (headword,)).fetchall()
+        assert type(results) == list
+        return (NameFile(file_name=result_tup[0], source_name=result_tup[1]) for result_tup in results)
 
     def get_file_info(self, source_name: str, file_name: str) -> FileInfo:
         cur = self._con.cursor()
