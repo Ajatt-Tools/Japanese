@@ -244,7 +244,7 @@ class AnkiAudioSourceManager(AudioSourceManager):
         for source in self.audio_sources:
             if source.name not in user_specified_source_names:
                 print(f"Removing unused cache data for audio source: {source.name}")
-                source.drop_cache()
+                self.drop_cache(source)
 
 
 class AnkiAudioSourceManagerFactory(AudioSourceManagerFactory):

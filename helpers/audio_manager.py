@@ -208,39 +208,10 @@ class AudioSource(AudioSourceConfig):
         self.raise_if_not_ready()
         return self.db.get_original_url(self.name)
 
-    @original_url.setter
-    def original_url(self, url: str) -> None:
-        self.raise_if_not_ready()
-        self.db.set_original_url(self.name, url)
-
     def update_original_url(self):
         # Remember where the file was downloaded from.
-        self.original_url = self.url
-
-    def read_local_json(self):
-        if self.url.endswith('.zip'):
-            # Read from a zip file that is expected to contain a json file with audio source data.
-            with zipfile.ZipFile(self.url) as zip_in:
-                print(f"Reading local zip audio source: {self.url}")
-                self.db.insert_data(self.name, json.loads(read_zip(zip_in, self)))
-        else:
-            # Read an uncompressed json file.
-            with open(self.url, encoding='utf8') as f:
-                print(f"Reading local json audio source: {self.url}")
-                self.db.insert_data(self.name, json.load(f))
-
-    def download_remote_json(self, client: AudioManagerHttpClient):
-        print(f"Downloading a remote audio source: {self.url}")
-        bytes_data = client.download(self)
-
-        try:
-            self.db.insert_data(self.name, json.loads(bytes_data))
-        except UnicodeDecodeError:
-            with zipfile.ZipFile(io.BytesIO(bytes_data)) as zip_in:
-                self.db.insert_data(self.name, json.loads(read_zip(zip_in, self)))
-
-    def drop_cache(self) -> None:
-        return self.db.remove_data(self.name)
+        self.raise_if_not_ready()
+        self.db.set_original_url(self.name, self.url)
 
     def distinct_file_count(self) -> int:
         return self.db.distinct_file_count(self.name)
@@ -299,21 +270,6 @@ def read_zip(zip_in: zipfile.ZipFile, audio_source: AudioSource) -> bytes:
         )
 
 
-def read_pronunciation_data(source: AudioSource, http_client: AudioManagerHttpClient):
-    if source.is_cached:
-        # Check if the URLs mismatch,
-        # e.g. when the user changed the URL without changing the name.
-        if source.url == source.original_url:
-            return
-        else:
-            source.drop_cache()
-    if source.is_local:
-        source.read_local_json()
-    else:
-        source.download_remote_json(http_client)
-    source.update_original_url()
-
-
 class AudioSourceManager:
     def __init__(
             self, config: SimpleNamespace,
@@ -333,12 +289,9 @@ class AudioSourceManager:
     def audio_sources(self) -> Iterable[AudioSource]:
         return self._audio_sources.values()
 
-    def _get_file(self, file: FileUrlData) -> bytes:
-        if os.path.isfile(file.url):
-            with open(file.url, 'rb') as f:
-                return f.read()
-        else:
-            return self._http_client.download(file)
+    @property
+    def db(self) -> Sqlite3Buddy:
+        return self._db
 
     def total_stats(self) -> TotalAudioStats:
         stats = [
@@ -355,7 +308,29 @@ class AudioSourceManager:
             sources=stats,
         )
 
-    def resolve_file(self, source: AudioSource, word: str, file_name: str) -> FileUrlData:
+    def drop_cache(self, source: AudioSource) -> None:
+        return self.db.remove_data(source.name)
+
+    def search_word(self, word: str) -> Iterable[FileUrlData]:
+        for file_name, source_name in self._db.search_files(word):
+            with contextlib.suppress(KeyError):
+                yield self._resolve_file(self._audio_sources[source_name], word, file_name)
+
+    def read_pronunciation_data(self, source: AudioSource):
+        if source.is_cached:
+            # Check if the URLs mismatch,
+            # e.g. when the user changed the URL without changing the name.
+            if source.url == source.original_url:
+                return
+            else:
+                self.drop_cache(source)
+        if source.is_local:
+            self._read_local_json(source)
+        else:
+            self._download_remote_json(source)
+        source.update_original_url()
+
+    def _resolve_file(self, source: AudioSource, word: str, file_name: str) -> FileUrlData:
         components: list[str] = []
         file_info: FileInfo = self._db.get_file_info(source.name, file_name)
 
@@ -381,10 +356,34 @@ class AudioSourceManager:
             pitch_number=(file_info['pitch_number'] or "?"),
         )
 
-    def search_word(self, word: str) -> Iterable[FileUrlData]:
-        for file_name, source_name in self._db.search_files(word):
-            with contextlib.suppress(KeyError):
-                yield self.resolve_file(self._audio_sources[source_name], word, file_name)
+    def _read_local_json(self, source: AudioSource):
+        if source.url.endswith('.zip'):
+            # Read from a zip file that is expected to contain a json file with audio source data.
+            with zipfile.ZipFile(source.url) as zip_in:
+                print(f"Reading local zip audio source: {source.url}")
+                self.db.insert_data(source.name, json.loads(read_zip(zip_in, source)))
+        else:
+            # Read an uncompressed json file.
+            with open(source.url, encoding='utf8') as f:
+                print(f"Reading local json audio source: {source.url}")
+                self.db.insert_data(source.name, json.load(f))
+
+    def _download_remote_json(self, source: AudioSource):
+        print(f"Downloading a remote audio source: {source.url}")
+        bytes_data = self._http_client.download(source)
+
+        try:
+            self.db.insert_data(source.name, json.loads(bytes_data))
+        except UnicodeDecodeError:
+            with zipfile.ZipFile(io.BytesIO(bytes_data)) as zip_in:
+                self.db.insert_data(source.name, json.loads(read_zip(zip_in, source)))
+
+    def _get_file(self, file: FileUrlData) -> bytes:
+        if os.path.isfile(file.url):
+            with open(file.url, 'rb') as f:
+                return f.read()
+        else:
+            return self._http_client.download(file)
 
 
 class AudioSourceManagerFactory:
@@ -431,12 +430,12 @@ class AudioSourceManagerFactory:
         A separate db connection is used.
         """
         sources, errors = [], []
-        with Sqlite3Buddy.new_session() as db:
-            for source in [AudioSource(**source, db=db) for source in self._config.audio_sources]:
+        with self.request_new_session() as session:
+            for source in [AudioSource(**source, db=session.db) for source in self._config.audio_sources]:
                 if not source.enabled:
                     continue
                 try:
-                    read_pronunciation_data(source, self._http_client)
+                    session.read_pronunciation_data(source)
                 except AudioManagerException as ex:
                     print(f"Ignoring audio source {source.name}: {ex.describe_short()}.")
                     errors.append(ex)
