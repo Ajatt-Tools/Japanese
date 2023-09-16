@@ -95,6 +95,10 @@ class SakuraParisClient(anki.httpclient.HttpClient):
             node["src"] = f'{SITE_URL}{node["src"]}'
 
 
+# Debug
+##########################################################################
+
+
 def main():
     config = SimpleNamespace(
         timeout=10,

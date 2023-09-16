@@ -62,6 +62,10 @@ class FormattedEntry(NamedTuple):
 AccentDict = NewType("AccentDict", dict[str, Sequence[FormattedEntry]])
 
 
+# Debug
+##########################################################################
+
+
 def main():
     for file_path in files_in_dir(THIS_DIR_PATH):
         print(file_path)

@@ -270,6 +270,10 @@ class Sqlite3Buddy:
             ).fetchone()[0]
 
 
+# Debug
+##########################################################################
+
+
 def main():
     with Sqlite3Buddy.new_session() as s:
         print(f"word count: {s.distinct_headword_count()}")

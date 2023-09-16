@@ -23,6 +23,10 @@ def adjust_reading(raw_word: str, headword: str, headword_reading: str):
     return headword_reading[:idx_reading] + raw_word[idx_headword:]
 
 
+# Debug
+##########################################################################
+
+
 def main():
     assert (adjust_reading('跪いた', '跪く', 'ひざまずく')) == 'ひざまずいた'
     assert (adjust_reading('安くなかった', '安い', 'やすい')) == 'やすくなかった'

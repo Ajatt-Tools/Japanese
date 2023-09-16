@@ -29,6 +29,10 @@ def is_inflected(headword: str, reading: str) -> bool:
     )
 
 
+# Debug
+##########################################################################
+
+
 def main():
     assert longest_kana_suffix("分かる") == "かる"
     assert longest_kana_suffix("綺麗") is None

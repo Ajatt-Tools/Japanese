@@ -130,6 +130,10 @@ def mingle_readings(words_furigana: list[str], *, sep: str = ', ') -> str:
     return ''.join(packs)
 
 
+# Debug
+##########################################################################
+
+
 def main():
     assert (whitespace_split(' 有[あ]り 得[う]る') == ['有[あ]り', '得[う]る'])
 

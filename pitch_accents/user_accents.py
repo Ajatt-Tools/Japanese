@@ -2,8 +2,8 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import collections
+from collections.abc import Collection
 from typing import Union
-from collections.abc import Iterable, Collection
 
 try:
     from .common import *
@@ -79,6 +79,10 @@ class UserAccentData:
         for key in temp_dict:
             temp_dict[key] = tuple(temp_dict[key])
         return AccentDict(temp_dict)
+
+
+# Debug
+##########################################################################
 
 
 def main():

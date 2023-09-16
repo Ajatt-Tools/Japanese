@@ -4,22 +4,17 @@
 import dataclasses
 import io
 import re
+import typing
 from collections.abc import Iterable
 
 from aqt.qt import *
 
 try:
     from .table import ExpandingTableWidget, CellContent, TableRow
-    from ..helpers.audio_manager import (
-        AudioSourceConfig, normalize_filename, AudioSourceManager,
-        init_testing_audio_manager, AudioSourceManagerFactory
-)
+    from ..helpers.audio_manager import AudioSourceConfig, normalize_filename
 except ImportError:
     from table import ExpandingTableWidget, CellContent, TableRow
-    from helpers.audio_manager import (
-        AudioSourceConfig, normalize_filename, AudioSourceManager,
-        init_testing_audio_manager
-    )
+    from helpers.audio_manager import AudioSourceConfig, normalize_filename
 
 
 class SourceEnableCheckbox(QCheckBox):
@@ -49,13 +44,18 @@ def tooltip_cache_remove_complete(removed: list[AudioSourceConfig]):
         tooltip(msg.getvalue(), period=5000)
 
 
+class AudioManagerInterface(typing.Protocol):
+    def request_new_session(self):
+        ...
+
+
 class AudioSourcesTable(ExpandingTableWidget):
     _columns = tuple(field.name.capitalize() for field in dataclasses.fields(AudioSourceConfig))
     # Slightly tightened the separator regex compared to the pitch override widget
     # since names and file paths can contain a wide range of characters.
     _sep_regex: re.Pattern = re.compile(r"[\r\t\n；;。、・]+", flags=re.IGNORECASE | re.MULTILINE)
 
-    def __init__(self, audio_mgr: AudioSourceManagerFactory, *args):
+    def __init__(self, audio_mgr: AudioManagerInterface, *args):
         super().__init__(*args)
         self._audio_mgr = audio_mgr
         self.addMoveRowContextActions()
@@ -169,8 +169,14 @@ def pack_back(row: TableRow) -> AudioSourceConfig:
     return AudioSourceConfig(*(to_json_compatible(item) for item in row))
 
 
+# Debug
+##########################################################################
+
+
 class App(QWidget):
     def __init__(self, parent=None):
+        from helpers.audio_manager import init_testing_audio_manager
+
         super().__init__(parent)
         self.setWindowTitle("Test")
         self.table = AudioSourcesTable(init_testing_audio_manager(), self)
@@ -190,7 +196,7 @@ class App(QWidget):
 
 def main():
     app = QApplication(sys.argv)
-    ex = App()
+    ex: QWidget = App()
     ex.show()
     app.exec()
     for item in ex.table.iterateConfigs():

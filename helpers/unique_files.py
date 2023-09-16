@@ -43,6 +43,10 @@ def ensure_unique_files(files: Iterable[FileUrlData]) -> Iterable[FileUrlData]:
     return ensure_unique_names(ensure_unique_urls(files))
 
 
+# Debug
+##########################################################################
+
+
 def main():
     examples = [
         FileUrlData("/mnt/data/file1.png", "file1.png", "単語", "NHK"),

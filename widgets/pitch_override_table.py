@@ -87,6 +87,10 @@ class PitchOverrideTable(ExpandingTableWidget):
             showInfo(f"{ex.__class__.__name__}: this file can't be written.", type="warning", parent=self)
 
 
+# Debug
+##########################################################################
+
+
 class App(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
