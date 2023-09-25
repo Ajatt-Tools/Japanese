@@ -51,17 +51,18 @@ def modify_note(func: Callable[[Editor], object]) -> Callable[[Editor], None]:
 
 
 def search_audio(editor: Editor):
-    dialog = AnkiAudioSearchDialog(aud_src_mgr)
-    fix_default_anki_style(dialog.table)
-    dialog.set_note_fields(editor.note.keys(), selected_field_name=cfg.audio_settings.search_dialog_field_name)
-    dialog.search(editor.web.selectedText())
-    if not dialog.exec():
-        return
-    results = dialog.files_to_add()
-    cfg.audio_settings.search_dialog_field_name = dialog.destination_field_name()
-    editor.note[dialog.destination_field_name()] += format_audio_tags(results)
-    aud_src_mgr.download_tags_bg(results)
-    cfg.write_config()
+    with aud_src_mgr.request_new_session() as session:
+        dialog = AnkiAudioSearchDialog(session)
+        fix_default_anki_style(dialog.table)
+        dialog.set_note_fields(editor.note.keys(), selected_field_name=cfg.audio_settings.search_dialog_field_name)
+        dialog.search(editor.web.selectedText())
+        if not dialog.exec():
+            return
+        results = dialog.files_to_add()
+        cfg.audio_settings.search_dialog_field_name = dialog.destination_field_name()
+        editor.note[dialog.destination_field_name()] += format_audio_tags(results)
+        session.download_tags_bg(results)
+        cfg.write_config()
 
 
 def query_buttons() -> Iterable[ToolbarButton]:
