@@ -4,14 +4,13 @@
 from collections.abc import Sequence
 
 from anki.collection import Collection
-from anki.notes import Note
+from anki.notes import Note, NoteId
 from aqt import mw
 from aqt.browser import Browser
 from aqt.operations import CollectionOp
 from aqt.qt import *
 from aqt.utils import showInfo
 
-from .helpers import NoteId
 from .helpers.profiles import TaskCaller
 from .tasks import DoTasks
 
