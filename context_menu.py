@@ -2,6 +2,9 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import abc
+import subprocess
+from distutils.spawn import find_executable
+from typing import Optional
 
 from aqt import gui_hooks
 from aqt.editor import EditorWebView, Editor
@@ -9,8 +12,8 @@ from aqt.qt import *
 from aqt.utils import tooltip
 
 from .config_view import config_view as cfg
-from .mecab_controller.unify_readings import literal_pronunciation
 from .mecab_controller.kana_conv import to_katakana, to_hiragana
+from .mecab_controller.unify_readings import literal_pronunciation
 from .reading import generate_furigana
 
 
@@ -42,8 +45,12 @@ class ContextMenuAction(abc.ABC):
     def action(self, text: str) -> str:
         pass
 
-    def __call__(self, *args, **kwargs) -> None:
+    def get_editor_selected_text(self) -> Optional[str]:
         if self.editor.currentField is not None and len(sel_text := self.editor.web.selectedText()) > 0:
+            return sel_text
+
+    def __call__(self, *args, **kwargs) -> None:
+        if sel_text := self.get_editor_selected_text():
             self.editor.doPaste(self.action(sel_text), internal=True, extended=False)
         else:
             tooltip("No text selected.")
@@ -71,6 +78,33 @@ class LiteralPronunciation(ContextMenuAction):
     key = "literal_pronunciation"
     label = "Literal pronunciation"
     action = staticmethod(literal_pronunciation)
+
+
+class LookUpWord(ContextMenuAction):
+    key = "look_up_word"
+    label = "Look up in GoldenDict"
+    goldendict_exe = find_executable("goldendict")
+
+    def action(self, text: str) -> None:
+        """
+        Call GoldenDict and pass it the selected text.
+        """
+        if self.goldendict_exe is None:
+            tooltip("GoldenDict is not installed. Doing nothing.")
+        else:
+            subprocess.Popen(
+                (self.goldendict_exe, text),
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                stdin=subprocess.DEVNULL,
+                start_new_session=True,
+            )
+
+    def __call__(self, *args, **kwargs) -> None:
+        if sel_text := self.get_editor_selected_text():
+            self.action(sel_text)
+        else:
+            tooltip("No text selected.")
 
 
 def add_context_menu_items(webview: EditorWebView, menu: QMenu) -> None:

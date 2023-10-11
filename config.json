@@ -69,7 +69,8 @@
     "generate_furigana": true,
     "to_katakana": true,
     "to_hiragana": true,
-    "literal_pronunciation": true
+    "literal_pronunciation": true,
+    "look_up_word": true
   },
   "toolbar": {
     "generate_all_button": {
