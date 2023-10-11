@@ -395,7 +395,7 @@ class AudioSourceManagerFactory:
             obj = cls._instance = super().__new__(cls)
         return obj
 
-    def __init__(self, config: SimpleNamespace, mgr_class: Type):
+    def __init__(self, config: SimpleNamespace, mgr_class: type):
         self._mgr_class = mgr_class
         self._config = config
         self._http_client = AudioManagerHttpClient(self._config)
