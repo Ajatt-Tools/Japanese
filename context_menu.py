@@ -8,6 +8,7 @@ from aqt import gui_hooks
 from aqt.editor import EditorWebView, Editor
 from aqt.qt import *
 from aqt.utils import tooltip
+from aqt.webview import AnkiWebView
 
 from .config_view import config_view as cfg
 from .helpers.goldendict_lookups import lookup_goldendict
@@ -18,13 +19,15 @@ from .reading import generate_furigana
 
 class ContextMenuAction(abc.ABC):
     subclasses: list[type['ContextMenuAction']] = []
+    shown_when_not_editing = False
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
         cls.subclasses.append(cls)
 
-    def __init__(self, editor: Editor):
+    def __init__(self, editor: Editor = None, webview: AnkiWebView = None):
         self.editor = editor
+        self.webview = webview or editor.web
 
     @classmethod
     def enabled(cls) -> bool:
@@ -41,16 +44,24 @@ class ContextMenuAction(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def action(self, text: str) -> str:
+    def action(self, text: str) -> Optional[str]:
+        """
+        When None is returned,
+        it is a sign that nothing should be modified in the Editor's field.
+        Otherwise, the returned text replaces the currently selected text.
+        """
         pass
 
-    def get_editor_selected_text(self) -> Optional[str]:
-        if self.editor.currentField is not None and len(sel_text := self.editor.web.selectedText()) > 0:
+    def get_selected_text(self) -> Optional[str]:
+        if self.editor is not None and self.editor.currentField is None:
+            return
+        if len(sel_text := self.webview.selectedText()) > 0:
             return sel_text
 
     def __call__(self, *args, **kwargs) -> None:
-        if sel_text := self.get_editor_selected_text():
-            self.editor.doPaste(self.action(sel_text), internal=True, extended=False)
+        if sel_text := self.get_selected_text():
+            if (result := self.action(sel_text)) is not None and self.editor is not None:
+                self.editor.doPaste(result, internal=True, extended=False)
         else:
             tooltip("No text selected.")
 
@@ -82,6 +93,7 @@ class LiteralPronunciation(ContextMenuAction):
 class LookUpWord(ContextMenuAction):
     key = "look_up_word"
     label = "Look up in GoldenDict"
+    shown_when_not_editing = True
 
     def action(self, text: str) -> None:
         """
@@ -92,19 +104,21 @@ class LookUpWord(ContextMenuAction):
         except RuntimeError as ex:
             tooltip(str(ex))
 
-    def __call__(self, *args, **kwargs) -> None:
-        if sel_text := self.get_editor_selected_text():
-            self.action(sel_text)
-        else:
-            tooltip("No text selected.")
 
-
-def add_context_menu_items(webview: EditorWebView, menu: QMenu) -> None:
+def add_editor_context_menu_items(webview: EditorWebView, menu: QMenu) -> None:
     for Action in ContextMenuAction.subclasses:
         if Action.enabled():
             action = menu.addAction(str(Action.label))
-            qconnect(action.triggered, Action(webview.editor))
+            qconnect(action.triggered, Action(editor=webview.editor))
+
+
+def add_webview_context_menu_items(webview: AnkiWebView, menu: QMenu) -> None:
+    for Action in ContextMenuAction.subclasses:
+        if Action.shown_when_not_editing and Action.enabled():
+            action = menu.addAction(str(Action.label))
+            qconnect(action.triggered, Action(webview=webview))
 
 
 def init():
-    gui_hooks.editor_will_show_context_menu.append(add_context_menu_items)
+    gui_hooks.editor_will_show_context_menu.append(add_editor_context_menu_items)
+    gui_hooks.webview_will_show_context_menu.append(add_webview_context_menu_items)
