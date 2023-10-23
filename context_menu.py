@@ -2,8 +2,6 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import abc
-import subprocess
-from distutils.spawn import find_executable
 from typing import Optional
 
 from aqt import gui_hooks
@@ -12,6 +10,7 @@ from aqt.qt import *
 from aqt.utils import tooltip
 
 from .config_view import config_view as cfg
+from .helpers.goldendict_lookups import lookup_goldendict
 from .mecab_controller.kana_conv import to_katakana, to_hiragana
 from .mecab_controller.unify_readings import literal_pronunciation
 from .reading import generate_furigana
@@ -83,22 +82,15 @@ class LiteralPronunciation(ContextMenuAction):
 class LookUpWord(ContextMenuAction):
     key = "look_up_word"
     label = "Look up in GoldenDict"
-    goldendict_exe = find_executable("goldendict")
 
     def action(self, text: str) -> None:
         """
         Call GoldenDict and pass it the selected text.
         """
-        if self.goldendict_exe is None:
-            tooltip("GoldenDict is not installed. Doing nothing.")
-        else:
-            subprocess.Popen(
-                (self.goldendict_exe, text),
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                stdin=subprocess.DEVNULL,
-                start_new_session=True,
-            )
+        try:
+            lookup_goldendict(text)
+        except RuntimeError as ex:
+            tooltip(str(ex))
 
     def __call__(self, *args, **kwargs) -> None:
         if sel_text := self.get_editor_selected_text():
