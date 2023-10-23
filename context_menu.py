@@ -11,7 +11,7 @@ from aqt.utils import tooltip
 from aqt.webview import AnkiWebView
 
 from .config_view import config_view as cfg
-from .helpers.goldendict_lookups import lookup_goldendict
+from .helpers.goldendict_lookups import lookup_goldendict, GD_PROGRAM_NAME
 from .mecab_controller.kana_conv import to_katakana, to_hiragana
 from .mecab_controller.unify_readings import literal_pronunciation
 from .reading import generate_furigana
@@ -92,7 +92,7 @@ class LiteralPronunciation(ContextMenuAction):
 
 class LookUpWord(ContextMenuAction):
     key = "look_up_word"
-    label = "Look up in GoldenDict"
+    label = f"Look up in {GD_PROGRAM_NAME}"
     shown_when_not_editing = True
 
     def action(self, text: str) -> None:

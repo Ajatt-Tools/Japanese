@@ -4,14 +4,15 @@
 import subprocess
 from distutils.spawn import find_executable
 
-GOLDENDICT_EXE = find_executable("goldendict")
+GD_PROGRAM_NAME = "GoldenDict-NG"
+GD_EXE = find_executable("goldendict")
 
 
 def lookup_goldendict(gd_word: str) -> subprocess.Popen:
-    if GOLDENDICT_EXE is None:
-        raise RuntimeError("GoldenDict-NG is not installed. Doing nothing.")
+    if GD_EXE is None:
+        raise RuntimeError(f"{GD_PROGRAM_NAME} is not installed. Doing nothing.")
     return subprocess.Popen(
-        (GOLDENDICT_EXE, gd_word),
+        (GD_EXE, gd_word),
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
         stdin=subprocess.DEVNULL,
