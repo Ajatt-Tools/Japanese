@@ -4,13 +4,15 @@
 import functools
 from typing import Optional, Callable, Any
 
+import anki.collection
+from anki import hooks
+from anki.decks import DeckId
 from anki.utils import strip_html_media
 from aqt import mw
 
 from .audio import format_audio_tags, AnkiAudioSourceManager
 from .config_view import config_view as cfg
 from .helpers import *
-from .helpers.hooks import collection_will_add_note
 from .helpers.profiles import Profile, ProfileFurigana, PitchOutputFormat, ProfilePitch, ProfileAudio, TaskCaller
 from .reading import format_pronunciations, get_pronunciations, generate_furigana
 
@@ -177,7 +179,7 @@ def should_generate(note: Note) -> bool:
     )
 
 
-def on_add_note(note: Note) -> None:
+def on_add_note(_col: anki.collection.Collection, note: Note, _deck_id: DeckId) -> None:
     if should_generate(note):
         DoTasks(
             note=note,
@@ -196,4 +198,4 @@ def init():
     gui_hooks.editor_did_unfocus_field.append(on_focus_lost)
 
     # Generate when AnkiConnect (Yomichan, Mpvacious) adds a new note.
-    collection_will_add_note.append(on_add_note)
+    hooks.note_will_be_added.append(on_add_note)
