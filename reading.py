@@ -3,7 +3,6 @@
 
 import functools
 from collections import OrderedDict
-from typing import Union
 
 from anki.utils import html_to_text_line
 from aqt import gui_hooks
@@ -285,6 +284,8 @@ def try_lookup_full_text(text: str) -> Iterable[AccDbParsedToken]:
 
     if cfg.furigana.can_lookup_in_db(text) and (results := get_pronunciations(text, recurse=False)):
         for word, entries in results.items():
+            word: str
+            entries: Sequence[FormattedEntry]
             yield AccDbParsedToken(
                 word=word,
                 hiragana_readings=[to_hiragana(entry.katakana_reading) for entry in entries],
@@ -333,7 +334,7 @@ def format_acc_db_result(out: AccDbParsedToken, full_hiragana: bool = False) -> 
 
 
 def format_parsed_tokens(
-        tokens: list[Union[AccDbParsedToken, MecabParsedToken, Token]],
+        tokens: Sequence[Union[AccDbParsedToken, MecabParsedToken, Token]],
         full_hiragana: bool = False
 ) -> Iterable[str]:
     for token in tokens:
@@ -365,6 +366,7 @@ def generate_furigana(src_text: str, split_morphemes: bool = True, full_hiragana
             # but abort if mecab outputs more than one word.
             substrings.append(first)
         else:
+            # Add the string as is, without furigana.
             substrings.append(token)
     return ''.join(format_parsed_tokens(substrings, full_hiragana)).strip()
 
