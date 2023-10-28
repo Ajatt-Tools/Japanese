@@ -19,7 +19,11 @@ except ImportError:
 NoneType = type(None)  # fix for the official binary bundle
 
 
-class NameFile(NamedTuple):
+class BoundFile(NamedTuple):
+    """
+    Represents an sqlite query result.
+    """
+    headword: str
     file_name: str
     source_name: str
 
@@ -199,7 +203,7 @@ class Sqlite3Buddy:
         self._con.commit()
         cur.close()
 
-    def search_files_in_source(self, source_name: str, headword: str) -> Iterable[NameFile]:
+    def search_files_in_source(self, source_name: str, headword: str) -> Iterable[BoundFile]:
         cur = self._con.cursor()
         query = """
         SELECT file_name FROM headwords
@@ -207,9 +211,12 @@ class Sqlite3Buddy:
         """
         results = cur.execute(query, (source_name, headword)).fetchall()
         assert type(results) == list
-        return (NameFile(file_name=result_tup[0], source_name=source_name) for result_tup in results)
+        return (
+            BoundFile(file_name=result_tup[0], source_name=source_name, headword=headword)
+            for result_tup in results
+        )
 
-    def search_files(self, headword: str) -> Iterable[NameFile]:
+    def search_files(self, headword: str) -> Iterable[BoundFile]:
         cur = self._con.cursor()
         query = """
         SELECT file_name, source_name FROM headwords
@@ -217,7 +224,10 @@ class Sqlite3Buddy:
         """
         results = cur.execute(query, (headword,)).fetchall()
         assert type(results) == list
-        return (NameFile(file_name=result_tup[0], source_name=result_tup[1]) for result_tup in results)
+        return (
+            BoundFile(file_name=result_tup[0], source_name=result_tup[1], headword=headword)
+            for result_tup in results
+        )
 
     def get_file_info(self, source_name: str, file_name: str) -> FileInfo:
         cur = self._con.cursor()
