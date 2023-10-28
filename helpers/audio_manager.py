@@ -12,7 +12,7 @@ import zipfile
 from collections.abc import Iterable
 from contextlib import contextmanager
 from types import SimpleNamespace
-from typing import Optional, Union, Type
+from typing import Optional, Union
 
 import anki.httpclient
 import requests
@@ -20,15 +20,13 @@ from requests import RequestException
 
 try:
     from .audio_json_schema import FileInfo
-    from .sqlite3_buddy import Sqlite3Buddy
-
+    from .sqlite3_buddy import Sqlite3Buddy, BoundFile
     from .file_ops import user_files_dir
     from ..mecab_controller.kana_conv import to_katakana
     from .inflections import is_inflected
 except ImportError:
     from helpers.audio_json_schema import FileInfo
-    from helpers.sqlite3_buddy import Sqlite3Buddy
-
+    from sqlite3_buddy import Sqlite3Buddy, BoundFile
     from helpers.file_ops import user_files_dir
     from helpers.inflections import is_inflected
     from mecab_controller.kana_conv import to_katakana
@@ -187,7 +185,7 @@ class AudioSource(AudioSourceConfig):
                 or self.join(os.path.dirname(self.url), self.db.get_media_dir_rel(self.name))
         )
 
-    def join(self, *args):
+    def join(self, *args) -> str:
         """ Join multiple paths. """
         if self.is_local:
             # Local paths are platform-dependent.
@@ -313,9 +311,9 @@ class AudioSourceManager:
         return self.db.remove_data(source.name)
 
     def search_word(self, word: str) -> Iterable[FileUrlData]:
-        for file_name, source_name in self._db.search_files(word):
+        for file in self._db.search_files(word):
             with contextlib.suppress(KeyError):
-                yield self._resolve_file(self._audio_sources[source_name], word, file_name)
+                yield self._resolve_file(self._audio_sources[file.source_name], file)
 
     def read_pronunciation_data(self, source: AudioSource):
         if source.is_cached:
@@ -331,9 +329,9 @@ class AudioSourceManager:
             self._download_remote_json(source)
         source.update_original_url()
 
-    def _resolve_file(self, source: AudioSource, word: str, file_name: str) -> FileUrlData:
+    def _resolve_file(self, source: AudioSource, file: BoundFile) -> FileUrlData:
         components: list[str] = []
-        file_info: FileInfo = self._db.get_file_info(source.name, file_name)
+        file_info: FileInfo = self._db.get_file_info(source.name, file.file_name)
 
         # Append either pitch pattern or kana reading, preferring pitch pattern.
         if file_info['pitch_pattern']:
@@ -345,13 +343,13 @@ class AudioSourceManager:
         if file_info['pitch_number']:
             components.append(norm_pitch_numbers(file_info['pitch_number']))
 
-        desired_filename = '_'.join((word, *components, source.name,))
-        desired_filename = f'{normalize_filename(desired_filename)}{os.path.splitext(file_name)[-1]}'
+        desired_filename = '_'.join((file.headword, *components, source.name,))
+        desired_filename = f'{normalize_filename(desired_filename)}{os.path.splitext(file.file_name)[-1]}'
 
         return FileUrlData(
-            url=source.join(source.media_dir, file_name),
+            url=source.join(source.media_dir, file.file_name),
             desired_filename=desired_filename,
-            word=word,
+            word=file.headword,
             source_name=source.name,
             reading=(file_info['kana_reading'] or ""),
             pitch_number=(file_info['pitch_number'] or "?"),
