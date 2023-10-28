@@ -199,7 +199,7 @@ class Sqlite3Buddy:
         self._con.commit()
         cur.close()
 
-    def search_files_in_source(self, source_name: str, headword: str) -> Iterable[str]:
+    def search_files_in_source(self, source_name: str, headword: str) -> Iterable[NameFile]:
         cur = self._con.cursor()
         query = """
         SELECT file_name FROM headwords
@@ -207,7 +207,7 @@ class Sqlite3Buddy:
         """
         results = cur.execute(query, (source_name, headword)).fetchall()
         assert type(results) == list
-        return (result_tup[0] for result_tup in results)
+        return (NameFile(file_name=result_tup[0], source_name=source_name) for result_tup in results)
 
     def search_files(self, headword: str) -> Iterable[NameFile]:
         cur = self._con.cursor()
