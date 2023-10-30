@@ -5,20 +5,11 @@ import math
 from collections.abc import Sequence, Iterable
 from typing import TypeVar
 
-from anki.notes import Note
-
 LONG_VOWEL_MARK = 'ー'
 
 
 def ui_translate(key: str) -> str:
     return key.capitalize().replace('_', ' ')
-
-
-def get_notetype(note: Note) -> dict[str, object]:
-    if hasattr(note, 'note_type'):
-        return note.note_type()
-    else:
-        return note.model()
 
 
 T = TypeVar("T")

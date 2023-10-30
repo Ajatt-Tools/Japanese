@@ -7,6 +7,7 @@ from typing import Optional, Callable, Any
 import anki.collection
 from anki import hooks
 from anki.decks import DeckId
+from anki.notes import Note
 from anki.utils import strip_html_media
 from aqt import mw
 
@@ -22,7 +23,7 @@ def note_type_matches(note_type: dict[str, Any], profile: Profile) -> bool:
 
 
 def iter_tasks(note: Note, src_field: Optional[str] = None) -> Iterable[Profile]:
-    note_type = get_notetype(note)
+    note_type = note.note_type()
     for profile in cfg.iter_profiles():
         if note_type_matches(note_type, profile) and (src_field is None or profile.source == src_field):
             yield profile
