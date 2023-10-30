@@ -9,9 +9,14 @@ from typing import Optional
 from aqt import mw
 from aqt.operations import QueryOp
 
-from .common import *
-from .user_accents import UserAccentData
-from ..mecab_controller.kana_conv import to_katakana, to_hiragana
+try:
+    from .common import *
+    from .user_accents import UserAccentData
+    from ..mecab_controller.kana_conv import to_katakana, to_hiragana
+except ImportError:
+    from common import *
+    from user_accents import UserAccentData
+    from mecab_controller.kana_conv import to_katakana, to_hiragana
 
 
 def read_formatted_accents() -> AccentDict:
@@ -95,3 +100,14 @@ class AccentDictManager:
         self._db.clear()
         self._db = new_dict
         print(f"Total pitch accent entries: {len(self._db)}.")
+
+
+def main():
+    acc_dict = accents_dict_init()
+    for word, entries in acc_dict.items():
+        for entry in entries:
+            print(f"{word}\t{entry.katakana_reading}\t{entry.pitch_number}")
+
+
+if __name__ == '__main__':
+    main()
