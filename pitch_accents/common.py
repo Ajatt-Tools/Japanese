@@ -1,9 +1,10 @@
 # Copyright: Ren Tatsumoto <tatsu at autistici.org>
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
+import re
+from collections.abc import Iterable
 from collections.abc import Sequence
 from typing import NamedTuple, NewType
-from collections.abc import Iterable
 
 try:
     from .consts import *
@@ -61,6 +62,12 @@ class FormattedEntry(NamedTuple):
 
 AccentDict = NewType("AccentDict", dict[str, Sequence[FormattedEntry]])
 
+RE_PITCH_NUM = re.compile(r'\d+|\?')
+
+
+def split_pitch_numbers(s: str) -> list[str]:
+    return re.findall(RE_PITCH_NUM, s)
+
 
 # Debug
 ##########################################################################
@@ -69,6 +76,8 @@ AccentDict = NewType("AccentDict", dict[str, Sequence[FormattedEntry]])
 def main():
     for file_path in files_in_dir(THIS_DIR_PATH):
         print(file_path)
+    print(split_pitch_numbers("?-1-2"))
+    print(split_pitch_numbers("1"))
 
 
 if __name__ == '__main__':

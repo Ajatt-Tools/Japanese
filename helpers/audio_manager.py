@@ -19,12 +19,14 @@ import requests
 from requests import RequestException
 
 try:
+    from ..pitch_accents.common import split_pitch_numbers
     from .audio_json_schema import FileInfo
     from .sqlite3_buddy import Sqlite3Buddy, BoundFile
     from .file_ops import user_files_dir
     from ..mecab_controller.kana_conv import to_katakana
     from .inflections import is_inflected
 except ImportError:
+    from pitch_accents.common import split_pitch_numbers
     from helpers.audio_json_schema import FileInfo
     from sqlite3_buddy import Sqlite3Buddy, BoundFile
     from helpers.file_ops import user_files_dir
@@ -41,7 +43,6 @@ def file_exists(file_path: str):
 
 
 RE_FILENAME_PROHIBITED = re.compile(r'[\\\n\t\r#%&\[\]{}<>^*?/$!\'":@+`|=]+', flags=re.MULTILINE | re.IGNORECASE)
-RE_PITCH_NUM = re.compile(r'\d+|\?')
 MAX_LEN_BYTES = 120 - 4
 
 
@@ -162,7 +163,7 @@ def norm_pitch_numbers(s: str) -> str:
     When an audio file has more than one accent, it basically represents two or more words chained together.
     E.g., かも-知れない (1-0), 黒い-霧 (2-0), 作用,反作用の,法則 (1-3-0), 八幡,大菩薩 (2-3), 入り代わり-立ち代わり (0-0), 七転,八起き (3-1)
     """
-    return '-'.join(re.findall(RE_PITCH_NUM, s)) or '?'
+    return '-'.join(split_pitch_numbers(s)) or '?'
 
 
 @dataclasses.dataclass
