@@ -214,10 +214,10 @@ class AudioSource(AudioSourceConfig):
         self.db.set_original_url(self.name, self.url)
 
     def distinct_file_count(self) -> int:
-        return self.db.distinct_file_count(self.name)
+        return self.db.distinct_file_count(source_names=(self.name,))
 
     def distinct_headword_count(self) -> int:
-        return self.db.distinct_headword_count(self.name)
+        return self.db.distinct_headword_count(source_names=(self.name,))
 
 
 @dataclasses.dataclass
@@ -293,6 +293,12 @@ class AudioSourceManager:
     def db(self) -> Sqlite3Buddy:
         return self._db
 
+    def distinct_file_count(self):
+        return self._db.distinct_file_count(source_names=tuple(source.name for source in self.audio_sources))
+
+    def distinct_headword_count(self):
+        return self._db.distinct_headword_count(source_names=tuple(source.name for source in self.audio_sources))
+
     def total_stats(self) -> TotalAudioStats:
         stats = [
             AudioStats(
@@ -303,8 +309,8 @@ class AudioSourceManager:
             for source in self.audio_sources
         ]
         return TotalAudioStats(
-            unique_files=self._db.distinct_file_count(),
-            unique_headwords=self._db.distinct_headword_count(),
+            unique_files=self.distinct_file_count(),
+            unique_headwords=self.distinct_headword_count(),
             sources=stats,
         )
 
