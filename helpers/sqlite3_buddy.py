@@ -300,6 +300,11 @@ class Sqlite3Buddy:
                 """ SELECT COUNT(*) FROM (SELECT DISTINCT headword FROM headwords); """
             ).fetchone()[0]
 
+    def source_names(self) -> list[str]:
+        cur = self._con.cursor()
+        query_result = cur.execute(""" SELECT source_name FROM meta; """).fetchall()
+        return [result_tuple[0] for result_tuple in query_result]
+
 
 # Debug
 ##########################################################################
@@ -307,6 +312,7 @@ class Sqlite3Buddy:
 
 def main():
     with Sqlite3Buddy.new_session() as s:
+        print(f"source names: {s.source_names()}")
         print(f"word count: {s.distinct_headword_count()}")
         print(f"file count: {s.distinct_file_count()}")
 
