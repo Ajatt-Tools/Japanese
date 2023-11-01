@@ -7,7 +7,7 @@ import sqlite3
 from collections.abc import Iterable
 from contextlib import contextmanager
 
-from typing import Optional, NamedTuple
+from typing import Optional, NamedTuple, Sequence
 
 try:
     from .sqlite_schema import CURRENT_DB
@@ -30,6 +30,10 @@ class BoundFile(NamedTuple):
     headword: str
     file_name: str
     source_name: str
+
+
+def build_or_clause(repeated_field_name: str, count: int) -> str:
+    return " OR ".join(f"{repeated_field_name} = ?" for _idx in range(count))
 
 
 class Sqlite3Buddy:
@@ -255,6 +259,9 @@ class Sqlite3Buddy:
         }
 
     def remove_data(self, source_name: str):
+        """
+        Remove all info about audio source from the database.
+        """
         cur = self._con.cursor()
         queries = (
             """ DELETE FROM meta      WHERE source_name = ?; """,
@@ -265,40 +272,32 @@ class Sqlite3Buddy:
             cur.execute(query, (source_name,))
         self._con.commit()
 
-    def distinct_file_count(self, source_name: Optional[str] = None) -> int:
+    def distinct_file_count(self, source_names: Sequence[str]) -> int:
         cur = self._con.cursor()
-        if source_name:
-            # If the audio source is known (NHK, Shinmeikai, etc.), simply count files.
-            # Each file is guaranteed to have a unique name.
-            return cur.execute(
-                """ SELECT COUNT(*) FROM (SELECT DISTINCT file_name FROM files WHERE source_name = ?); """,
-                (source_name,)
-            ).fetchone()[0]
-        else:
-            # Filenames in different audio sources may collide,
-            # although it's not likely with the currently released audio sources.
-            # To resolve collisions when counting distinct filenames,
-            # dictionary name and year are also taken into account.
-            return cur.execute("""
-                SELECT COUNT(*) FROM (
-                    SELECT DISTINCT f.file_name, m.dictionary_name, m.year FROM files f
-                    INNER JOIN meta m ON f.source_name = m.source_name
-                );
-            """).fetchone()[0]
+        # Filenames in different audio sources may collide,
+        # although it's not likely with the currently released audio sources.
+        # To resolve collisions when counting distinct filenames,
+        # dictionary name and year are also taken into account.
+        query = """
+            SELECT COUNT(*) FROM (
+                SELECT DISTINCT f.file_name, m.dictionary_name, m.year FROM files f
+                INNER JOIN meta m ON f.source_name = m.source_name
+                WHERE %s
+            );
+        """
+        return cur.execute(
+            query % build_or_clause("f.source_name", len(source_names)),
+            source_names,
+        ).fetchone()[0]
 
-    def distinct_headword_count(self, source_name: Optional[str] = None) -> int:
+    def distinct_headword_count(self, source_names: Sequence[str]) -> int:
         cur = self._con.cursor()
-        if source_name:
-            # If the audio source is known, simply count headwords.
-            return cur.execute(
-                """ SELECT COUNT(*) FROM (SELECT DISTINCT headword FROM headwords WHERE source_name = ?); """,
-                (source_name,)
-            ).fetchone()[0]
-        else:
-            # Return the number of unique headwords in all sources.
-            return cur.execute(
-                """ SELECT COUNT(*) FROM (SELECT DISTINCT headword FROM headwords); """
-            ).fetchone()[0]
+        query = """ SELECT COUNT(*) FROM (SELECT DISTINCT headword FROM headwords WHERE %s); """
+        # Return the number of unique headwords in the specified sources.
+        return cur.execute(
+            query % build_or_clause("source_name", len(source_names)),
+            source_names,
+        ).fetchone()[0]
 
     def source_names(self) -> list[str]:
         cur = self._con.cursor()
@@ -312,9 +311,10 @@ class Sqlite3Buddy:
 
 def main():
     with Sqlite3Buddy.new_session() as s:
-        print(f"source names: {s.source_names()}")
-        print(f"word count: {s.distinct_headword_count()}")
-        print(f"file count: {s.distinct_file_count()}")
+        source_names = s.source_names()
+        print(f"source names: {source_names}")
+        print(f"word count: {s.distinct_headword_count(source_names)}")
+        print(f"file count: {s.distinct_file_count(source_names)}")
 
 
 if __name__ == '__main__':
