@@ -10,13 +10,17 @@ from contextlib import contextmanager
 from typing import Optional, NamedTuple
 
 try:
+    from .sqlite_schema import CURRENT_DB
     from .audio_json_schema import SourceIndex, FileInfo
     from .file_ops import user_files_dir
 except ImportError:
+    from sqlite_schema import CURRENT_DB
     from audio_json_schema import SourceIndex, FileInfo
     from file_ops import user_files_dir
 
 NoneType = type(None)  # fix for the official binary bundle
+
+CURRENT_DB.remove_deprecated_files()
 
 
 class BoundFile(NamedTuple):
@@ -30,7 +34,7 @@ class BoundFile(NamedTuple):
 
 class Sqlite3Buddy:
     """ Db holds three tables: ('meta', 'headwords', 'files') """
-    _db_path = os.path.join(user_files_dir(), "audio_sources.sqlite3")
+    _db_path = os.path.join(user_files_dir(), CURRENT_DB.name)
 
     def __init__(self):
         self._con: Optional[sqlite3.Connection] = None
@@ -112,14 +116,15 @@ class Sqlite3Buddy:
         cur = self._con.cursor()
         query = """
         INSERT INTO meta
-        (source_name, year, version, original_url, media_dir, media_dir_abs)
-        VALUES(?, ?, ?, ?, ?, ?);
+        (source_name, dictionary_name, year, version, original_url, media_dir, media_dir_abs)
+        VALUES(?, ?, ?, ?, ?, ?, ?);
         """
         # Insert meta.
         cur.execute(
             query,
             (
                 source_name,
+                data['meta']['name'],
                 data['meta']['year'],
                 data['meta']['version'],
                 None,
@@ -164,9 +169,14 @@ class Sqlite3Buddy:
 
     def _prepare_tables(self):
         cur = self._con.cursor()
+        # Note: `source_name` is the name given to the audio source by the user,
+        # and it can be arbitrary (e.g. NHK-2016).
+        # `dictionary_name` is the name given to the audio source by its creator.
+        # E.g. the NHK audio source provided by Ajatt-Tools has `dictionary_name` set to "NHK日本語発音アクセント新辞典".
         cur.execute("""
             CREATE TABLE IF NOT EXISTS meta(
                 source_name TEXT primary key not null,
+                dictionary_name TEXT not null,
                 year INTEGER not null,
                 version INTEGER not null,
                 original_url TEXT,
@@ -258,23 +268,34 @@ class Sqlite3Buddy:
     def distinct_file_count(self, source_name: Optional[str] = None) -> int:
         cur = self._con.cursor()
         if source_name:
+            # If the audio source is known (NHK, Shinmeikai, etc.), simply count files.
+            # Each file is guaranteed to have a unique name.
             return cur.execute(
                 """ SELECT COUNT(*) FROM (SELECT DISTINCT file_name FROM files WHERE source_name = ?); """,
                 (source_name,)
             ).fetchone()[0]
         else:
-            return cur.execute(
-                """ SELECT COUNT(*) FROM (SELECT DISTINCT file_name FROM files); """
-            ).fetchone()[0]
+            # Filenames in different audio sources may collide,
+            # although it's not likely with the currently released audio sources.
+            # To resolve collisions when counting distinct filenames,
+            # dictionary name and year are also taken into account.
+            return cur.execute("""
+                SELECT COUNT(*) FROM (
+                    SELECT DISTINCT f.file_name, m.dictionary_name, m.year FROM files f
+                    INNER JOIN meta m ON f.source_name = m.source_name
+                );
+            """).fetchone()[0]
 
     def distinct_headword_count(self, source_name: Optional[str] = None) -> int:
         cur = self._con.cursor()
         if source_name:
+            # If the audio source is known, simply count headwords.
             return cur.execute(
                 """ SELECT COUNT(*) FROM (SELECT DISTINCT headword FROM headwords WHERE source_name = ?); """,
                 (source_name,)
             ).fetchone()[0]
         else:
+            # Return the number of unique headwords in all sources.
             return cur.execute(
                 """ SELECT COUNT(*) FROM (SELECT DISTINCT headword FROM headwords); """
             ).fetchone()[0]

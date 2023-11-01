@@ -463,9 +463,12 @@ def main():
     factory.init_sources()
 
     with factory.request_new_session() as aud_mgr:
-        stats = aud_mgr.total_stats()
-        print(f"Unique audio files: {stats.unique_files}")
-        print(f"Unique headwords: {stats.unique_headwords}")
+        aud_mgr: AudioSourceManager
+        stats: TotalAudioStats = aud_mgr.total_stats()
+        print(f"{stats.unique_files=}")
+        print(f"{stats.unique_headwords=}")
+        for source_stats in stats.sources:
+            print(source_stats)
         for file in aud_mgr.search_word('ひらがな'):
             print(file)
         for source in aud_mgr.audio_sources:
