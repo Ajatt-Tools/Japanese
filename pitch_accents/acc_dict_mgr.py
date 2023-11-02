@@ -90,6 +90,7 @@ class AccentDictManager:
             parent=mw,
             op=lambda collection: accents_dict_init(),
             success=lambda dictionary: self._reload_dict(dictionary),
+        ).without_collection(
         ).with_progress(
             "Reloading pitch accent dictionary..."
         ).run_in_background()
