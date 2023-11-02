@@ -7,7 +7,8 @@ import sqlite3
 from collections.abc import Iterable
 from contextlib import contextmanager
 
-from typing import Optional, NamedTuple, Sequence
+from typing import Optional, NamedTuple
+from collections.abc import Sequence
 
 try:
     from .sqlite_schema import CURRENT_DB
