@@ -7,6 +7,7 @@ from types import SimpleNamespace
 from typing import Optional, TypedDict
 
 from aqt import mw
+from aqt.operations import QueryOp
 from aqt.qt import *
 from aqt.utils import restoreGeom, saveGeom, openLink
 
@@ -17,6 +18,7 @@ from .ajt_common.grab_key import ShortCutGrabButton
 from .audio import aud_src_mgr
 from .config_view import config_view as cfg, ReadingsDiscardMode, PitchPatternStyle
 from .helpers import ui_translate, split_list
+from .helpers.audio_manager import TotalAudioStats
 from .helpers.profiles import Profile, ProfileFurigana, ProfilePitch, PitchOutputFormat, ProfileAudio, TaskCaller
 from .helpers.sakura_client import DictName, SearchType, AddDefBehavior
 from .pitch_accents.user_accents import UserAccentData
@@ -756,10 +758,13 @@ class AudioSourcesGroup(QGroupBox):
         self.setCheckable(False)
         self._audio_sources_table = AudioSourcesTable(aud_src_mgr).populate(cfg.iter_audio_sources())
         self._bottom_label = QLabel()
+        self._audio_stats: Optional[TotalAudioStats] = None
+        self._stats_button = QPushButton("Statistics")
         self._purge_button = QPushButton("Purge database")
         self.setLayout(self._make_layout())
         self._populate()
         qconnect(self._purge_button.clicked, self._on_purge_db_clicked)
+        qconnect(self._stats_button.clicked, self._on_show_statistics_clicked)
 
     def _make_layout(self):
         layout = QVBoxLayout()
@@ -774,16 +779,27 @@ class AudioSourcesGroup(QGroupBox):
         layout = QHBoxLayout()
         layout.addWidget(self._bottom_label)
         layout.addStretch(1)
+        layout.addWidget(self._stats_button)
         layout.addWidget(self._purge_button)
         return layout
 
     def _populate(self):
-        with aud_src_mgr.request_new_session() as session:
-            audio_stats = session.total_stats()
-            self._bottom_label.setText(
-                f"<strong>Unique files</strong>: {audio_stats.unique_files}. "
-                f"<strong>Unique headwords</strong>: {audio_stats.unique_headwords}."
-            )
+        QueryOp(
+            parent=mw,
+            op=lambda collection: aud_src_mgr.get_statistics(),
+            success=lambda audio_stats: self._remember_and_update_stats(audio_stats),
+        ).without_collection(
+        ).run_in_background()
+
+    def _remember_and_update_stats(self, audio_stats: TotalAudioStats) -> None:
+        self._audio_stats = audio_stats
+        self._bottom_label.setText(
+            f"<strong>Unique files</strong>: {audio_stats.unique_files}. "
+            f"<strong>Unique headwords</strong>: {audio_stats.unique_headwords}."
+        )
+
+    def _on_show_statistics_clicked(self):
+        pass
 
     def _on_purge_db_clicked(self):
         aud_src_mgr.purge_everything()

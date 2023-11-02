@@ -22,7 +22,7 @@ from .helpers.audio_manager import (
     FileUrlData,
     AudioManagerException,
     InitResult,
-    AudioSourceManagerFactory
+    AudioSourceManagerFactory, TotalAudioStats
 )
 from .helpers.inflections import is_inflected
 from .helpers.tokens import tokenize, ParseableToken
@@ -224,27 +224,13 @@ class AnkiAudioSourceManager(AudioSourceManager):
             self._get_file(audio_file),
         )
 
-    def report_init_results(self, result: InitResult, notify_on_finish: bool):
-        if result.errors:
-            showWarning('\n'.join(
-                f"Couldn't download audio source: {error.explanation}."
-                for error in result.errors
-            ))
-        elif notify_on_finish and result.sources:
-            stats = self.total_stats()
-            tooltip(
-                "<b>Initialized audio sources.</b><ul>"
-                f"<li>Unique audio files: <code>{stats.unique_files}</code></li>"
-                f"<li>Unique headwords: <code>{stats.unique_headwords}</code></li></ul>",
-                period=5000,
-            )
-
     def remove_unused_audio_data(self):
-        user_specified_source_names = [source.name for source in self._config.iter_audio_sources()]
-        for source in self.audio_sources:
-            if source.name not in user_specified_source_names:
-                print(f"Removing unused cache data for audio source: {source.name}")
-                self.drop_cache(source)
+        user_specified_source_names = {source.name for source in self._config.iter_audio_sources()}
+        source_names_in_db = set(self._db.source_names())
+        sources_to_remove = source_names_in_db - user_specified_source_names
+        for source_name in sources_to_remove:
+            print(f"Removing unused cache data for audio source: {source_name}")
+            self.db.remove_data(source_name)
 
 
 class AnkiAudioSourceManagerFactory(AudioSourceManagerFactory):
@@ -255,11 +241,37 @@ class AnkiAudioSourceManagerFactory(AudioSourceManagerFactory):
             success=lambda result: self._after_init(result, notify_on_finish),
         ).run_in_background()
 
+    def get_statistics(self) -> TotalAudioStats:
+        """
+        Return statistics, running in a new session.
+        """
+        with self.request_new_session() as session:
+            return session.total_stats()
+
     def _after_init(self, result: InitResult, notify_on_finish: bool):
         self._set_sources(result.sources)
         with self.request_new_session() as session:
             session.remove_unused_audio_data()
-            session.report_init_results(result, notify_on_finish)
+        self._report_init_results(result, notify_on_finish)
+
+    def _report_init_results(self, result: InitResult, notify_on_finish: bool):
+        if result.errors:
+            showWarning('\n'.join(
+                f"Couldn't download audio source: {error.explanation}."
+                for error in result.errors
+            ))
+        elif notify_on_finish and result.sources:
+            QueryOp(
+                parent=mw,
+                op=lambda collection: self.get_statistics(),
+                success=lambda stats: tooltip(
+                    "<b>Initialized audio sources.</b><ul>"
+                    f"<li>Unique audio files: <code>{stats.unique_files}</code></li>"
+                    f"<li>Unique headwords: <code>{stats.unique_headwords}</code></li></ul>",
+                    period=5000,
+                ),
+            ).without_collection(
+            ).run_in_background()
         print("Initialized all audio sources.")
 
 
