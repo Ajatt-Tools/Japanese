@@ -17,9 +17,10 @@ except ImportError:
     from mecab_controller.kana_conv import to_hiragana, kana_to_moras
     from mecab_controller.basic_types import MecabParsedToken
 
-SEP_PITCH_TYPES = ','
 SEP_PITCH_GROUP = ' '
-SEP_TYPE_NUM = ':'
+SEP_PITCH_TYPES = ','
+SEP_READING_PITCH = ':'
+SEP_PITCH_TYPE_NUM = '-'
 
 
 class PitchType(enum.Enum):
@@ -36,7 +37,7 @@ class PitchParam(NamedTuple):
 
     def describe(self):
         if self.type == PitchType.nakadaka:
-            return f"{self.type.name}{SEP_TYPE_NUM}{self.number}"
+            return f"{self.type.name}{SEP_PITCH_TYPE_NUM}{self.number}"
         else:
             return self.type.name
 
@@ -49,7 +50,10 @@ class PitchAccentEntry(NamedTuple):
         return bool(self.pitches and any(pitch.type != PitchType.unknown for pitch in self.pitches))
 
     def describe_pitches(self) -> str:
-        return SEP_PITCH_TYPES.join(pitch.describe() for pitch in self.pitches)
+        return self.katakana_reading + SEP_READING_PITCH + SEP_PITCH_TYPES.join(dict.fromkeys(
+            pitch.describe()
+            for pitch in self.pitches
+        ))
 
     @classmethod
     def from_formatted(cls, entry: FormattedEntry):
@@ -112,12 +116,28 @@ def main():
         word="楽しかった",
         headword="楽しい",
         katakana_reading="たのしかった",
-        part_of_speech=PartOfSpeech.unknown,
+        part_of_speech=PartOfSpeech.i_adjective,
         inflection_type=Inflection.unknown,
         headword_accents=(entry,),
     )
 
-    assert token.describe_pitches() == "nakadaka:3"
+    assert token.describe_pitches() == "たのしい:nakadaka-3"
+
+    entry = PitchAccentEntry.from_formatted(FormattedEntry(
+        katakana_reading="なや",
+        pitch_number="0,1",
+        html_notation=""
+    ))
+
+    token = AccDbParsedToken(
+        word="納屋",
+        headword="納屋",
+        katakana_reading="なや",
+        part_of_speech=PartOfSpeech.noun,
+        inflection_type=Inflection.dictionary_form,
+        headword_accents=(entry,),
+    )
+    assert token.describe_pitches() == "なや:heiban,atamadaka"
 
 
 if __name__ == '__main__':
