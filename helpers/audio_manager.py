@@ -314,9 +314,6 @@ class AudioSourceManager:
             sources=stats,
         )
 
-    def drop_cache(self, source: AudioSource) -> None:
-        return self.db.remove_data(source.name)
-
     def search_word(self, word: str) -> Iterable[FileUrlData]:
         for file in self._db.search_files(word):
             with contextlib.suppress(KeyError):
@@ -329,7 +326,7 @@ class AudioSourceManager:
             if source.url == source.original_url:
                 return
             else:
-                self.drop_cache(source)
+                self.db.remove_data(source.name)
         if source.is_local:
             self._read_local_json(source)
         else:
@@ -421,7 +418,7 @@ class AudioSourceManagerFactory:
                 config=self._config,
                 http_client=self._http_client,
                 db=db,
-                audio_sources=self._audio_sources
+                audio_sources=self._audio_sources,
             )
 
     def init_sources(self):

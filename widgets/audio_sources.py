@@ -81,7 +81,7 @@ class AudioSourcesTable(ExpandingTableWidget):
         with self._audio_mgr.request_new_session() as session:
             for cached in session.audio_sources:
                 if (cached.name, cached.url) in gui_selected_sources:
-                    session.drop_cache(cached)
+                    session.db.remove_data(cached.name)
                     removed.append(cached)
                     print(f"Removed cache for source: {cached.name} ({cached.url})")
                 else:
