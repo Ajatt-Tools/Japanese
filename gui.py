@@ -41,6 +41,15 @@ def adjust_to_contents(widget: QWidget):
         pass
 
 
+def is_obj_deleted(self: QWidget) -> bool:
+    try:
+        self.isVisible()
+    except RuntimeError:
+        return True
+    else:
+        return False
+
+
 class ControlPanel(QHBoxLayout):
     def __init__(self, *args):
         super().__init__(*args)
@@ -792,6 +801,8 @@ class AudioSourcesGroup(QGroupBox):
         ).run_in_background()
 
     def _remember_and_update_stats(self, audio_stats: TotalAudioStats) -> None:
+        if is_obj_deleted(self):
+            return
         self._audio_stats = audio_stats
         self._bottom_label.setText(
             f"<strong>Unique files</strong>: {audio_stats.unique_files}. "
@@ -799,6 +810,7 @@ class AudioSourcesGroup(QGroupBox):
         )
 
     def _on_show_statistics_clicked(self):
+        # TODO finish
         pass
 
     def _on_purge_db_clicked(self):
