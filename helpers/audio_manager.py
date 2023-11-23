@@ -315,9 +315,11 @@ class AudioSourceManager:
         )
 
     def search_word(self, word: str) -> Iterable[FileUrlData]:
-        for file in self._db.search_files(word):
-            with contextlib.suppress(KeyError):
-                yield self._resolve_file(self._audio_sources[file.source_name], file)
+        for source_name in self._audio_sources:
+            for file in self._db.search_files_in_source(source_name, word):
+                with contextlib.suppress(KeyError):
+                    # Accessing a disabled source results in a key error.
+                    yield self._resolve_file(self._audio_sources[file.source_name], file)
 
     def read_pronunciation_data(self, source: AudioSource):
         if source.is_cached:
