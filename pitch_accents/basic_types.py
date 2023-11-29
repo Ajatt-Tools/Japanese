@@ -139,6 +139,20 @@ def main():
     )
     assert token.describe_pitches() == "なや:heiban,atamadaka"
 
+    token = AccDbParsedToken(
+        word='粗末',
+        headword='粗末',
+        katakana_reading=None,
+        part_of_speech=PartOfSpeech.unknown,
+        inflection_type=Inflection.dictionary_form,
+        headword_accents=[
+            PitchAccentEntry(
+                katakana_reading='ソマツ',
+                pitches=[PitchParam(type=PitchType.atamadaka, number='1')])
+        ]
+    )
+    assert token.describe_pitches() == "ソマツ:atamadaka"
+
 
 if __name__ == '__main__':
     main()
