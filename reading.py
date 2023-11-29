@@ -1,6 +1,7 @@
 # Copyright: Ren Tatsumoto <tatsu at autistici.org>
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
+import dataclasses
 import functools
 from collections import OrderedDict
 
@@ -9,15 +10,17 @@ from aqt import gui_hooks
 
 from .config_view import config_view as cfg, ReadingsDiscardMode
 from .helpers import *
-from .helpers.common_kana import adjust_reading
+from .helpers.common_kana import adjust_to_inflection
 from .helpers.mingle_readings import *
 from .helpers.profiles import PitchOutputFormat
 from .helpers.tokens import tokenize, split_separators, ParseableToken, clean_furigana, Token
+from .mecab_controller.basic_types import PartOfSpeech, Inflection
 from .mecab_controller.format import format_output
 from .mecab_controller.kana_conv import is_kana_str, to_hiragana
 from .mecab_controller.mecab_controller import MecabController, MecabParsedToken
 from .mecab_controller.unify_readings import literal_pronunciation as pr, unify_repr
 from .pitch_accents.acc_dict_mgr import AccentDict, FormattedEntry, AccentDictManager
+from .pitch_accents.basic_types import AccDbParsedToken, PitchAccentEntry
 from .pitch_accents.styles import STYLE_MAP
 
 
@@ -201,15 +204,6 @@ def format_pronunciations(
         txt = sep_multi.join(ordered_dict.values())
 
     return txt
-
-
-class AccDbParsedToken(NamedTuple):
-    """
-    A tuple used to store gathered readings of an expression.
-    If readings are found in the accent db, mecab can be bypassed.
-    """
-    word: str
-    hiragana_readings: list[str]
 
 
 def gather_possible_readings(out: MecabParsedToken) -> AccDbParsedToken:
