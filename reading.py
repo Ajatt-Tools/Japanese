@@ -230,7 +230,7 @@ def gather_possible_readings(out: MecabParsedToken) -> AccDbParsedToken:
     return AccDbParsedToken(out.word, readings)
 
 
-def format_furigana_readings(word: str, hiragana_readings: list[str]) -> str:
+def format_furigana_readings(word: str, hiragana_readings: Sequence[str]) -> str:
     """
     Pack all readings into this format: "word[reading<sep>reading, ...]suffix".
     If there are too many readings to pack, discard all but the first.
@@ -253,7 +253,7 @@ def format_furigana_readings(word: str, hiragana_readings: list[str]) -> str:
         return furigana_readings[0]
 
 
-def format_hiragana_readings(readings: list[str]):
+def format_hiragana_readings(readings: Sequence[str]) -> str:
     """ Discard kanji and format the readings as hiragana. """
     if 1 < len(readings):
         return f"({cfg.furigana.reading_separator.join(map(to_hiragana, readings))})"
@@ -261,7 +261,12 @@ def format_hiragana_readings(readings: list[str]):
         return to_hiragana(readings[0])
 
 
-def discard_extra_readings(readings: list[str], max_results: int, discard_mode: ReadingsDiscardMode) -> list[str]:
+def discard_extra_readings(
+        readings: Sequence[str],
+        *,
+        max_results: int,
+        discard_mode: ReadingsDiscardMode
+) -> Sequence[str]:
     """ Depending on the settings, if there are too many readings, discard some or all but the first. """
     if max_results <= 0 or len(readings) <= max_results:
         return readings
@@ -292,12 +297,12 @@ def try_lookup_full_text(text: str) -> Iterable[AccDbParsedToken]:
             )
 
 
-def unique_readings(readings: list[str]) -> list[str]:
+def unique_readings(readings: Iterable[str]) -> Sequence[str]:
     """
     Return a list of readings without repetitions.
     """
 
-    def sorted_readings() -> list[str]:
+    def sorted_readings() -> Sequence[str]:
         """
         Sort readings according to the user's preferences.
         The long vowel symbol is used to identify readings that resemble literal pronunciation.
