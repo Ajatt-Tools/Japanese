@@ -28,7 +28,7 @@ try:
 except ImportError:
     from pitch_accents.common import split_pitch_numbers
     from helpers.audio_json_schema import FileInfo
-    from sqlite3_buddy import Sqlite3Buddy, BoundFile
+    from helpers.sqlite3_buddy import Sqlite3Buddy, BoundFile
     from helpers.file_ops import user_files_dir
     from helpers.inflections import is_inflected
     from mecab_controller.kana_conv import to_katakana
