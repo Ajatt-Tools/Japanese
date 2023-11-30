@@ -811,6 +811,8 @@ class AudioSourcesGroup(QGroupBox):
         )
 
     def _on_show_statistics_clicked(self):
+        if not self._audio_stats:
+            return
         d = AudioStatsDialog()
         d.load_data(self._audio_stats)
         restoreGeom(d, d.name, adjustSize=True)
