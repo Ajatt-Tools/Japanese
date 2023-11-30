@@ -25,6 +25,7 @@ from .pitch_accents.user_accents import UserAccentData
 from .reading import acc_dict
 from .widgets.anki_style import fix_default_anki_style
 from .widgets.audio_sources import AudioSourcesTable
+from .widgets.audio_sources_stats import AudioStatsDialog
 from .widgets.enum_selector import EnumSelectCombo
 from .widgets.pitch_override_widget import PitchOverrideWidget
 
@@ -810,8 +811,11 @@ class AudioSourcesGroup(QGroupBox):
         )
 
     def _on_show_statistics_clicked(self):
-        # TODO finish
-        pass
+        d = AudioStatsDialog()
+        d.load_data(self._audio_stats)
+        restoreGeom(d, d.name, adjustSize=True)
+        d.exec()
+        saveGeom(d, d.name)
 
     def _on_purge_db_clicked(self):
         aud_src_mgr.purge_everything()
