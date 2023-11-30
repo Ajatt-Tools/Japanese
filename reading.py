@@ -206,24 +206,6 @@ def format_pronunciations(
     return txt
 
 
-def gather_possible_readings(out: MecabParsedToken) -> AccDbParsedToken:
-    """
-    Return all possible hiragana readings for the word, e.g. [そそぐ, すすぐ, ゆすぐ].
-    If the user doesn't want to look up readings in the pitch accents dictionary,
-    return back the one reading contained in the parsed token, which may be empty.
-    """
-    readings = []
-
-    if out.katakana_reading:
-        readings.append(to_hiragana(out.katakana_reading))
-
-    if cfg.furigana.can_lookup_in_db(out.headword):
-        for entry in iter_accents(out.headword):
-            readings.append(adjust_reading(out.word, out.headword, to_hiragana(entry.katakana_reading)))
-
-    return AccDbParsedToken(out.word, readings)
-
-
 def format_furigana_readings(word: str, hiragana_readings: Sequence[str]) -> str:
     """
     Pack all readings into this format: "word[reading<sep>reading, ...]suffix".
@@ -286,8 +268,12 @@ def try_lookup_full_text(text: str) -> Iterable[AccDbParsedToken]:
             word: str
             entries: Sequence[FormattedEntry]
             yield AccDbParsedToken(
+                headword=word,
                 word=word,
-                hiragana_readings=[to_hiragana(entry.katakana_reading) for entry in entries],
+                part_of_speech=PartOfSpeech.unknown,
+                inflection_type=Inflection.dictionary_form,
+                katakana_reading=None,
+                headword_accents=[PitchAccentEntry.from_formatted(entry) for entry in entries]
             )
 
 
@@ -310,6 +296,20 @@ def unique_readings(readings: Iterable[str]) -> Sequence[str]:
     return list({pr(reading): reading for reading in sorted_readings()}.values())
 
 
+def all_hiragana_readings(token: AccDbParsedToken) -> Iterable[str]:
+    """
+    Yield all possible hiragana readings for the word, e.g. [そそぐ, すすぐ, ゆすぐ].
+    """
+    if token.katakana_reading:
+        yield to_hiragana(token.katakana_reading)
+    for entry in token.headword_accents:
+        yield adjust_to_inflection(
+            raw_word=token.word,
+            headword=token.headword,
+            headword_reading=to_hiragana(entry.katakana_reading)
+        )
+
+
 def format_acc_db_result(out: AccDbParsedToken, full_hiragana: bool = False) -> str:
     """
     Given a word and a list of its readings, produce the appropriate furigana or kana output.
@@ -318,7 +318,7 @@ def format_acc_db_result(out: AccDbParsedToken, full_hiragana: bool = False) -> 
         return out.word
 
     readings = discard_extra_readings(
-        unique_readings(out.hiragana_readings),
+        readings=unique_readings(all_hiragana_readings(out)),
         max_results=cfg.furigana.maximum_results,
         discard_mode=cfg.furigana.discard_mode,
     )
@@ -332,15 +332,20 @@ def format_acc_db_result(out: AccDbParsedToken, full_hiragana: bool = False) -> 
     return format_furigana_readings(out.word, readings)
 
 
+def append_accents(token: MecabParsedToken) -> AccDbParsedToken:
+    return AccDbParsedToken(
+        **dataclasses.asdict(token),
+        headword_accents=[PitchAccentEntry.from_formatted(entry) for entry in iter_accents(token.headword)]
+    )
+
+
 def format_parsed_tokens(
-        tokens: Sequence[Union[AccDbParsedToken, MecabParsedToken, Token]],
+        tokens: Sequence[Union[AccDbParsedToken, Token]],
         full_hiragana: bool = False
 ) -> Iterable[str]:
     for token in tokens:
         if isinstance(token, AccDbParsedToken):
             yield format_acc_db_result(token, full_hiragana=full_hiragana)
-        elif isinstance(token, MecabParsedToken):
-            yield format_acc_db_result(gather_possible_readings(token), full_hiragana=full_hiragana)
         elif isinstance(token, str):
             yield token
         else:
@@ -359,11 +364,11 @@ def generate_furigana(src_text: str, split_morphemes: bool = True, full_hiragana
             substrings.extend(acc_db_result)
         elif split_morphemes is True:
             # Split with mecab, format furigana for each word.
-            substrings.extend(mecab_translate(token))
+            substrings.extend(append_accents(out) for out in mecab_translate(token))
         elif (first := mecab_translate(token)[0]).word == token:
             # If the user doesn't want to split morphemes, still try to find the reading using mecab
             # but abort if mecab outputs more than one word.
-            substrings.append(first)
+            substrings.append(append_accents(first))
         else:
             # Add the string as is, without furigana.
             substrings.append(token)
