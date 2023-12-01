@@ -31,7 +31,7 @@ class DbFileSchema(NamedTuple):
             if file.name.startswith(self.prefix) and file.name.endswith(f'.{self.ext}'):
                 try:
                     schema = DbFileSchema(*file.name.split('.'))
-                except ValueError:
+                except (ValueError, TypeError):
                     os.remove(file)
                     print(f"Removed invalid database file: {file.path}")
                 else:
