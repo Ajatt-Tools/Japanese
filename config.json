@@ -127,6 +127,11 @@
     },
     {
       "enabled": true,
+      "name": "Daijisen",
+      "url": "https://github.com/Ajatt-Tools/daijisen_pronunciations_index/releases/download/v1.0/Daijisen_main.zip"
+    },
+    {
+      "enabled": true,
       "name": "TAAS",
       "url": "https://github.com/Ajatt-Tools/taas_pronunciations_index/releases/download/v1.0/TAAS_main.zip"
     }
