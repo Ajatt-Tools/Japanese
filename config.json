@@ -143,7 +143,8 @@
     "maximum_results": 99,
     "ignore_inflections": false,
     "stop_if_one_source_has_results": false,
-    "search_dialog_field_name": "VocabAudio"
+    "search_dialog_field_name": "VocabAudio",
+    "tag_separator": "<br>"
   },
   "definitions": {
     "timeout": 10,

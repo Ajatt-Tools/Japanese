@@ -659,6 +659,7 @@ class AudioSettingsForm(MultiColumnSettingsForm):
         self._widgets.maximum_results = NarrowSpinBox(
             initial_value=self._config.maximum_results
         )
+        self._widgets.tag_separator = NarrowLineEdit(self._config.tag_separator)
 
     def _add_tooltips(self):
         super()._add_tooltips()

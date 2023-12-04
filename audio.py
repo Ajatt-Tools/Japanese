@@ -98,7 +98,7 @@ def iter_mecab_variants(token: MecabParsedToken):
 
 
 def format_audio_tags(hits: Collection[FileUrlData]):
-    return ''.join(
+    return cfg.audio_settings.tag_separator.join(
         f'[sound:{hit.desired_filename}]'
         for hit in hits
     )
