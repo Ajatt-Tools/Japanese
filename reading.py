@@ -365,10 +365,10 @@ def generate_furigana(src_text: str, split_morphemes: bool = True, full_hiragana
         elif split_morphemes is True:
             # Split with mecab, format furigana for each word.
             substrings.extend(append_accents(out) for out in mecab_translate(token))
-        elif (first := mecab_translate(token)[0]).word == token:
+        elif (out := mecab_translate(token)) and out[0].word == token:
             # If the user doesn't want to split morphemes, still try to find the reading using mecab
             # but abort if mecab outputs more than one word.
-            substrings.append(append_accents(first))
+            substrings.append(append_accents(out[0]))
         else:
             # Add the string as is, without furigana.
             substrings.append(token)
