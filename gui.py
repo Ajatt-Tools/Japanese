@@ -685,6 +685,10 @@ class AudioSettingsForm(MultiColumnSettingsForm):
             "Note: If a word has several pitch accents,\n"
             "this setting may result in some of them not being represented."
         )
+        self._widgets.tag_separator.setToolTip(
+            "Separate [sound:filename.ogg] tags with this string\n"
+            "when adding audio files to cards."
+        )
 
 
 class ToolbarButtonConfig(TypedDict):
