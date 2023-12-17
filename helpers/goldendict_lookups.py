@@ -5,7 +5,7 @@ import subprocess
 from distutils.spawn import find_executable
 
 GD_PROGRAM_NAME = "GoldenDict-NG"
-GD_EXE = find_executable("goldendict")
+GD_EXE = find_executable("goldendict") or "/Applications/GoldenDict.app/Contents/MacOS/GoldenDict"
 
 
 def lookup_goldendict(gd_word: str) -> subprocess.Popen:
