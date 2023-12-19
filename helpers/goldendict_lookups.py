@@ -10,19 +10,23 @@ from typing import Optional
 from anki.utils import is_mac
 
 GD_PROGRAM_NAME = "GoldenDict-NG"
+GD_MACOS_PATH = "/Applications/GoldenDict.app/Contents/MacOS/GoldenDict"
+
+
+def find_goldendict_fallback() -> Optional[str]:
+    return is_mac and os.path.isfile(GD_MACOS_PATH) and GD_MACOS_PATH or None
 
 
 @functools.cache
 def find_goldendict() -> Optional[str]:
-    gd_exe = find_executable("goldendict")
-    gd_macos_location = "/Applications/GoldenDict.app/Contents/MacOS/GoldenDict"
-    if gd_exe is None and is_mac and os.path.isfile(gd_macos_location):
-        gd_exe = gd_macos_location
-    return gd_exe
+    return (
+            find_executable("goldendict")
+            or find_goldendict_fallback()
+    )
 
 
 def lookup_goldendict(gd_word: str) -> subprocess.Popen:
-    if find_goldendict() is None:
+    if not find_goldendict():
         raise RuntimeError(f"{GD_PROGRAM_NAME} is not installed. Doing nothing.")
     return subprocess.Popen(
         (find_goldendict(), gd_word),
