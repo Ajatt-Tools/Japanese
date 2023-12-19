@@ -40,10 +40,7 @@ class AudioStatsDialog(QDialog):
         self.setMinimumSize(400, 240)
         self.table = AudioStatsTable()
         self.setLayout(QVBoxLayout())
-        self._button_box = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok |
-            QDialogButtonBox.StandardButton.Cancel
-        )
+        self._button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)
         self.layout().addWidget(self.table)
         self.layout().addWidget(self._button_box)
         qconnect(self._button_box.accepted, self.accept)
