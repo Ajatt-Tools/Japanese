@@ -274,6 +274,8 @@ class Sqlite3Buddy:
         self._con.commit()
 
     def distinct_file_count(self, source_names: Sequence[str]) -> int:
+        if not source_names:
+            return 0
         cur = self._con.cursor()
         # Filenames in different audio sources may collide,
         # although it's not likely with the currently released audio sources.
@@ -292,6 +294,8 @@ class Sqlite3Buddy:
         ).fetchone()[0]
 
     def distinct_headword_count(self, source_names: Sequence[str]) -> int:
+        if not source_names:
+            return 0
         cur = self._con.cursor()
         query = """ SELECT COUNT(*) FROM (SELECT DISTINCT headword FROM headwords WHERE %s); """
         # Return the number of unique headwords in the specified sources.
