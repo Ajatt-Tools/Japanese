@@ -767,6 +767,10 @@ class ToolbarSettingsForm(QGroupBox):
 
 
 class AudioSourcesGroup(QGroupBox):
+    """
+    A table that shows imported audio sources.
+    The stats are shown at the bottom.
+    """
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setTitle("Audio sources")
