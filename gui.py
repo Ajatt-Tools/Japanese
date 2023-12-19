@@ -780,6 +780,10 @@ class AudioSourcesGroup(QGroupBox):
         self._populate()
         qconnect(self._purge_button.clicked, self._on_purge_db_clicked)
         qconnect(self._stats_button.clicked, self._on_show_statistics_clicked)
+        self._purge_button.setToolTip(
+            "Remove the database file.\n"
+            "It will be recreated from scratch again."
+        )
 
     def _make_layout(self):
         layout = QVBoxLayout()
