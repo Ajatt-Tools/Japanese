@@ -784,10 +784,7 @@ class AudioSourcesGroup(QGroupBox):
         self._populate()
         qconnect(self._purge_button.clicked, self._on_purge_db_clicked)
         qconnect(self._stats_button.clicked, self._on_show_statistics_clicked)
-        self._purge_button.setToolTip(
-            "Remove the database file.\n"
-            "It will be recreated from scratch again."
-        )
+        self._add_tooltips()
 
     def _make_layout(self):
         layout = QVBoxLayout()
@@ -838,6 +835,15 @@ class AudioSourcesGroup(QGroupBox):
 
     def iterateConfigs(self):
         return self._audio_sources_table.iterateConfigs()
+
+    def _add_tooltips(self):
+        self._stats_button.setToolTip(
+            "Show statistics for each imported audio source."
+        )
+        self._purge_button.setToolTip(
+            "Remove the database file.\n"
+            "It will be recreated from scratch again."
+        )
 
 
 class SettingsDialog(QDialog):
