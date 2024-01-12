@@ -4,7 +4,7 @@
 import dataclasses
 from collections.abc import Iterable, Collection
 from types import SimpleNamespace
-from typing import Optional, TypedDict
+from typing import Optional, TypedDict, cast
 
 from aqt import mw
 from aqt.operations import QueryOp
@@ -930,8 +930,8 @@ class SettingsDialog(QDialog):
         self._tabs.addTab(tab, "Menus")
 
     def _setup_ui(self) -> None:
-        self.setWindowModality(Qt.WindowModality.ApplicationModal)
-        self.setWindowTitle(f'{ADDON_SERIES} {self.name}')
+        cast(QDialog, self).setWindowModality(Qt.WindowModality.ApplicationModal)
+        cast(QDialog, self).setWindowTitle(f'{ADDON_SERIES} {self.name}')
         self.setMinimumSize(800, 600)
         tweak_window(self)
         self.setLayout(self.make_layout())
