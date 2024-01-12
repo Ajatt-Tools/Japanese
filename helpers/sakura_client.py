@@ -106,7 +106,7 @@ def main():
         dict_name=DictName.meikyou,
         search_type=SearchType.exact,
     )
-    client = SakuraParisClient(config)  # type: ignore
+    client = SakuraParisClient(typing.cast(SakuraParisConfig, config))
     print(client.fetch_def("故郷"))
 
 

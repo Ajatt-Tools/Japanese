@@ -12,7 +12,7 @@ import zipfile
 from collections.abc import Iterable
 from contextlib import contextmanager
 from types import SimpleNamespace
-from typing import Optional, Union
+from typing import Optional, Union, cast
 
 import anki.httpclient
 import requests
@@ -459,7 +459,7 @@ def init_testing_audio_manager():
     # Used for testing when Anki isn't running.
     with open(os.path.join(os.path.dirname(__file__), os.pardir, 'config.json')) as inf:
         cfg = SimpleNamespace(**json.load(inf))
-        cfg.audio_settings = SimpleNamespace(**cfg.audio_settings)  # type: ignore
+        cfg.audio_settings = SimpleNamespace(**cast(dict, cfg.audio_settings))
     return AudioSourceManagerFactory(cfg, AudioSourceManager)
 
 

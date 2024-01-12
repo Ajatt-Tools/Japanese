@@ -9,7 +9,7 @@ from aqt.editor import Editor
 from aqt.qt import *
 
 from .config_view import config_view as cfg
-from .helpers.sakura_client import SakuraParisClient, AddDefBehavior, DEF_SEP
+from .helpers.sakura_client import SakuraParisClient
 
 
 @dataclasses.dataclass(frozen=True)
@@ -28,7 +28,7 @@ class Worker(QRunnable):
         self._fn = fn
         self._fn_args = args
         self._fn_kwargs = kwargs
-        self.signals = WorkerSignals()  # type: ignore
+        self.signals = WorkerSignals()
 
     def _emit_result(self, result: WorkerResult):
         self.signals.result.emit(result)  # type: ignore
@@ -92,7 +92,7 @@ class SakuraParisAnkiClient(SakuraParisClient):
         qconnect(worker.signals.result, handle_result)
 
         # Execute
-        QThreadPool.globalInstance().start(worker)  # type: ignore
+        QThreadPool.globalInstance().start(worker)
         progress.exec()
 
 

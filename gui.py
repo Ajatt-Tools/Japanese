@@ -38,7 +38,7 @@ ADDON_SETUP_GUIDE = "https://tatsumoto-ren.github.io/blog/anki-japanese-support.
 
 def adjust_to_contents(widget: QWidget):
     try:
-        widget.setSizeAdjustPolicy(widget.AdjustToContents)  # type: ignore
+        widget.setSizeAdjustPolicy(widget.AdjustToContents)
     except AttributeError:
         pass
 
