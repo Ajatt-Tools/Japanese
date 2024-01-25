@@ -174,27 +174,40 @@ class AnkiAudioSourceManager(AudioSourceManager):
             *,
             play_on_finish: bool = False,
             run_in_background: bool = True,
-    ):
-        if not hits:
+    ) -> None:
+        if len(hits) < 1:
+            # Sequence is empty. Nothing to do.
             return
         if run_in_background:
-            # called from the main thread. Can use QueryOp.
-            QueryOp(
-                parent=mw,
-                op=lambda col: self._download_tags(only_missing(col, hits)),
-                success=lambda futures: save_files(
-                    futures,
-                    play_on_finish=play_on_finish,
-                    notify_on_finish=True,
-                ),
-            ).run_in_background()
+            # Called from the main thread. Can use QueryOp.
+            return self._download_and_save_tags_bg(hits, play_on_finish)
         else:
             # Called from another thread. Can't use QueryOp and can't call any UI routines.
-            save_files(
-                self._download_tags(only_missing(mw.col, hits)),
+            return self._download_and_save_tags_fg(hits, play_on_finish)
+
+    def _download_and_save_tags_fg(self, hits: Sequence[FileUrlData], play_on_finish: bool) -> None:
+        """
+        Download and save audio files in the current thread.
+        """
+        return save_files(
+            self._download_tags(only_missing(mw.col, hits)),
+            play_on_finish=play_on_finish,
+            notify_on_finish=False,
+        )
+
+    def _download_and_save_tags_bg(self, hits: Sequence[FileUrlData], play_on_finish: bool) -> None:
+        """
+        Download and save audio files using QueryOp.
+        """
+        return QueryOp(
+            parent=mw,
+            op=lambda col: self._download_tags(only_missing(col, hits)),
+            success=lambda futures: save_files(
+                futures,
                 play_on_finish=play_on_finish,
-                notify_on_finish=False,
-            )
+                notify_on_finish=True,
+            ),
+        ).run_in_background()
 
     def _search_word_variants(self, src_text: str) -> Iterable[FileUrlData]:
         """
