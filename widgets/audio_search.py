@@ -13,11 +13,13 @@ from aqt.qt import *
 from aqt.utils import restoreGeom, saveGeom, tooltip, tr
 
 try:
+    from ..helpers.misc import strip_media_tags
     from ..helpers.file_ops import open_file
     from ..helpers import ui_translate
     from ..helpers.audio_manager import FileUrlData
     from .audio_sources import SourceEnableCheckbox
 except ImportError:
+    from helpers.misc import strip_media_tags
     from helpers.file_ops import open_file
     from helpers import ui_translate
     from helpers.audio_manager import FileUrlData
@@ -205,7 +207,9 @@ class AudioSearchDialog(QDialog):
 
     def search(self, search_text: typing.Optional[str] = None):
         self._table_widget.clear()
-        self._search_bar.set_text(search_text := (search_text or self._search_bar.current_text()))
+        # strip media in case source field and destination field are the same.
+        search_text = strip_media_tags(search_text or self._search_bar.current_text() or "")
+        self._search_bar.set_text(search_text)
         if not search_text:
             return
         # repopulate with new data
