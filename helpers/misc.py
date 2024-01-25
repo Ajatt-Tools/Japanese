@@ -1,10 +1,9 @@
-import re
+# Copyright: Ren Tatsumoto <tatsu at autistici.org> and contributors
+# License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
-from anki.media import MediaManager
+from anki.utils import html_to_text_line
+from aqt import mw
 
 
-def strip_media_tags(txt: str) -> str:
-    """Return text with sound and image tags removed."""
-    for reg in MediaManager.regexps:
-        txt = re.sub(reg, "", txt)
-    return txt
+def strip_html_and_media(text: str) -> str:
+    return html_to_text_line(mw.col.media.strip(text))
