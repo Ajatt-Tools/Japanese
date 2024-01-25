@@ -6,4 +6,4 @@ from aqt import mw
 
 
 def strip_html_and_media(text: str) -> str:
-    return html_to_text_line(mw.col.media.strip(text))
+    return html_to_text_line(mw.col.media.strip(text)) if text else text

@@ -216,7 +216,7 @@ class AudioSearchDialog(QDialog):
     def search(self, search_text: typing.Optional[str] = None):
         self._table_widget.clear()
         # strip media in case source field and destination field are the same.
-        search_text = strip_html_and_media(search_text or self._search_bar.current_text() or "")
+        search_text = strip_html_and_media(search_text or self._search_bar.current_text())
         self._search_bar.set_text(search_text)
         if not search_text:
             return
