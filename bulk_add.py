@@ -28,7 +28,7 @@ def update_notes_op(col: Collection, notes: Sequence[Note]):
     return col.merge_undo_entries(pos)
 
 
-def bulk_add_readings(nids: Sequence[NoteId], parent: Browser):
+def bulk_add_readings(nids: Sequence[NoteId], parent: Browser) -> None:
     CollectionOp(
         parent=parent, op=lambda col: update_notes_op(col, notes=[mw.col.get_note(nid) for nid in nids])
     ).success(
@@ -36,7 +36,7 @@ def bulk_add_readings(nids: Sequence[NoteId], parent: Browser):
             parent=parent,
             title="Tasks done",
             textFormat="rich",
-            text=f"Added data to {len(nids)} selected notes."
+            text=f"Processed {len(nids)} selected notes."
         )
     ).run_in_background()
 

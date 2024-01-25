@@ -168,24 +168,33 @@ class AnkiAudioSourceManager(AudioSourceManager):
 
         return sorted_files(ensure_unique_files(itertools.chain(*hits.values())))
 
-    def download_tags_bg(
+    def download_and_save_tags(
             self,
             hits: Sequence[FileUrlData],
             *,
             play_on_finish: bool = False,
-            notify_on_finish: bool = True
+            run_in_background: bool = True,
     ):
         if not hits:
             return
-        QueryOp(
-            parent=mw,
-            op=lambda col: self._download_tags(only_missing(col, hits)),
-            success=lambda futures: save_files(
-                futures,
+        if run_in_background:
+            # called from the main thread. Can use QueryOp.
+            QueryOp(
+                parent=mw,
+                op=lambda col: self._download_tags(only_missing(col, hits)),
+                success=lambda futures: save_files(
+                    futures,
+                    play_on_finish=play_on_finish,
+                    notify_on_finish=True,
+                ),
+            ).run_in_background()
+        else:
+            # Called from another thread. Can't use QueryOp and can't call any UI routines.
+            save_files(
+                self._download_tags(only_missing(mw.col, hits)),
                 play_on_finish=play_on_finish,
-                notify_on_finish=notify_on_finish,
-            ),
-        ).run_in_background()
+                notify_on_finish=False,
+            )
 
     def _search_word_variants(self, src_text: str) -> Iterable[FileUrlData]:
         """

@@ -90,7 +90,10 @@ class AddAudio(DoTask, task_type=ProfileAudio):
             stop_if_one_source_has_results=cfg.audio_settings.stop_if_one_source_has_results,
         )
         search_results = search_results[:cfg.audio_settings.maximum_results]
-        self._aud_src_mgr.download_tags_bg(search_results, notify_on_finish=(self._caller != TaskCaller.bulk_add))
+        self._aud_src_mgr.download_and_save_tags(
+            search_results,
+            run_in_background=(self._caller != TaskCaller.bulk_add),
+        )
         return format_audio_tags(search_results)
 
 
