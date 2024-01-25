@@ -223,6 +223,14 @@ class AudioSettingsConfigView(ConfigViewBase):
         self['search_dialog_dest_field_name'] = field_name
 
     @property
+    def search_dialog_src_field_name(self) -> str:
+        return self['search_dialog_src_field_name']
+
+    @search_dialog_src_field_name.setter
+    def search_dialog_src_field_name(self, field_name: str):
+        self['search_dialog_src_field_name'] = field_name
+
+    @property
     def tag_separator(self) -> str:
         return self['tag_separator']
 

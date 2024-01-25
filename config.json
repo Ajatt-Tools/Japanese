@@ -143,6 +143,7 @@
     "maximum_results": 99,
     "ignore_inflections": false,
     "stop_if_one_source_has_results": false,
+    "search_dialog_src_field_name": "VocabKanji",
     "search_dialog_dest_field_name": "VocabAudio",
     "tag_separator": "<br>"
   },

@@ -3,8 +3,9 @@
 
 import functools
 from collections.abc import Iterable
-from typing import Callable, NamedTuple
+from typing import Callable, NamedTuple, Optional
 
+from anki.notes import Note
 from aqt import gui_hooks
 from aqt.editor import Editor
 
@@ -50,20 +51,37 @@ def modify_note(func: Callable[[Editor], object]) -> Callable[[Editor], None]:
     return decorator
 
 
+def get_note_value(note: Note, field_name: str) -> Optional[str]:
+    try:
+        return note[field_name]
+    except KeyError:
+        return None
+
+
 def search_audio(editor: Editor):
     # the caller should have ensured that editor.note is not None.
     with aud_src_mgr.request_new_session() as session:
         dialog = AnkiAudioSearchDialog(session)
         fix_default_anki_style(dialog.table)
-        dialog.set_note_fields(editor.note.keys(), selected_field_name=cfg.audio_settings.search_dialog_dest_field_name)
-        dialog.search(editor.web.selectedText())
+        dialog.set_note_fields(
+            editor.note.keys(),
+            selected_src_field_name=cfg.audio_settings.search_dialog_src_field_name,
+            selected_dest_field_name=cfg.audio_settings.search_dialog_dest_field_name,
+        )
+        dialog.search(
+            editor.web.selectedText()
+            or get_note_value(note=editor.note, field_name=cfg.audio_settings.search_dialog_src_field_name)
+        )
         if not dialog.exec():
             return
-        results = dialog.files_to_add()
-        cfg.audio_settings.search_dialog_dest_field_name = dialog.destination_field_name()
-        editor.note[dialog.destination_field_name()] += format_audio_tags(results)
-        session.download_and_save_tags(results)
+        # remember field names for later calls
+        cfg.audio_settings.search_dialog_src_field_name = dialog.source_field_name
+        cfg.audio_settings.search_dialog_dest_field_name = dialog.destination_field_name
         cfg.write_config()
+        # process results
+        results = dialog.files_to_add()
+        editor.note[dialog.destination_field_name] += format_audio_tags(results)
+        session.download_and_save_tags(results)
 
 
 def query_buttons() -> Iterable[ToolbarButton]:

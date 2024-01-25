@@ -147,7 +147,8 @@ class AudioSearchDialog(QDialog):
 
         # create widgets
         self._search_bar = SearchBar()
-        self._field_selector = QComboBox()
+        self._src_field_selector = QComboBox()
+        self._dest_field_selector = QComboBox()
         self._table_widget = SearchResultsTable()
         self._button_box = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok |
@@ -182,13 +183,16 @@ class AudioSearchDialog(QDialog):
 
     def _create_top_layout(self):
         layout = QHBoxLayout()
+        layout.addWidget(QLabel("Source:"))
+        layout.addWidget(self._src_field_selector)
         layout.addWidget(QLabel("Destination:"))
-        layout.addWidget(self._field_selector)
+        layout.addWidget(self._dest_field_selector)
         layout.addWidget(QLabel("Search:"))
         layout.addWidget(self._search_bar)
-        self._field_selector.setMinimumWidth(150)
-        self._field_selector.setMaximumWidth(200)
-        self._field_selector.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
+        for combo in (self._src_field_selector, self._dest_field_selector):
+            combo.setMinimumWidth(120)
+            combo.setMaximumWidth(200)
+            combo.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
         self._search_bar.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum)
         return layout
 
@@ -212,13 +216,20 @@ class AudioSearchDialog(QDialog):
             stop_if_one_source_has_results=False,
         ))
 
-    def set_note_fields(self, field_names: list[str], selected_field_name: str):
-        self._field_selector.clear()
-        self._field_selector.addItems(field_names)
-        self._field_selector.setCurrentText(selected_field_name)
+    def set_note_fields(self, field_names: list[str], *, selected_src_field_name: str, selected_dest_field_name: str, ):
+        for combo in (self._src_field_selector, self._dest_field_selector):
+            combo.clear()
+            combo.addItems(field_names)
+        self._src_field_selector.setCurrentText(selected_src_field_name)
+        self._dest_field_selector.setCurrentText(selected_dest_field_name)
 
+    @property
+    def source_field_name(self) -> str:
+        return self._dest_field_selector.currentText()
+
+    @property
     def destination_field_name(self) -> str:
-        return self._field_selector.currentText()
+        return self._dest_field_selector.currentText()
 
 
 class AnkiAudioSearchDialog(AudioSearchDialog):
@@ -290,14 +301,19 @@ def main():
 
     app = QApplication(sys.argv)
     dialog = AudioSearchDialog(MockAudioManager())
-    dialog.set_note_fields(["Question", "Answer", "Audio", "Image", ], selected_field_name="Audio")
+    dialog.set_note_fields(
+        ["Question", "Answer", "Audio", "Image", ],
+        selected_dest_field_name="Audio",
+        selected_src_field_name="Question",
+    )
     dialog.search("test")
     dialog.show()
     app.exec()
     print("chosen:")
     for file in dialog.files_to_add():
         print(file)
-    print(f"destination: {dialog.destination_field_name()}")
+    print(f"source: {dialog.source_field_name}")
+    print(f"destination: {dialog.destination_field_name}")
 
 
 if __name__ == '__main__':
