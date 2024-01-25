@@ -237,7 +237,7 @@ class AudioSearchDialog(QDialog):
 
     @property
     def source_field_name(self) -> str:
-        return self._dest_field_selector.currentText()
+        return self._src_field_selector.currentText()
 
     @property
     def destination_field_name(self) -> str:
