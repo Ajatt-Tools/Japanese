@@ -5,6 +5,7 @@ import enum
 import functools
 import random
 import typing
+from typing import cast
 
 from anki.sound import SoundOrVideoTag
 from anki.utils import no_bundled_libs
@@ -95,9 +96,12 @@ class SearchResultsTable(QTableWidget):
         self._last_results: list[FileUrlData] = []
         self.verticalHeader().setVisible(False)
         self.horizontalHeader().setStretchLastSection(True)
-        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        cast(QWidget, self).setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.setColumnCount(SearchResultsTableColumns.column_count())
-        self.setHorizontalHeaderLabels(ui_translate(item.name) for item in SearchResultsTableColumns)
+        cast(QTableWidget, self).setHorizontalHeaderLabels(
+            ui_translate(item.name)
+            for item in SearchResultsTableColumns
+        )
         self.setSectionResizeModes()
 
     def setSectionResizeModes(self):
@@ -145,7 +149,7 @@ class AudioSearchDialog(QDialog):
         super().__init__(parent)
         self._audio_manager = audio_manager
         self.setMinimumSize(600, 400)
-        self.setWindowTitle("AJT Japanese - Audio search")
+        cast(QDialog, self).setWindowTitle("AJT Japanese - Audio search")
 
         # create widgets
         self._search_bar = SearchBar()
@@ -195,7 +199,7 @@ class AudioSearchDialog(QDialog):
             combo.setMinimumWidth(120)
             combo.setMaximumWidth(200)
             combo.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
-        self._search_bar.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum)
+        cast(QDialog, self._search_bar).setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum)
         return layout
 
     @property
