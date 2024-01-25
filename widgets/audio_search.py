@@ -160,6 +160,7 @@ class AudioSearchDialog(QDialog):
             QDialogButtonBox.StandardButton.Ok |
             QDialogButtonBox.StandardButton.Cancel
         )
+        self._button_box.button(QDialogButtonBox.StandardButton.Ok).setText("Add audio and close")
 
         # add search bar, button, and table to main layout
         main_layout = QVBoxLayout()
