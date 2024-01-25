@@ -215,12 +215,12 @@ class AudioSettingsConfigView(ConfigViewBase):
         return bool(self['stop_if_one_source_has_results'])
 
     @property
-    def search_dialog_field_name(self) -> str:
-        return self['search_dialog_field_name']
+    def search_dialog_dest_field_name(self) -> str:
+        return self['search_dialog_dest_field_name']
 
-    @search_dialog_field_name.setter
-    def search_dialog_field_name(self, field_name: str):
-        self['search_dialog_field_name'] = field_name
+    @search_dialog_dest_field_name.setter
+    def search_dialog_dest_field_name(self, field_name: str):
+        self['search_dialog_dest_field_name'] = field_name
 
     @property
     def tag_separator(self) -> str:
