@@ -114,7 +114,7 @@ def query_buttons() -> Iterable[ToolbarButton]:
         ToolbarButton(
             id='add_definition_button',
             on_press=modify_note(sakura_client.add_definition),
-            tip='Add dictionary definition',
+            tip='Add dictionary definition for the target word.',
             conf=cfg.toolbar.add_definition_button
         ),
     )
