@@ -34,7 +34,7 @@ class AudioManager(typing.Protocol):
     def search_audio(self, src_text: str, **kwargs) -> list[FileUrlData]:
         ...
 
-    def download_tags_bg(self, hits: typing.Sequence[FileUrlData], play_on_finish: bool = False):
+    def download_and_save_tags(self, hits: typing.Sequence[FileUrlData], play_on_finish: bool = False):
         ...
 
 
@@ -258,7 +258,7 @@ class AnkiAudioSearchDialog(AudioSearchDialog):
         elif mw.col.media.have(file.desired_filename):
             return sound.av_player.play_tags([SoundOrVideoTag(filename=file.desired_filename), ])
         else:
-            return self._audio_manager.download_tags_bg([file, ], play_on_finish=True)
+            return self._audio_manager.download_and_save_tags([file, ], play_on_finish=True)
 
     def _open_audio_file(self, file: FileUrlData):
         tooltip(tr.qt_misc_loading(), period=1000)
@@ -308,7 +308,7 @@ def main():
                     output.append(get_rand_file())
             return output
 
-        def download_tags_bg(self, *args):
+        def download_and_save_tags(self, *args):
             pass
 
     app = QApplication(sys.argv)
