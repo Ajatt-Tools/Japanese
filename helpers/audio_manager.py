@@ -133,6 +133,9 @@ class AudioManagerHttpClient(anki.httpclient.HttpClient):
         return self._get_with_timeout(url, timeout)
 
     def download(self, file: Union[AudioSourceConfig, FileUrlData]) -> bytes:
+        """
+        Get an audio source or audio file.
+        """
         timeout = (
             self._audio_settings.dictionary_download_timeout
             if isinstance(file, AudioSourceConfig)
