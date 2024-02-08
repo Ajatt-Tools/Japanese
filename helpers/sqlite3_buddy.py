@@ -83,7 +83,7 @@ class Sqlite3Buddy:
         cur = self._con.cursor()
         query = """ SELECT media_dir_abs FROM meta WHERE source_name = ? LIMIT 1; """
         result = cur.execute(query, (source_name,)).fetchone()
-        assert type(result) == tuple and len(result) == 1 and (type(result[0]) in (str, NoneType))
+        assert type(result) is tuple and len(result) == 1 and (type(result[0]) in (str, NoneType))
         return result[0]
 
     def get_media_dir_rel(self, source_name: str) -> str:
@@ -225,7 +225,7 @@ class Sqlite3Buddy:
         WHERE source_name = ? AND headword = ?;
         """
         results = cur.execute(query, (source_name, headword)).fetchall()
-        assert type(results) == list
+        assert type(results) is list
         return (
             BoundFile(file_name=result_tup[0], source_name=source_name, headword=headword)
             for result_tup in results
@@ -238,7 +238,7 @@ class Sqlite3Buddy:
         WHERE headword = ?;
         """
         results = cur.execute(query, (headword,)).fetchall()
-        assert type(results) == list
+        assert type(results) is list
         return (
             BoundFile(file_name=result_tup[0], source_name=result_tup[1], headword=headword)
             for result_tup in results
