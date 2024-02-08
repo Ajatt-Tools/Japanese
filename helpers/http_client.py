@@ -52,7 +52,7 @@ class AudioSettingsProtocol(Protocol):
     attempts: int
 
 
-class AudioManagerHttpClient(anki.httpclient.HttpClient):
+class AudioManagerHttpClient:
     # add some fake headers to convince sites we're not a bot.
     headers = {
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
@@ -73,24 +73,13 @@ class AudioManagerHttpClient(anki.httpclient.HttpClient):
             audio_settings: AudioSettingsProtocol,
             progress_hook: Optional[anki.httpclient.ProgressCallback] = None
     ) -> None:
-        super().__init__(progress_hook)
         self._audio_settings = audio_settings
-
-    def get(self, url: str, headers: dict[str, str] = None):
-        # Mask the default get function in case it is called by mistake.
-        raise NotImplementedError()
+        self._client = anki.httpclient.HttpClient(progress_hook)
 
     def _get_with_timeout(self, url: str, timeout: int) -> requests.Response:
-        # Set headers
-        headers = self.headers.copy()
-        headers["User-Agent"] = self._agent_name()
-
         # Set timeout
-        timeout = timeout or self.timeout
-
-        return self.session.get(
-            url, stream=True, headers=headers, timeout=timeout, verify=self.verify
-        )
+        self._client.timeout = max(min(timeout, 2), 99)
+        return self._client.get(url, headers=self.headers.copy())
 
     def _get_with_retry(self, url: str, timeout: int, attempts: int) -> requests.Response:
         for _attempt in range(min(max(0, attempts - 1), 99)):
@@ -126,7 +115,7 @@ class AudioManagerHttpClient(anki.httpclient.HttpClient):
                 f'{file.url} download failed with return code {response.status_code}',
                 response=response
             )
-        return self.stream_content(response)
+        return self._client.stream_content(response)
 
 
 def main():
