@@ -80,8 +80,8 @@ class AddAudio(DoTask, task_type=ProfileAudio):
             split_morphemes=self._task.split_morphemes,
             ignore_inflections=cfg.audio_settings.ignore_inflections,
             stop_if_one_source_has_results=cfg.audio_settings.stop_if_one_source_has_results,
-        )
-        search_results = search_results[:cfg.audio_settings.maximum_results]
+        )[:cfg.audio_settings.maximum_results]
+
         self._aud_src_mgr.download_and_save_tags(
             search_results,
             run_in_background=(self._caller.value.audio_download_report is True),
