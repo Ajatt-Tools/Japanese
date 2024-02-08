@@ -3,6 +3,7 @@
 
 import dataclasses
 import enum
+from typing import Iterable
 
 
 @enum.unique
@@ -19,17 +20,21 @@ class TaskCallerOpts:
 
 @enum.unique
 class TaskCaller(enum.Enum):
-    focus_lost = TaskCallerOpts()
-    toolbar_button = TaskCallerOpts()
-    note_added = TaskCallerOpts()
-    bulk_add = TaskCallerOpts(audio_download_report=False)
+    focus_lost = enum.auto(), TaskCallerOpts()
+    toolbar_button = enum.auto(), TaskCallerOpts()
+    note_added = enum.auto(), TaskCallerOpts()
+    bulk_add = enum.auto(), TaskCallerOpts(audio_download_report=False)
+
+    @property
+    def cfg(self) -> TaskCallerOpts:
+        return self.value[-1]
 
     @classmethod
-    def all_names(cls):
+    def all_names(cls) -> Iterable[str]:
         return (caller.name for caller in cls)
 
     @classmethod
-    def all_comma_separated_names(cls):
+    def all_comma_separated_names(cls) -> str:
         return ','.join(cls.all_names())
 
 

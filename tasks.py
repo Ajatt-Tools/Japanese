@@ -84,7 +84,7 @@ class AddAudio(DoTask, task_type=ProfileAudio):
 
         self._aud_src_mgr.download_and_save_tags(
             search_results,
-            run_in_background=(self._caller.value.audio_download_report is True),
+            run_in_background=(self._caller.cfg.audio_download_report is True),
         )
         return format_audio_tags(search_results)
 
