@@ -171,6 +171,9 @@ class AddonConfigProtocol(Protocol):
     audio_sources: dict
     audio_settings: AudioSettingsProtocol
 
+    def iter_audio_sources(self):
+        ...
+
 
 class AudioSourceManager:
     def __init__(
@@ -362,6 +365,9 @@ def init_testing_audio_manager():
     class Settings(NamedTuple):
         audio_settings: AudioSettingsProtocol
         audio_sources: dict
+
+        def iter_audio_sources(self):
+            pass
 
     with open(find_config_json()) as f:
         loaded = json.load(f)
