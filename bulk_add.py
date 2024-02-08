@@ -3,7 +3,7 @@
 
 from collections.abc import Sequence
 
-from anki.collection import Collection
+from anki.collection import Collection, OpChanges
 from anki.notes import Note, NoteId
 from aqt import mw
 from aqt.browser import Browser
@@ -17,7 +17,7 @@ from .tasks import DoTasks
 ACTION_NAME = "AJT: Bulk-generate"
 
 
-def update_notes_op(col: Collection, notes: Sequence[Note]):
+def update_notes_op(col: Collection, notes: Sequence[Note]) -> OpChanges:
     pos = col.add_custom_undo_entry(f"AJT: Add data to {len(notes)} notes.")
     to_update = []
     for note in notes:
