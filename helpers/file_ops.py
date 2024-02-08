@@ -28,7 +28,14 @@ def touch(path):
         os.utime(path, None)
 
 
-def user_files_dir():
+def find_config_json() -> str:
+    """ Used when testing/debugging. """
+    for parent_dir in walk_parents(__file__):
+        if os.path.isfile(path := os.path.join(parent_dir, "config.json")):
+            return path
+
+
+def user_files_dir() -> str:
     """ Return path to the user files directory. """
     for parent_dir in walk_parents(__file__):
         if os.path.isdir(dir_path := os.path.join(parent_dir, "user_files")):

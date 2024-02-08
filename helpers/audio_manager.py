@@ -12,25 +12,33 @@ import zipfile
 from collections.abc import Iterable
 from contextlib import contextmanager
 from types import SimpleNamespace
-from typing import Optional, Union, cast
-
-import anki.httpclient
-import requests
-from requests import RequestException
+from typing import Optional, cast, Protocol, Union, NamedTuple
 
 try:
+    from .http_client import (
+        AudioManagerException,
+        AudioSourceConfig,
+        AudioManagerHttpClient,
+        FileUrlData,
+        AudioSettingsProtocol
+    )
     from ..pitch_accents.common import split_pitch_numbers
     from .audio_json_schema import FileInfo
     from .sqlite3_buddy import Sqlite3Buddy, BoundFile
-    from .file_ops import user_files_dir
+    from .file_ops import find_config_json
     from ..mecab_controller.kana_conv import to_katakana
-    from .inflections import is_inflected
 except ImportError:
+    from http_client import (
+        AudioManagerException,
+        AudioSourceConfig,
+        AudioManagerHttpClient,
+        FileUrlData,
+        AudioSettingsProtocol
+    )
     from pitch_accents.common import split_pitch_numbers
     from helpers.audio_json_schema import FileInfo
     from helpers.sqlite3_buddy import Sqlite3Buddy, BoundFile
-    from helpers.file_ops import user_files_dir
-    from helpers.inflections import is_inflected
+    from helpers.file_ops import find_config_json
     from mecab_controller.kana_conv import to_katakana
 
 
@@ -62,104 +70,6 @@ def normalize_filename(text: str) -> str:
     return text.strip()
 
 
-@dataclasses.dataclass(frozen=True)
-class FileUrlData:
-    url: str
-    desired_filename: str
-    word: str
-    source_name: str
-    reading: str = ""
-    pitch_number: str = "?"
-
-
-@dataclasses.dataclass
-class AudioSourceConfig:
-    enabled: bool
-    name: str
-    url: str
-
-    @property
-    def is_valid(self) -> str:
-        return self.name and self.url
-
-
-class AudioManagerHttpClient(anki.httpclient.HttpClient):
-    # add some fake headers to convince sites we're not a bot.
-    headers = {
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.5",
-        "Accept-Encoding": "gzip, deflate, br",
-        "DNT": "1",
-        "Connection": "keep-alive",
-        "Upgrade-Insecure-Requests": "1",
-        "Sec-Fetch-Dest": "document",
-        "Sec-Fetch-Mode": "navigate",
-        "Sec-Fetch-Site": "cross-site",
-        "Sec-Fetch-User": "?1",
-        "TE": "trailers",
-    }
-
-    def __init__(
-            self,
-            addon_config: SimpleNamespace,
-            progress_hook: Optional[anki.httpclient.ProgressCallback] = None
-    ) -> None:
-        super().__init__(progress_hook)
-        self._audio_settings = addon_config.audio_settings
-
-    def get(self, url: str, headers: dict[str, str] = None):
-        # Mask the default get function in case it is called by mistake.
-        raise NotImplementedError()
-
-    def _get_with_timeout(self, url: str, timeout: int) -> requests.Response:
-        # Set headers
-        headers = self.headers.copy()
-        headers["User-Agent"] = self._agent_name()
-
-        # Set timeout
-        timeout = timeout or self.timeout
-
-        return self.session.get(
-            url, stream=True, headers=headers, timeout=timeout, verify=self.verify
-        )
-
-    def _get_with_retry(self, url: str, timeout: int, attempts: int) -> requests.Response:
-        for _attempt in range(min(max(0, attempts - 1), 99)):
-            try:
-                return self._get_with_timeout(url, timeout)
-            except requests.Timeout:
-                continue
-        # If other tries timed out.
-        return self._get_with_timeout(url, timeout)
-
-    def download(self, file: Union[AudioSourceConfig, FileUrlData]) -> bytes:
-        """
-        Get an audio source or audio file.
-        """
-        timeout = (
-            self._audio_settings.dictionary_download_timeout
-            if isinstance(file, AudioSourceConfig)
-            else self._audio_settings.audio_download_timeout
-        )
-        attempts = self._audio_settings.attempts
-
-        try:
-            response = self._get_with_retry(file.url, timeout, attempts)
-        except OSError as ex:
-            raise AudioManagerException(
-                file,
-                f'{file.url} download failed with {ex.__class__.__name__}',
-                exception=ex
-            )
-        if response.status_code != requests.codes.ok:
-            raise AudioManagerException(
-                file,
-                f'{file.url} download failed with return code {response.status_code}',
-                response=response
-            )
-        return self.stream_content(response)
-
-
 def norm_pitch_numbers(s: str) -> str:
     """
     Ensure that all pitch numbers of a word (pronunciation) are presented as a dash-separated string.
@@ -189,7 +99,7 @@ class AudioSource(AudioSourceConfig):
                 or self.join(os.path.dirname(self.url), self.db.get_media_dir_rel(self.name))
         )
 
-    def join(self, *args) -> str:
+    def join(self, *args) -> Union[str, bytes]:
         """ Join multiple paths. """
         if self.is_local:
             # Local paths are platform-dependent.
@@ -221,22 +131,6 @@ class AudioSource(AudioSourceConfig):
 
     def distinct_headword_count(self) -> int:
         return self.db.distinct_headword_count(source_names=(self.name,))
-
-
-@dataclasses.dataclass
-class AudioManagerException(RequestException):
-    file: Union[AudioSource, FileUrlData]
-    explanation: str
-    response: Optional[requests.Response] = None
-    exception: Optional[Exception] = None
-
-    def describe_short(self) -> str:
-        return str(
-            self.exception.__class__.__name__
-            if self.exception
-            else
-            self.response.status_code
-        )
 
 
 @dataclasses.dataclass
@@ -273,9 +167,14 @@ def read_zip(zip_in: zipfile.ZipFile, audio_source: AudioSource) -> bytes:
         )
 
 
+class AddonConfigProtocol(Protocol):
+    audio_sources: dict
+    audio_settings: AudioSettingsProtocol
+
+
 class AudioSourceManager:
     def __init__(
-            self, config: SimpleNamespace,
+            self, config: AddonConfigProtocol,
             http_client: Optional[AudioManagerHttpClient],
             db: Sqlite3Buddy,
             audio_sources: list[AudioSource],
@@ -402,10 +301,10 @@ class AudioSourceManagerFactory:
             obj = cls._instance = super().__new__(cls)
         return obj
 
-    def __init__(self, config: SimpleNamespace, mgr_class: type):
+    def __init__(self, config: AddonConfigProtocol, mgr_class: type):
         self._mgr_class = mgr_class
         self._config = config
-        self._http_client = AudioManagerHttpClient(self._config)
+        self._http_client = AudioManagerHttpClient(self._config.audio_settings)
         self._audio_sources: list[AudioSource] = []
 
     def purge_everything(self):
@@ -460,10 +359,21 @@ class AudioSourceManagerFactory:
 
 def init_testing_audio_manager():
     # Used for testing when Anki isn't running.
-    with open(os.path.join(os.path.dirname(__file__), os.pardir, 'config.json')) as inf:
-        cfg = SimpleNamespace(**json.load(inf))
-        cfg.audio_settings = SimpleNamespace(**cast(dict, cfg.audio_settings))
-    return AudioSourceManagerFactory(cfg, AudioSourceManager)
+    class Settings(NamedTuple):
+        audio_settings: AudioSettingsProtocol
+        audio_sources: dict
+
+    with open(find_config_json()) as f:
+        loaded = json.load(f)
+        cfg = Settings(
+            audio_sources=loaded["audio_sources"],
+            audio_settings=cast(AudioSettingsProtocol, SimpleNamespace(**loaded["audio_settings"])),
+        )
+
+    return AudioSourceManagerFactory(
+        config=cfg,
+        mgr_class=AudioSourceManager,
+    )
 
 
 def main():
