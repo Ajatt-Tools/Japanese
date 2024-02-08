@@ -30,7 +30,8 @@ def update_notes_op(col: Collection, notes: Sequence[Note]) -> OpChanges:
 
 def bulk_add_readings(nids: Sequence[NoteId], parent: Browser) -> None:
     CollectionOp(
-        parent=parent, op=lambda col: update_notes_op(col, notes=[mw.col.get_note(nid) for nid in nids])
+        parent=parent,
+        op=lambda col: update_notes_op(col, notes=[mw.col.get_note(nid) for nid in nids]),
     ).success(
         lambda out: showInfo(
             parent=parent,

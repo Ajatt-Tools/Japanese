@@ -75,6 +75,7 @@ class SearchBar(QWidget):
         self.setLayout(hbox)
 
 
+@enum.unique
 class SearchResultsTableColumns(enum.Enum):
     add_to_note = 0
     play_audio = enum.auto()
