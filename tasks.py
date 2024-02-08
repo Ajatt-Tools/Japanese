@@ -143,6 +143,12 @@ class DoTasks:
     def _src_text(self, task: Profile) -> str:
         return mw.col.media.strip(self._note[task.source]).strip()
 
+    def _field_contains_garbage(self, field_name: str) -> bool:
+        # Yomichan added `No pitch accent data` to the field when creating the note.
+        if "No pitch accent data".lower() in self._note[field_name].lower():
+            return True
+        return False
+
     def _can_fill_destination(self, task: Profile) -> bool:
         # Field names are empty or None
         if not task.source or not task.destination:
@@ -152,8 +158,7 @@ class DoTasks:
         if task.source not in self._note or task.destination not in self._note:
             return False
 
-        # Yomichan added `No pitch accent data` to the field when creating the note
-        if "No pitch accent data".lower() in self._note[task.destination].lower():
+        if self._field_contains_garbage(task.destination):
             return True
 
         # Must overwrite any existing data.
