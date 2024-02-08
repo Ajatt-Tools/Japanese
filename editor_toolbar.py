@@ -8,6 +8,7 @@ from typing import Callable, NamedTuple, Optional
 from anki.notes import Note
 from aqt import gui_hooks
 from aqt.editor import Editor
+from aqt.operations.note import update_note
 
 from .audio import aud_src_mgr, format_audio_tags
 from .config_view import config_view as cfg, ToolbarButtonConfig
@@ -50,7 +51,12 @@ def modify_note(func: Callable[[Editor], object]) -> Callable[[Editor], None]:
         # Note must be set to proceed.
         if editor.note:
             func(editor)
-            note_reload(editor)
+            update_note(
+                parent=editor.widget,
+                note=editor.note,
+            ).success(
+                lambda out: note_reload(editor)
+            ).run_in_background()
 
     return decorator
 
