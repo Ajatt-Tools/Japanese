@@ -38,41 +38,47 @@ class DownloadedData(NamedTuple):
     data: bytes
 
 
-def report_results(successes: list[DownloadedData], fails: list[AudioManagerException]):
+class FileSaveResults(NamedTuple):
+    successes: list[DownloadedData]
+    fails: list[AudioManagerException]
+
+
+def report_results(r: FileSaveResults):
     txt = io.StringIO()
-    if successes:
-        txt.write(f"<b>Added {len(successes)} files to the collection.</b><ol>")
-        txt.write(''.join(f"<li>{file.desired_filename}</li>" for file in successes))
+    if r.successes:
+        txt.write(f"<b>Added {len(r.successes)} files to the collection.</b><ol>")
+        txt.write(''.join(f"<li>{file.desired_filename}</li>" for file in r.successes))
         txt.write("</ol>")
-    if fails:
-        txt.write(f"<b>Failed {len(fails)} files.</b><ol>")
-        txt.write(''.join(f"<li>{fail.file.desired_filename}: {fail.describe_short()}</li>" for fail in fails))
+    if r.fails:
+        txt.write(f"<b>Failed {len(r.fails)} files.</b><ol>")
+        txt.write(''.join(f"<li>{fail.file.desired_filename}: {fail.describe_short()}</li>" for fail in r.fails))
         txt.write("</ol>")
     if txt := txt.getvalue():
-        return tooltip(txt, period=7000, y_offset=80 + 18 * (len(successes) + len(fails)))
+        return tooltip(txt, period=7000, y_offset=80 + 18 * (len(r.successes) + len(r.fails)))
 
 
 def save_files(
         futures: Collection[Future[DownloadedData]],
         play_on_finish: bool = False,
-        notify_on_finish: bool = True
-):
-    successes, fails = [], []
+        notify_on_finish: bool = True,
+) -> FileSaveResults:
+    results = FileSaveResults([], [])
     for future in futures:
         try:
             result = future.result()
         except AudioManagerException as ex:
-            fails.append(ex)
+            results.fails.append(ex)
         else:
             mw.col.media.write_data(
                 desired_fname=result.desired_filename,
                 data=result.data,
             )
-            successes.append(result)
+            results.successes.append(result)
     if notify_on_finish is True:
-        report_results(successes, fails)
+        report_results(results)
     if play_on_finish is True:
-        sound.av_player.play_tags([SoundOrVideoTag(filename=result.desired_filename) for result in successes])
+        sound.av_player.play_tags([SoundOrVideoTag(filename=result.desired_filename) for result in results.successes])
+    return results
 
 
 def only_missing(col: anki.collection.Collection, files: Collection[FileUrlData]):
