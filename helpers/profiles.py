@@ -12,12 +12,17 @@ class PitchOutputFormat(enum.Enum):
     html_and_number = enum.auto()
 
 
+@dataclasses.dataclass(frozen=True)
+class TaskCallerOpts:
+    audio_download_report: bool = True
+
+
 @enum.unique
 class TaskCaller(enum.Enum):
-    focus_lost = enum.auto()
-    toolbar_button = enum.auto()
-    note_added = enum.auto()
-    bulk_add = enum.auto()
+    focus_lost = TaskCallerOpts()
+    toolbar_button = TaskCallerOpts()
+    note_added = TaskCallerOpts()
+    bulk_add = TaskCallerOpts(audio_download_report=False)
 
     @classmethod
     def all_names(cls):
