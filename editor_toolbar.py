@@ -58,7 +58,7 @@ def get_note_value(note: Note, field_name: str) -> Optional[str]:
         return None
 
 
-def search_audio(editor: Editor):
+def search_audio(editor: Editor) -> None:
     # the caller should have ensured that editor.note is not None.
     with aud_src_mgr.request_new_session() as session:
         dialog = AnkiAudioSearchDialog(session)

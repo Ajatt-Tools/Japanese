@@ -60,7 +60,7 @@ def create_progress_dialog(parent: QWidget):
 
 
 class SakuraParisAnkiClient(SakuraParisClient):
-    def add_definition(self, editor: Editor):
+    def add_definition(self, editor: Editor) -> None:
         """
         Interaction with Anki's editor.
         """
