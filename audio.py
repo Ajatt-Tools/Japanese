@@ -186,16 +186,16 @@ class AnkiAudioSourceManager(AudioSourceManager):
             return
         if run_in_background:
             # Called from the main thread. Can use QueryOp.
-            return self._download_and_save_tags_bg(hits, play_on_finish)
+            self._download_and_save_tags_bg(hits, play_on_finish)
         else:
             # Called from another thread. Can't use QueryOp and can't call any UI routines.
-            return self._download_and_save_tags_fg(hits, play_on_finish)
+            self._download_and_save_tags_fg(hits, play_on_finish)
 
     def _download_and_save_tags_fg(self, hits: Sequence[FileUrlData], play_on_finish: bool) -> None:
         """
         Download and save audio files in the current thread.
         """
-        return save_files(
+        save_files(
             self._download_tags(only_missing(mw.col, hits)),
             play_on_finish=play_on_finish,
             notify_on_finish=False,
