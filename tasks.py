@@ -128,7 +128,7 @@ class DoTasks:
         with aud_src_mgr.request_new_session() as aud_mgr:
             for task in self._tasks:
                 if task.should_answer_to(self._caller):
-                    changed = self._do_task(task, aud_mgr=aud_mgr) or changed
+                    changed = (self._do_task(task, aud_mgr=aud_mgr) or changed)
             return changed
 
     def _do_task(self, task: Profile, aud_mgr: AnkiAudioSourceManager) -> bool:
