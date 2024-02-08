@@ -151,7 +151,7 @@ class AudioManagerHttpClient(anki.httpclient.HttpClient):
                 f'{file.url} download failed with {ex.__class__.__name__}',
                 exception=ex
             )
-        if response.status_code != 200:
+        if response.status_code != requests.codes.ok:
             raise AudioManagerException(
                 file,
                 f'{file.url} download failed with return code {response.status_code}',
