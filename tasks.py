@@ -29,18 +29,6 @@ def iter_tasks(note: Note, src_field: Optional[str] = None) -> Iterable[Profile]
             yield profile
 
 
-def do_not_modify_destination_if_have_nothing_to_add(fn: Callable[['DoTask', str], str]):
-    @functools.wraps(fn)
-    def wrapper(self: 'DoTask', input_text: str, current_text: str):
-        return (
-            out
-            if (out := fn(self, input_text)) and (out != input_text or not current_text)
-            else current_text
-        )
-
-    return wrapper
-
-
 class DoTask:
     _subclasses_map = {}  # e.g. ProfileFurigana -> AddFurigana
     _key_class_param = "task_type"
@@ -59,19 +47,24 @@ class DoTask:
         self._caller = caller
         self._aud_src_mgr = aud_src_mgr
 
-    def run(self, *args, **kwargs) -> str:
+    def _generate_text(self, src_text: str) -> str:
         raise NotImplementedError()
+
+    def run(self, src_text: str, dest_text: str) -> str:
+        return (
+            out
+            if (out := self._generate_text(src_text)) and (out != src_text or not dest_text)
+            else dest_text
+        )
 
 
 class AddFurigana(DoTask, task_type=ProfileFurigana):
-    @do_not_modify_destination_if_have_nothing_to_add
-    def run(self, src_text: str) -> str:
+    def _generate_text(self, src_text: str) -> str:
         return generate_furigana(src_text, split_morphemes=self._task.split_morphemes)
 
 
 class AddPitch(DoTask, task_type=ProfilePitch):
-    @do_not_modify_destination_if_have_nothing_to_add
-    def run(self, src_text: str) -> str:
+    def _generate_text(self, src_text: str) -> str:
         return format_pronunciations(
             pronunciations=get_pronunciations(src_text, use_mecab=self._task.split_morphemes),
             output_format=PitchOutputFormat[self._task.output_format],
@@ -81,8 +74,7 @@ class AddPitch(DoTask, task_type=ProfilePitch):
 
 
 class AddAudio(DoTask, task_type=ProfileAudio):
-    @do_not_modify_destination_if_have_nothing_to_add
-    def run(self, src_text: str) -> str:
+    def _generate_text(self, src_text: str) -> str:
         search_results = self._aud_src_mgr.search_audio(
             src_text,
             split_morphemes=self._task.split_morphemes,
