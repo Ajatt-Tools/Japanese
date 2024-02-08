@@ -38,15 +38,19 @@ def modify_field(func: Callable[[str], str]) -> Callable[[Editor], None]:
 
 
 def modify_note(func: Callable[[Editor], object]) -> Callable[[Editor], None]:
+    def note_reload(editor: Editor):
+        return (
+            editor.loadNote(focusTo=0)
+            if editor.currentField is None
+            else editor.loadNoteKeepingFocus()
+        )
+
     @functools.wraps(func)
     def decorator(editor: Editor) -> None:
+        # Note must be set to proceed.
         if editor.note:
-            # Note must be set to proceed.
             func(editor)
-            if editor.currentField is None:
-                editor.loadNote(focusTo=0)
-            else:
-                editor.loadNoteKeepingFocus()
+            note_reload(editor)
 
     return decorator
 
