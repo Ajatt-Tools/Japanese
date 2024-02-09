@@ -8,6 +8,7 @@ import requests
 from aqt.editor import Editor
 from aqt.qt import *
 
+from .helpers import ADDON_NAME
 from .config_view import config_view as cfg
 from .helpers.sakura_client import SakuraParisClient
 
@@ -53,7 +54,7 @@ def create_progress_dialog(parent: QWidget):
     dialog.form.progressBar.setMaximum(0)
     dialog.form.progressBar.setTextVisible(False)
     dialog.form.label.setText("Fetching definitions...")
-    dialog.setWindowTitle("AJT Japanese")
+    dialog.setWindowTitle(ADDON_NAME)
     dialog.setWindowModality(Qt.WindowModality.ApplicationModal)
     dialog.setMinimumWidth(300)
     return dialog

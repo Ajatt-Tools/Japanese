@@ -5,7 +5,15 @@ import math
 from collections.abc import Sequence, Iterable
 from typing import TypeVar
 
+try:
+    # Running as add-on.
+    from ..ajt_common.consts import ADDON_SERIES
+except ImportError:
+    # Running as a standalone script.
+    ADDON_SERIES = "TEST"
+
 LONG_VOWEL_MARK = 'ー'
+ADDON_NAME = f"{ADDON_SERIES} Japanese"
 
 
 def ui_translate(key: str) -> str:
