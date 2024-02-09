@@ -33,6 +33,9 @@ class ToolbarButton(NamedTuple):
 
 
 def modify_field(func: Callable[[str], str]) -> Callable[[Editor], None]:
+    """
+    Used to generate or clean furigana in the current field.
+    """
     def collection_op(col: anki.collection.Collection, note: Note, field_n: int) -> OpChanges:
         pos = col.add_custom_undo_entry(f"{ADDON_SERIES}: Modify field {note.keys()[field_n]}.")
         note.fields[field_n] = func(note.fields[field_n])
@@ -53,6 +56,9 @@ def modify_field(func: Callable[[str], str]) -> Callable[[Editor], None]:
 
 
 def modify_note(func: Callable[[Editor], object]) -> Callable[[Editor], None]:
+    """
+    Used to (re)generate all target fields of the current note.
+    """
     def note_reload(editor: Editor):
         return (
             editor.loadNote(focusTo=0)
