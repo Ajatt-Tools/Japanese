@@ -30,7 +30,7 @@ except ImportError:
     from widgets.audio_sources import SourceEnableCheckbox
 
 
-class AudioManager(typing.Protocol):
+class AudioManagerProtocol(typing.Protocol):
     def search_audio(self, src_text: str, **kwargs) -> list[FileUrlData]:
         ...
 
@@ -149,7 +149,7 @@ class SearchResultsTable(QTableWidget):
 
 
 class AudioSearchDialog(QDialog):
-    def __init__(self, audio_manager: AudioManager, parent=None):
+    def __init__(self, audio_manager: AudioManagerProtocol, parent=None):
         super().__init__(parent)
         self._audio_manager = audio_manager
         self.setMinimumSize(600, 400)
@@ -248,7 +248,7 @@ class AudioSearchDialog(QDialog):
 class AnkiAudioSearchDialog(AudioSearchDialog):
     name = "ajt__audio_search_dialog"
 
-    def __init__(self, audio_manager: AudioManager, parent=None):
+    def __init__(self, audio_manager: AudioManagerProtocol, parent=None):
         super().__init__(audio_manager, parent)
         # Restore previous geom
         restoreGeom(self, self.name, adjustSize=True)
