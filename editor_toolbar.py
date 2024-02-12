@@ -71,9 +71,9 @@ def modify_note(func: Callable[[Editor], object]) -> Callable[[Editor], None]:
         # Note must be set to proceed.
         if editor.note:
             func(editor)
-            update_note(
+            CollectionOp(
                 parent=editor.widget,
-                note=editor.note,
+                op=lambda col: (col.update_note(editor.note) if editor.note.id > 0 else OpChanges()),
             ).success(
                 lambda out: note_reload(editor)
             ).run_in_background()
