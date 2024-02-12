@@ -82,6 +82,10 @@ def modify_note(func: Callable[[Editor], object]) -> Callable[[Editor], None]:
 
 
 def get_note_value(note: Note, field_name: str) -> Optional[str]:
+    """
+    Try to access field with name field_name.
+    Suppress KeyError and return None if the field with this name doesn't exist.
+    """
     try:
         return note[field_name]
     except KeyError:
@@ -90,6 +94,9 @@ def get_note_value(note: Note, field_name: str) -> Optional[str]:
 
 def search_audio(editor: Editor) -> None:
     # the caller should have ensured that editor.note is not None.
+
+    assert editor.note is not None
+
     with aud_src_mgr.request_new_session() as session:
         dialog = AnkiAudioSearchDialog(session)
         fix_default_anki_style(dialog.table)
@@ -103,7 +110,9 @@ def search_audio(editor: Editor) -> None:
             or get_note_value(note=editor.note, field_name=cfg.audio_settings.search_dialog_src_field_name)
         )
         if not dialog.exec():
+            # The user pressed "Cancel". Nothing to do.
             return
+
         # remember field names for later calls
         cfg.audio_settings.search_dialog_src_field_name = dialog.source_field_name
         cfg.audio_settings.search_dialog_dest_field_name = dialog.destination_field_name

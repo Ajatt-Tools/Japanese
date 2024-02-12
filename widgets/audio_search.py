@@ -259,6 +259,7 @@ class AnkiAudioSearchDialog(AudioSearchDialog):
         elif mw.col.media.have(file.desired_filename):
             return sound.av_player.play_tags([SoundOrVideoTag(filename=file.desired_filename), ])
         else:
+            # file is not located on this computer and needs to be downloaded first.
             return self._audio_manager.download_and_save_tags([file, ], play_on_finish=True)
 
     def _open_audio_file(self, file: FileUrlData):
