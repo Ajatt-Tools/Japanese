@@ -82,7 +82,11 @@ class AddAudio(DoTask, task_type=ProfileAudio):
             stop_if_one_source_has_results=cfg.audio_settings.stop_if_one_source_has_results,
         )[:cfg.audio_settings.maximum_results]
         # Download and save tags has to run on main as it will launch a new QueryOp.
-        mw.taskman.run_on_main(functools.partial(self._aud_src_mgr.download_and_save_tags, search_results,))
+        mw.taskman.run_on_main(functools.partial(
+            self._aud_src_mgr.download_and_save_tags,
+            search_results,
+            notify_on_finish=self._caller.cfg.audio_download_report,
+        ))
         return format_audio_tags(search_results)
 
 
