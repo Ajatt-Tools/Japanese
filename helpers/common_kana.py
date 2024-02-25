@@ -50,8 +50,15 @@ def main():
     assert (adjust_to_inflection('死ん', '死ぬ', 'しぬ') == 'しん')
     assert (adjust_to_inflection('たべた', 'たべる', 'たべる') == 'たべた')
     assert (adjust_to_inflection('カタカナ', 'カタカナ', 'かたかな') == 'カタカナ')
-    assert adjust_to_inflection("相合い傘", "相合い傘", "あいあいがさ") == "あいあいがさ"
+    assert (adjust_to_inflection("相合い傘", "相合い傘", "あいあいがさ") == "あいあいがさ")
+    assert (adjust_to_inflection("いた目", "板目", "いため") == "いため")
+    assert (adjust_to_inflection("軽そう", "軽装", "けいそー") == "けいそー")
+    assert (adjust_to_inflection("唸りました", "唸る", "うなる") == "うなりました")
+    assert (adjust_to_inflection("可愛くない", "可愛い", "かわいい") == "かわいくない")
+    assert (adjust_to_inflection("かわいくない", "可愛い", "かわいい") == "かわいくない")
+
     print("Passed.")
+
 
 if __name__ == '__main__':
     main()
