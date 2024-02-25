@@ -27,7 +27,12 @@ def adjust_to_inflection(raw_word: str, headword: str, headword_reading: str) ->
     while _(headword[idx_headword - 1]) == _(headword_reading[idx_reading - 1]):
         idx_headword -= 1
         idx_reading -= 1
-    return headword_reading[:idx_reading] + raw_word[idx_headword:]
+    stem_reading = headword_reading[:idx_reading]
+    inflected_reading = raw_word[idx_headword:]
+
+    if _(stem_reading) == _(headword_reading):
+        return headword_reading
+    return stem_reading + inflected_reading
 
 
 # Debug
