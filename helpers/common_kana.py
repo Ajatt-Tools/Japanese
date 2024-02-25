@@ -10,12 +10,17 @@ except ImportError:
 def adjust_to_inflection(raw_word: str, headword: str, headword_reading: str) -> str:
     """
     Adjusts the word's reading to match its conjugated form.
-    E.g., if raw_word is 食べた, should output たべた.
+    E.g., if raw_word is 食べた and the reading is たべる, it should output たべた.
     """
     if _(headword) == _(headword_reading):
         return raw_word
     if _(headword) == _(raw_word):
         return headword_reading
+
+    # Analyze the headword.
+    # Go from the last to the first character
+    # and skip the characters that are identical between the headword and the reading.
+    # In the end, the reading of a common `stem` should be found, e.g. "ひざまず" for "跪かなかった"
     idx_headword, idx_reading = len(headword), len(headword_reading)
     while _(headword[idx_headword - 1]) == _(headword_reading[idx_reading - 1]):
         idx_headword -= 1
