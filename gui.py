@@ -767,7 +767,7 @@ class ToolbarSettingsForm(QGroupBox):
         }
 
 
-class AudioSourcesGroup(QGroupBox):
+class AudioSourcesEditTable(QWidget):
     """
     A table that shows imported audio sources.
     The stats are shown at the bottom.
@@ -775,8 +775,6 @@ class AudioSourcesGroup(QGroupBox):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setTitle("Audio sources")
-        self.setCheckable(False)
         self._audio_sources_table = AudioSourcesTable(aud_src_mgr).populate(cfg.iter_audio_sources())
         self._bottom_label = QLabel()
         self._audio_stats: Optional[TotalAudioStats] = None
@@ -864,7 +862,7 @@ class SettingsDialog(QDialog):
 
         # Audio tab
         self._audio_profiles_edit = AudioProfilesEdit()
-        self._audio_sources_edit = AudioSourcesGroup()
+        self._audio_sources_edit = AudioSourcesEditTable()
         self._audio_settings = AudioSettingsForm()
 
         # Menus tab
@@ -913,8 +911,9 @@ class SettingsDialog(QDialog):
         tab = QWidget()
         tab.setLayout(layout := QVBoxLayout())
         layout.addWidget(self._audio_profiles_edit)
-        layout.addWidget(self._audio_sources_edit)
-        layout.addWidget(self._audio_settings)
+        layout.addWidget(audio_inner_tabs := QTabWidget())
+        audio_inner_tabs.addTab(self._audio_sources_edit, "Audio sources")
+        audio_inner_tabs.addTab(self._audio_settings, "Audio settings")
         self._tabs.addTab(tab, "Audio")
 
         # Accent DB override
