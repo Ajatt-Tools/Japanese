@@ -385,7 +385,7 @@ class WordsEdit(QTextEdit):
         return ','.join(dict.fromkeys(filter(bool, self.toPlainText().replace(' ', '').split('\n'))))
 
 
-class SettingsForm(QGroupBox):
+class SettingsForm(QWidget):
     _title = None
     _config = None
 
@@ -394,12 +394,14 @@ class SettingsForm(QGroupBox):
         assert self._title, "Title must be set."
         assert self._config, "Config must be set."
 
-        self.setTitle(self._title)
-        self.setCheckable(False)
         self._widgets = SimpleNamespace()
         self._add_widgets()
         self._add_tooltips()
         self.setLayout(self._make_layout())
+
+    @property
+    def title(self) -> str:
+        return self._title
 
     def _add_widgets(self):
         """Subclasses add new widgets here."""
@@ -426,6 +428,18 @@ class SettingsForm(QGroupBox):
             else:
                 layout.addRow(ui_translate(key), widget)
         return layout
+
+
+class GroupBoxWrapper(QGroupBox):
+    def __init__(self, settings_form: SettingsForm, *args):
+        super().__init__(*args)
+        self._form = settings_form
+        self.setTitle(settings_form.title)
+        self.setCheckable(False)
+        self.setLayout(settings_form.layout())
+
+    def as_dict(self) -> dict[str, Union[bool, str, int]]:
+        return self._form.as_dict()
 
 
 class ContextMenuSettingsForm(SettingsForm):
@@ -857,11 +871,11 @@ class SettingsDialog(QDialog):
 
         # Furigana tab
         self._furigana_profiles_edit = FuriganaProfilesEdit()
-        self._furigana_settings = FuriganaSettingsForm()
+        self._furigana_settings = GroupBoxWrapper(FuriganaSettingsForm())
 
         # Pitch tab
         self._pitch_profiles_edit = PitchProfilesEdit()
-        self._pitch_settings = PitchSettingsForm()
+        self._pitch_settings = GroupBoxWrapper(PitchSettingsForm())
 
         # Audio tab
         self._audio_profiles_edit = AudioProfilesEdit()
@@ -869,9 +883,9 @@ class SettingsDialog(QDialog):
         self._audio_settings = AudioSettingsForm()
 
         # Menus tab
-        self._context_menu_settings = ContextMenuSettingsForm()
         self._toolbar_settings = ToolbarSettingsForm()
-        self._definitions_settings = DefinitionsSettingsForm()
+        self._context_menu_settings = GroupBoxWrapper(ContextMenuSettingsForm())
+        self._definitions_settings = GroupBoxWrapper(DefinitionsSettingsForm())
 
         # Overrides tab
         self._accents_override = PitchOverrideWidget(self, file_path=UserAccentData.source_csv_path)
