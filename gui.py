@@ -391,6 +391,9 @@ class SettingsForm(QGroupBox):
 
     def __init__(self, *args):
         super().__init__(*args)
+        assert self._title, "Title must be set."
+        assert self._config, "Config must be set."
+
         self.setTitle(self._title)
         self.setCheckable(False)
         self._widgets = SimpleNamespace()
