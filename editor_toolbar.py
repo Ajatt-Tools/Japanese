@@ -39,7 +39,10 @@ def modify_field(func: Callable[[str], str]) -> Callable[[Editor], None]:
     def collection_op(col: anki.collection.Collection, note: Note, field_n: int) -> OpChanges:
         pos = col.add_custom_undo_entry(f"{ADDON_SERIES}: Modify field {note.keys()[field_n]}.")
         note.fields[field_n] = func(note.fields[field_n])
-        col.update_note(note)
+        if note.id > 0:
+            # Anki can't update notes in the "Add" window.
+            # It can only update notes in the "Browser" and "Edit" windows.
+            col.update_note(note)
         return col.merge_undo_entries(pos)
 
     @functools.wraps(func)
