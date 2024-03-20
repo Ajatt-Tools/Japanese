@@ -11,7 +11,6 @@ from anki.notes import Note
 from aqt import gui_hooks
 from aqt.editor import Editor
 from aqt.operations import CollectionOp
-from aqt.operations.note import update_note
 
 from .ajt_common.consts import ADDON_SERIES
 from .audio import aud_src_mgr, format_audio_tags
@@ -32,17 +31,23 @@ class ToolbarButton(NamedTuple):
     conf: ToolbarButtonConfig
 
 
+def carefully_update_note(col: anki.collection.Collection, note: Note) -> OpChanges:
+    if note.id > 0:
+        # Anki can't update notes in the "Add" window.
+        # It can only update notes in the "Browser" and "Edit" windows.
+        return col.update_note(note)
+    return OpChanges()
+
+
 def modify_field(func: Callable[[str], str]) -> Callable[[Editor], None]:
     """
     Used to generate or clean furigana in the current field.
     """
+
     def collection_op(col: anki.collection.Collection, note: Note, field_n: int) -> OpChanges:
         pos = col.add_custom_undo_entry(f"{ADDON_SERIES}: Modify field {note.keys()[field_n]}.")
         note.fields[field_n] = func(note.fields[field_n])
-        if note.id > 0:
-            # Anki can't update notes in the "Add" window.
-            # It can only update notes in the "Browser" and "Edit" windows.
-            col.update_note(note)
+        carefully_update_note(col, note)
         return col.merge_undo_entries(pos)
 
     @functools.wraps(func)
@@ -62,6 +67,7 @@ def modify_note(func: Callable[[Editor], object]) -> Callable[[Editor], None]:
     """
     Used to (re)generate all target fields of the current note.
     """
+
     def note_reload(editor: Editor):
         return (
             editor.loadNote(focusTo=0)
@@ -76,7 +82,7 @@ def modify_note(func: Callable[[Editor], object]) -> Callable[[Editor], None]:
             func(editor)
             CollectionOp(
                 parent=editor.widget,
-                op=lambda col: (col.update_note(editor.note) if editor.note.id > 0 else OpChanges()),
+                op=lambda col: carefully_update_note(col, editor.note),
             ).success(
                 lambda out: note_reload(editor)
             ).run_in_background()
