@@ -55,9 +55,9 @@ def modify_field(func: Callable[[str], str]) -> Callable[[Editor], None]:
         if (note := editor.note) and (field_n := editor.currentField) is not None:
             CollectionOp(
                 parent=editor.widget,
-                op=lambda col: collection_op(col, note, field_n)
+                op=lambda col: collection_op(col, note, field_n),
             ).success(
-                lambda out: editor.loadNoteKeepingFocus()
+                lambda out: editor.loadNoteKeepingFocus(),
             ).run_in_background()
 
     return decorator
@@ -69,11 +69,7 @@ def modify_note(func: Callable[[Editor], object]) -> Callable[[Editor], None]:
     """
 
     def note_reload(editor: Editor):
-        return (
-            editor.loadNote(focusTo=0)
-            if editor.currentField is None
-            else editor.loadNoteKeepingFocus()
-        )
+        return editor.loadNote(focusTo=0) if editor.currentField is None else editor.loadNoteKeepingFocus()
 
     @functools.wraps(func)
     def decorator(editor: Editor) -> None:
@@ -84,7 +80,7 @@ def modify_note(func: Callable[[Editor], object]) -> Callable[[Editor], None]:
                 parent=editor.widget,
                 op=lambda col: carefully_update_note(col, editor.note),
             ).success(
-                lambda out: note_reload(editor)
+                lambda out: note_reload(editor),
             ).run_in_background()
 
     return decorator
@@ -135,54 +131,58 @@ def search_audio(editor: Editor) -> None:
 def query_buttons() -> Iterable[ToolbarButton]:
     return (
         ToolbarButton(
-            id='generate_all_button',
-            on_press=modify_note(lambda editor: DoTasks(
-                editor.note,
-                caller=TaskCaller.toolbar_button,
-                overwrite=False,
-            ).run()),
-            tip='Generate all fields',
-            conf=cfg.toolbar.generate_all_button
+            id="generate_all_button",
+            on_press=modify_note(
+                lambda editor: DoTasks(
+                    editor.note,
+                    caller=TaskCaller.toolbar_button,
+                    overwrite=False,
+                ).run()
+            ),
+            tip="Generate all fields",
+            conf=cfg.toolbar.generate_all_button,
         ),
         ToolbarButton(
-            id='regenerate_all_button',
-            on_press=modify_note(lambda editor: DoTasks(
-                editor.note,
-                caller=TaskCaller.toolbar_button,
-                overwrite=True,
-            ).run()),
-            tip='Regenerate all fields (overwrite existing data)',
-            conf=cfg.toolbar.regenerate_all_button
+            id="regenerate_all_button",
+            on_press=modify_note(
+                lambda editor: DoTasks(
+                    editor.note,
+                    caller=TaskCaller.toolbar_button,
+                    overwrite=True,
+                ).run()
+            ),
+            tip="Regenerate all fields (overwrite existing data)",
+            conf=cfg.toolbar.regenerate_all_button,
         ),
         ToolbarButton(
-            id='furigana_button',
+            id="furigana_button",
             on_press=modify_field(generate_furigana),
-            tip='Generate furigana in the field',
-            conf=cfg.toolbar.furigana_button
+            tip="Generate furigana in the field",
+            conf=cfg.toolbar.furigana_button,
         ),
         ToolbarButton(
-            id='hiragana_button',
+            id="hiragana_button",
             on_press=modify_field(functools.partial(generate_furigana, full_hiragana=True)),
-            tip='Reconvert the field as hiragana',
-            conf=cfg.toolbar.hiragana_button
+            tip="Reconvert the field as hiragana",
+            conf=cfg.toolbar.hiragana_button,
         ),
         ToolbarButton(
-            id='clean_furigana_button',
+            id="clean_furigana_button",
             on_press=modify_field(clean_furigana),
-            tip='Clean furigana in the field',
-            conf=cfg.toolbar.clean_furigana_button
+            tip="Clean furigana in the field",
+            conf=cfg.toolbar.clean_furigana_button,
         ),
         ToolbarButton(
-            id='audio_search_button',
+            id="audio_search_button",
             on_press=modify_note(search_audio),
-            tip='Search audio files to add to note',
-            conf=cfg.toolbar.audio_search_button
+            tip="Search audio files to add to note",
+            conf=cfg.toolbar.audio_search_button,
         ),
         ToolbarButton(
-            id='add_definition_button',
+            id="add_definition_button",
             on_press=modify_note(sakura_client.add_definition),
-            tip='Add dictionary definition for the target word.',
-            conf=cfg.toolbar.add_definition_button
+            tip="Add dictionary definition for the target word.",
+            conf=cfg.toolbar.add_definition_button,
         ),
     )
 
@@ -191,13 +191,14 @@ def add_toolbar_buttons(html_buttons: list[str], editor: Editor) -> None:
     html_buttons.extend(
         editor.addButton(
             icon=None,
-            cmd=f'ajt__{b.id}',
+            cmd=f"ajt__{b.id}",
             func=b.on_press,
             tip=f"{b.tip} ({b.conf.shortcut})" if b.conf.shortcut else b.tip,
             keys=b.conf.shortcut or None,
             label=b.conf.text,
         )
-        for b in query_buttons() if b.conf.enabled
+        for b in query_buttons()
+        if b.conf.enabled
     )
 
 

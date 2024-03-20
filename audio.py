@@ -22,7 +22,8 @@ from .helpers.audio_manager import (
     FileUrlData,
     AudioManagerException,
     InitResult,
-    AudioSourceManagerFactory, TotalAudioStats
+    AudioSourceManagerFactory,
+    TotalAudioStats,
 )
 from .helpers.inflections import is_inflected
 from .helpers.tokens import tokenize, ParseableToken
@@ -82,12 +83,8 @@ def save_files(
 
 
 def only_missing(col: anki.collection.Collection, files: Collection[FileUrlData]):
-    """ Returns files that aren't present in the collection already. """
-    return (
-        file
-        for file in files
-        if not col.media.have(file.desired_filename)
-    )
+    """Returns files that aren't present in the collection already."""
+    return (file for file in files if not col.media.have(file.desired_filename))
 
 
 def iter_tokens(src_text: str) -> Iterable[ParseableToken]:
@@ -104,10 +101,10 @@ def iter_mecab_variants(token: MecabParsedToken):
 
 
 def format_audio_tags(hits: Collection[FileUrlData]):
-    return cfg.audio_settings.tag_separator.join(
-        f'[sound:{hit.desired_filename}]'
-        for hit in hits
-    )
+    """
+    Create [sound:filename.ext] tags that Anki understands.
+    """
+    return cfg.audio_settings.tag_separator.join(f"[sound:{hit.desired_filename}]" for hit in hits)
 
 
 def sorted_files(hits: Iterable[FileUrlData]):
@@ -131,12 +128,12 @@ def take_first_source(hits: dict[str, list[FileUrlData]]):
 
 class AnkiAudioSourceManager(AudioSourceManager):
     def search_audio(
-            self,
-            src_text: str,
-            *,
-            split_morphemes: bool,
-            ignore_inflections: bool,
-            stop_if_one_source_has_results: bool,
+        self,
+        src_text: str,
+        *,
+        split_morphemes: bool,
+        ignore_inflections: bool,
+        stop_if_one_source_has_results: bool,
     ) -> list[FileUrlData]:
         """
         Search audio files (pronunciations) for words contained in search text.
@@ -220,7 +217,7 @@ class AnkiAudioSourceManager(AudioSourceManager):
         return hits
 
     def _download_tags(self, hits: Iterable[FileUrlData]) -> list[Future[DownloadedData]]:
-        """ Download audio files from a remote. """
+        """Download audio files from a remote."""
 
         futures, results = [], []
 
@@ -269,10 +266,7 @@ class AnkiAudioSourceManagerFactory(AudioSourceManagerFactory):
 
     def _report_init_results(self, result: InitResult, notify_on_finish: bool):
         if result.errors:
-            showWarning('\n'.join(
-                f"Couldn't download audio source: {error.explanation}."
-                for error in result.errors
-            ))
+            showWarning("\n".join(f"Couldn't download audio source: {error.explanation}." for error in result.errors))
         elif notify_on_finish and result.sources:
             QueryOp(
                 parent=mw,
@@ -283,8 +277,7 @@ class AnkiAudioSourceManagerFactory(AudioSourceManagerFactory):
                     f"<li>Unique headwords: <code>{stats.unique_headwords}</code></li></ul>",
                     period=5000,
                 ),
-            ).without_collection(
-            ).run_in_background()
+            ).without_collection().run_in_background()
         print("Initialized all audio sources.")
 
 

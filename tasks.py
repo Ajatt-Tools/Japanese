@@ -19,7 +19,7 @@ from .reading import format_pronunciations, get_pronunciations, generate_furigan
 
 
 def note_type_matches(note_type: dict[str, Any], profile: Profile) -> bool:
-    return profile.note_type.lower() in note_type['name'].lower()
+    return profile.note_type.lower() in note_type["name"].lower()
 
 
 def iter_tasks(note: Note, src_field: Optional[str] = None) -> Iterable[Profile]:
@@ -51,11 +51,7 @@ class DoTask:
         raise NotImplementedError()
 
     def run(self, src_text: str, dest_text: str) -> str:
-        return (
-            out
-            if (out := self._generate_text(src_text)) and (out != src_text or not dest_text)
-            else dest_text
-        )
+        return out if (out := self._generate_text(src_text)) and (out != src_text or not dest_text) else dest_text
 
 
 class AddFurigana(DoTask, task_type=ProfileFurigana):
@@ -91,24 +87,25 @@ class AddAudio(DoTask, task_type=ProfileAudio):
 
 
 def html_to_media_line(txt: str) -> str:
-    """ Strip HTML but keep media filenames. """
+    """Strip HTML but keep media filenames."""
     return strip_html_media(
-        txt
-        .replace("<br>", " ")
+        txt.replace("<br>", " ")
+        .replace("<br/>", " ")
         .replace("<br />", " ")
         .replace("<div>", " ")
+        .replace("</div>", " ")
         .replace("\n", " ")
     ).strip()
 
 
 class DoTasks:
     def __init__(
-            self,
-            note: Note,
-            *,
-            caller: TaskCaller,
-            src_field: Optional[str] = None,
-            overwrite: bool = False,
+        self,
+        note: Note,
+        *,
+        caller: TaskCaller,
+        src_field: Optional[str] = None,
+        overwrite: bool = False,
     ):
         self._note = note
         self._caller = caller
@@ -121,15 +118,20 @@ class DoTasks:
         with aud_src_mgr.request_new_session() as aud_mgr:
             for task in self._tasks:
                 if task.should_answer_to(self._caller):
-                    changed = (self._do_task(task, aud_mgr=aud_mgr) or changed)
+                    changed = self._do_task(task, aud_mgr=aud_mgr) or changed
             return changed
 
     def _do_task(self, task: Profile, aud_mgr: AnkiAudioSourceManager) -> bool:
         changed = False
         if self._can_fill_destination(task) and (src_text := self._src_text(task)):
             self._note[task.destination] = DoTask(
-                task, self._caller, aud_mgr,
-            ).run(src_text, self._note[task.destination])
+                task,
+                self._caller,
+                aud_mgr,
+            ).run(
+                src_text,
+                self._note[task.destination],
+            )
             changed = True
         return changed
 
@@ -174,11 +176,8 @@ def on_focus_lost(changed: bool, note: Note, field_idx: int) -> bool:
 
 
 def should_generate(note: Note) -> bool:
-    """ Generate when a new note is added by Yomichan or Mpvacious. """
-    return (
-            mw.app.activeWindow() is None
-            and note.id == 0
-    )
+    """Generate when a new note is added by Yomichan or Mpvacious."""
+    return mw.app.activeWindow() is None and note.id == 0
 
 
 def on_add_note(_col: anki.collection.Collection, note: Note, _deck_id: DeckId) -> None:
