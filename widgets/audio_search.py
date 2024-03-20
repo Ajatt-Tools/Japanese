@@ -31,12 +31,19 @@ except ImportError:
     from widgets.audio_sources import SourceEnableCheckbox
 
 
-class AudioManagerProtocol(typing.Protocol):
-    def search_audio(self, src_text: str, **kwargs) -> list[FileUrlData]:
-        ...
+class FileSaveResultsProtocol(typing.Protocol):
+    successes: list
+    fails: list
 
-    def download_and_save_tags(self, hits: typing.Sequence[FileUrlData], play_on_finish: bool = False):
-        ...
+
+class AudioManagerProtocol(typing.Protocol):
+    def search_audio(self, src_text: str, **kwargs) -> list[FileUrlData]: ...
+
+    def download_and_save_tags(
+        self,
+        hits: typing.Sequence[FileUrlData],
+        on_finish: Callable[[FileSaveResultsProtocol], typing.Any],
+    ): ...
 
 
 class SearchBar(QWidget):
@@ -265,7 +272,12 @@ class AnkiAudioSearchDialog(AudioSearchDialog):
             return sound.av_player.play_tags([SoundOrVideoTag(filename=file.desired_filename)])
         else:
             # file is not located on this computer and needs to be downloaded first.
-            return self._audio_manager.download_and_save_tags([file, ], play_on_finish=True)
+            return self._audio_manager.download_and_save_tags(
+                hits=[file],
+                on_finish=lambda results: sound.av_player.play_tags(
+                    [SoundOrVideoTag(filename=result.desired_filename) for result in results.successes]
+                ),
+            )
 
     def _open_audio_file(self, file: FileUrlData):
         tooltip(tr.qt_misc_loading(), period=1000)

@@ -76,14 +76,31 @@ class AddAudio(DoTask, task_type=ProfileAudio):
             split_morphemes=self._task.split_morphemes,
             ignore_inflections=cfg.audio_settings.ignore_inflections,
             stop_if_one_source_has_results=cfg.audio_settings.stop_if_one_source_has_results,
-        )[:cfg.audio_settings.maximum_results]
-        # Download and save tags has to run on main as it will launch a new QueryOp.
-        mw.taskman.run_on_main(functools.partial(
-            self._aud_src_mgr.download_and_save_tags,
-            search_results,
-            notify_on_finish=self._caller.cfg.audio_download_report,
-        ))
+        )[: cfg.audio_settings.maximum_results]
+        # "Download and save tags" has to run on main as it will launch a new QueryOp.
+        mw.taskman.run_on_main(
+            functools.partial(
+                self._aud_src_mgr.download_and_save_tags,
+                search_results,
+                on_finish=self._report_results,
+            )
+        )
         return format_audio_tags(search_results)
+
+    def _report_results(self, r: FileSaveResults):
+        if not self._caller.cfg.audio_download_report:
+            return
+        txt = io.StringIO()
+        if r.successes:
+            txt.write(f"<b>Added {len(r.successes)} files to the collection.</b><ol>")
+            txt.write("".join(f"<li>{file.desired_filename}</li>" for file in r.successes))
+            txt.write("</ol>")
+        if r.fails:
+            txt.write(f"<b>Failed {len(r.fails)} files.</b><ol>")
+            txt.write("".join(f"<li>{fail.file.desired_filename}: {fail.describe_short()}</li>" for fail in r.fails))
+            txt.write("</ol>")
+        if txt := txt.getvalue():
+            return tooltip(txt, period=7000, y_offset=80 + 18 * (len(r.successes) + len(r.fails)))
 
 
 def html_to_media_line(txt: str) -> str:
