@@ -1,0 +1,38 @@
+name: "tagged-release"
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  tagged-release:
+    name: "Tagged Release"
+    runs-on: "ubuntu-latest"
+    permissions:
+      contents: write
+
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          submodules: "recursive"
+
+      - name: Install zipmerge
+        run: |
+          sudo apt-get install -y zipmerge
+
+      - name: "Create zip"
+        run: |
+          ./package.sh --target github
+
+      - name: "Create release"
+        uses: softprops/action-gh-release@v2
+        with:
+          prerelease: false
+          make_latest: true
+          generate_release_notes: true
+          name: "Japanese ${{github.ref_name}}"
+          files: |
+            *.ankiaddon
