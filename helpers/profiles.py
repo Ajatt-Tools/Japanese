@@ -3,7 +3,8 @@
 
 import dataclasses
 import enum
-from typing import Iterable
+import typing
+from collections.abc import Iterable, Container
 
 
 @enum.unique
@@ -35,7 +36,12 @@ class TaskCaller(enum.Enum):
 
     @classmethod
     def all_comma_separated_names(cls) -> str:
-        return ','.join(cls.all_names())
+        return ",".join(cls.all_names())
+
+
+class AnkiNoteProtocol(typing.Protocol):
+    def __contains__(self, key: str) -> bool:
+        ...
 
 
 @dataclasses.dataclass(frozen=True)
@@ -52,7 +58,7 @@ class Profile:
     _subclasses_map = {}  # "furigana" (str) -> ProfileFurigana
 
     def __init_subclass__(cls, **kwargs):
-        mode = kwargs.pop('mode')  # suppresses ide warning
+        mode = kwargs.pop("mode")  # suppresses ide warning
         super().__init_subclass__(**kwargs)
         cls._subclasses_map[mode] = cls
         cls.mode = mode
@@ -62,11 +68,7 @@ class Profile:
         return object.__new__(subclass)
 
     def enabled_callers(self) -> list[TaskCaller]:
-        return [
-            TaskCaller[name]
-            for name in self.triggered_by.split(',')
-            if name
-        ]
+        return [TaskCaller[name] for name in self.triggered_by.split(",") if name]
 
     def should_answer_to(self, caller: TaskCaller) -> bool:
         """
@@ -74,6 +76,12 @@ class Profile:
         if the caller isn't listed among the callers that the task can be triggered by.
         """
         return caller in self.enabled_callers()
+
+    def applies_to_note(self, note: AnkiNoteProtocol) -> bool:
+        """
+        Field names must not be empty or None. The note must have fields with these names.
+        """
+        return (self.source and self.destination) and (self.source in note and self.destination in note)
 
     @classmethod
     def class_by_mode(cls, mode: str):
@@ -96,7 +104,7 @@ class Profile:
         return cls.class_by_mode(mode).new()
 
     @classmethod
-    def clone(cls, profile: 'Profile'):
+    def clone(cls, profile: "Profile"):
         return cls(**dataclasses.asdict(profile))
 
 
@@ -133,15 +141,15 @@ class ProfileAudio(Profile, mode="audio"):
         )
 
 
-def test():
+def main():
     import json
 
-    with open('../config.json') as f:
+    with open("../config.json") as f:
         config = json.load(f)
 
-    for p in config.get('profiles'):
+    for p in config.get("profiles"):
         print(Profile(**p))
 
 
-if __name__ == '__main__':
-    test()
+if __name__ == "__main__":
+    main()

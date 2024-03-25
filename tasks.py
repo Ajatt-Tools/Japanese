@@ -2,23 +2,26 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import functools
-from typing import Optional, Callable, Any
+import io
+from typing import Optional
 
 import anki.collection
 from anki import hooks
 from anki.decks import DeckId
+from anki.models import NotetypeDict
 from anki.notes import Note
 from anki.utils import strip_html_media
 from aqt import mw
+from aqt.utils import tooltip
 
-from .audio import format_audio_tags, AnkiAudioSourceManager
+from .audio import format_audio_tags, AnkiAudioSourceManager, FileSaveResults
 from .config_view import config_view as cfg
 from .helpers import *
 from .helpers.profiles import Profile, ProfileFurigana, PitchOutputFormat, ProfilePitch, ProfileAudio, TaskCaller
 from .reading import format_pronunciations, get_pronunciations, generate_furigana
 
 
-def note_type_matches(note_type: dict[str, Any], profile: Profile) -> bool:
+def note_type_matches(note_type: NotetypeDict, profile: Profile) -> bool:
     return profile.note_type.lower() in note_type["name"].lower()
 
 
@@ -51,7 +54,11 @@ class DoTask:
         raise NotImplementedError()
 
     def run(self, src_text: str, dest_text: str) -> str:
-        return out if (out := self._generate_text(src_text)) and (out != src_text or not dest_text) else dest_text
+        if src_text:
+            out_text = self._generate_text(src_text)
+            if out_text and (not dest_text or out_text != src_text):
+                return out_text
+        return dest_text
 
 
 class AddFurigana(DoTask, task_type=ProfileFurigana):
@@ -117,12 +124,12 @@ def html_to_media_line(txt: str) -> str:
 
 class DoTasks:
     def __init__(
-        self,
-        note: Note,
-        *,
-        caller: TaskCaller,
-        src_field: Optional[str] = None,
-        overwrite: bool = False,
+            self,
+            note: Note,
+            *,
+            caller: TaskCaller,
+            src_field: Optional[str] = None,
+            overwrite: bool = False,
     ):
         self._note = note
         self._caller = caller
@@ -134,12 +141,17 @@ class DoTasks:
 
         with aud_src_mgr.request_new_session() as aud_mgr:
             for task in self._tasks:
-                if task.should_answer_to(self._caller):
+                if task.should_answer_to(self._caller) and task.applies_to_note(self._note):
                     changed = self._do_task(task, aud_mgr=aud_mgr) or changed
             return changed
 
     def _do_task(self, task: Profile, aud_mgr: AnkiAudioSourceManager) -> bool:
         changed = False
+
+        if self._field_contains_garbage(task.destination):
+            self._note[task.destination] = ""  # immediately clear garbage
+            changed = True
+
         if self._can_fill_destination(task) and (src_text := self._src_text(task)):
             self._note[task.destination] = DoTask(
                 task,
@@ -152,36 +164,31 @@ class DoTasks:
             changed = True
         return changed
 
+    def _can_fill_destination(self, task: Profile) -> bool:
+        """
+        The add-on can fill the destination field if it's empty
+        or if the user wants to fill it with new data and erase the old data.
+        """
+        return self._is_overwrite_permitted(task) or not html_to_media_line(self._note[task.destination])
+
+    def _is_overwrite_permitted(self, task: Profile) -> bool:
+        """
+        Has the user allowed the add-on to erase existing content (if any) in the destination field?
+        """
+        return self._overwrite or task.overwrite_destination
+
     def _src_text(self, task: Profile) -> str:
+        """
+        Return source text with sound and image tags removed.
+        """
         return mw.col.media.strip(self._note[task.source]).strip()
 
     def _field_contains_garbage(self, field_name: str) -> bool:
-        # Yomichan added `No pitch accent data` to the field when creating the note.
-        if "No pitch accent data".lower() in self._note[field_name].lower():
-            return True
-        return False
-
-    def _can_fill_destination(self, task: Profile) -> bool:
-        # Field names are empty or None
-        if not task.source or not task.destination:
-            return False
-
-        # The note doesn't have fields with these names
-        if task.source not in self._note or task.destination not in self._note:
-            return False
-
-        if self._field_contains_garbage(task.destination):
-            return True
-
-        # Must overwrite any existing data.
-        if self._overwrite is True or task.overwrite_destination is True:
-            return True
-
-        # Field is empty.
-        if not html_to_media_line(self._note[task.destination]):
-            return True
-
-        return False
+        """
+        Yomichan added `No pitch accent data` to the field when creating the note.
+        Rikaitan doesn't have this problem.
+        """
+        return "No pitch accent data".lower() in self._note[field_name].lower()
 
 
 def on_focus_lost(changed: bool, note: Note, field_idx: int) -> bool:
