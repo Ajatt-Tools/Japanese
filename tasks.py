@@ -95,6 +95,9 @@ class AddAudio(DoTask, task_type=ProfileAudio):
         return format_audio_tags(search_results)
 
     def _report_results(self, r: FileSaveResults):
+        """
+        Show a tooltip with audio download results.
+        """
         if not self._caller.cfg.audio_download_report:
             return
         txt = io.StringIO()
