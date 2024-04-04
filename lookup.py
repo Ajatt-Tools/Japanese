@@ -8,13 +8,13 @@ from typing import Optional
 from aqt import gui_hooks, mw
 from aqt.browser import Browser
 from aqt.qt import *
-from aqt.utils import showInfo, restoreGeom, saveGeom
+from aqt.utils import restoreGeom, saveGeom, tooltip
 from aqt.webview import AnkiWebView
 
-from .pitch_accents.common import AccentDict
 from .ajt_common.about_menu import menu_root_entry, tweak_window, garbage_collect_on_dialog_finish
 from .config_view import config_view as cfg
 from .helpers.tokens import clean_furigana
+from .pitch_accents.common import AccentDict
 from .reading import get_pronunciations, format_pronunciations, update_html
 
 ACTION_NAME = "Pitch Accent lookup"
@@ -39,7 +39,7 @@ class ViewPitchAccentsDialog(QDialog):
         garbage_collect_on_dialog_finish(self)
         tweak_window(self)
 
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         self.setWindowModality(Qt.WindowModality.ApplicationModal)
         self.setWindowTitle(ACTION_NAME)
         self.setMinimumSize(420, 240)
@@ -48,7 +48,7 @@ class ViewPitchAccentsDialog(QDialog):
         layout.addLayout(self._make_bottom_buttons())
         restoreGeom(self, ACTION_NAME)
 
-    def _make_bottom_buttons(self):
+    def _make_bottom_buttons(self) -> QLayout:
         buttons = (
             ("Ok", self.accept),
             ("Copy HTML to Clipboard", self._copy_pronunciations),
@@ -61,7 +61,7 @@ class ViewPitchAccentsDialog(QDialog):
         hbox.addStretch()
         return hbox
 
-    def _copy_pronunciations(self):
+    def _copy_pronunciations(self) -> None:
         return QApplication.clipboard().setText(
             format_pronunciations(
                 self._pronunciations,
@@ -76,7 +76,7 @@ class ViewPitchAccentsDialog(QDialog):
         self._pronunciations = get_pronunciations(search)
         return self
 
-    def _format_html_result(self):
+    def _format_html_result(self) -> str:
         """Create HTML body"""
         assert self._pronunciations, "Populate pronunciations first."
         html = io.StringIO()
@@ -109,12 +109,12 @@ class ViewPitchAccentsDialog(QDialog):
         return super().done(*args, **kwargs)
 
 
-def on_lookup_pronunciation(parent: QWidget, text: str):
+def on_lookup_pronunciation(parent: QWidget, text: str) -> None:
     """Do a lookup on the selection"""
     if text := clean_furigana(text).strip():
         (ViewPitchAccentsDialog(parent).lookup_pronunciations(text).set_html_result().exec())
     else:
-        showInfo(_("Empty selection."))
+        tooltip(_("Empty selection."), parent=parent)
 
 
 def setup_mw_lookup_action(root_menu: QMenu) -> None:
@@ -141,7 +141,7 @@ def setup_browser_menu(browser: Browser) -> None:
     browser.form.menuJump.addAction(action)
 
 
-def init():
+def init() -> None:
     # Create the manual look-up menu entry
     setup_mw_lookup_action(menu_root_entry())
     # Hook to context menu events
