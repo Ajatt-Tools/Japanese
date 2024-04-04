@@ -115,7 +115,7 @@ class LookUpWord(ContextMenuAction):
 
 class BrowserSearch(ContextMenuAction):
     key = "browser_search"
-    label = "Search Collection"
+    label = "Browser Search"
     shown_when_not_editing = True
 
     def action(self, search_text: str) -> None:
