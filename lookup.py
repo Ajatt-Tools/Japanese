@@ -78,7 +78,8 @@ class ViewPitchAccentsDialog(QDialog):
 
     def _format_html_result(self) -> str:
         """Create HTML body"""
-        assert self._pronunciations, "Populate pronunciations first."
+        assert self._pronunciations is not None, "Populate pronunciations first."
+
         html = io.StringIO()
         html.write('<main class="pitch_lookup">')
         for word, entries in self._pronunciations.items():
@@ -114,11 +115,12 @@ def on_lookup_pronunciation(parent: QWidget, text: str) -> None:
     if text := clean_furigana(text).strip():
         (ViewPitchAccentsDialog(parent).lookup_pronunciations(text).set_html_result().exec())
     else:
-        tooltip(_("Empty selection."), parent=parent)
+        tooltip(_("Empty selection."), parent=((parent.window() or mw) if isinstance(parent, AnkiWebView) else parent))
 
 
 def setup_mw_lookup_action(root_menu: QMenu) -> None:
     """Add a main window entry"""
+    assert mw
     action = QAction(ACTION_NAME, root_menu)
     qconnect(action.triggered, lambda: on_lookup_pronunciation(mw, mw.web.selectedText()))
     if shortcut := cfg.pitch_accent.lookup_shortcut:
