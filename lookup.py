@@ -1,8 +1,9 @@
 # Copyright: Ren Tatsumoto <tatsu at autistici.org> and contributors
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
-from collections import OrderedDict
+import io
 from gettext import gettext as _
+from typing import Optional
 
 from aqt import gui_hooks, mw
 from aqt.browser import Browser
@@ -10,7 +11,8 @@ from aqt.qt import *
 from aqt.utils import showInfo, restoreGeom, saveGeom
 from aqt.webview import AnkiWebView
 
-from .ajt_common.about_menu import menu_root_entry, tweak_window
+from .pitch_accents.common import AccentDict
+from .ajt_common.about_menu import menu_root_entry, tweak_window, garbage_collect_on_dialog_finish
 from .config_view import config_view as cfg
 from .helpers.tokens import clean_furigana
 from .reading import get_pronunciations, format_pronunciations, update_html
@@ -26,14 +28,18 @@ class ViewPitchAccentsDialog(QDialog):
 
     mw.addonManager.setWebExports(__name__, r"(img|web)/.*\.(js|css|html|png|svg)")
 
+    _pronunciations: Optional[AccentDict]
+    _webview: Optional[AnkiWebView]
+
     def __init__(self, parent: QWidget):
         super().__init__(parent)
         self._webview = AnkiWebView(parent=self, title=ACTION_NAME)
         self._pronunciations = None
         self._setup_ui()
+        garbage_collect_on_dialog_finish(self)
+        tweak_window(self)
 
     def _setup_ui(self):
-        tweak_window(self)
         self.setWindowModality(Qt.WindowModality.ApplicationModal)
         self.setWindowTitle(ACTION_NAME)
         self.setMinimumSize(420, 240)
@@ -70,34 +76,36 @@ class ViewPitchAccentsDialog(QDialog):
         self._pronunciations = get_pronunciations(search)
         return self
 
+    def _format_html_result(self):
+        """Create HTML body"""
+        assert self._pronunciations, "Populate pronunciations first."
+        html = io.StringIO()
+        html.write('<main class="pitch_lookup">')
+        for word, entries in self._pronunciations.items():
+            html.write(f'<div class="keyword">{word}</div>')
+            html.write('<div class="pitch_accents">')
+            html.write("<ol>")
+            entries = dict.fromkeys(f"{update_html(entry.html_notation)}[{entry.pitch_number}]" for entry in entries)
+            for entry in entries:
+                html.write(f"<li>{entry}</li>")
+            html.write("</ol>")
+            html.write(f"</div>")
+        html.write("</main>")
+        return html.getvalue()
+
     def set_html_result(self):
         """Format pronunciations as an HTML list."""
-        ordered_dict = OrderedDict()
-        for word, entries in self._pronunciations.items():
-            ordered_dict[word] = "".join(
-                dict.fromkeys(f"<li>{update_html(entry.html_notation)}[{entry.pitch_number}]</li>" for entry in entries)
-            )
-
-        entries = []
-        for word, html in ordered_dict.items():
-            entries.append(f'<div class="keyword">{word}</div><div class="pitch_accents"><ol>{html}</ol></div>')
-
         self._webview.stdHtml(
-            body=f'<main class="pitch_lookup">{"".join(entries)}</main>',
+            body=self._format_html_result(),
             css=[self._css_relpath],
         )
         return self
 
-    def reject(self) -> None:
-        self._webview = None
-        return super().reject()
-
-    def accept(self) -> None:
-        self._webview = None
-        return super().accept()
-
     def done(self, *args, **kwargs) -> None:
+        print("closing AJT lookup window...")
         saveGeom(self, ACTION_NAME)
+        self._webview = None
+        self._pronunciations = None
         return super().done(*args, **kwargs)
 
 
