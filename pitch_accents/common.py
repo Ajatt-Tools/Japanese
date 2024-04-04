@@ -13,7 +13,7 @@ except ImportError:
 
 
 def is_dunder(name: str) -> bool:
-    """ Returns whether name is a dunder name. """
+    """Returns whether name is a dunder name."""
     return name.startswith("__") and name.endswith("__")
 
 
@@ -62,7 +62,7 @@ class FormattedEntry(NamedTuple):
 
 AccentDict = NewType("AccentDict", dict[str, Sequence[FormattedEntry]])
 
-RE_PITCH_NUM = re.compile(r'\d+|\?')
+RE_PITCH_NUM = re.compile(r"\d+|\?")
 
 
 def split_pitch_numbers(s: str) -> list[str]:
@@ -80,5 +80,5 @@ def main():
     print(split_pitch_numbers("1"))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

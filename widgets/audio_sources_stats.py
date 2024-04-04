@@ -61,7 +61,7 @@ def get_mock_stats() -> TotalAudioStats:
             AudioStats("tick", 5, 6),
             AudioStats("tack", 7, 7),
             AudioStats("toe", 10, 9),
-        ]
+        ],
     )
 
 
@@ -73,5 +73,5 @@ def main():
     app.exec()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

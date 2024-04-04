@@ -36,26 +36,26 @@ class PitchOverrideWidget(QWidget):
             name, mime = QFileDialog.getSaveFileName(
                 parent=cast(QWidget, self),
                 caption="Save override table as TSV File",
-                directory=cfg['last_file_save_location'],
+                directory=cfg["last_file_save_location"],
                 filter=self._filename_filter,
             )
             if not name:
                 return tooltip("Aborted.")
             self._table.dump(name)
-            cfg['last_file_save_location'] = name  # may or may not be lost
+            cfg["last_file_save_location"] = name  # may or may not be lost
 
         def read_tsv_file():
             # noinspection PyArgumentList
             name, mime = QFileDialog.getOpenFileName(
                 parent=cast(QWidget, self),
-                caption='Load override table from TSV File',
-                directory=cfg['last_file_save_location'],
+                caption="Load override table from TSV File",
+                directory=cfg["last_file_save_location"],
                 filter=self._filename_filter,
             )
             if not name:
                 return tooltip("Aborted.")
             self._table.update_from_tsv(name, reset_table=False)
-            cfg['last_file_save_location'] = name  # may or may not be lost
+            cfg["last_file_save_location"] = name  # may or may not be lost
 
         qconnect(self._import_button.clicked, read_tsv_file)
         qconnect(self._export_button.clicked, write_tsv_file)

@@ -17,10 +17,10 @@ except ImportError:
     from mecab_controller.kana_conv import to_hiragana, kana_to_moras
     from mecab_controller.basic_types import MecabParsedToken
 
-SEP_PITCH_GROUP = ' '
-SEP_PITCH_TYPES = ','
-SEP_READING_PITCH = ':'
-SEP_PITCH_TYPE_NUM = '-'
+SEP_PITCH_GROUP = " "
+SEP_PITCH_TYPES = ","
+SEP_READING_PITCH = ":"
+SEP_PITCH_TYPE_NUM = "-"
 
 
 class PitchType(enum.Enum):
@@ -50,10 +50,11 @@ class PitchAccentEntry(NamedTuple):
         return bool(self.pitches and any(pitch.type != PitchType.unknown for pitch in self.pitches))
 
     def describe_pitches(self) -> str:
-        return self.katakana_reading + SEP_READING_PITCH + SEP_PITCH_TYPES.join(dict.fromkeys(
-            pitch.describe()
-            for pitch in self.pitches
-        ))
+        return (
+            self.katakana_reading
+            + SEP_READING_PITCH
+            + SEP_PITCH_TYPES.join(dict.fromkeys(pitch.describe() for pitch in self.pitches))
+        )
 
     @classmethod
     def from_formatted(cls, entry: FormattedEntry):
@@ -94,6 +95,7 @@ class AccDbParsedToken(MecabParsedToken):
     """
     Add pitch number to the parsed token
     """
+
     headword_accents: Sequence[PitchAccentEntry]
 
     def describe_pitches(self) -> str:
@@ -140,8 +142,8 @@ def main():
     assert token.describe_pitches() == "なや:heiban,atamadaka"
 
     token = AccDbParsedToken(
-        word='粗末',
-        headword='粗末',
+        word="粗末",
+        headword="粗末",
         katakana_reading=None,
         part_of_speech=PartOfSpeech.unknown,
         inflection_type=Inflection.dictionary_form,
@@ -154,5 +156,5 @@ def main():
     assert token.describe_pitches() == "ソマツ:atamadaka"
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

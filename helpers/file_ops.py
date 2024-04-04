@@ -17,26 +17,26 @@ def walk_parents(current_dir: str) -> Iterable[str]:
 
 
 def resolve_relative_path(*paths) -> str:
-    """ Return path to file inside the add-on's dir. """
+    """Return path to file inside the add-on's dir."""
     for parent_dir in walk_parents(__file__):
         if os.path.basename(parent_dir) == THIS_ADDON_MODULE:
             return os.path.join(parent_dir, *paths)
 
 
 def touch(path):
-    with open(path, 'a'):
+    with open(path, "a"):
         os.utime(path, None)
 
 
 def find_config_json() -> str:
-    """ Used when testing/debugging. """
+    """Used when testing/debugging."""
     for parent_dir in walk_parents(__file__):
         if os.path.isfile(path := os.path.join(parent_dir, "config.json")):
             return path
 
 
 def user_files_dir() -> str:
-    """ Return path to the user files directory. """
+    """Return path to the user files directory."""
     for parent_dir in walk_parents(__file__):
         if os.path.isdir(dir_path := os.path.join(parent_dir, "user_files")):
             return dir_path
@@ -58,6 +58,6 @@ def open_file(path: str) -> None:
             QDesktopServices.openUrl(QUrl(f"file://{path}"))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     print(user_files_dir())
-    print(open_file('/etc/hosts'))
+    print(open_file("/etc/hosts"))

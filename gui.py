@@ -69,8 +69,8 @@ def relevant_field_names(note_type_name_fuzzy: Optional[str] = None) -> Iterable
     """
     for model in mw.col.models.all_names_and_ids():
         if not note_type_name_fuzzy or note_type_name_fuzzy.lower() in model.name.lower():
-            for field in mw.col.models.get(model.id)['flds']:
-                yield field['name']
+            for field in mw.col.models.get(model.id)["flds"]:
+                yield field["name"]
 
 
 class EditableSelector(QComboBox):
@@ -195,14 +195,14 @@ class TriggeredBySelector(CheckableComboBox):
         return self.setCheckedData(callers)
 
     def comma_separated_callers(self):
-        return ','.join(caller.name for caller in self.checkedData())
+        return ",".join(caller.name for caller in self.checkedData())
 
 
 class ProfileEditForm(QGroupBox):
     _subclasses_map = {}  # e.g. ProfileFurigana => FuriganaProfileEditForm
 
     def __init_subclass__(cls, **kwargs):
-        profile_class: type(Profile) = kwargs.pop('profile_class')  # suppresses ide warning
+        profile_class: type(Profile) = kwargs.pop("profile_class")  # suppresses ide warning
         super().__init_subclass__(**kwargs)
         cls._subclasses_map[profile_class] = cls
 
@@ -243,15 +243,9 @@ class ProfileEditForm(QGroupBox):
             "Profile will be triggered for Note Type names that contain this string.\n"
             "Note Type name matching is case-insensitive."
         )
-        self._form.source.setToolTip(
-            "Name of the field to get data from, i.e. the raw expression."
-        )
-        self._form.destination.setToolTip(
-            "Name of the field to place generated data to."
-        )
-        self._form.triggered_by.setToolTip(
-            "Names of Anki actions that can trigger this profile's task."
-        )
+        self._form.source.setToolTip("Name of the field to get data from, i.e. the raw expression.")
+        self._form.destination.setToolTip("Name of the field to place generated data to.")
+        self._form.triggered_by.setToolTip("Names of Anki actions that can trigger this profile's task.")
         self._form.split_morphemes.setToolTip(
             "If the source field contains multiple words, try to identify and parse each word.\n"
             "Recommended to disable for vocabulary fields."
@@ -282,7 +276,7 @@ class ProfileEditForm(QGroupBox):
         return layout
 
     def _repopulate_fields(self, profile: Optional[Profile] = None):
-        for key in ('source', 'destination',):
+        for key in ("source", "destination"):
             widget: QComboBox = self._form.__dict__[key]
             current_text = dataclasses.asdict(profile)[key] if profile else widget.currentText()
             widget.clear()
@@ -311,7 +305,7 @@ class AudioProfileEditForm(ProfileEditForm, profile_class=ProfileAudio):
 
 class ProfileEdit(QWidget):
     def __init_subclass__(cls, **kwargs):
-        cls._profile_class: type(Profile) = kwargs.pop('profile_class')  # suppresses ide warning
+        cls._profile_class: type(Profile) = kwargs.pop("profile_class")  # suppresses ide warning
         super().__init_subclass__(**kwargs)
 
     def __init__(self, *args, **kwargs):
@@ -379,10 +373,10 @@ class WordsEdit(QTextEdit):
 
     def set_values(self, values: list[str]):
         if values:
-            self.setPlainText(','.join(dict.fromkeys(values)))
+            self.setPlainText(",".join(dict.fromkeys(values)))
 
     def as_text(self) -> str:
-        return ','.join(dict.fromkeys(filter(bool, self.toPlainText().replace(' ', '').split('\n'))))
+        return ",".join(dict.fromkeys(filter(bool, self.toPlainText().replace(" ", "").split("\n"))))
 
 
 class SettingsForm(QWidget):
@@ -459,10 +453,10 @@ class DefinitionsSettingsForm(SettingsForm):
     def _add_widgets(self):
         super()._add_widgets()
         self._widgets.source = FieldNameSelector(
-            initial_value=self._config.source
+            initial_value=self._config.source,
         )
         self._widgets.destination = FieldNameSelector(
-            initial_value=self._config.destination
+            initial_value=self._config.destination,
         )
         self._widgets.dict_name = EnumSelectCombo(
             enum_type=DictName,
@@ -471,27 +465,27 @@ class DefinitionsSettingsForm(SettingsForm):
         )
         self._widgets.search_type = EnumSelectCombo(
             enum_type=SearchType,
-            initial_value=self._config.search_type
+            initial_value=self._config.search_type,
         )
         self._widgets.behavior = EnumSelectCombo(
             enum_type=AddDefBehavior,
-            initial_value=self._config.behavior
+            initial_value=self._config.behavior,
         )
         self._widgets.timeout = NarrowSpinBox(
-            initial_value=self._config.timeout
+            initial_value=self._config.timeout,
         )
 
     def _add_tooltips(self):
         super()._add_tooltips()
         self._widgets.timeout.setToolTip(
-            "Download timeout in seconds."
+            "Download timeout in seconds.",
         )
         self._widgets.remove_marks.setToolTip(
             "Strip all <mark> tags from definitions.\n"
             "Usually <mark> tags simply repeat the headword and are not needed."
         )
         self._widgets.dict_name.setToolTip(
-            "Dictionary to fetch definitions from."
+            "Dictionary to fetch definitions from.",
         )
         self._widgets.search_type.setToolTip(
             "How to search.\n"
@@ -554,14 +548,16 @@ class PitchSettingsForm(MultiColumnSettingsForm):
 
     def _add_widgets(self):
         super()._add_widgets()
-        self._widgets.maximum_results = NarrowSpinBox(initial_value=self._config.maximum_results)
+        self._widgets.maximum_results = NarrowSpinBox(
+            initial_value=self._config.maximum_results,
+        )
         self._widgets.discard_mode = EnumSelectCombo(
             enum_type=ReadingsDiscardMode,
-            initial_value=self._config.discard_mode
+            initial_value=self._config.discard_mode,
         )
         self._widgets.style = EnumSelectCombo(
             enum_type=PitchPatternStyle,
-            initial_value=self._config.style
+            initial_value=self._config.style,
         )
         self._widgets.reading_separator = NarrowLineEdit(self._config.reading_separator)
         self._widgets.word_separator = NarrowLineEdit(self._config.word_separator)
@@ -605,7 +601,7 @@ class PitchSettingsForm(MultiColumnSettingsForm):
         )
         self._widgets.style.setToolTip(
             "Style of pitch accent patterns.\n"
-            "If set to \"none\", you can configure your own styles\n"
+            'If set to "none", you can configure your own styles\n'
             "in the Styling section of your card type using CSS class names."
         )
 
@@ -619,7 +615,7 @@ class FuriganaSettingsForm(MultiColumnSettingsForm):
         self._widgets.maximum_results = NarrowSpinBox(initial_value=self._config.maximum_results)
         self._widgets.discard_mode = EnumSelectCombo(
             enum_type=ReadingsDiscardMode,
-            initial_value=self._config.discard_mode
+            initial_value=self._config.discard_mode,
         )
         self._widgets.reading_separator = NarrowLineEdit(self._config.reading_separator)
         self._widgets.blocklisted_words = WordsEdit(initial_values=self._config.blocklisted_words)
@@ -864,7 +860,7 @@ class AudioSourcesEditTable(QWidget):
 
 
 class SettingsDialog(QDialog):
-    name = 'Japanese Options'
+    name = "Japanese Options"
 
     def __init__(self, *args):
         super().__init__(*args)
@@ -893,9 +889,9 @@ class SettingsDialog(QDialog):
         # Finish layout
         self._tabs = QTabWidget()
         self._button_box = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok |
-            QDialogButtonBox.StandardButton.Cancel |
-            QDialogButtonBox.StandardButton.Help
+            QDialogButtonBox.StandardButton.Ok
+            | QDialogButtonBox.StandardButton.Cancel
+            | QDialogButtonBox.StandardButton.Help
         )
         self._setup_tabs()
         self._add_tooltips()
@@ -947,7 +943,7 @@ class SettingsDialog(QDialog):
 
     def _setup_ui(self) -> None:
         cast(QDialog, self).setWindowModality(Qt.WindowModality.ApplicationModal)
-        cast(QDialog, self).setWindowTitle(f'{ADDON_SERIES} {self.name}')
+        cast(QDialog, self).setWindowTitle(f"{ADDON_SERIES} {self.name}")
         self.setMinimumSize(800, 600)
         tweak_window(self)
         self.setLayout(self.make_layout())
@@ -977,21 +973,18 @@ class SettingsDialog(QDialog):
         return layout
 
     def accept(self) -> None:
-        cfg['pitch_accent'].update(self._pitch_settings.as_dict())
-        cfg['furigana'].update(self._furigana_settings.as_dict())
-        cfg['context_menu'].update(self._context_menu_settings.as_dict())
-        cfg['definitions'].update(self._definitions_settings.as_dict())
-        cfg['toolbar'].update(self._toolbar_settings.as_dict())
-        cfg['profiles'] = [
+        cfg["pitch_accent"].update(self._pitch_settings.as_dict())
+        cfg["furigana"].update(self._furigana_settings.as_dict())
+        cfg["context_menu"].update(self._context_menu_settings.as_dict())
+        cfg["definitions"].update(self._definitions_settings.as_dict())
+        cfg["toolbar"].update(self._toolbar_settings.as_dict())
+        cfg["profiles"] = [
             *self._furigana_profiles_edit.as_list(),
             *self._pitch_profiles_edit.as_list(),
             *self._audio_profiles_edit.as_list(),
         ]
-        cfg['audio_sources'] = [
-            dataclasses.asdict(source)
-            for source in self._audio_sources_edit.iterateConfigs()
-        ]
-        cfg['audio_settings'].update(self._audio_settings.as_dict())
+        cfg["audio_sources"] = [dataclasses.asdict(source) for source in self._audio_sources_edit.iterateConfigs()]
+        cfg["audio_settings"].update(self._audio_settings.as_dict())
         # Write the new data to disk
         cfg.write_config()
         self._accents_override.save_to_disk()
@@ -1002,7 +995,7 @@ class SettingsDialog(QDialog):
 
 
 def add_settings_action(root_menu: QMenu):
-    menu_action = QAction(f'{SettingsDialog.name}...', root_menu)
+    menu_action = QAction(f"{SettingsDialog.name}...", root_menu)
     qconnect(menu_action.triggered, lambda: SettingsDialog(mw))
     root_menu.addAction(menu_action)
 

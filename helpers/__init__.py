@@ -12,32 +12,32 @@ except ImportError:
     # Running as a standalone script.
     ADDON_SERIES = "TEST"
 
-LONG_VOWEL_MARK = 'ー'
+LONG_VOWEL_MARK = "ー"
 ADDON_NAME = f"{ADDON_SERIES} Japanese"
 
 
 def ui_translate(key: str) -> str:
-    return key.capitalize().replace('_', ' ')
+    return key.capitalize().replace("_", " ")
 
 
 T = TypeVar("T")
 
 
 def split_list(input_list: Sequence[T], n_chunks: int) -> Iterable[Sequence[T]]:
-    """ Splits a list into N chunks. """
+    """Splits a list into N chunks."""
     chunk_size = math.ceil(len(input_list) / n_chunks)
     for i in range(0, len(input_list), chunk_size):
-        yield input_list[i:i + chunk_size]
+        yield input_list[i : i + chunk_size]
 
 
 def main():
-    assert (list(split_list([1, 2, 3], n_chunks=2)) == [[1, 2], [3]])
-    assert (list(split_list([1, 2, 3, 4], n_chunks=2)) == [[1, 2], [3, 4]])
-    assert (list(split_list([1, 2, 3, 4, 5], n_chunks=2)) == [[1, 2, 3], [4, 5]])
-    assert (list(split_list([1, 2, 3, 4, 5, 6, 7], n_chunks=2)) == [[1, 2, 3, 4], [5, 6, 7]])
-    assert (list(split_list([1, 2, 3, 4, 5, 6, 7, 8], n_chunks=3)) == [[1, 2, 3], [4, 5, 6], [7, 8]])
+    assert list(split_list([1, 2, 3], n_chunks=2)) == [[1, 2], [3]]
+    assert list(split_list([1, 2, 3, 4], n_chunks=2)) == [[1, 2], [3, 4]]
+    assert list(split_list([1, 2, 3, 4, 5], n_chunks=2)) == [[1, 2, 3], [4, 5]]
+    assert list(split_list([1, 2, 3, 4, 5, 6, 7], n_chunks=2)) == [[1, 2, 3, 4], [5, 6, 7]]
+    assert list(split_list([1, 2, 3, 4, 5, 6, 7, 8], n_chunks=3)) == [[1, 2, 3], [4, 5, 6], [7, 8]]
     print("Passed.")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

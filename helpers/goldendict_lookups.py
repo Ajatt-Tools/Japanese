@@ -41,5 +41,5 @@ def main():
     lookup_goldendict("肉じゃが")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

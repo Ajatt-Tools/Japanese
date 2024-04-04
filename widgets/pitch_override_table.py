@@ -20,7 +20,7 @@ except ImportError:
 
 
 def is_comma_separated_list_of_numbers(text: str):
-    return bool(re.fullmatch(r'[0-9,]+', text))
+    return bool(re.fullmatch(r"[0-9,]+", text))
 
 
 def is_allowed_accent_notation(text: str):
@@ -36,7 +36,7 @@ class PitchAccentTableRow(NamedTuple):
 class PitchOverrideTable(ExpandingTableWidget):
     _columns = tuple(ui_translate(s) for s in PitchAccentTableRow._fields)
     _sep_regex = re.compile(r"[ \r\t\n.;。、；・]+", flags=re.IGNORECASE | re.MULTILINE)
-    _column_sep = '\t'
+    _column_sep = "\t"
 
     @classmethod
     def from_tsv(cls, file_path: str, *args):
@@ -45,14 +45,14 @@ class PitchOverrideTable(ExpandingTableWidget):
     def read_tsv_file(self, file_path: str) -> Collection[PitchAccentTableRow]:
         table_rows = {}
         if os.path.isfile(file_path):
-            with open(file_path, encoding='utf8') as f:
+            with open(file_path, encoding="utf8") as f:
                 try:
                     table_rows.update(dict.fromkeys(
                         PitchAccentTableRow(*line.strip().split(self._column_sep))
                         for line in f
                     ))
                 except TypeError as ex:
-                    error = str(ex).replace('.__new__()', '')
+                    error = str(ex).replace(".__new__()", "")
                     showInfo(f"The file is formatted incorrectly. {error}.", type="warning", parent=self)
         return table_rows.keys()
 
@@ -81,8 +81,8 @@ class PitchOverrideTable(ExpandingTableWidget):
 
     def dump(self, file_path: str):
         try:
-            with open(file_path, 'w', encoding='utf8') as of:
-                of.write('\n'.join(self.as_tsv()))
+            with open(file_path, "w", encoding="utf8") as of:
+                of.write("\n".join(self.as_tsv()))
         except OSError as ex:
             showInfo(f"{ex.__class__.__name__}: this file can't be written.", type="warning", parent=self)
 
@@ -104,12 +104,12 @@ class App(QWidget):
         layout.addWidget(self.table)
 
         # example rows
-        self.table.addRow(['咖哩', 'かれー', '0'])
-        self.table.addRow(['敷礼', 'しきれい', '0'])
-        self.table.addRow(['器量良し', 'きりょうよし', '2'])
-        self.table.addRow(['隅に置けない', 'すみにおけない', '1'])
-        self.table.addRow(['尾骶骨', 'びていこつ', '2'])
-        self.table.addRow(['管水母', 'くだくらげ', '3'])
+        self.table.addRow(["咖哩", "かれー", "0"])
+        self.table.addRow(["敷礼", "しきれい", "0"])
+        self.table.addRow(["器量良し", "きりょうよし", "2"])
+        self.table.addRow(["隅に置けない", "すみにおけない", "1"])
+        self.table.addRow(["尾骶骨", "びていこつ", "2"])
+        self.table.addRow(["管水母", "くだくらげ", "3"])
 
 
 def main():
@@ -119,5 +119,5 @@ def main():
     sys.exit(app.exec())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

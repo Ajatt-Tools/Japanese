@@ -127,12 +127,12 @@ def html_to_media_line(txt: str) -> str:
 
 class DoTasks:
     def __init__(
-            self,
-            note: Note,
-            *,
-            caller: TaskCaller,
-            src_field: Optional[str] = None,
-            overwrite: bool = False,
+        self,
+        note: Note,
+        *,
+        caller: TaskCaller,
+        src_field: Optional[str] = None,
+        overwrite: bool = False,
     ):
         self._note = note
         self._caller = caller

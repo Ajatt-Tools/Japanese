@@ -6,13 +6,15 @@ from aqt.qt import *
 
 def fix_default_anki_style(self: QTableWidget):
     from aqt import mw
+
     try:
         from aqt.theme import WidgetStyle
     except ImportError:
         # Running an old version of Anki. No action is necessary.
         return
     if mw.pm.get_widget_style() == WidgetStyle.ANKI:
-        self.setStyleSheet("""
+        self.setStyleSheet(
+            """
                 QTableWidget,
                 QTableView,
                 QLineEdit,
@@ -26,4 +28,5 @@ def fix_default_anki_style(self: QTableWidget):
                     border-radius: 0px;
                     padding: 0px;
                 }
-                """)
+                """
+        )

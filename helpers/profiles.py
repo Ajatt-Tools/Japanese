@@ -40,8 +40,7 @@ class TaskCaller(enum.Enum):
 
 
 class AnkiNoteProtocol(typing.Protocol):
-    def __contains__(self, key: str) -> bool:
-        ...
+    def __contains__(self, key: str) -> bool: ...
 
 
 @dataclasses.dataclass(frozen=True)

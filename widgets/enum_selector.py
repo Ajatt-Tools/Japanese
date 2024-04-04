@@ -10,11 +10,11 @@ from ..helpers import ui_translate
 
 class EnumSelectCombo(QComboBox):
     def __init__(
-            self,
-            enum_type: enum.EnumMeta,
-            initial_value: Union[enum.Enum, str] = None,
-            show_values: bool = False,
-            parent=None,
+        self,
+        enum_type: enum.EnumMeta,
+        initial_value: Union[enum.Enum, str] = None,
+        show_values: bool = False,
+        parent=None,
     ):
         super().__init__(parent)
         for item in enum_type:

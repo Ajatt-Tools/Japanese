@@ -28,6 +28,7 @@ class BoundFile(NamedTuple):
     """
     Represents an sqlite query result.
     """
+
     headword: str
     file_name: str
     source_name: str
@@ -38,7 +39,8 @@ def build_or_clause(repeated_field_name: str, count: int) -> str:
 
 
 class Sqlite3Buddy:
-    """ Db holds three tables: ('meta', 'headwords', 'files') """
+    """Db holds three tables: ('meta', 'headwords', 'files')"""
+
     _db_path = os.path.join(user_files_dir(), CURRENT_DB.name)
 
     def __init__(self):
@@ -89,7 +91,7 @@ class Sqlite3Buddy:
     def get_media_dir_rel(self, source_name: str) -> str:
         cur = self._con.cursor()
         query = """ SELECT media_dir FROM meta WHERE source_name = ? LIMIT 1; """
-        return ''.join(cur.execute(query, (source_name,)).fetchone())
+        return "".join(cur.execute(query, (source_name,)).fetchone())
 
     def get_original_url(self, source_name: str) -> Optional[str]:
         cur = self._con.cursor()
@@ -105,7 +107,7 @@ class Sqlite3Buddy:
         self._con.commit()
 
     def is_source_cached(self, source_name: str) -> bool:
-        """ True if audio source with this name has been cached already. """
+        """True if audio source with this name has been cached already."""
         cur = self._con.cursor()
         queries = (
             """ SELECT 1 FROM meta      WHERE source_name = ? LIMIT 1; """,
@@ -129,13 +131,13 @@ class Sqlite3Buddy:
             query,
             (
                 source_name,
-                data['meta']['name'],
-                data['meta']['year'],
-                data['meta']['version'],
+                data["meta"]["name"],
+                data["meta"]["year"],
+                data["meta"]["version"],
                 None,
-                data['meta']['media_dir'],
-                data['meta'].get('media_dir_abs'),  # Possibly unset
-            )
+                data["meta"]["media_dir"],
+                data["meta"].get("media_dir_abs"),  # Possibly unset
+            ),
         )
         # Insert headwords and file names
         query = """
@@ -147,9 +149,9 @@ class Sqlite3Buddy:
             query,
             (
                 (source_name, headword, file_name)
-                for headword, file_list in data['headwords'].items()
+                for headword, file_list in data["headwords"].items()
                 for file_name in file_list
-            )
+            ),
         )
         # Insert readings and accent info.
         query = """
@@ -163,12 +165,12 @@ class Sqlite3Buddy:
                 (
                     source_name,
                     file_name,
-                    file_info['kana_reading'],
-                    file_info.get('pitch_pattern'),
-                    file_info.get('pitch_number'),
+                    file_info["kana_reading"],
+                    file_info.get("pitch_pattern"),
+                    file_info.get("pitch_number"),
                 )
-                for file_name, file_info in data['files'].items()
-            )
+                for file_name, file_info in data["files"].items()
+            ),
         )
         self._con.commit()
 
@@ -178,7 +180,8 @@ class Sqlite3Buddy:
         # and it can be arbitrary (e.g. NHK-2016).
         # `dictionary_name` is the name given to the audio source by its creator.
         # E.g. the NHK audio source provided by Ajatt-Tools has `dictionary_name` set to "NHK日本語発音アクセント新辞典".
-        cur.execute("""
+        cur.execute(
+            """
             CREATE TABLE IF NOT EXISTS meta(
                 source_name TEXT primary key not null,
                 dictionary_name TEXT not null,
@@ -188,15 +191,19 @@ class Sqlite3Buddy:
                 media_dir TEXT not null,
                 media_dir_abs TEXT
             );
-        """)
-        cur.execute("""
+        """
+        )
+        cur.execute(
+            """
             CREATE TABLE IF NOT EXISTS headwords(
                 source_name TEXT not null,
                 headword TEXT not null,
                 file_name TEXT not null
             );
-        """)
-        cur.execute("""
+        """
+        )
+        cur.execute(
+            """
             CREATE TABLE IF NOT EXISTS files(
                 source_name TEXT not null,
                 file_name TEXT not null,
@@ -204,16 +211,23 @@ class Sqlite3Buddy:
                 pitch_pattern TEXT,
                 pitch_number TEXT
             );
-        """)
-        cur.execute("""
+        """
+        )
+        cur.execute(
+            """
             CREATE INDEX IF NOT EXISTS index_names ON meta(source_name);
-        """)
-        cur.execute("""
+        """
+        )
+        cur.execute(
+            """
             CREATE INDEX IF NOT EXISTS index_file_names ON headwords(source_name, headword);
-        """)
-        cur.execute("""
+        """
+        )
+        cur.execute(
+            """
             CREATE INDEX IF NOT EXISTS index_file_info ON files(source_name, file_name);
-        """)
+        """
+        )
 
         self._con.commit()
         cur.close()
@@ -322,5 +336,5 @@ def main():
         print(f"file count: {s.distinct_file_count(source_names)}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

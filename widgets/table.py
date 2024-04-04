@@ -123,7 +123,7 @@ class ExpandingTableWidget(QTableWidget):
             raise ValueError("Invalid parameter passed.")
 
     def addEmptyLastRow(self):
-        return self.addRow(cells=('' for _column in self._columns), index=self.rowCount())
+        return self.addRow(cells=("" for _column in self._columns), index=self.rowCount())
 
     def getCellContent(self, row_n: int, col_n: int) -> Optional[CellContent]:
         """
@@ -148,10 +148,10 @@ class ExpandingTableWidget(QTableWidget):
         """
 
         def text_parts():
-            return filter(bool, map(str.strip, re.split(self._sep_regex, QApplication.clipboard().text(), )), )
+            return filter(bool, map(str.strip, re.split(self._sep_regex, QApplication.clipboard().text())))
 
         def column_iter():
-            return range(self.currentColumn(), self.columnCount(), )
+            return range(self.currentColumn(), self.columnCount())
 
         for col_n, text in zip(column_iter(), text_parts()):
             self.fillCellContent(self.currentRow(), col_n, text)

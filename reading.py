@@ -29,7 +29,7 @@ from .pitch_accents.styles import STYLE_MAP
 
 
 def convert_to_inline_style(txt: str) -> str:
-    """ Map style classes to their user-configured inline versions. """
+    """Map style classes to their user-configured inline versions."""
     for k, v in STYLE_MAP[cfg.pitch_accent.style].items():
         txt = txt.replace(k, v)
     return txt
@@ -55,11 +55,11 @@ def should_ignore_incorrect_reading(expr_reading: str) -> bool:
     https://tatsumoto-ren.github.io/blog/discussing-various-card-templates.html#distinguishing-readings
     """
     return (
-            expr_reading.isnumeric()
-            or cfg.furigana.reading_separator.strip() in expr_reading
-            or MULTIPLE_READING_SEP in expr_reading
-            or expr_reading.startswith('x')
-            or expr_reading.startswith('×')
+        expr_reading.isnumeric()
+        or cfg.furigana.reading_separator.strip() in expr_reading
+        or MULTIPLE_READING_SEP in expr_reading
+        or expr_reading.startswith("x")
+        or expr_reading.startswith("×")
     )
 
 
@@ -74,7 +74,7 @@ def split_possible_furigana(expr: str) -> WordReading:
 
     # If there are numbers or multiple readings present, ignore all of them.
     if expr_reading and should_ignore_incorrect_reading(expr_reading):
-        expr_reading = ''
+        expr_reading = ""
 
     return WordReading(expr, expr_reading)
 
@@ -124,7 +124,7 @@ def get_pronunciations(expr: str, sanitize: bool = True, recurse: bool = True, u
     # or if the kana reading of the full expression can be sourced from mecab,
     # and the user wants to perform kana lookups, then try the reading.
     if not ret and cfg.pitch_accent.kana_lookups:
-        expr_reading = (expr_reading or single_word_reading(expr))
+        expr_reading = expr_reading or single_word_reading(expr)
         if expr_reading and (lookup_reading := acc_dict.lookup(expr_reading)):
             ret.setdefault(expr, []).extend(lookup_reading)
 
@@ -166,7 +166,7 @@ def get_notation(entry: FormattedEntry, mode: PitchOutputFormat) -> str:
     elif mode == PitchOutputFormat.number:
         return entry.pitch_number
     elif mode == PitchOutputFormat.html_and_number:
-        return update_html(f'{entry.html_notation} {entry.pitch_number_html}')
+        return update_html(f"{entry.html_notation} {entry.pitch_number_html}")
     raise Exception("Unreachable.")
 
 
@@ -185,12 +185,12 @@ def entries_to_html(entries: Sequence[FormattedEntry], output_format: PitchOutpu
 
 
 def format_pronunciations(
-        pronunciations: AccentDict,
-        output_format: PitchOutputFormat = PitchOutputFormat.html,
-        sep_single: str = "・",
-        sep_multi: str = "、",
-        expr_sep: str = None,
-        max_results: int = None,
+    pronunciations: AccentDict,
+    output_format: PitchOutputFormat = PitchOutputFormat.html,
+    sep_single: str = "・",
+    sep_multi: str = "、",
+    expr_sep: str = None,
+    max_results: int = None,
 ) -> str:
     ordered_dict = OrderedDict()
     for word, entries in pronunciations.items():
@@ -230,7 +230,7 @@ def format_furigana_readings(word: str, hiragana_readings: Sequence[str]) -> str
 
 
 def format_hiragana_readings(readings: Sequence[str]) -> str:
-    """ Discard kanji and format the readings as hiragana. """
+    """Discard kanji and format the readings as hiragana."""
     if 1 < len(readings):
         return f"({cfg.furigana.reading_separator.join(map(to_hiragana, readings))})"
     else:
@@ -238,12 +238,12 @@ def format_hiragana_readings(readings: Sequence[str]) -> str:
 
 
 def discard_extra_readings(
-        readings: Sequence[str],
-        *,
-        max_results: int,
-        discard_mode: ReadingsDiscardMode
+    readings: Sequence[str],
+    *,
+    max_results: int,
+    discard_mode: ReadingsDiscardMode,
 ) -> Sequence[str]:
-    """ Depending on the settings, if there are too many readings, discard some or all but the first. """
+    """Depending on the settings, if there are too many readings, discard some or all but the first."""
     if max_results <= 0 or len(readings) <= max_results:
         return readings
     elif discard_mode == ReadingsDiscardMode.discard_extra:
@@ -273,7 +273,7 @@ def try_lookup_full_text(text: str) -> Iterable[AccDbParsedToken]:
                 part_of_speech=PartOfSpeech.unknown,
                 inflection_type=Inflection.dictionary_form,
                 katakana_reading=None,
-                headword_accents=[PitchAccentEntry.from_formatted(entry) for entry in entries]
+                headword_accents=[PitchAccentEntry.from_formatted(entry) for entry in entries],
             )
 
 
@@ -306,7 +306,7 @@ def all_hiragana_readings(token: AccDbParsedToken) -> Iterable[str]:
         yield adjust_to_inflection(
             raw_word=token.word,
             headword=token.headword,
-            headword_reading=to_hiragana(entry.katakana_reading)
+            headword_reading=to_hiragana(entry.katakana_reading),
         )
 
 
@@ -335,13 +335,13 @@ def format_acc_db_result(out: AccDbParsedToken, full_hiragana: bool = False) -> 
 def append_accents(token: MecabParsedToken) -> AccDbParsedToken:
     return AccDbParsedToken(
         **dataclasses.asdict(token),
-        headword_accents=[PitchAccentEntry.from_formatted(entry) for entry in iter_accents(token.headword)]
+        headword_accents=[PitchAccentEntry.from_formatted(entry) for entry in iter_accents(token.headword)],
     )
 
 
 def format_parsed_tokens(
-        tokens: Sequence[Union[AccDbParsedToken, Token]],
-        full_hiragana: bool = False
+    tokens: Sequence[Union[AccDbParsedToken, Token]],
+    full_hiragana: bool = False,
 ) -> Iterable[str]:
     for token in tokens:
         if isinstance(token, AccDbParsedToken):
@@ -372,7 +372,7 @@ def generate_furigana(src_text: str, split_morphemes: bool = True, full_hiragana
         else:
             # Add the string as is, without furigana.
             substrings.append(token)
-    return ''.join(format_parsed_tokens(substrings, full_hiragana)).strip()
+    return "".join(format_parsed_tokens(substrings, full_hiragana)).strip()
 
 
 # Entry point

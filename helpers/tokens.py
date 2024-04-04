@@ -35,17 +35,17 @@ class ParseableToken(Token):
 
 
 def split_separators(expr: str) -> list[str]:
-    """ Split text by common separators (like / or ・) into separate words that can be looked up. """
+    """Split text by common separators (like / or ・) into separate words that can be looked up."""
 
     # Replace all typical separators with a space
-    expr = re.sub(NON_JP_REGEX, ' ', expr)  # Remove non-Japanese characters
-    expr = re.sub(JP_SEP_REGEX, ' ', expr)  # Remove Japanese punctuation
-    return expr.split(' ')
+    expr = re.sub(NON_JP_REGEX, " ", expr)  # Remove non-Japanese characters
+    expr = re.sub(JP_SEP_REGEX, " ", expr)  # Remove Japanese punctuation
+    return expr.split(" ")
 
 
 def clean_furigana(expr: str) -> str:
     """Remove text in [] used to represent furigana."""
-    return re.sub(r' *([^ \[\]]+)\[[^\[\]]+]', r'\g<1>', expr, flags=RE_FLAGS)
+    return re.sub(r" *([^ \[\]]+)\[[^\[\]]+]", r"\g<1>", expr, flags=RE_FLAGS)
 
 
 def mark_non_jp_token(m: re.Match) -> str:
@@ -61,7 +61,7 @@ def parts(expr: str, pattern: re.Pattern):
 
 
 def split_counters(text: str) -> Iterable[ParseableToken]:
-    """ Preemptively split text by words that mecab doesn't know how to parse. """
+    """Preemptively split text by words that mecab doesn't know how to parse."""
     for part in RE_COUNTERS.split(text):
         if part:
             yield ParseableToken(part)
@@ -69,11 +69,11 @@ def split_counters(text: str) -> Iterable[ParseableToken]:
 
 def _tokenize(expr: str, *, split_regexes: Sequence[re.Pattern]) -> Iterable[Token]:
     if not split_regexes:
-        yield from split_counters(expr.replace(' ', ''))
+        yield from split_counters(expr.replace(" ", ""))
     else:
         for part in parts(expr, split_regexes[0]):
             if part:
-                if m := re.fullmatch(r'<no-jp>(.*?)</no-jp>', part, flags=RE_FLAGS):
+                if m := re.fullmatch(r"<no-jp>(.*?)</no-jp>", part, flags=RE_FLAGS):
                     yield Token(m.group(1))
                 else:
                     yield from _tokenize(part, split_regexes=split_regexes[1:])
@@ -100,7 +100,7 @@ def main():
     print(clean_furigana("富竹[とみたけ]さん 今[いま] 扉[とびら]の 南京錠[なんきんじょう]いじってませんでした？"))
 
     expr = (
-        "<div>Lorem ipsum dolor sit amet, [sound:はな.mp3]<img src=\"はな.jpg\"> "
+        '<div>Lorem ipsum dolor sit amet, [sound:はな.mp3]<img src="はな.jpg"> '
         "consectetur adipiscing<br> elit <b>私達</b>は昨日ロンドンに着いた。おはよう。 Тест.</div>"
         "1月8日八日.彼女は１２月のある寒い夜に亡くなった。"
         " 情報処理[じょうほうしょり]の 技術[ぎじゅつ]は 日々[にちにち,ひび] 進化[しんか]している。"
@@ -109,5 +109,5 @@ def main():
         print(f"{token.__class__.__name__}({token})")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

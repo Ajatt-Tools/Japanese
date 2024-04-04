@@ -92,10 +92,10 @@ def format_nakadaka(moras: Sequence[str], accent: int) -> str:
 
 
 def format_entry(moras: Sequence[str], accent: Union[int, str]) -> str:
-    """ Format an entry from the data in the original pitch accents file to something that uses html """
+    """Format an entry from the data in the original pitch accents file to something that uses html"""
 
     if type(accent) != int:
-        return literal_pronunciation(''.join(moras))
+        return literal_pronunciation("".join(moras))
     elif len(moras) == 1:
         return format_one_mora_word(moras, is_flat=(accent == 0))
     elif accent == 0:

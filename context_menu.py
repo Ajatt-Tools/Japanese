@@ -18,7 +18,7 @@ from .reading import generate_furigana
 
 
 class ContextMenuAction(abc.ABC):
-    subclasses: list[type['ContextMenuAction']] = []
+    subclasses: list[type["ContextMenuAction"]] = []
     shown_when_not_editing = False
 
     def __init_subclass__(cls, **kwargs):

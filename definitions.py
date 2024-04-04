@@ -69,9 +69,9 @@ class SakuraParisAnkiClient(SakuraParisClient):
 
         for field_name in (self._config.source, self._config.destination):
             if field_name not in editor.note:
-                return tooltip(f"Note doesn't have field \"{field_name}\".")
+                return tooltip(f'Note doesn\'t have field "{field_name}".')
         if not editor.note[self._config.source]:
-            return tooltip(f"Source field \"{self._config.source}\" is empty.")
+            return tooltip(f'Source field "{self._config.source}" is empty.')
 
         progress = create_progress_dialog(editor.parentWindow)
 

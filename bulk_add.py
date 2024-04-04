@@ -38,13 +38,13 @@ def bulk_add_readings(nids: Sequence[NoteId], parent: Browser) -> None:
             parent=parent,
             title="Tasks done",
             textFormat="rich",
-            text=f"Processed {len(nids)} selected notes."
+            text=f"Processed {len(nids)} selected notes.",
         )
     ).run_in_background()
 
 
 def setup_browser_menu(browser: Browser):
-    """ Add menu entry to browser window """
+    """Add menu entry to browser window"""
     action = QAction(ACTION_NAME, browser)
     qconnect(action.triggered, lambda: bulk_add_readings(browser.selectedNotes(), parent=browser))
     browser.form.menuEdit.addAction(action)

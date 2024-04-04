@@ -78,7 +78,7 @@ class SakuraParisClient(anki.httpclient.HttpClient):
 
     def _parse_result(self, html_page: str) -> str:
         soup = BeautifulSoup(html_page, "html.parser")
-        for node in soup.find_all('div', class_="content"):
+        for node in soup.find_all("div", class_="content"):
             del node["class"]
             self._trim_node(node)
             yield str(node).strip().replace("\n", DEF_SEP)
@@ -110,5 +110,5 @@ def main():
     print(client.fetch_def("故郷"))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -18,6 +18,7 @@ class DbFileSchema(NamedTuple):
     the add-on opens a different sqlite3 file,
     thus avoiding errors that will otherwise occur due to mismatching tables, columns, etc.
     """
+
     prefix: str
     ver: str
     ext: str
@@ -28,9 +29,9 @@ class DbFileSchema(NamedTuple):
 
     def remove_deprecated_files(self) -> None:
         for file in os.scandir(user_files_dir()):
-            if file.name.startswith(self.prefix) and file.name.endswith(f'.{self.ext}'):
+            if file.name.startswith(self.prefix) and file.name.endswith(f".{self.ext}"):
                 try:
-                    schema = DbFileSchema(*file.name.split('.'))
+                    schema = DbFileSchema(*file.name.split("."))
                 except (ValueError, TypeError):
                     os.remove(file)
                     print(f"Removed invalid database file: {file.path}")
@@ -51,5 +52,5 @@ def main():
     CURRENT_DB.remove_deprecated_files()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

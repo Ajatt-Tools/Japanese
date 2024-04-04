@@ -20,11 +20,13 @@ except ImportError:
 class SourceEnableCheckbox(QCheckBox):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.setStyleSheet("""
+        self.setStyleSheet(
+            """
         QCheckBox {
             margin: 0 auto;
         }
-        """)
+        """
+        )
 
 
 def tooltip_cache_remove_complete(removed: list[AudioSourceConfig]):
@@ -45,8 +47,7 @@ def tooltip_cache_remove_complete(removed: list[AudioSourceConfig]):
 
 
 class AudioManagerInterface(typing.Protocol):
-    def request_new_session(self):
-        ...
+    def request_new_session(self): ...
 
 
 class AudioSourcesTable(ExpandingTableWidget):
@@ -138,7 +139,7 @@ class AudioSourcesTable(ExpandingTableWidget):
             if all(row) and (row := pack_back(row)).is_valid:
                 row.name = normalize_filename(row.name)
                 while row.name in sources:
-                    row.name += '(new)'
+                    row.name += "(new)"
                 sources[row.name] = row
         return sources.values()
 
@@ -156,7 +157,7 @@ class AudioSourcesTable(ExpandingTableWidget):
 
     def fillCellContent(self, row_n: int, col_n: int, content: str):
         if isinstance(cell := self.getCellContent(row_n, col_n), QCheckBox):
-            return cell.setChecked(any(value in content.lower() for value in ('true', 'yes', 'y')))
+            return cell.setChecked(any(value in content.lower() for value in ("true", "yes", "y")))
         return super().fillCellContent(row_n, col_n, content)
 
 
@@ -204,5 +205,5 @@ def main():
     sys.exit()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
