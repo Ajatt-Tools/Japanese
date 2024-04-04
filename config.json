@@ -70,7 +70,8 @@
     "to_katakana": true,
     "to_hiragana": true,
     "literal_pronunciation": true,
-    "look_up_word": true
+    "look_up_word": true,
+    "browser_search": true
   },
   "toolbar": {
     "generate_all_button": {
