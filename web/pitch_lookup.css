@@ -1,0 +1,51 @@
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+}
+
+body {
+    margin: 0;
+    font-size: 1.5rem;
+    font-family: "Noto Serif", "Noto Serif CJK JP", "Yu Mincho", "Liberation Serif", "Times New Roman", Times, Georgia,
+        Serif;
+    background-color: #fffaf0;
+    color: #2a1b0a;
+    line-height: 1.4;
+    text-align: left;
+}
+
+.pitch_lookup {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    row-gap: 0.2rem;
+    column-gap: 0.2rem;
+}
+
+.keyword {
+    color: #582020;
+}
+
+.keyword,
+.pitch_accents {
+    margin-top: 0px;
+    margin-bottom: 0px;
+    background-color: rgba(87, 43, 43, 0.1);
+    padding: 0.2rem;
+}
+
+.keyword:nth-of-type(2n),
+.pitch_accents:nth-of-type(2n) {
+    background-color: rgba(144, 148, 113, 0.1);
+}
+
+ol,
+ul {
+    padding-left: 1.5em;
+}
+
+li + li {
+    margin-top: 0.4rem;
+}

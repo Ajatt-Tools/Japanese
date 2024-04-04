@@ -18,55 +18,16 @@ from .reading import get_pronunciations, format_pronunciations, update_html
 ACTION_NAME = "Pitch Accent lookup"
 
 
-def html_page(body_content: str):
-    head_content = """
-    <meta charset="UTF-8" />
-    <title>Pronunciations</title>
-    <style>
-        body {
-            box-sizing: border-box;
-            font-size: 25px;
-            font-family: "Noto Serif",
-                "Noto Serif CJK JP",
-                "Yu Mincho",
-                "Liberation Serif",
-                "Times New Roman",
-                Times,
-                Georgia,
-                Serif;
-            background-color: #FFFAF0;
-            color: #2A1B0A;
-            line-height: 1.4;
-            text-align: left;
-
-            display: grid;
-            grid-template-columns: max-content 1fr;
-            row-gap: 8px;
-            column-gap: 8px
-        }
-
-        .key {
-            color: #582020;
-        }
-
-        .key,
-        .value {
-            margin-top: 0px;
-            margin-bottom: 0px;
-        }
-
-        li + li {
-            margin-top: 0.5rem;
-        }
-    </style>
-    """
-
-    return f'<!DOCTYPE html><html><head>{head_content}</head><body>{body_content}</body></html>'
-
-
 class ViewPitchAccentsDialog(QDialog):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    assert mw, "Anki must be initialized."
+
+    _web_relpath = f"/_addons/{mw.addonManager.addonFromModule(__name__)}/web"
+    _css_relpath = f"{_web_relpath}/pitch_lookup.css"
+
+    mw.addonManager.setWebExports(__name__, r"(img|web)/.*\.(js|css|html|png|svg)")
+
+    def __init__(self, parent: QWidget):
+        super().__init__(parent)
         self._webview = AnkiWebView(parent=self, title=ACTION_NAME)
         self._pronunciations = None
         self._setup_ui()
@@ -83,8 +44,8 @@ class ViewPitchAccentsDialog(QDialog):
 
     def _make_bottom_buttons(self):
         buttons = (
-            ('Ok', self.accept),
-            ('Copy HTML to Clipboard', self._copy_pronunciations)
+            ("Ok", self.accept),
+            ("Copy HTML to Clipboard", self._copy_pronunciations),
         )
         hbox = QHBoxLayout()
         for label, action in buttons:
@@ -95,32 +56,36 @@ class ViewPitchAccentsDialog(QDialog):
         return hbox
 
     def _copy_pronunciations(self):
-        return QApplication.clipboard().setText(format_pronunciations(
-            self._pronunciations,
-            sep_single='、',
-            sep_multi='<br>',
-            expr_sep='：',
-            max_results=99,
-        ))
+        return QApplication.clipboard().setText(
+            format_pronunciations(
+                self._pronunciations,
+                sep_single="、",
+                sep_multi="<br>",
+                expr_sep="：",
+                max_results=99,
+            )
+        )
 
-    def lookup(self, search: str):
+    def lookup_pronunciations(self, search: str):
         self._pronunciations = get_pronunciations(search)
         return self
 
-    def format(self):
-        """ Format pronunciations as an HTML list. """
+    def set_html_result(self):
+        """Format pronunciations as an HTML list."""
         ordered_dict = OrderedDict()
         for word, entries in self._pronunciations.items():
-            ordered_dict[word] = ''.join(dict.fromkeys(
-                f'<li>{update_html(entry.html_notation)}[{entry.pitch_number}]</li>'
-                for entry in entries
-            ))
+            ordered_dict[word] = "".join(
+                dict.fromkeys(f"<li>{update_html(entry.html_notation)}[{entry.pitch_number}]</li>" for entry in entries)
+            )
 
         entries = []
         for word, html in ordered_dict.items():
-            entries.append(f'<div class="key">{word}</div><ol class="value">{html}</ol>')
+            entries.append(f'<div class="keyword">{word}</div><div class="pitch_accents"><ol>{html}</ol></div>')
 
-        self._webview.setHtml(html_page(''.join(entries)))
+        self._webview.stdHtml(
+            body=f'<main class="pitch_lookup">{"".join(entries)}</main>',
+            css=[self._css_relpath],
+        )
         return self
 
     def reject(self) -> None:
@@ -137,20 +102,15 @@ class ViewPitchAccentsDialog(QDialog):
 
 
 def on_lookup_pronunciation(parent: QWidget, text: str):
-    """ Do a lookup on the selection """
+    """Do a lookup on the selection"""
     if text := clean_furigana(text).strip():
-        (
-            ViewPitchAccentsDialog(parent)
-            .lookup(text)
-            .format()
-            .exec()
-        )
+        (ViewPitchAccentsDialog(parent).lookup_pronunciations(text).set_html_result().exec())
     else:
         showInfo(_("Empty selection."))
 
 
 def setup_mw_lookup_action(root_menu: QMenu) -> None:
-    """ Add a main window entry """
+    """Add a main window entry"""
     action = QAction(ACTION_NAME, root_menu)
     qconnect(action.triggered, lambda: on_lookup_pronunciation(mw, mw.web.selectedText()))
     if shortcut := cfg.pitch_accent.lookup_shortcut:
@@ -159,12 +119,12 @@ def setup_mw_lookup_action(root_menu: QMenu) -> None:
 
 
 def add_context_menu_item(webview: AnkiWebView, menu: QMenu) -> None:
-    """ Add a context menu entry """
+    """Add a context menu entry"""
     menu.addAction(ACTION_NAME, lambda: on_lookup_pronunciation(webview, webview.selectedText()))
 
 
 def setup_browser_menu(browser: Browser) -> None:
-    """ Add a browser entry """
+    """Add a browser entry"""
     action = QAction(ACTION_NAME, browser)
     qconnect(action.triggered, lambda: on_lookup_pronunciation(browser, browser.editor.web.selectedText()))
     if shortcut := cfg.pitch_accent.lookup_shortcut:
