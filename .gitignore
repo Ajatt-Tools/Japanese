@@ -1,6 +1,8 @@
 # Ignored files
 __pycache__
+.mypy_cache
 .idea
+.vscode
 *.pickle
 *.db
 *.sqlite
