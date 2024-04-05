@@ -1,0 +1,8 @@
+/test export-ignore
+/*.sh export-ignore
+.git* export-ignore
+.idea export-ignore
+.vscode export-ignore
+.mypy_cache export-ignore
+__pycache__ export-ignore
+meta.json export-ignore
