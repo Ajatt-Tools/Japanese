@@ -119,6 +119,9 @@ class BrowserSearch(ContextMenuAction):
     shown_when_not_editing = True
 
     def action(self, search_text: str) -> None:
+        """
+        Paste selected text into the Browser's search bar and perform search.
+        """
         if not search_text:
             return tooltip("Empty selection.", parent=self._parent_window())
         browser = aqt.dialogs.open("Browser", aqt.mw)  # browser requires mw (AnkiQt) to be passed as parent
