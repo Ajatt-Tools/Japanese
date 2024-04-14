@@ -8,6 +8,11 @@ import anki.httpclient
 import requests
 from requests import RequestException
 
+try:
+    from .misc import clamp
+except ImportError:
+    from misc import clamp
+
 
 @dataclasses.dataclass(frozen=True)
 class FileUrlData:
@@ -38,12 +43,7 @@ class AudioManagerException(RequestException):
     exception: Optional[Exception] = None
 
     def describe_short(self) -> str:
-        return str(
-            self.exception.__class__.__name__
-            if self.exception
-            else
-            self.response.status_code
-        )
+        return str(self.exception.__class__.__name__ if self.exception else self.response.status_code)
 
 
 class AudioSettingsProtocol(Protocol):
@@ -69,20 +69,20 @@ class AudioManagerHttpClient:
     }
 
     def __init__(
-            self,
-            audio_settings: AudioSettingsProtocol,
-            progress_hook: Optional[anki.httpclient.ProgressCallback] = None
+        self,
+        audio_settings: AudioSettingsProtocol,
+        progress_hook: Optional[anki.httpclient.ProgressCallback] = None,
     ) -> None:
         self._audio_settings = audio_settings
         self._client = anki.httpclient.HttpClient(progress_hook)
 
     def _get_with_timeout(self, url: str, timeout: int) -> requests.Response:
         # Set timeout
-        self._client.timeout = min(max(timeout, 2), 99)
+        self._client.timeout = clamp(min_val=2, val=timeout, max_val=99)
         return self._client.get(url, headers=self.headers.copy())
 
     def _get_with_retry(self, url: str, timeout: int, attempts: int) -> requests.Response:
-        for _attempt in range(min(max(0, attempts - 1), 99)):
+        for _attempt in range(clamp(min_val=0, val=attempts - 1, max_val=99)):
             try:
                 return self._get_with_timeout(url, timeout)
             except requests.Timeout:
@@ -106,14 +106,14 @@ class AudioManagerHttpClient:
         except OSError as ex:
             raise AudioManagerException(
                 file,
-                f'{file.url} download failed with {ex.__class__.__name__}',
-                exception=ex
+                f"{file.url} download failed with {ex.__class__.__name__}",
+                exception=ex,
             )
         if response.status_code != requests.codes.ok:
             raise AudioManagerException(
                 file,
-                f'{file.url} download failed with return code {response.status_code}',
-                response=response
+                f"{file.url} download failed with return code {response.status_code}",
+                response=response,
             )
         return self._client.stream_content(response)
 

@@ -9,12 +9,15 @@ from collections.abc import Iterable
 
 from aqt.qt import *
 
+
 try:
     from .table import ExpandingTableWidget, CellContent, TableRow
     from ..helpers.audio_manager import AudioSourceConfig, normalize_filename
+    from ..helpers.misc import clamp
 except ImportError:
     from table import ExpandingTableWidget, CellContent, TableRow
     from helpers.audio_manager import AudioSourceConfig, normalize_filename
+    from helpers.misc import clamp
 
 
 class SourceEnableCheckbox(QCheckBox):
@@ -96,7 +99,10 @@ class AudioSourcesTable(ExpandingTableWidget):
             current_row = self.currentRow()
             current_source_copy = pack_back(self.getRowCellContents(current_row))
             self.removeRow(current_row)
-            self.addSource(current_source_copy, index=max(0, min(current_row + offset, self.rowCount() - 1)))
+            self.addSource(
+                current_source_copy,
+                index=clamp(min_val=0, val=current_row + offset, max_val=self.rowCount() - 1),
+            )
 
         action = QAction("Move row down", self)
         qconnect(action.triggered, lambda: move_current_row(1))
@@ -120,15 +126,15 @@ class AudioSourcesTable(ExpandingTableWidget):
         return isinstance(cell, QCheckBox) and cell.isChecked() or super().isCellFilled(cell)
 
     def addSource(self, source: AudioSourceConfig, index: int = None):
-        self.addRow((checkbox := SourceEnableCheckbox(), source.name, source.url,), index=index)
+        self.addRow((checkbox := SourceEnableCheckbox(), source.name, source.url), index=index)
         # The checkbox widget has to notify the table widget when its state changes.
         # Otherwise, the table will not automatically add/remove rows.
         qconnect(checkbox.stateChanged, lambda checked: self.onCellChanged(self.currentRow()))
         checkbox.setChecked(source.enabled)
 
     def addEmptyLastRow(self):
-        """ Redefine this method. """
-        return self.addSource(AudioSourceConfig(True, "", "", ), index=self.rowCount())
+        """Redefine this method."""
+        return self.addSource(AudioSourceConfig(True, "", ""), index=self.rowCount())
 
     def iterateConfigs(self) -> Iterable[AudioSourceConfig]:
         """
@@ -189,10 +195,10 @@ class App(QWidget):
         layout.addWidget(self.table)
 
         # example rows
-        self.table.addSource(AudioSourceConfig(True, 'NHK1', '/test/nhk/1.json', ))
-        self.table.addSource(AudioSourceConfig(False, 'NHK2', '/test/nhk/2.json', ))
-        self.table.addSource(AudioSourceConfig(True, 'NHK3', '/test/nhk/3.json', ))
-        self.table.addSource(AudioSourceConfig(False, 'NHK4', '/test/nhk/4.json', ))
+        self.table.addSource(AudioSourceConfig(True, "NHK1", "/test/nhk/1.json"))
+        self.table.addSource(AudioSourceConfig(False, "NHK2", "/test/nhk/2.json"))
+        self.table.addSource(AudioSourceConfig(True, "NHK3", "/test/nhk/3.json"))
+        self.table.addSource(AudioSourceConfig(False, "NHK4", "/test/nhk/4.json"))
 
 
 def main():
