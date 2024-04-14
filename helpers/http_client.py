@@ -78,7 +78,7 @@ class AudioManagerHttpClient:
 
     def _get_with_timeout(self, url: str, timeout: int) -> requests.Response:
         # Set timeout
-        self._client.timeout = max(min(timeout, 2), 99)
+        self._client.timeout = min(max(timeout, 2), 99)
         return self._client.get(url, headers=self.headers.copy())
 
     def _get_with_retry(self, url: str, timeout: int, attempts: int) -> requests.Response:
