@@ -6,23 +6,22 @@ from collections.abc import Iterable, Sequence
 
 RE_FLAGS = re.MULTILINE | re.IGNORECASE
 HTML_AND_MEDIA_REGEX = re.compile(
-    r'<[^<>]+>|\[sound:[^\[\]]+]',
-    flags=RE_FLAGS
+    r"<[^<>]+>|\[sound:[^\[\]]+]",
+    flags=RE_FLAGS,
 )
 NON_JP_REGEX = re.compile(
     # Reference: https://stackoverflow.com/questions/15033196/
     # Added arabic numbers.
-    r'[^\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\uff66-\uff9f\u4e00-\u9fff\u3400-\u4dbf０-９0-9]+',
-    flags=RE_FLAGS
+    r"[^\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\uff66-\uff9f\u4e00-\u9fff\u3400-\u4dbf０-９0-9]+",
+    flags=RE_FLAGS,
 )
 JP_SEP_REGEX = re.compile(
     # Reference: https://wikiless.org/wiki/List_of_Japanese_typographic_symbols
-    r'[\r\n\t仝　 ・、※【】「」〒◎×〃゜『』《》～〜~〽,.。〄〇〈〉〓〔〕〖〗〘〙〚〛〝〞〟〠〡〢〣〥〦〧〨〭〮〯〫〬〶〷〸〹〺〻〼〾〿！？…ヽヾゞ〱〲〳〵〴（）［］｛｝｟｠゠＝‥•◦﹅﹆＊♪♫♬♩ⓍⓁⓎ]+',
-    flags=RE_FLAGS
+    r"[\r\n\t仝　 ・、※【】「」〒◎×〃゜『』《》～〜~〽,.。〄〇〈〉〓〔〕〖〗〘〙〚〛〝〞〟〠〡〢〣〥〦〧〨〭〮〯〫〬〶〷〸〹〺〻〼〾〿！？…ヽヾゞ〱〲〳〵〴（）［］｛｝｟｠゠＝‥•◦﹅﹆＊♪♫♬♩ⓍⓁⓎ]+",
+    flags=RE_FLAGS,
 )
 RE_COUNTERS = re.compile(
-    r'([0-9０-９一二三四五六七八九十]{1,4}(?:[つ月日人筋隻丁品番枚時回円万歳限]|万人))',
-    flags=RE_FLAGS
+    r"([0-9０-９一二三四五六七八九十]{1,4}(?:[つ月日人筋隻丁品番枚時回円万歳限]|万人))", flags=RE_FLAGS
 )
 
 
@@ -54,9 +53,9 @@ def mark_non_jp_token(m: re.Match) -> str:
 
 def parts(expr: str, pattern: re.Pattern):
     return re.split(
-        r'(<no-jp>.*?</no-jp>)',
+        r"(<no-jp>.*?</no-jp>)",
         string=re.sub(pattern, mark_non_jp_token, expr),
-        flags=RE_FLAGS
+        flags=RE_FLAGS,
     )
 
 
@@ -87,7 +86,7 @@ def tokenize(expr: str):
     """
     return _tokenize(
         expr=clean_furigana(expr),
-        split_regexes=(HTML_AND_MEDIA_REGEX, NON_JP_REGEX, JP_SEP_REGEX,),
+        split_regexes=(HTML_AND_MEDIA_REGEX, NON_JP_REGEX, JP_SEP_REGEX),
     )
 
 

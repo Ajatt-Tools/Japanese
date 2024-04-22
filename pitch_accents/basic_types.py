@@ -108,11 +108,13 @@ class AccDbParsedToken(MecabParsedToken):
 def main():
     from mecab_controller.basic_types import PartOfSpeech, Inflection
 
-    entry = PitchAccentEntry.from_formatted(FormattedEntry(
-        katakana_reading="たのしい",
-        pitch_number="3",
-        html_notation=""
-    ))
+    entry = PitchAccentEntry.from_formatted(
+        FormattedEntry(
+            katakana_reading="たのしい",
+            pitch_number="3",
+            html_notation="",
+        )
+    )
 
     token = AccDbParsedToken(
         word="楽しかった",
@@ -125,11 +127,13 @@ def main():
 
     assert token.describe_pitches() == "たのしい:nakadaka-3"
 
-    entry = PitchAccentEntry.from_formatted(FormattedEntry(
-        katakana_reading="なや",
-        pitch_number="0,1",
-        html_notation=""
-    ))
+    entry = PitchAccentEntry.from_formatted(
+        FormattedEntry(
+            katakana_reading="なや",
+            pitch_number="0,1",
+            html_notation="",
+        )
+    )
 
     token = AccDbParsedToken(
         word="納屋",
@@ -149,9 +153,10 @@ def main():
         inflection_type=Inflection.dictionary_form,
         headword_accents=[
             PitchAccentEntry(
-                katakana_reading='ソマツ',
-                pitches=[PitchParam(type=PitchType.atamadaka, number='1')])
-        ]
+                katakana_reading="ソマツ",
+                pitches=[PitchParam(type=PitchType.atamadaka, number="1")],
+            )
+        ],
     )
     assert token.describe_pitches() == "ソマツ:atamadaka"
 

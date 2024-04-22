@@ -28,7 +28,7 @@ try:
     from .file_ops import find_config_json
     from ..mecab_controller.kana_conv import to_katakana
 except ImportError:
-    from http_client import (
+    from helpers.http_client import (
         AudioManagerException,
         AudioSourceConfig,
         AudioManagerHttpClient,
@@ -43,11 +43,7 @@ except ImportError:
 
 
 def file_exists(file_path: str):
-    return (
-            file_path
-            and os.path.isfile(file_path)
-            and os.stat(file_path).st_size > 0
-    )
+    return file_path and os.path.isfile(file_path) and os.stat(file_path).st_size > 0
 
 
 RE_FILENAME_PROHIBITED = re.compile(r'[\\\n\t\r#%&\[\]{}<>^*?/$!\'":@+`|=]+', flags=re.MULTILINE | re.IGNORECASE)
@@ -95,9 +91,8 @@ class AudioSource(AudioSourceConfig):
         # which will be used if set.
         # Otherwise, fall back to relative path.
         self.raise_if_not_ready()
-        return (
-                self.db.get_media_dir_abs(self.name)
-                or self.join(os.path.dirname(self.url), self.db.get_media_dir_rel(self.name))
+        return self.db.get_media_dir_abs(self.name) or self.join(
+            os.path.dirname(self.url), self.db.get_media_dir_rel(self.name)
         )
 
     def join(self, *args) -> Union[str, bytes]:
@@ -156,10 +151,7 @@ class TotalAudioStats:
 
 def read_zip(zip_in: zipfile.ZipFile, audio_source: AudioSource) -> bytes:
     try:
-        return zip_in.read(next(
-            name for name in zip_in.namelist()
-            if name.endswith('.json')
-        ))
+        return zip_in.read(next(name for name in zip_in.namelist() if name.endswith(".json")))
     except (StopIteration, zipfile.BadZipFile) as ex:
         raise AudioManagerException(
             audio_source,
@@ -187,8 +179,7 @@ class AudioSourceManager:
         self._http_client = http_client
         self._db: Sqlite3Buddy = db
         self._audio_sources: dict[str, AudioSource] = {
-            source.name: dataclasses.replace(source, db=self._db)
-            for source in audio_sources
+            source.name: dataclasses.replace(source, db=self._db) for source in audio_sources
         }
 
     @property
@@ -252,11 +243,17 @@ class AudioSourceManager:
             components.append(to_katakana(file_info["kana_reading"]))
 
         # If pitch number is present, append it after reading.
-        if file_info['pitch_number']:
-            components.append(norm_pitch_numbers(file_info['pitch_number']))
+        if file_info["pitch_number"]:
+            components.append(norm_pitch_numbers(file_info["pitch_number"]))
 
-        desired_filename = '_'.join((file.headword, *components, source.name,))
-        desired_filename = f'{normalize_filename(desired_filename)}{os.path.splitext(file.file_name)[-1]}'
+        desired_filename = "_".join(
+            (
+                file.headword,
+                *components,
+                source.name,
+            )
+        )
+        desired_filename = f"{normalize_filename(desired_filename)}{os.path.splitext(file.file_name)[-1]}"
 
         return FileUrlData(
             url=source.join(source.media_dir, file.file_name),

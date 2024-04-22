@@ -50,9 +50,17 @@ def open_file(path: str) -> None:
     from distutils.spawn import find_executable
 
     if (terminal := os.getenv("TERMINAL")) and (lf := (os.getenv("FILE") or find_executable("lf"))):
-        subprocess.Popen([terminal, "-e", lf, path, ], shell=False, start_new_session=True)
+        subprocess.Popen(
+            [terminal, "-e", lf, path],
+            shell=False,
+            start_new_session=True,
+        )
     elif opener := find_executable("xdg-open"):
-        subprocess.Popen([opener, f"file://{path}", ], shell=False, start_new_session=True)
+        subprocess.Popen(
+            [opener, f"file://{path}"],
+            shell=False,
+            start_new_session=True,
+        )
     else:
         with no_bundled_libs():
             QDesktopServices.openUrl(QUrl(f"file://{path}"))

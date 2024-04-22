@@ -23,10 +23,7 @@ def is_inflected(headword: str, reading: str) -> bool:
     A reading is inflected if the word's kana ending isn't equal to the reading's ending.
     """
     headword, reading = replace_handakuten(headword), replace_handakuten(reading)
-    return bool(
-        (kana_suffix := longest_kana_suffix(headword))
-        and pr(kana_suffix) != pr(reading[-len(kana_suffix):])
-    )
+    return bool((kana_suffix := longest_kana_suffix(headword)) and pr(kana_suffix) != pr(reading[-len(kana_suffix) :]))
 
 
 # Debug

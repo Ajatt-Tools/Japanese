@@ -35,10 +35,7 @@ def read_formatted_accents() -> AccentDict:
             for key in (word, kana):
                 if entry not in acc_dict[key]:
                     acc_dict[key].append(entry)
-    acc_dict = AccentDict({
-        headword: tuple(entries)
-        for headword, entries in acc_dict.items()
-    })
+    acc_dict = AccentDict({headword: tuple(entries) for headword, entries in acc_dict.items()})
     return acc_dict
 
 
@@ -90,9 +87,8 @@ class AccentDictManager:
             parent=mw,
             op=lambda collection: accents_dict_init(),
             success=lambda dictionary: self._reload_dict(dictionary),
-        ).without_collection(
-        ).with_progress(
-            "Reloading pitch accent dictionary..."
+        ).without_collection().with_progress(
+            "Reloading pitch accent dictionary...",
         ).run_in_background()
 
     def _reload_dict(self, new_dict: AccentDict):

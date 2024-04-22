@@ -13,12 +13,14 @@ from aqt import sound, mw
 from aqt.qt import *
 from aqt.utils import restoreGeom, saveGeom, tooltip, tr
 
+
 try:
     from ..helpers.misc import strip_html_and_media
     from ..helpers.file_ops import open_file
-    from ..helpers import ui_translate, ADDON_NAME
+    from ..helpers import ADDON_NAME
     from ..helpers.audio_manager import FileUrlData
     from .audio_sources import SourceEnableCheckbox
+    from ..ajt_common.utils import ui_translate
 except ImportError:
 
     def strip_html_and_media(s: str) -> str:
@@ -26,9 +28,9 @@ except ImportError:
 
     ADDON_NAME = "Test window"
     from helpers.file_ops import open_file
-    from helpers import ui_translate
     from helpers.audio_manager import FileUrlData
     from widgets.audio_sources import SourceEnableCheckbox
+    from ajt_common.utils import ui_translate
 
 
 class FileSaveResultsProtocol(typing.Protocol):

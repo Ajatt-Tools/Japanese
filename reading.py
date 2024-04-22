@@ -145,11 +145,7 @@ def get_pronunciations(expr: str, sanitize: bool = True, recurse: bool = True, u
                 # If everything failed, try katakana lookups.
                 # Katakana lookups are possible because of the additional key in the pitch accents dictionary.
                 # If the word was in conjugated form, this lookup will also fail.
-                if (
-                        out.headword not in ret
-                        and out.katakana_reading
-                        and cfg.pitch_accent.kana_lookups is True
-                ):
+                if out.headword not in ret and out.katakana_reading and cfg.pitch_accent.kana_lookups is True:
                     ret.update(get_pronunciations(out.katakana_reading, sanitize, recurse=False))
 
     return ret
@@ -214,11 +210,7 @@ def format_furigana_readings(word: str, hiragana_readings: Sequence[str]) -> str
     furigana_readings = [
         format_output(
             word,
-            reading=(
-                reading
-                if cfg.furigana.prefer_literal_pronunciation is False
-                else unify_repr(reading)
-            ),
+            reading=(reading if cfg.furigana.prefer_literal_pronunciation is False else unify_repr(reading)),
         )
         for reading in hiragana_readings
         if reading

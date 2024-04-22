@@ -16,10 +16,6 @@ LONG_VOWEL_MARK = "ー"
 ADDON_NAME = f"{ADDON_SERIES} Japanese"
 
 
-def ui_translate(key: str) -> str:
-    return key.capitalize().replace("_", " ")
-
-
 T = TypeVar("T")
 
 

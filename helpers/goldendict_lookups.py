@@ -19,10 +19,7 @@ def find_goldendict_fallback() -> Optional[str]:
 
 @functools.cache
 def find_goldendict() -> Optional[str]:
-    return (
-            find_executable("goldendict")
-            or find_goldendict_fallback()
-    )
+    return find_executable("goldendict") or find_goldendict_fallback()
 
 
 def lookup_goldendict(gd_word: str) -> subprocess.Popen:

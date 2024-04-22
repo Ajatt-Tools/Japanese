@@ -18,10 +18,7 @@ except ImportError:
 
 
 def search_pitch_accent_numbers(accents: str) -> Iterable[Union[str, int]]:
-    return (
-        (int(pos) if pos != NO_ACCENT else NO_ACCENT)
-        for pos in accents.split(',')
-    )
+    return ((int(pos) if pos != NO_ACCENT else NO_ACCENT) for pos in accents.split(","))
 
 
 class AccentEntry(NamedTuple):

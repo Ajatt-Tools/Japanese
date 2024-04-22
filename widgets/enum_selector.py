@@ -5,7 +5,7 @@ import enum
 
 from aqt.qt import *
 
-from ..helpers import ui_translate
+from ..ajt_common.utils import ui_translate
 
 
 class EnumSelectCombo(QComboBox):

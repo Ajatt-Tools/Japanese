@@ -11,6 +11,7 @@ from aqt.operations import QueryOp
 from aqt.qt import *
 from aqt.utils import restoreGeom, saveGeom, openLink
 
+from .ajt_common.utils import ui_translate
 from .ajt_common.about_menu import tweak_window, menu_root_entry
 from .ajt_common.addon_config import set_config_action
 from .ajt_common.checkable_combobox import CheckableComboBox
@@ -18,7 +19,7 @@ from .ajt_common.consts import ADDON_SERIES
 from .ajt_common.grab_key import ShortCutGrabButton
 from .audio import aud_src_mgr
 from .config_view import config_view as cfg, ReadingsDiscardMode, PitchPatternStyle
-from .helpers import ui_translate, split_list
+from .helpers import split_list
 from .helpers.audio_manager import TotalAudioStats
 from .helpers.profiles import Profile, ProfileFurigana, ProfilePitch, PitchOutputFormat, ProfileAudio, TaskCaller
 from .helpers.sakura_client import DictName, SearchType, AddDefBehavior
@@ -494,8 +495,7 @@ class DefinitionsSettingsForm(SettingsForm):
             "Exact — headwords equal to the search string."
         )
         self._widgets.behavior.setToolTip(
-            "How to add fetched definitions.\n"
-            "Replace existing definitions, append or prepend."
+            "How to add fetched definitions.\n" "Replace existing definitions, append or prepend."
         )
 
 
@@ -567,28 +567,17 @@ class PitchSettingsForm(MultiColumnSettingsForm):
     def _add_tooltips(self):
         super()._add_tooltips()
         self._widgets.output_hiragana.setToolTip(
-            "Print pitch accents using hiragana.\n"
-            "Normally katakana is used to print pitch accent."
+            "Print pitch accents using hiragana.\n" "Normally katakana is used to print pitch accent."
         )
         self._widgets.kana_lookups.setToolTip(
-            "Attempt to look up a word using its kana reading\n"
-            "if there's no entry for its kanji form."
+            "Attempt to look up a word using its kana reading\n" "if there's no entry for its kanji form."
         )
-        self._widgets.skip_numbers.setToolTip(
-            "Don't add pitch accents to numbers."
-        )
-        self._widgets.reading_separator.setToolTip(
-            "String used to separate multiple accents of a word."
-        )
-        self._widgets.word_separator.setToolTip(
-            "String used to separate multiple words."
-        )
-        self._widgets.blocklisted_words.setToolTip(
-            "A comma-separated list of words that won't be looked up."
-        )
+        self._widgets.skip_numbers.setToolTip("Don't add pitch accents to numbers.")
+        self._widgets.reading_separator.setToolTip("String used to separate multiple accents of a word.")
+        self._widgets.word_separator.setToolTip("String used to separate multiple words.")
+        self._widgets.blocklisted_words.setToolTip("A comma-separated list of words that won't be looked up.")
         self._widgets.maximum_results.setToolTip(
-            "Maximum number of results to output.\n"
-            "Too many results are not informative and will bloat Anki cards."
+            "Maximum number of results to output.\n" "Too many results are not informative and will bloat Anki cards."
         )
         self._widgets.discard_mode.setToolTip(
             "Approach used when the number of results exceeds the maximum number of results.\n"
@@ -596,9 +585,7 @@ class PitchSettingsForm(MultiColumnSettingsForm):
             "Discard extra — Output the first few accents, no more than the maximum number.\n"
             "Discard all — Output nothing."
         )
-        self._widgets.lookup_shortcut.setToolTip(
-            "A keyboard shortcut for looking up selected text."
-        )
+        self._widgets.lookup_shortcut.setToolTip("A keyboard shortcut for looking up selected text.")
         self._widgets.style.setToolTip(
             "Style of pitch accent patterns.\n"
             'If set to "none", you can configure your own styles\n'
@@ -623,9 +610,7 @@ class FuriganaSettingsForm(MultiColumnSettingsForm):
 
     def _add_tooltips(self):
         super()._add_tooltips()
-        self._widgets.skip_numbers.setToolTip(
-            "Don't add furigana to numbers."
-        )
+        self._widgets.skip_numbers.setToolTip("Don't add furigana to numbers.")
         self._widgets.prefer_literal_pronunciation.setToolTip(
             "Print furigana in a way that shows a word's literal pronunciation."
         )
@@ -636,16 +621,14 @@ class FuriganaSettingsForm(MultiColumnSettingsForm):
             "like the one provided by Ajatt-Tools."
         )
         self._widgets.blocklisted_words.setToolTip(
-            "A comma-separated list of words that won't be looked up.\n"
-            "Furigana won't be added."
+            "A comma-separated list of words that won't be looked up.\n" "Furigana won't be added."
         )
         self._widgets.mecab_only.setToolTip(
             "A comma-separted list of words that won't be looked up in the bundled dictionary.\n"
             "However, they will still be looked up using Mecab."
         )
         self._widgets.maximum_results.setToolTip(
-            "Maximum number of results to output.\n"
-            "Too many results are not informative and will bloat Anki cards."
+            "Maximum number of results to output.\n" "Too many results are not informative and will bloat Anki cards."
         )
         self._widgets.discard_mode.setToolTip(
             "Approach used when the number of results exceeds the maximum number of results.\n"
@@ -664,28 +647,17 @@ class AudioSettingsForm(MultiColumnSettingsForm):
         self._widgets.dictionary_download_timeout = NarrowSpinBox(
             initial_value=self._config.dictionary_download_timeout
         )
-        self._widgets.audio_download_timeout = NarrowSpinBox(
-            initial_value=self._config.audio_download_timeout
-        )
-        self._widgets.attempts = NarrowSpinBox(
-            initial_value=self._config.attempts
-        )
-        self._widgets.maximum_results = NarrowSpinBox(
-            initial_value=self._config.maximum_results
-        )
+        self._widgets.audio_download_timeout = NarrowSpinBox(initial_value=self._config.audio_download_timeout)
+        self._widgets.attempts = NarrowSpinBox(initial_value=self._config.attempts)
+        self._widgets.maximum_results = NarrowSpinBox(initial_value=self._config.maximum_results)
         self._widgets.tag_separator = NarrowLineEdit(self._config.tag_separator)
 
     def _add_tooltips(self):
         super()._add_tooltips()
-        self._widgets.dictionary_download_timeout.setToolTip(
-            "Download timeout in seconds."
-        )
-        self._widgets.audio_download_timeout.setToolTip(
-            "Download timeout in seconds."
-        )
+        self._widgets.dictionary_download_timeout.setToolTip("Download timeout in seconds.")
+        self._widgets.audio_download_timeout.setToolTip("Download timeout in seconds.")
         self._widgets.attempts.setToolTip(
-            "Number of attempts before giving up.\n"
-            "Applies to both dictionary downloads and audio downloads."
+            "Number of attempts before giving up.\n" "Applies to both dictionary downloads and audio downloads."
         )
         self._widgets.ignore_inflections.setToolTip(
             "If enabled, audio recordings of inflected readings won't be added."
@@ -700,8 +672,7 @@ class AudioSettingsForm(MultiColumnSettingsForm):
             "this setting may result in some of them not being represented."
         )
         self._widgets.tag_separator.setToolTip(
-            "Separate [sound:filename.ogg] tags with this string\n"
-            "when adding audio files to cards."
+            "Separate [sound:filename.ogg] tags with this string\n" "when adding audio files to cards."
         )
 
 
@@ -774,10 +745,7 @@ class ToolbarSettingsForm(QGroupBox):
         return layout
 
     def as_dict(self) -> dict[str, ToolbarButtonConfig]:
-        return {
-            key: widget.as_dict()
-            for key, widget in self._widgets.items()
-        }
+        return {key: widget.as_dict() for key, widget in self._widgets.items()}
 
 
 class AudioSourcesEditTable(QWidget):
@@ -821,8 +789,7 @@ class AudioSourcesEditTable(QWidget):
             parent=mw,
             op=lambda collection: aud_src_mgr.get_statistics(),
             success=lambda audio_stats: self._remember_and_update_stats(audio_stats),
-        ).without_collection(
-        ).run_in_background()
+        ).without_collection().run_in_background()
 
     def _remember_and_update_stats(self, audio_stats: TotalAudioStats) -> None:
         if is_obj_deleted(self):
@@ -850,13 +817,8 @@ class AudioSourcesEditTable(QWidget):
         return self._audio_sources_table.iterateConfigs()
 
     def _add_tooltips(self):
-        self._stats_button.setToolTip(
-            "Show statistics for each imported audio source."
-        )
-        self._purge_button.setToolTip(
-            "Remove the database file.\n"
-            "It will be recreated from scratch again."
-        )
+        self._stats_button.setToolTip("Show statistics for each imported audio source.")
+        self._purge_button.setToolTip("Remove the database file.\n" "It will be recreated from scratch again.")
 
 
 class SettingsDialog(QDialog):
@@ -950,15 +912,11 @@ class SettingsDialog(QDialog):
         self.connect_widgets()
 
     def _add_tooltips(self):
-        self._button_box.button(QDialogButtonBox.StandardButton.Ok).setToolTip(
-            "Save settings and close the dialog."
-        )
+        self._button_box.button(QDialogButtonBox.StandardButton.Ok).setToolTip("Save settings and close the dialog.")
         self._button_box.button(QDialogButtonBox.StandardButton.Cancel).setToolTip(
             "Discard settings and close the dialog."
         )
-        self._button_box.button(QDialogButtonBox.StandardButton.Help).setToolTip(
-            "Open Guide."
-        )
+        self._button_box.button(QDialogButtonBox.StandardButton.Help).setToolTip("Open Guide.")
 
     def connect_widgets(self):
         qconnect(self._button_box.accepted, self.accept)

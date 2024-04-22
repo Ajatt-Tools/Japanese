@@ -9,14 +9,15 @@ from collections.abc import Collection, Iterable
 from aqt.qt import *
 from aqt.utils import showInfo
 
+
 try:
     from .table import ExpandingTableWidget
     from ..pitch_accents.consts import NO_ACCENT
-    from ..helpers import ui_translate
+    from ..ajt_common.utils import ui_translate
 except ImportError:
     from table import ExpandingTableWidget
     from pitch_accents.consts import NO_ACCENT
-    from helpers import ui_translate
+    from ajt_common.utils import ui_translate
 
 
 def is_comma_separated_list_of_numbers(text: str):
@@ -47,10 +48,9 @@ class PitchOverrideTable(ExpandingTableWidget):
         if os.path.isfile(file_path):
             with open(file_path, encoding="utf8") as f:
                 try:
-                    table_rows.update(dict.fromkeys(
-                        PitchAccentTableRow(*line.strip().split(self._column_sep))
-                        for line in f
-                    ))
+                    table_rows.update(
+                        dict.fromkeys(PitchAccentTableRow(*line.strip().split(self._column_sep)) for line in f)
+                    )
                 except TypeError as ex:
                     error = str(ex).replace(".__new__()", "")
                     showInfo(f"The file is formatted incorrectly. {error}.", type="warning", parent=self)
@@ -62,10 +62,12 @@ class PitchOverrideTable(ExpandingTableWidget):
                 yield PitchAccentTableRow(*(cell.text() for cell in row_cells))
 
     def update_from_tsv(self, file_path: str, reset_table: bool = True):
-        table_rows_combined = dict.fromkeys((
-            *(self.iterateRowTexts() if not reset_table else ()),
-            *self.read_tsv_file(file_path),
-        ))
+        table_rows_combined = dict.fromkeys(
+            (
+                *(self.iterateRowTexts() if not reset_table else ()),
+                *self.read_tsv_file(file_path),
+            )
+        )
         self.setRowCount(0)
         for row_cells in table_rows_combined:
             if all(row_cells):

@@ -103,7 +103,7 @@ class Sqlite3Buddy:
     def set_original_url(self, source_name: str, new_url: str) -> None:
         cur = self._con.cursor()
         query = """ UPDATE meta SET original_url = ? WHERE source_name = ?; """
-        cur.execute(query, (new_url, source_name,))
+        cur.execute(query, (new_url, source_name))
         self._con.commit()
 
     def is_source_cached(self, source_name: str) -> bool:
@@ -114,10 +114,7 @@ class Sqlite3Buddy:
             """ SELECT 1 FROM headwords WHERE source_name = ? LIMIT 1; """,
             """ SELECT 1 FROM files     WHERE source_name = ? LIMIT 1; """,
         )
-        return all(
-            cur.execute(query, (source_name,)).fetchone() is not None
-            for query in queries
-        )
+        return all(cur.execute(query, (source_name,)).fetchone() is not None for query in queries)
 
     def insert_data(self, source_name: str, data: SourceIndex):
         cur = self._con.cursor()
@@ -241,8 +238,7 @@ class Sqlite3Buddy:
         results = cur.execute(query, (source_name, headword)).fetchall()
         assert type(results) is list
         return (
-            BoundFile(file_name=result_tup[0], source_name=source_name, headword=headword)
-            for result_tup in results
+            BoundFile(file_name=result_tup[0], source_name=source_name, headword=headword) for result_tup in results
         )
 
     def search_files(self, headword: str) -> Iterable[BoundFile]:
@@ -254,8 +250,7 @@ class Sqlite3Buddy:
         results = cur.execute(query, (headword,)).fetchall()
         assert type(results) is list
         return (
-            BoundFile(file_name=result_tup[0], source_name=result_tup[1], headword=headword)
-            for result_tup in results
+            BoundFile(file_name=result_tup[0], source_name=result_tup[1], headword=headword) for result_tup in results
         )
 
     def get_file_info(self, source_name: str, file_name: str) -> FileInfo:
