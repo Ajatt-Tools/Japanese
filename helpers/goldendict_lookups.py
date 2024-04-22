@@ -4,17 +4,21 @@
 import functools
 import os
 import subprocess
-from distutils.spawn import find_executable
 from typing import Optional
 
 from anki.utils import is_mac
+
+try:
+    from ..ajt_common.utils import find_executable
+except ImportError:
+    from ajt_common.utils import find_executable
 
 GD_PROGRAM_NAME = "GoldenDict-NG"
 GD_MACOS_PATH = "/Applications/GoldenDict.app/Contents/MacOS/GoldenDict"
 
 
 def find_goldendict_fallback() -> Optional[str]:
-    return is_mac and os.path.isfile(GD_MACOS_PATH) and GD_MACOS_PATH or None
+    return GD_MACOS_PATH if (is_mac and os.path.isfile(GD_MACOS_PATH)) else None
 
 
 @functools.cache

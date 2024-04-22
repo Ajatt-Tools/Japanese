@@ -1,11 +1,17 @@
 # Copyright: Ren Tatsumoto <tatsu at autistici.org>
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
+import functools
 import os
 import subprocess
 from collections.abc import Iterable
 
 from anki.utils import no_bundled_libs
+
+try:
+    from ..ajt_common.utils import find_executable
+except ImportError:
+    from ajt_common.utils import find_executable
 
 THIS_ADDON_MODULE = __name__.split(".")[0]
 
@@ -35,6 +41,7 @@ def find_config_json() -> str:
             return path
 
 
+@functools.cache
 def user_files_dir() -> str:
     """Return path to the user files directory."""
     for parent_dir in walk_parents(__file__):
@@ -47,7 +54,6 @@ def open_file(path: str) -> None:
     Select file in lf, the preferred terminal file manager, or open it with xdg-open.
     """
     from aqt.qt import QDesktopServices, QUrl
-    from distutils.spawn import find_executable
 
     if (terminal := os.getenv("TERMINAL")) and (lf := (os.getenv("FILE") or find_executable("lf"))):
         subprocess.Popen(
@@ -66,6 +72,11 @@ def open_file(path: str) -> None:
             QDesktopServices.openUrl(QUrl(f"file://{path}"))
 
 
+def main():
+    print("config", find_config_json())
+    print("user files", user_files_dir())
+    print("open file", open_file("/etc/hosts"))
+
+
 if __name__ == "__main__":
-    print(user_files_dir())
-    print(open_file("/etc/hosts"))
+    main()
