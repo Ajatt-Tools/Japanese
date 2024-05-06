@@ -4,12 +4,13 @@
 import dataclasses
 import functools
 from collections import OrderedDict
+from collections.abc import Mapping, Sequence
 
 from anki.utils import html_to_text_line
 from aqt import gui_hooks
 
+from .helpers import LONG_VOWEL_MARK
 from .config_view import config_view as cfg, ReadingsDiscardMode
-from .helpers import *
 from .helpers.common_kana import adjust_to_inflection
 from .helpers.mingle_readings import *
 from .helpers.profiles import PitchOutputFormat
@@ -166,7 +167,11 @@ def get_notation(entry: FormattedEntry, mode: PitchOutputFormat) -> str:
     raise Exception("Unreachable.")
 
 
-def entries_to_html(entries: Sequence[FormattedEntry], output_format: PitchOutputFormat, max_results: int):
+def entries_to_html(
+    entries: Sequence[FormattedEntry],
+    output_format: PitchOutputFormat,
+    max_results: int,
+) -> Sequence[str]:
     """
     Convert entries to HTML, sort and remove duplicates.
     """
