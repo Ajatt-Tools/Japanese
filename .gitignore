@@ -7,7 +7,7 @@ __pycache__
 *.db
 *.sqlite
 *.sqlite3
-/meta.json
-/manifest.json
-/*.ankiaddon
-/user_files/user_data*
+meta.json
+manifest.json
+*.ankiaddon
+user_files/user_data*
