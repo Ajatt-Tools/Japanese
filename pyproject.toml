@@ -1,0 +1,65 @@
+[build-system]
+build-backend = "hatchling.build"
+requires = [
+  "hatchling>=1.24",
+  "hatch-vcs>=0.4",
+]
+
+[project]
+name = "japanese"
+dynamic = ["version"]
+description = 'Automatically generate furigana and other data on Anki cards.'
+readme = "README.md"
+requires-python = "==3.9"
+license = {file = "LICENSE"}
+keywords = ["ajatt"]
+authors = [
+  { name = "Ren Tatsumoto", email = "tatsu@autistici.org" },
+]
+classifiers = [
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.9",
+]
+dependencies = []
+
+[project.urls]
+Documentation = "https://github.com/Ajatt-Tools/japanese"
+Issues = "https://github.com/Ajatt-Tools/japanese/issues"
+Source = "https://github.com/Ajatt-Tools/japanese"
+
+[tool.hatch.version]
+source = "vcs"
+path = "japanese/__about__.py"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "japanese/__about.py"
+
+[tool.hatch.envs.types]
+extra-dependencies = [
+  "mypy>=1.0.0",
+]
+[tool.hatch.envs.types.scripts]
+check = "mypy --install-types --non-interactive {args:japanese tests}"
+
+[tool.coverage.run]
+source_pkgs = ["japanese", "tests"]
+branch = true
+parallel = true
+omit = [
+  "japanese/__about__.py",
+]
+
+[tool.coverage.paths]
+japanese = ["japanese", "*/japanese/japanese"]
+tests = ["tests", "*/japanese/tests"]
+
+[tool.coverage.report]
+exclude_lines = [
+  "no cov",
+  "if __name__ == .__main__.:",
+  "if TYPE_CHECKING:",
+]
+
+[tool.black]
+line-length = 120
+target-version = ['py39']
