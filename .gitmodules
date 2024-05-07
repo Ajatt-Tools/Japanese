@@ -1,6 +1,6 @@
 [submodule "addon/ajt_common"]
-	path = addon/ajt_common
+	path = japanese/ajt_common
 	url = git@github.com:Ajatt-Tools/ajt_common.git
 [submodule "addon/mecab_controller"]
-	path = addon/mecab_controller
+	path = japanese/mecab_controller
 	url = git@github.com:Ajatt-Tools/mecab_controller.git
