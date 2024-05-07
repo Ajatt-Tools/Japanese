@@ -1,6 +1,6 @@
 #!/bin/bash
 
-./ajt_common/package.sh \
+./addon/ajt_common/package.sh \
 	--package "Japanese" \
 	--name "AJT Japanese" \
 	"$@"
