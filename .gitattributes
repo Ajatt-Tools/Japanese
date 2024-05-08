@@ -1,4 +1,4 @@
-/test export-ignore
+/tests export-ignore
 /*.sh export-ignore
 .git* export-ignore
 .idea export-ignore

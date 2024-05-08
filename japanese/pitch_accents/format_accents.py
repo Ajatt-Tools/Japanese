@@ -1,18 +1,15 @@
 # Copyright: Ren Tatsumoto <tatsu at autistici.org> and contributors
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
-from typing import Union
 from collections.abc import Sequence
+from typing import Union
 
-try:
-    from .styles import XmlTags
-    from ..mecab_controller.unify_readings import literal_pronunciation
-except ImportError:
-    from styles import XmlTags
-    from mecab_controller.unify_readings import literal_pronunciation
+from ..mecab_controller.unify_readings import literal_pronunciation
+from .styles import XmlTags
 
 
 def format_one_mora_word(moras: Sequence[str], is_flat: bool) -> str:
+    assert len(moras) == 1
     if is_flat:
         # _/
         return "".join(
@@ -106,7 +103,7 @@ def format_nakadaka(moras: Sequence[str], accent: int) -> str:
 def format_entry(moras: Sequence[str], accent: Union[int, str]) -> str:
     """Format an entry from the data in the original pitch accents file to something that uses html"""
 
-    if type(accent) != int:
+    if type(accent) is not int:
         return literal_pronunciation("".join(moras))
     elif len(moras) == 1:
         return format_one_mora_word(moras, is_flat=(accent == 0))

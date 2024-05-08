@@ -3,20 +3,15 @@
 
 import collections
 import csv
+import os
 import pickle
+from collections.abc import Mapping, MutableSequence, Sequence
 from typing import Optional
 
-from aqt import mw
-from aqt.operations import QueryOp
-
-try:
-    from .common import *
-    from .user_accents import UserAccentData
-    from ..mecab_controller.kana_conv import to_katakana, to_hiragana
-except ImportError:
-    from common import *
-    from user_accents import UserAccentData
-    from mecab_controller.kana_conv import to_katakana, to_hiragana
+from ..mecab_controller.kana_conv import to_hiragana, to_katakana
+from .common import AccentDict, FormattedEntry, should_regenerate
+from .consts import FORMATTED_ACCENTS_PICKLE, FORMATTED_ACCENTS_TSV, RES_DIR_PATH
+from .user_accents import UserAccentData
 
 
 def read_formatted_accents() -> AccentDict:
@@ -27,7 +22,7 @@ def read_formatted_accents() -> AccentDict:
     Example entry as it appears in the formatted file:
     新年会 シンネンカイ <low_rise>シ</low_rise><high_drop>ンネ</high_drop><low>ンカイ</low> 3
     """
-    acc_dict: AccentDict = collections.defaultdict(list)
+    acc_dict: Mapping[str, MutableSequence[FormattedEntry]] = collections.defaultdict(list)
     with open(FORMATTED_ACCENTS_TSV, newline="", encoding="utf-8") as f:
         reader = csv.reader(f, delimiter="\t", quoting=csv.QUOTE_NONE)
         for word, kana, *pitch_data in reader:
@@ -35,8 +30,7 @@ def read_formatted_accents() -> AccentDict:
             for key in (word, kana):
                 if entry not in acc_dict[key]:
                     acc_dict[key].append(entry)
-    acc_dict = AccentDict({headword: tuple(entries) for headword, entries in acc_dict.items()})
-    return acc_dict
+    return AccentDict({headword: tuple(entries) for headword, entries in acc_dict.items()})
 
 
 def accents_dict_init() -> AccentDict:
@@ -62,7 +56,7 @@ def accents_dict_init() -> AccentDict:
 
 
 class AccentDictManager:
-    def __init__(self):
+    def __init__(self) -> None:
         self._db: AccentDict = AccentDict({})
 
     def __contains__(self, item: str):
@@ -79,8 +73,12 @@ class AccentDictManager:
         for variant in (expr, to_katakana(expr), to_hiragana(expr)):
             if variant in self:
                 return self[variant]
+        return None
 
     def reload_from_disk(self):
+        from aqt import mw
+        from aqt.operations import QueryOp
+
         """Reads pitch accents file from disk."""
         print("Reading pitch accents file...")
         QueryOp(
@@ -97,14 +95,3 @@ class AccentDictManager:
         self._db.clear()
         self._db = new_dict
         print(f"Total pitch accent entries: {len(self._db)}.")
-
-
-def main():
-    acc_dict = accents_dict_init()
-    for word, entries in acc_dict.items():
-        for entry in entries:
-            print(f"{word}\t{entry.katakana_reading}\t{entry.pitch_number}")
-
-
-if __name__ == "__main__":
-    main()

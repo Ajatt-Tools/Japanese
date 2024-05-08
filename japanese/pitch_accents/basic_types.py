@@ -6,16 +6,10 @@ import enum
 from collections.abc import Sequence
 from typing import NamedTuple
 
-try:
-    from .common import split_pitch_numbers, FormattedEntry
-    from .consts import NO_ACCENT
-    from ..mecab_controller.kana_conv import to_hiragana, kana_to_moras
-    from ..mecab_controller.basic_types import MecabParsedToken
-except ImportError:
-    from common import split_pitch_numbers, FormattedEntry
-    from consts import NO_ACCENT
-    from mecab_controller.kana_conv import to_hiragana, kana_to_moras
-    from mecab_controller.basic_types import MecabParsedToken
+from ..mecab_controller.basic_types import MecabParsedToken
+from ..mecab_controller.kana_conv import kana_to_moras
+from .common import FormattedEntry, split_pitch_numbers
+from .consts import NO_ACCENT
 
 SEP_PITCH_GROUP = " "
 SEP_PITCH_TYPES = ","
@@ -103,63 +97,3 @@ class AccDbParsedToken(MecabParsedToken):
 
     def has_pitch(self) -> bool:
         return all(token.has_accent() for token in self.headword_accents)
-
-
-def main():
-    from mecab_controller.basic_types import PartOfSpeech, Inflection
-
-    entry = PitchAccentEntry.from_formatted(
-        FormattedEntry(
-            katakana_reading="たのしい",
-            pitch_number="3",
-            html_notation="",
-        )
-    )
-
-    token = AccDbParsedToken(
-        word="楽しかった",
-        headword="楽しい",
-        katakana_reading="たのしかった",
-        part_of_speech=PartOfSpeech.i_adjective,
-        inflection_type=Inflection.unknown,
-        headword_accents=(entry,),
-    )
-
-    assert token.describe_pitches() == "たのしい:nakadaka-3"
-
-    entry = PitchAccentEntry.from_formatted(
-        FormattedEntry(
-            katakana_reading="なや",
-            pitch_number="0,1",
-            html_notation="",
-        )
-    )
-
-    token = AccDbParsedToken(
-        word="納屋",
-        headword="納屋",
-        katakana_reading="なや",
-        part_of_speech=PartOfSpeech.noun,
-        inflection_type=Inflection.dictionary_form,
-        headword_accents=(entry,),
-    )
-    assert token.describe_pitches() == "なや:heiban,atamadaka"
-
-    token = AccDbParsedToken(
-        word="粗末",
-        headword="粗末",
-        katakana_reading=None,
-        part_of_speech=PartOfSpeech.unknown,
-        inflection_type=Inflection.dictionary_form,
-        headword_accents=[
-            PitchAccentEntry(
-                katakana_reading="ソマツ",
-                pitches=[PitchParam(type=PitchType.atamadaka, number="1")],
-            )
-        ],
-    )
-    assert token.describe_pitches() == "ソマツ:atamadaka"
-
-
-if __name__ == "__main__":
-    main()

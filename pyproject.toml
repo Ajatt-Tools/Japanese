@@ -10,8 +10,8 @@ name = "japanese"
 dynamic = ["version"]
 description = 'Automatically generate furigana and other data on Anki cards.'
 readme = "README.md"
-requires-python = "==3.9"
-license = {file = "LICENSE"}
+requires-python = ">=3.9"
+license = { file = "LICENSE" }
 keywords = ["ajatt"]
 authors = [
   { name = "Ren Tatsumoto", email = "tatsu@autistici.org" },
@@ -32,7 +32,7 @@ source = "vcs"
 path = "japanese/__about__.py"
 
 [tool.hatch.build.hooks.vcs]
-version-file = "japanese/__about.py"
+version-file = "japanese/__about__.py"
 
 [tool.hatch.envs.types]
 extra-dependencies = [

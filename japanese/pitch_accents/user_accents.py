@@ -5,16 +5,10 @@ import collections
 from collections.abc import Collection
 from typing import Union
 
-try:
-    from .common import *
-    from .format_accents import format_entry
-    from ..helpers.file_ops import touch, user_files_dir
-    from ..mecab_controller.kana_conv import to_katakana, kana_to_moras
-except ImportError:
-    from common import *
-    from helpers.file_ops import touch, user_files_dir
-    from mecab_controller.kana_conv import to_katakana, kana_to_moras
-    from format_accents import format_entry
+from ..helpers.file_ops import touch, user_files_dir
+from ..mecab_controller.kana_conv import kana_to_moras, to_katakana
+from .common import *
+from .format_accents import format_entry
 
 
 def search_pitch_accent_numbers(accents: str) -> Iterable[Union[str, int]]:
@@ -71,7 +65,7 @@ class UserAccentData:
 
     def create_formatted(self) -> AccentDict:
         """Build the derived pitch accents file from the original pitch accents file and save it as *.csv"""
-        temp_dict: AccentDict = collections.defaultdict(dict)
+        temp_dict = collections.defaultdict(dict)
         for entry in self.read_entries():
             temp_dict[entry.headword].update(create_formatted(entry))
         for key in temp_dict:

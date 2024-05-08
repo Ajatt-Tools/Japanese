@@ -1,15 +1,12 @@
 # Copyright: Ren Tatsumoto <tatsu at autistici.org>
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
+import os
 import re
-from collections.abc import Iterable
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from typing import NamedTuple, NewType
 
-try:
-    from .consts import *
-except ImportError:
-    from consts import *
+from .consts import NO_ACCENT, PITCH_DIR_PATH
 
 
 def is_dunder(name: str) -> bool:
@@ -26,20 +23,21 @@ def files_in_dir(dir_path: str) -> Iterable[str]:
     )
 
 
-def is_old(file_path: str) -> bool:
+def is_old(pickle_file_path: str) -> bool:
     """
     Return True if the file pointed by file_path is older than the other files.
     """
     return any(
-        os.path.getmtime(cmp_file_path) > os.path.getmtime(file_path) for cmp_file_path in files_in_dir(THIS_DIR_PATH)
+        os.path.getmtime(cmp_file_path) > os.path.getmtime(pickle_file_path)
+        for cmp_file_path in files_in_dir(PITCH_DIR_PATH)
     )
 
 
-def should_regenerate(file_path: str) -> bool:
+def should_regenerate(pickle_file_path: str) -> bool:
     """
     Return True if the pickle file pointed by file_path needs to be regenerated.
     """
-    return not os.path.isfile(file_path) or os.path.getsize(file_path) < 1 or is_old(file_path)
+    return not os.path.isfile(pickle_file_path) or os.path.getsize(pickle_file_path) < 1 or is_old(pickle_file_path)
 
 
 class FormattedEntry(NamedTuple):
@@ -62,18 +60,3 @@ RE_PITCH_NUM = re.compile(r"\d+|\?")
 
 def split_pitch_numbers(s: str) -> list[str]:
     return re.findall(RE_PITCH_NUM, s)
-
-
-# Debug
-##########################################################################
-
-
-def main():
-    for file_path in files_in_dir(THIS_DIR_PATH):
-        print(file_path)
-    print(split_pitch_numbers("?-1-2"))
-    print(split_pitch_numbers("1"))
-
-
-if __name__ == "__main__":
-    main()
