@@ -555,9 +555,9 @@ class PitchSettingsForm(MultiColumnSettingsForm):
             enum_type=ReadingsDiscardMode,
             initial_value=self._config.discard_mode,
         )
-        self._widgets.style = EnumSelectCombo(
+        self._widgets.html_style = EnumSelectCombo(
             enum_type=PitchPatternStyle,
-            initial_value=self._config.style,
+            initial_value=self._config.html_style,
         )
         self._widgets.reading_separator = NarrowLineEdit(self._config.reading_separator)
         self._widgets.word_separator = NarrowLineEdit(self._config.word_separator)
@@ -586,7 +586,7 @@ class PitchSettingsForm(MultiColumnSettingsForm):
             "Discard all — Output nothing."
         )
         self._widgets.lookup_shortcut.setToolTip("A keyboard shortcut for looking up selected text.")
-        self._widgets.style.setToolTip(
+        self._widgets.html_style.setToolTip(
             "Style of pitch accent patterns.\n"
             'If set to "none", you can configure your own styles\n'
             "in the Styling section of your card type using CSS class names."

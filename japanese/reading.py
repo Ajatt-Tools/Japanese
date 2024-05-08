@@ -31,7 +31,7 @@ from .pitch_accents.styles import STYLE_MAP
 
 def convert_to_inline_style(txt: str) -> str:
     """Map style classes to their user-configured inline versions."""
-    for k, v in STYLE_MAP[cfg.pitch_accent.style].items():
+    for k, v in STYLE_MAP[cfg.pitch_accent.html_style].items():
         txt = txt.replace(k, v)
     return txt
 

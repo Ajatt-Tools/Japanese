@@ -116,8 +116,8 @@ class PitchConfigView(PitchAndFuriganaCommon):
         return self["word_separator"]
 
     @property
-    def style(self) -> PitchPatternStyle:
-        return PitchPatternStyle[self["style"]]
+    def html_style(self) -> PitchPatternStyle:
+        return PitchPatternStyle[self["html_style"]]
 
 
 @final

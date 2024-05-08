@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ./japanese/ajt_common/package.sh \
-	--package "Japanese" \
+	--package "AJT Japanese" \
 	--name "AJT Japanese" \
 	--root "japanese" \
 	"$@"
