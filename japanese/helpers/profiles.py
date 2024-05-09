@@ -4,7 +4,7 @@
 import dataclasses
 import enum
 import typing
-from collections.abc import Iterable, Container
+from collections.abc import Iterable
 
 
 @enum.unique
@@ -43,8 +43,12 @@ class AnkiNoteProtocol(typing.Protocol):
     def __contains__(self, key: str) -> bool: ...
 
 
+class ProfileBase:
+    _subclasses_map: dict[str, type["Profile"]] = {}  # "furigana" (str) -> ProfileFurigana
+
+
 @dataclasses.dataclass(frozen=True)
-class Profile:
+class Profile(ProfileBase):
     name: str
     note_type: str
     source: str
@@ -53,8 +57,6 @@ class Profile:
     split_morphemes: bool
     triggered_by: str
     overwrite_destination: bool
-
-    _subclasses_map = {}  # "furigana" (str) -> ProfileFurigana
 
     def __init_subclass__(cls, **kwargs):
         mode = kwargs.pop("mode")  # suppresses ide warning
@@ -80,10 +82,10 @@ class Profile:
         """
         Field names must not be empty or None. The note must have fields with these names.
         """
-        return (self.source and self.destination) and (self.source in note and self.destination in note)
+        return bool((self.source and self.destination) and (self.source in note and self.destination in note))
 
     @classmethod
-    def class_by_mode(cls, mode: str):
+    def class_by_mode(cls, mode: str) -> type["Profile"]:
         return cls._subclasses_map[mode]
 
     @classmethod
