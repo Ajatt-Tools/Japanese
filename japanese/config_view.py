@@ -22,7 +22,7 @@ def split_words(config_value: str) -> list[str]:
 
 
 class ConfigViewBase(AddonConfigManager):
-    _view_key = None
+    _view_key: str | None = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
