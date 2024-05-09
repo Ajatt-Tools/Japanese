@@ -2,13 +2,15 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import collections
-from collections.abc import Collection
-from typing import Union
+import os
+from collections.abc import MutableMapping, Iterable, Sequence
+from typing import Union, NamedTuple
 
+from .common import FormattedEntry, AccentDict
+from .consts import NO_ACCENT
+from .format_accents import format_entry
 from ..helpers.file_ops import touch, user_files_dir
 from ..mecab_controller.kana_conv import kana_to_moras, to_katakana
-from .common import *
-from .format_accents import format_entry
 
 
 def search_pitch_accent_numbers(accents: str) -> Iterable[Union[str, int]]:
@@ -35,7 +37,7 @@ class AccentEntry(NamedTuple):
         )
 
 
-def create_formatted(entry: AccentEntry) -> Collection[FormattedEntry]:
+def create_formatted(entry: AccentEntry) -> MutableMapping[FormattedEntry, None]:
     return dict.fromkeys(
         FormattedEntry(
             katakana_reading="".join(entry.moras),

@@ -4,15 +4,23 @@
 import dataclasses
 import functools
 from collections import OrderedDict
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
+from typing import Union
+from collections.abc import Iterable
 
 from anki.utils import html_to_text_line
 from aqt import gui_hooks
 
-from .helpers import LONG_VOWEL_MARK
 from .config_view import config_view as cfg, ReadingsDiscardMode
+from .helpers import LONG_VOWEL_MARK
 from .helpers.common_kana import adjust_to_inflection
-from .helpers.mingle_readings import *
+from .helpers.mingle_readings import (
+    MULTIPLE_READING_SEP,
+    WordReading,
+    strip_non_jp_furigana,
+    word_reading,
+    mingle_readings,
+)
 from .helpers.profiles import PitchOutputFormat
 from .helpers.tokens import tokenize, split_separators, ParseableToken, clean_furigana, Token
 from .mecab_controller.basic_types import PartOfSpeech, Inflection
