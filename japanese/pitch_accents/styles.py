@@ -6,6 +6,10 @@ import enum
 
 @enum.unique
 class PitchPatternStyle(enum.Enum):
+    """
+    Styles for HTML pitch patterns.
+    """
+
     javdejong = enum.auto()
     u_biq = enum.auto()
     kanjium = enum.auto()
