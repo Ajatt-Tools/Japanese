@@ -9,7 +9,7 @@ from typing import NamedTuple, final
 
 from .ajt_common.addon_config import AddonConfigManager
 from .helpers.audio_manager import AudioSourceConfig
-from .helpers.profiles import Profile
+from .helpers.profiles import Profile, get_default_profile
 from .helpers.sakura_client import DictName, SearchType, AddDefBehavior
 from .helpers.tokens import RE_FLAGS
 from .mecab_controller.kana_conv import to_katakana
@@ -283,9 +283,11 @@ class ConfigView(ConfigViewBase):
         for profile_dict in self["profiles"]:
             # In case new options are added or removed in the future,
             # load default settings first, then overwrite them.
+            default = get_default_profile(profile_dict["mode"])
+            common_keys = dataclasses.asdict(default).keys() & profile_dict.keys()
             yield dataclasses.replace(
-                default := Profile.get_default(profile_dict["mode"]),
-                **{key: profile_dict[key] for key in (dataclasses.asdict(default).keys() & profile_dict.keys())},
+                default,
+                **{key: profile_dict[key] for key in common_keys},
             )
 
     def iter_audio_sources(self) -> Iterable[AudioSourceConfig]:

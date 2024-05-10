@@ -1,3 +1,3 @@
 #!/bin/bash
 
-./addon/ajt_common/format.sh
+./japanese/ajt_common/format.sh

@@ -3,6 +3,7 @@
 
 import dataclasses
 import enum
+import functools
 import typing
 from collections.abc import Iterable
 
@@ -107,6 +108,11 @@ class Profile(ProfileBase):
     @classmethod
     def clone(cls, profile: "Profile"):
         return cls(**dataclasses.asdict(profile))
+
+
+@functools.cache
+def get_default_profile(mode: str) -> Profile:
+    return Profile.get_default(mode)
 
 
 @dataclasses.dataclass(frozen=True)
