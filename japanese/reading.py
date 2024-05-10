@@ -88,7 +88,7 @@ def split_possible_furigana(expr: str) -> WordReading:
     return WordReading(expr, expr_reading)
 
 
-def single_word_reading(word: str):
+def single_word_reading(word: str) -> str:
     """
     Try to look up the reading of a single word using mecab.
     """

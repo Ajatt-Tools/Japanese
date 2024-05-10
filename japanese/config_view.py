@@ -24,13 +24,13 @@ def split_words(config_value: str) -> list[str]:
 class ConfigViewBase(AddonConfigManager):
     _view_key: str | None = None
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         if self._view_key is not None:
             self._config = self._config[self._view_key]
             self._default_config = self._default_config[self._view_key]
 
-    def write_config(self):
+    def write_config(self) -> None:
         if self._view_key is not None:
             raise RuntimeError("Can't call this function from a sub-view.")
         return super().write_config()
@@ -219,7 +219,7 @@ class AudioSettingsConfigView(ConfigViewBase):
         return self["search_dialog_dest_field_name"]
 
     @search_dialog_dest_field_name.setter
-    def search_dialog_dest_field_name(self, field_name: str):
+    def search_dialog_dest_field_name(self, field_name: str) -> None:
         self["search_dialog_dest_field_name"] = field_name
 
     @property
@@ -227,7 +227,7 @@ class AudioSettingsConfigView(ConfigViewBase):
         return self["search_dialog_src_field_name"]
 
     @search_dialog_src_field_name.setter
-    def search_dialog_src_field_name(self, field_name: str):
+    def search_dialog_src_field_name(self, field_name: str) -> None:
         self["search_dialog_src_field_name"] = field_name
 
     @property
@@ -270,7 +270,7 @@ class DefinitionsConfigView(ConfigViewBase):
 
 @final
 class ConfigView(ConfigViewBase):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._furigana = FuriganaConfigView()
         self._pitch = PitchConfigView()
@@ -295,11 +295,11 @@ class ConfigView(ConfigViewBase):
             yield AudioSourceConfig(**source_dict)
 
     @property
-    def audio_settings(self):
+    def audio_settings(self) -> AudioSettingsConfigView:
         return self._audio_settings
 
     @property
-    def audio_sources(self):
+    def audio_sources(self) -> list[dict]:
         return self["audio_sources"]
 
     @property
