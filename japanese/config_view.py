@@ -7,7 +7,7 @@ import re
 from collections.abc import Iterable
 from typing import NamedTuple, final
 
-from .ajt_common.addon_config import AddonConfigManager
+from .ajt_common.addon_config import AddonConfigManager, ConfigSubViewBase
 from .helpers.audio_manager import AudioSourceConfig
 from .helpers.profiles import Profile, get_default_profile
 from .helpers.sakura_client import DictName, SearchType, AddDefBehavior
@@ -21,22 +21,7 @@ def split_words(config_value: str) -> list[str]:
     return re.split(r"[、, ]+", config_value, flags=RE_FLAGS)
 
 
-class ConfigViewBase(AddonConfigManager):
-    _view_key: str | None = None
-
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        if self._view_key is not None:
-            self._config = self._config[self._view_key]
-            self._default_config = self._default_config[self._view_key]
-
-    def write_config(self) -> None:
-        if self._view_key is not None:
-            raise RuntimeError("Can't call this function from a sub-view.")
-        return super().write_config()
-
-
-class WordBlockListManager(ConfigViewBase):
+class WordBlockListManager(ConfigSubViewBase):
     _NUMBERS = re.compile(r"[一二三四五六七八九十０１２３４５６７８９0123456789]+")
 
     @property
@@ -121,7 +106,7 @@ class PitchConfigView(PitchAndFuriganaCommon):
 
 
 @final
-class ContextMenuConfigView(ConfigViewBase):
+class ContextMenuConfigView(ConfigSubViewBase):
     _view_key = "context_menu"
 
     @property
@@ -148,7 +133,7 @@ class ToolbarButtonConfig(NamedTuple):
 
 
 @final
-class ToolbarConfigView(ConfigViewBase):
+class ToolbarConfigView(ConfigSubViewBase):
     _view_key = "toolbar"
 
     def __getitem__(self, item) -> ToolbarButtonConfig:
@@ -187,7 +172,7 @@ class ToolbarConfigView(ConfigViewBase):
 
 
 @final
-class AudioSettingsConfigView(ConfigViewBase):
+class AudioSettingsConfigView(ConfigSubViewBase):
     _view_key = "audio_settings"
 
     @property
@@ -236,7 +221,7 @@ class AudioSettingsConfigView(ConfigViewBase):
 
 
 @final
-class DefinitionsConfigView(ConfigViewBase):
+class DefinitionsConfigView(ConfigSubViewBase):
     _view_key = "definitions"
 
     @property
@@ -269,7 +254,7 @@ class DefinitionsConfigView(ConfigViewBase):
 
 
 @final
-class ConfigView(ConfigViewBase):
+class JapaneseConfig(AddonConfigManager):
     def __init__(self) -> None:
         super().__init__()
         self._furigana = FuriganaConfigView()
@@ -327,4 +312,4 @@ class ConfigView(ConfigViewBase):
         return self._definitions
 
 
-config_view = ConfigView()
+config_view = JapaneseConfig()
