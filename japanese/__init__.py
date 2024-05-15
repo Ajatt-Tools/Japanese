@@ -3,6 +3,8 @@
 
 import sys
 
+from aqt import mw
+
 
 def start_addon():
     from . import tasks, lookup, bulk_add, gui, context_menu, editor_toolbar
@@ -15,5 +17,5 @@ def start_addon():
     editor_toolbar.init()
 
 
-if "pytest" not in sys.modules:
+if mw and "pytest" not in sys.modules:
     start_addon()
