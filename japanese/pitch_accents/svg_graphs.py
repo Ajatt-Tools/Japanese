@@ -289,9 +289,8 @@ class SvgPitchGraphMaker:
             visible_height = opts.graph_visible_height
             content.append(make_group(text_moras, 'text'))
         else:
-            svg_height_no_text = height_low + opts.size_unit
-            svg_height = svg_height_no_text
-            ratio = svg_height_no_text / svg_height_with_text
+            svg_height = height_low + opts.size_unit
+            ratio = svg_height / svg_height_with_text
             visible_height = int(ratio * opts.graph_visible_height)
 
         return self.make_svg(
