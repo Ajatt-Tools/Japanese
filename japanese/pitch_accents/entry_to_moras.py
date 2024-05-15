@@ -1,0 +1,77 @@
+# Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
+# License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
+
+import dataclasses
+import enum
+import html
+import re
+from typing import Iterable, Optional
+
+from .common import FormattedEntry
+from .styles import XmlTags
+from ..mecab_controller import kana_to_moras
+
+RE_PITCH_TAG = re.compile(r"(<[^<>]+>)")
+
+
+def split_html_notation(entry: FormattedEntry) -> Iterable[str]:
+    return filter(bool, map(str.strip, re.split(RE_PITCH_TAG, entry.html_notation)))
+
+
+@enum.unique
+class PitchLevel(enum.Enum):
+    low = "low"
+    high = "high"
+
+
+class MoraFlag(enum.Flag):
+    nasal = enum.auto()
+    devoiced = enum.auto()
+
+
+@dataclasses.dataclass
+class Quark:
+    txt: str
+    flags: MoraFlag
+
+
+@dataclasses.dataclass
+class Mora:
+    txt: str
+    level: PitchLevel
+    flags: MoraFlag
+    quark: Optional[Quark] = None
+
+
+class SpecialSymbols:
+    nasal_dakuten_esc = "&#176;"  # ° is used in the NHK dictionary before カ, etc.
+    nasal_dakuten = html.unescape("&#176;")
+
+
+def entry_to_moras(entry: FormattedEntry) -> list[Mora]:
+    moras: list[Mora] = []
+    current_level: PitchLevel = PitchLevel.low
+    current_flags = MoraFlag(0)
+
+    for token in split_html_notation(entry):
+        match token:
+            case XmlTags.low_rise_start | XmlTags.low_start | XmlTags.high_drop_end | XmlTags.high_end:
+                current_level = PitchLevel.low
+            case XmlTags.high_start | XmlTags.high_drop_start | XmlTags.low_rise_end | XmlTags.low_end:
+                current_level = PitchLevel.high
+            case XmlTags.nasal_start:
+                current_flags |= MoraFlag.nasal
+            case XmlTags.nasal_end:
+                current_flags &= ~MoraFlag.nasal
+            case XmlTags.devoiced_start:
+                current_flags |= MoraFlag.devoiced
+            case XmlTags.devoiced_end:
+                current_flags &= ~MoraFlag.devoiced
+            case SpecialSymbols.nasal_dakuten_esc | SpecialSymbols.nasal_dakuten:
+                assert MoraFlag.nasal in current_flags, "nasal handakuten only appears inside nasal tags."
+                assert len(moras) > 0, "nasal handakuten must be attached to an existing mora."
+                moras[-1].quark = Quark(token, flags=current_flags)
+            case _:
+                assert token.isalpha()
+                moras.extend(Mora(mora, current_level, flags=current_flags) for mora in kana_to_moras(token))
+    return moras
