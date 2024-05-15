@@ -102,9 +102,10 @@ class Line:
     def is_completed(self) -> bool:
         return self.start is not None and self.end is not None
 
-    def draw(self) -> str:
+    def draw(self, trailing: bool = False) -> str:
         assert self.start is not None and self.end is not None
-        return (f'<line stroke="black" stroke-width="{self._opts.stroke_width:.2f}" '
+        stroke = "gray" if trailing else "black"
+        return (f'<line stroke="{stroke}" stroke-width="{self._opts.stroke_width:.2f}" '
                 f'x1="{self.start.x:.3f}" y1="{self.start.y:.3f}" '
                 f'x2="{self.end.x:.3f}" y2="{self.end.y:.3f}" />')
 
@@ -167,12 +168,12 @@ class Path:
             self.go_to(x, y)
         return self
 
-    def draw(self) -> str:
+    def draw(self, trailing: bool = False) -> str:
         opts = self._opts
         drawn: list[str] = []
         line: Line
         for line in filter(lambda _line: _line.is_completed(), self._lines):
-            drawn.append(line.adjust_to_radius(opts.circle_radius).draw())
+            drawn.append(line.adjust_to_radius(opts.circle_radius).draw(trailing))
         return ''.join(drawn)
 
 
@@ -180,12 +181,14 @@ class SvgPitchGraphMaker:
     def __init__(self, options: SvgPitchGraphOptions):
         self._opts = options
 
-    def make_circle(self, x_pos: int, y_pos: int) -> str:
+    def make_circle(self, x_pos: int, y_pos: int, trailing: bool = False) -> str:
         """
         Create a circle that is positioned where two lines touch.
         """
+        fill = "none" if trailing else "black"
+        stroke = "gray" if trailing else "black"
         return (
-            f'<circle fill="black" stroke="black" stroke-width="{self._opts.stroke_width:.2f}" '
+            f'<circle fill="{fill}" stroke="{stroke}" stroke-width="{self._opts.stroke_width:.2f}" '
             f'cx="{x_pos:.3f}" cy="{y_pos:.3f}" r="{self._opts.circle_radius:.2f}" />'
         )
 
@@ -274,8 +277,8 @@ class SvgPitchGraphMaker:
         if pitch_type == PitchType.heiban:
             # add a trailing line.
             assert height_high == y_pos
-            trail_line = Path(opts).start_at(x_pos - opts.x_step, height_high).go_to(x_pos, height_high).draw()
-            trail_circle = self.make_circle(x_pos, height_high)
+            trail_line = Path(opts).start_at(x_pos - opts.x_step, height_high).go_to(x_pos, height_high).draw(trailing=True)
+            trail_circle = self.make_circle(x_pos, height_high, trailing=True)
             content.append(make_group([trail_line, trail_circle], 'trail'))
 
         content.append(make_group([path.draw()], 'paths'))
