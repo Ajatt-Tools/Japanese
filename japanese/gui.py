@@ -526,20 +526,23 @@ class MultiColumnSettingsForm(SettingsForm):
 
 
 class NarrowSpinBox(QSpinBox):
-    _default_allowed_range = (1, 99)
+    _default_allowed_range: tuple[int, int] = (1, 99)
+    _max_width: int = NARROW_WIDGET_MAX_WIDTH
 
     def __init__(self, initial_value: int = None, *args):
         super().__init__(*args)
         self.setRange(*self._default_allowed_range)
-        self.setMaximumWidth(NARROW_WIDGET_MAX_WIDTH)
+        self.setMaximumWidth(self._max_width)
         if initial_value:
             self.setValue(initial_value)
 
 
 class NarrowLineEdit(QLineEdit):
+    _max_width: int = NARROW_WIDGET_MAX_WIDTH
+
     def __init__(self, *args):
         super().__init__(*args)
-        self.setMaximumWidth(NARROW_WIDGET_MAX_WIDTH)
+        self.setMaximumWidth(self._max_width)
 
 
 class PitchSettingsForm(MultiColumnSettingsForm):
