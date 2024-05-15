@@ -3,14 +3,14 @@
 from collections.abc import Sequence
 
 from japanese.pitch_accents.common import FormattedEntry
-from japanese.pitch_accents.entry_to_moras import entry_to_moras, PitchLevel, MoraFlag
+from japanese.pitch_accents.entry_to_moras import entry_to_moras, PitchLevel, MoraFlag, mora_flags_to_classname
 
 
 def filter_by_level(moras, level: PitchLevel) -> Sequence[str]:
     return list(map(lambda mora: mora.txt, filter(lambda mora: mora.level == level, moras)))
 
 
-def test_entry_to_moras():
+def test_entry_to_moras() -> None:
     e = FormattedEntry(
         "ジンチク",
         "<low_rise>ジ</low_rise><high>ン<devoiced>チ</devoiced>ク</high>",
@@ -59,3 +59,9 @@ def test_entry_to_moras():
     moras = entry_to_moras(e)
     assert filter_by_level(moras, PitchLevel.high) == list("モート")
     assert filter_by_level(moras, PitchLevel.low) == list("イ")
+
+
+def test_mora_flags_to_classname() -> None:
+    assert mora_flags_to_classname(MoraFlag.nasal | MoraFlag.devoiced) == "nasal devoiced"
+    assert mora_flags_to_classname(MoraFlag.nasal) == "nasal"
+    assert mora_flags_to_classname(MoraFlag.devoiced) == "devoiced"
