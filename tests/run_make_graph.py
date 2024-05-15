@@ -10,13 +10,13 @@ def main() -> None:
         FormattedEntry(
             "ジンロウ",
             "<low_rise>ジ</low_rise><high>ンロウ</high>",
-            "0"
+            "0",
         ),
         FormattedEntry(
             "スイソウガク",
             "<low_rise>ス</low_rise><high_drop>イソ</high_drop><low>ーカ<nasal>&#176;</nasal>ク</low>",
-            "3"
-        )
+            "3",
+        ),
     )
 
     maker = SvgPitchGraphMaker(options=SvgPitchGraphOptions())

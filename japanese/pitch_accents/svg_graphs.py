@@ -30,25 +30,22 @@ class SvgPitchGraphOptions:
     devoiced_rectangle_padding: float = 5
     devoiced_stroke_disarray: str = "2 3"
     graph_visible_height: int = 100
-    graph_font: str = ("Noto Sans, Noto Sans CJK JP, "
-                       "IPAexGothic, IPAPGothic, IPAGothic, "
-                       "Yu Gothic, "
-                       "Sans, Sans-Serif")
+    graph_font: str = "Noto Sans, Noto Sans CJK JP, IPAexGothic, IPAPGothic, IPAGothic, Yu Gothic, Sans, Sans-Serif"
 
 
 def append_classname(mora_flag: MoraFlag) -> str:
     class_name = mora_flags_to_classname(mora_flag)
-    return f' class="{class_name}"' if class_name else ''
+    return f' class="{class_name}"' if class_name else ""
 
 
 @enum.unique
 class PitchType(Enum):
-    heiban = 'h'
-    atamadaka = 'a'
-    nakadaka = 'n'
-    odaka = 'o'
-    kifuku = 'k'
-    unknown = 'u'
+    heiban = "h"
+    atamadaka = "a"
+    nakadaka = "n"
+    odaka = "o"
+    kifuku = "k"
+    unknown = "u"
 
 
 def pitch_type_from_pitch_num(moras: list[Mora], pitch_num_as_str: str) -> PitchType:
@@ -105,9 +102,11 @@ class Line:
     def draw(self, trailing: bool = False) -> str:
         assert self.start is not None and self.end is not None
         stroke = "gray" if trailing else "black"
-        return (f'<line stroke="{stroke}" stroke-width="{self._opts.stroke_width:.2f}" '
-                f'x1="{self.start.x:.3f}" y1="{self.start.y:.3f}" '
-                f'x2="{self.end.x:.3f}" y2="{self.end.y:.3f}" />')
+        return (
+            f'<line stroke="{stroke}" stroke-width="{self._opts.stroke_width:.2f}" '
+            f'x1="{self.start.x:.3f}" y1="{self.start.y:.3f}" '
+            f'x2="{self.end.x:.3f}" y2="{self.end.y:.3f}" />'
+        )
 
     def adjust_to_radius(self, r: float) -> "Line":
         assert self.start is not None and self.end is not None
@@ -174,7 +173,7 @@ class Path:
         line: Line
         for line in filter(lambda _line: _line.is_completed(), self._lines):
             drawn.append(line.adjust_to_radius(opts.circle_radius).draw(trailing))
-        return ''.join(drawn)
+        return "".join(drawn)
 
 
 class SvgPitchGraphMaker:
@@ -221,20 +220,25 @@ class SvgPitchGraphMaker:
         Create a text element with the mora inside.
         """
         tspan_dx = self._opts.tspan_dx
-        quark = f'<tspan{append_classname(mora.quark.flags)} fill="red" dx="{tspan_dx:.0f}">{mora.quark.txt}</tspan>' if mora.quark else ''
+        quark = (
+            f'<tspan{append_classname(mora.quark.flags)} fill="red" dx="{tspan_dx:.0f}">{mora.quark.txt}</tspan>'
+            if mora.quark
+            else ""
+        )
         return (
             f'<text{append_classname(mora.flags)} fill="black" font-size="{self._opts.font_size}px" '
             f'x="{x:.0f}" y="{y:.0f}" dx="{dx:.0f}">{mora.txt}{quark}</text>'
         )
 
     def calc_svg_width(self, moras: list[Mora], pitch_type: PitchType) -> int:
-        count = (len(moras) + (1 if pitch_type == PitchType.heiban else 0))
+        count = len(moras) + (1 if pitch_type == PitchType.heiban else 0)
         return count * self._opts.x_step + self._opts.graph_horizontal_padding * 2
 
     def make_svg(self, contents: str, *, width: int, height: int, visible_height: int) -> str:
         return (
             f'<svg class="ajt__pitch_svg" style="font-family: {self._opts.graph_font}" viewBox="0 0 {width} {height}" '
-            f'height="{visible_height}px" xmlns="http://www.w3.org/2000/svg">{contents}</svg>')
+            f'height="{visible_height}px" xmlns="http://www.w3.org/2000/svg">{contents}</svg>'
+        )
 
     def make_graph(self, entry: FormattedEntry) -> str:
         opts = self._opts
@@ -257,18 +261,9 @@ class SvgPitchGraphMaker:
 
             if MoraFlag.devoiced in mora.flags:
                 # circle around text
-                text_moras.append(self.make_devoiced_circle(
-                    mora,
-                    x_pos,
-                    height_kana
-                ))
+                text_moras.append(self.make_devoiced_circle(mora, x_pos, height_kana))
 
-            text_moras.append(self.make_text(
-                mora,
-                x_pos,
-                height_kana,
-                dx=int(opts.text_dx) * len(mora.txt)
-            ))
+            text_moras.append(self.make_text(mora, x_pos, height_kana, dx=int(opts.text_dx) * len(mora.txt)))
 
             x_pos += opts.x_step
 
@@ -277,12 +272,14 @@ class SvgPitchGraphMaker:
         if pitch_type == PitchType.heiban:
             # add a trailing line.
             assert height_high == y_pos
-            trail_line = Path(opts).start_at(x_pos - opts.x_step, height_high).go_to(x_pos, height_high).draw(trailing=True)
+            trail_line = (
+                Path(opts).start_at(x_pos - opts.x_step, height_high).go_to(x_pos, height_high).draw(trailing=True)
+            )
             trail_circle = self.make_circle(x_pos, height_high, trailing=True)
-            content.append(make_group([trail_line, trail_circle], 'trail'))
+            content.append(make_group([trail_line, trail_circle], "trail"))
 
-        content.append(make_group([path.draw()], 'paths'))
-        content.append(make_group(word_circles, 'circles'))
+        content.append(make_group([path.draw()], "paths"))
+        content.append(make_group(word_circles, "circles"))
 
         svg_width = self.calc_svg_width(moras, pitch_type)
         svg_height_with_text = height_kana + opts.size_unit
@@ -290,7 +287,7 @@ class SvgPitchGraphMaker:
         if opts.include_text:
             svg_height = svg_height_with_text
             visible_height = opts.graph_visible_height
-            content.append(make_group(text_moras, 'text'))
+            content.append(make_group(text_moras, "text"))
         else:
             svg_height = height_low + opts.size_unit
             ratio = svg_height / svg_height_with_text
@@ -298,5 +295,7 @@ class SvgPitchGraphMaker:
 
         return self.make_svg(
             make_group(content, pitch_type.name),
-            width=svg_width, height=svg_height, visible_height=visible_height,
+            width=svg_width,
+            height=svg_height,
+            visible_height=visible_height,
         )
