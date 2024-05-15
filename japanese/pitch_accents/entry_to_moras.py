@@ -5,7 +5,8 @@ import dataclasses
 import enum
 import html
 import re
-from typing import Iterable, Optional
+from typing import Optional
+from collections.abc import Iterable
 
 from .common import FormattedEntry
 from .styles import XmlTags
@@ -54,24 +55,23 @@ def entry_to_moras(entry: FormattedEntry) -> list[Mora]:
     current_flags = MoraFlag(0)
 
     for token in split_html_notation(entry):
-        match token:
-            case XmlTags.low_rise_start | XmlTags.low_start | XmlTags.high_drop_end | XmlTags.high_end:
-                current_level = PitchLevel.low
-            case XmlTags.high_start | XmlTags.high_drop_start | XmlTags.low_rise_end | XmlTags.low_end:
-                current_level = PitchLevel.high
-            case XmlTags.nasal_start:
-                current_flags |= MoraFlag.nasal
-            case XmlTags.nasal_end:
-                current_flags &= ~MoraFlag.nasal
-            case XmlTags.devoiced_start:
-                current_flags |= MoraFlag.devoiced
-            case XmlTags.devoiced_end:
-                current_flags &= ~MoraFlag.devoiced
-            case SpecialSymbols.nasal_dakuten_esc | SpecialSymbols.nasal_dakuten:
-                assert MoraFlag.nasal in current_flags, "nasal handakuten only appears inside nasal tags."
-                assert len(moras) > 0, "nasal handakuten must be attached to an existing mora."
-                moras[-1].quark = Quark(token, flags=current_flags)
-            case _:
-                assert token.isalpha()
-                moras.extend(Mora(mora, current_level, flags=current_flags) for mora in kana_to_moras(token))
+        if token in (XmlTags.low_rise_start, XmlTags.low_start, XmlTags.high_drop_end, XmlTags.high_end):
+            current_level = PitchLevel.low
+        elif token in (XmlTags.high_start, XmlTags.high_drop_start, XmlTags.low_rise_end, XmlTags.low_end):
+            current_level = PitchLevel.high
+        elif token == XmlTags.nasal_start:
+            current_flags |= MoraFlag.nasal
+        elif token == XmlTags.nasal_end:
+            current_flags &= ~MoraFlag.nasal
+        elif token == XmlTags.devoiced_start:
+            current_flags |= MoraFlag.devoiced
+        elif token == XmlTags.devoiced_end:
+            current_flags &= ~MoraFlag.devoiced
+        elif token in (SpecialSymbols.nasal_dakuten_esc, SpecialSymbols.nasal_dakuten):
+            assert MoraFlag.nasal in current_flags, "nasal handakuten only appears inside nasal tags."
+            assert len(moras) > 0, "nasal handakuten must be attached to an existing mora."
+            moras[-1].quark = Quark(token, flags=current_flags)
+        else:
+            assert token.isalpha()
+            moras.extend(Mora(mora, current_level, flags=current_flags) for mora in kana_to_moras(token))
     return moras
