@@ -1,8 +1,11 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
+import pathlib
 
 from japanese.pitch_accents.common import FormattedEntry
 from japanese.pitch_accents.svg_graphs import SvgPitchGraphMaker, SvgPitchGraphOptions
+
+DATA_DIR = pathlib.Path(__file__).parent / "data"
 
 
 def main() -> None:
@@ -21,13 +24,12 @@ def main() -> None:
             "ツケヒモ",
             "<low_rise><devoiced>ツ</devoiced></low_rise><high>ケヒモ</high>",
             "0",
-        )
+        ),
     )
-
     maker = SvgPitchGraphMaker(options=SvgPitchGraphOptions())
-
+    DATA_DIR.mkdir(exist_ok=True)
     for idx, entry in enumerate(entries):
-        with open(f"test_{idx}.svg", "w", encoding="utf-8") as of:
+        with open(DATA_DIR / f"test_{idx}.svg", "w", encoding="utf-8") as of:
             of.write(maker.make_graph(entry))
 
 
