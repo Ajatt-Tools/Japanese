@@ -242,6 +242,13 @@ class SvgPitchGraphMaker:
             f'height="{visible_height}px" xmlns="http://www.w3.org/2000/svg">{contents}</svg>'
         )
 
+    def make_trailing_line(self, x_pos: int, y_pos: int, height_high: int) -> str:
+        opts = self._opts
+        # 1-mora heiban words start low, so the last mora is still low.
+        trail_line = Path(opts).start_at(x_pos - opts.x_step, y_pos).go_to(x_pos, height_high).draw(trailing=True)
+        trail_circle = self.make_circle(x_pos, height_high, trailing=True)
+        return make_group([trail_line, trail_circle], "trail")
+
     def make_graph(self, entry: FormattedEntry) -> str:
         opts = self._opts
         moras = entry_to_moras(entry)
@@ -272,12 +279,8 @@ class SvgPitchGraphMaker:
         content: list[str] = []
 
         if pitch_type == PitchType.heiban:
-            # add a trailing line.
-            # 1-mora heiban words start low, so the last mora is still low.
             assert height_high == y_pos or len(moras) == 1, f"can't proceed: {entry}"
-            trail_line = Path(opts).start_at(x_pos - opts.x_step, y_pos).go_to(x_pos, height_high).draw(trailing=True)
-            trail_circle = self.make_circle(x_pos, height_high, trailing=True)
-            content.append(make_group([trail_line, trail_circle], "trail"))
+            content.append(self.make_trailing_line(x_pos, y_pos, height_high))
 
         content.append(make_group([path.draw()], "paths"))
         content.append(make_group(word_circles, "circles"))
