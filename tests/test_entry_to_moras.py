@@ -39,6 +39,7 @@ def test_entry_to_moras() -> None:
     moras = entry_to_moras(e)
     assert filter_by_level(moras, PitchLevel.high) == list("ンセイテツ")
     assert filter_by_level(moras, PitchLevel.low) == list("ジカク")
+    assert moras[6].quark
     assert moras[6].quark.flags == MoraFlag.nasal
 
     e = FormattedEntry(
@@ -49,6 +50,7 @@ def test_entry_to_moras() -> None:
     moras = entry_to_moras(e)
     assert filter_by_level(moras, PitchLevel.high) == list("ンセイテ")
     assert filter_by_level(moras, PitchLevel.low) == list("ジツカク")
+    assert moras[6].quark
     assert moras[6].quark.flags == MoraFlag.nasal
 
     e = FormattedEntry(
