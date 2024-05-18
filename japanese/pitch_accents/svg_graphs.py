@@ -233,7 +233,7 @@ class SvgPitchGraphMaker:
         )
 
     def calc_svg_width(self, moras: list[Mora], pitch_type: PitchType) -> int:
-        count = len(moras) + (1 if pitch_type == PitchType.heiban else 0)
+        count = len(moras) + (1 if pitch_type == PitchType.heiban or len(moras) == 1 else 0)
         return count * self._opts.x_step + self._opts.graph_horizontal_padding * 2
 
     def make_svg(self, contents: str, *, width: int, height: int, visible_height: int) -> str:
@@ -242,11 +242,11 @@ class SvgPitchGraphMaker:
             f'height="{visible_height}px" xmlns="http://www.w3.org/2000/svg">{contents}</svg>'
         )
 
-    def make_trailing_line(self, x_pos: int, y_pos: int, height_high: int) -> str:
+    def make_trailing_line(self, start: Point, end: Point) -> str:
         opts = self._opts
         # 1-mora heiban words start low, so the last mora is still low.
-        trail_line = Path(opts).start_at(x_pos - opts.x_step, y_pos).go_to(x_pos, height_high).draw(trailing=True)
-        trail_circle = self.make_circle(x_pos, height_high, trailing=True)
+        trail_line = Path(opts).start_at(start.x, start.y).go_to(end.x, end.y).draw(trailing=True)
+        trail_circle = self.make_circle(end.x, end.y, trailing=True)
         return make_group([trail_line, trail_circle], "trail")
 
     def make_graph(self, entry: FormattedEntry) -> str:
@@ -278,9 +278,14 @@ class SvgPitchGraphMaker:
 
         content: list[str] = []
 
-        if pitch_type == PitchType.heiban:
+        if pitch_type == PitchType.heiban or len(moras) == 1:
             assert height_high == y_pos or len(moras) == 1, f"can't proceed: {entry}"
-            content.append(self.make_trailing_line(x_pos, y_pos, height_high))
+            content.append(
+                self.make_trailing_line(
+                    start=Point(x_pos - opts.x_step, y_pos),
+                    end=Point(x_pos, height_low if pitch_type == PitchType.atamadaka else height_high),
+                )
+            )
 
         content.append(make_group([path.draw()], "paths"))
         content.append(make_group(word_circles, "circles"))
