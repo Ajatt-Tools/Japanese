@@ -8,10 +8,8 @@ from typing import Optional
 
 from anki.utils import is_mac
 
-try:
-    from ..ajt_common.utils import find_executable
-except ImportError:
-    from ajt_common.utils import find_executable
+from ..ajt_common.utils import find_executable
+
 
 GD_PROGRAM_NAME = "GoldenDict-NG"
 GD_MACOS_PATH = (
@@ -44,11 +42,3 @@ def lookup_goldendict(gd_word: str) -> subprocess.Popen:
         stdin=subprocess.DEVNULL,
         start_new_session=True,
     )
-
-
-def main():
-    lookup_goldendict("肉じゃが")
-
-
-if __name__ == "__main__":
-    main()
