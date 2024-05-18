@@ -47,6 +47,7 @@ class Mora:
 class SpecialSymbols:
     nasal_dakuten_esc = "&#176;"  # ° is used in the NHK dictionary before カ, etc.
     nasal_dakuten = html.unescape("&#176;")
+    nakaten = "・"
 
 
 def entry_to_moras(entry: FormattedEntry) -> list[Mora]:
@@ -71,8 +72,13 @@ def entry_to_moras(entry: FormattedEntry) -> list[Mora]:
             assert MoraFlag.nasal in current_flags, "nasal handakuten only appears inside nasal tags."
             assert len(moras) > 0, "nasal handakuten must be attached to an existing mora."
             moras[-1].quark = Quark(token, flags=current_flags)
+        elif token == SpecialSymbols.nakaten:
+            # Skip nakaten because it's not a mora.
+            # In NHK-1998, nakaten is used to separate parts of words
+            # that consist of multiple sub-words, e.g. 二十四時間.
+            pass
         else:
-            assert token.isalpha()
+            assert token.isalpha(), f"can't proceed: {entry}"
             moras.extend(Mora(mora, current_level, flags=current_flags) for mora in kana_to_moras(token))
     return moras
 
