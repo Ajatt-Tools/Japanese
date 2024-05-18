@@ -80,8 +80,9 @@ def entry_to_moras(entry: FormattedEntry) -> list[Mora]:
         else:
             assert token.isalpha(), f"can't proceed: {entry}"
             moras.extend(Mora(mora, current_level, flags=current_flags) for mora in kana_to_moras(token))
+
     return moras
 
 
-def mora_flags_to_classname(flags: MoraFlag):
-    return " ".join(flag.name for flag in MoraFlag if flag in flags)
+def mora_flags2class_name(flags: MoraFlag):
+    return " ".join(flag.name for flag in MoraFlag if flag.name and flag in flags)

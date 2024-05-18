@@ -6,12 +6,11 @@ import enum
 import math
 import typing
 from collections.abc import Iterable
-from enum import Enum
 from math import sqrt
 from typing import Optional
 
 from .common import FormattedEntry
-from .entry_to_moras import entry_to_moras, PitchLevel, MoraFlag, Mora, mora_flags_to_classname
+from .entry_to_moras import entry_to_moras, PitchLevel, MoraFlag, Mora, mora_flags2class_name
 
 
 @dataclasses.dataclass
@@ -34,19 +33,19 @@ class SvgPitchGraphOptions:
     graph_font: str = "Noto Sans, Noto Sans CJK JP, IPAexGothic, IPAPGothic, IPAGothic, Yu Gothic, Sans, Sans-Serif"
 
 
-def append_classname(mora_flag: MoraFlag) -> str:
-    class_name = mora_flags_to_classname(mora_flag)
+def append_class_name(mora_flag: MoraFlag) -> str:
+    class_name = mora_flags2class_name(mora_flag)
     return f' class="{class_name}"' if class_name else ""
 
 
 @enum.unique
-class PitchType(Enum):
-    heiban = "h"
-    atamadaka = "a"
-    nakadaka = "n"
-    odaka = "o"
-    kifuku = "k"
-    unknown = "u"
+class PitchType(enum.Enum):
+    heiban = enum.auto()
+    atamadaka = enum.auto()
+    nakadaka = enum.auto()
+    odaka = enum.auto()
+    kifuku = enum.auto()
+    unknown = enum.auto()
 
 
 def pitch_type_from_pitch_num(moras: list[Mora], pitch_num_as_str: str) -> PitchType:
@@ -69,8 +68,8 @@ def pitch_type_from_pitch_num(moras: list[Mora], pitch_num_as_str: str) -> Pitch
     return PitchType.unknown
 
 
-def make_group(elements: Iterable[str], classname: str) -> str:
-    return f'<g class="{classname}">{"".join(elements)}</g>'
+def make_group(elements: Iterable[str], class_name: str) -> str:
+    return f'<g class="{class_name}">{"".join(elements)}</g>'
 
 
 class Point(typing.NamedTuple):
@@ -227,12 +226,12 @@ class SvgPitchGraphMaker:
         """
         tspan_dx = self._opts.tspan_dx
         quark = (
-            f'<tspan{append_classname(mora.quark.flags)} fill="red" dx="{tspan_dx:.0f}">{mora.quark.txt}</tspan>'
+            f'<tspan{append_class_name(mora.quark.flags)} fill="red" dx="{tspan_dx:.0f}">{mora.quark.txt}</tspan>'
             if mora.quark
             else ""
         )
         return (
-            f'<text{append_classname(mora.flags)} fill="black" font-size="{self._opts.font_size}px" '
+            f'<text{append_class_name(mora.flags)} fill="black" font-size="{self._opts.font_size}px" '
             f'x="{pos.x:.0f}" y="{pos.y:.0f}" dx="{dx:.0f}">{mora.txt}{quark}</text>'
         )
 

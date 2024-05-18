@@ -3,7 +3,7 @@
 from collections.abc import Sequence
 
 from japanese.pitch_accents.common import FormattedEntry
-from japanese.pitch_accents.entry_to_moras import entry_to_moras, PitchLevel, MoraFlag, mora_flags_to_classname
+from japanese.pitch_accents.entry_to_moras import entry_to_moras, PitchLevel, MoraFlag, mora_flags2class_name
 
 
 def filter_by_level(moras, level: PitchLevel) -> Sequence[str]:
@@ -62,8 +62,35 @@ def test_entry_to_moras() -> None:
     assert filter_by_level(moras, PitchLevel.high) == list("モート")
     assert filter_by_level(moras, PitchLevel.low) == list("イ")
 
+    e = FormattedEntry(
+        "ニジュウヨジカン",
+        "<high_drop>ニ</high_drop><low>ジュー</low>・<low_rise>ヨ</low_rise><high_drop>ジ</high_drop><low>カン</low>",
+        "1+2",
+    )
+    moras = entry_to_moras(e)
+    assert filter_by_level(moras, PitchLevel.high) == list("ニジ")
+    assert filter_by_level(moras, PitchLevel.low) == ["ジュ", "ー", "ヨ", "カ", "ン"]
 
-def test_mora_flags_to_classname() -> None:
-    assert mora_flags_to_classname(MoraFlag.nasal | MoraFlag.devoiced) == "nasal devoiced"
-    assert mora_flags_to_classname(MoraFlag.nasal) == "nasal"
-    assert mora_flags_to_classname(MoraFlag.devoiced) == "devoiced"
+    e = FormattedEntry(
+        "ニ",
+        "<low_rise>ニ</low_rise>",
+        "0",
+    )
+    moras = entry_to_moras(e)
+    assert filter_by_level(moras, PitchLevel.high) == list("")
+    assert filter_by_level(moras, PitchLevel.low) == list("ニ")
+
+    e = FormattedEntry(
+        "ヨ",
+        "<high_drop>ヨ</high_drop>",
+        "1",
+    )
+    moras = entry_to_moras(e)
+    assert filter_by_level(moras, PitchLevel.high) == list("ヨ")
+    assert filter_by_level(moras, PitchLevel.low) == list("")
+
+
+def test_mora_flags2class_name() -> None:
+    assert mora_flags2class_name(MoraFlag.nasal | MoraFlag.devoiced) == "nasal devoiced"
+    assert mora_flags2class_name(MoraFlag.nasal) == "nasal"
+    assert mora_flags2class_name(MoraFlag.devoiced) == "devoiced"
