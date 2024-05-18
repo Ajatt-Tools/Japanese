@@ -17,12 +17,38 @@ SEP_READING_PITCH = ":"
 SEP_PITCH_TYPE_NUM = "-"
 
 
+@enum.unique
 class PitchType(enum.Enum):
     unknown = NO_ACCENT
     heiban = 0
     atamadaka = 1
     nakadaka = object()
     odaka = object()
+    kifuku = object()
+
+
+def pitch_type_from_pitch_num(pitch_num_as_str: str, n_moras: int) -> PitchType:
+    if not pitch_num_as_str:
+        return PitchType.unknown
+
+    try:
+        pitch_num = int(pitch_num_as_str)
+    except ValueError:
+        return PitchType.unknown
+
+    assert pitch_num >= 0, "pitch number can't be less than 0"
+    assert n_moras > 0, "word must consist of at least 1 mora"
+    assert pitch_num <= n_moras, "pitch must drop inside the word or right after"
+
+    if pitch_num == 0:
+        return PitchType.heiban
+    if pitch_num == 1:
+        return PitchType.atamadaka
+    if pitch_num == n_moras:
+        return PitchType.odaka
+    if pitch_num < n_moras:
+        return PitchType.nakadaka
+    return PitchType.unknown
 
 
 class PitchParam(NamedTuple):

@@ -2,13 +2,13 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import dataclasses
-import enum
 import math
 import typing
 from collections.abc import Iterable
 from math import sqrt
 from typing import Optional
 
+from .basic_types import PitchType, pitch_type_from_pitch_num
 from .common import FormattedEntry
 from .entry_to_moras import entry_to_moras, PitchLevel, MoraFlag, Mora, mora_flags2class_name
 
@@ -36,36 +36,6 @@ class SvgPitchGraphOptions:
 def append_class_name(mora_flag: MoraFlag) -> str:
     class_name = mora_flags2class_name(mora_flag)
     return f' class="{class_name}"' if class_name else ""
-
-
-@enum.unique
-class PitchType(enum.Enum):
-    heiban = enum.auto()
-    atamadaka = enum.auto()
-    nakadaka = enum.auto()
-    odaka = enum.auto()
-    kifuku = enum.auto()
-    unknown = enum.auto()
-
-
-def pitch_type_from_pitch_num(moras: list[Mora], pitch_num_as_str: str) -> PitchType:
-    if not pitch_num_as_str:
-        return PitchType.unknown
-
-    try:
-        pitch_num = int(pitch_num_as_str)
-    except ValueError:
-        return PitchType.unknown
-
-    if pitch_num == 0:
-        return PitchType.heiban
-    if pitch_num == 1:
-        return PitchType.atamadaka
-    if pitch_num == len(moras):
-        return PitchType.odaka
-    if pitch_num < len(moras):
-        return PitchType.nakadaka
-    return PitchType.unknown
 
 
 def make_group(elements: Iterable[str], class_name: str) -> str:
@@ -255,7 +225,7 @@ class SvgPitchGraphMaker:
     def make_graph(self, entry: FormattedEntry) -> str:
         opts = self._opts
         moras = entry_to_moras(entry)
-        pitch_type = pitch_type_from_pitch_num(moras, entry.pitch_number)
+        pitch_type = pitch_type_from_pitch_num(entry.pitch_number, len(moras))
 
         height_high = opts.size_unit
         height_low = height_high + opts.graph_height

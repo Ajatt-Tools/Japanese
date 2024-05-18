@@ -25,6 +25,7 @@ class PitchLevel(enum.Enum):
     high = "high"
 
 
+@enum.unique
 class MoraFlag(enum.Flag):
     nasal = enum.auto()
     devoiced = enum.auto()
