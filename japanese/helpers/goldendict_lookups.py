@@ -14,19 +14,19 @@ except ImportError:
     from ajt_common.utils import find_executable
 
 GD_PROGRAM_NAME = "GoldenDict-NG"
-GDNG_MACOS_PATH = "/Applications/GoldenDict-ng.app/Contents/MacOS/GoldenDict-ng"
-GD_MACOS_PATH = "/Applications/GoldenDict.app/Contents/MacOS/GoldenDict"
+GD_MACOS_PATH = (
+    "/Applications/GoldenDict-ng.app/Contents/MacOS/GoldenDict-ng",
+    "/Applications/GoldenDict.app/Contents/MacOS/GoldenDict",
+)
 
 
 def find_goldendict_fallback() -> Optional[str]:
     if not is_mac:
         return None
-    elif os.path.isfile(GDNG_MACOS_PATH):
-        return GDNG_MACOS_PATH
-    elif os.path.isfile(GD_MACOS_PATH):
-        return GD_MACOS_PATH
-    else:
-        return None
+    for path in GD_MACOS_PATH:
+        if os.path.isfile(path):
+            return path
+    return None
 
 
 @functools.cache
