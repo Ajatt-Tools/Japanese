@@ -82,6 +82,9 @@ class Point(typing.NamedTuple):
     def shift_by(self, *, x: float = 0, y: float = 0):
         return Point(x=self.x + x, y=self.y + y)
 
+    def replace(self, *, x: Optional[float] = None, y: Optional[float] = None):
+        return Point(x=x if x is not None else self.x, y=y if y is not None else self.y)
+
 
 class Line:
     _opts: SvgPitchGraphOptions
@@ -260,22 +263,22 @@ class SvgPitchGraphMaker:
         height_high = opts.size_unit
         height_low = height_high + opts.graph_height
         height_kana = height_low + opts.x_step
-        pos = Point(opts.size_unit + opts.graph_horizontal_padding, opts.size_unit)
+        pos = Point(x=opts.size_unit + opts.graph_horizontal_padding, y=opts.size_unit)
 
         word_circles: list[str] = []
         text_moras: list[str] = []
         path = Path(opts)
 
         for idx, mora in enumerate(moras):
-            pos = Point(pos.x, height_high if mora.level == PitchLevel.high else height_low)
+            pos = pos.replace(y=height_high if mora.level == PitchLevel.high else height_low)
             word_circles.append(self.make_circle(pos))
             path.push(pos)
 
             if MoraFlag.devoiced in mora.flags:
                 # circle around text
-                text_moras.append(self.make_devoiced_circle(mora, Point(pos.x, height_kana)))
+                text_moras.append(self.make_devoiced_circle(mora, pos.replace(y=height_kana)))
 
-            text_moras.append(self.make_text(mora, Point(pos.x, height_kana), dx=int(opts.text_dx) * len(mora.txt)))
+            text_moras.append(self.make_text(mora, pos.replace(y=height_kana), dx=int(opts.text_dx) * len(mora.txt)))
 
             pos = pos.shift_by(x=opts.x_step)
 
@@ -285,8 +288,8 @@ class SvgPitchGraphMaker:
             assert height_high == pos.y or len(moras) == 1, f"can't proceed: {entry}"
             content.append(
                 self.make_trailing_line(
-                    start=Point(pos.x - opts.x_step, pos.y),
-                    end=Point(pos.x, height_low if pitch_type == PitchType.atamadaka else height_high),
+                    start=pos.shift_by(x=-opts.x_step),
+                    end=pos.replace(y=height_low if pitch_type == PitchType.atamadaka else height_high),
                 )
             )
 
