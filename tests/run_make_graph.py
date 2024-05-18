@@ -17,6 +17,11 @@ def main() -> None:
             "<low_rise>ス</low_rise><high_drop>イソ</high_drop><low>ーカ<nasal>&#176;</nasal>ク</low>",
             "3",
         ),
+        FormattedEntry(
+            "ツケヒモ",
+            "<low_rise><devoiced>ツ</devoiced></low_rise><high>ケヒモ</high>",
+            "0",
+        )
     )
 
     maker = SvgPitchGraphMaker(options=SvgPitchGraphOptions())
