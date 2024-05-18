@@ -273,10 +273,9 @@ class SvgPitchGraphMaker:
 
         if pitch_type == PitchType.heiban:
             # add a trailing line.
-            assert height_high == y_pos
-            trail_line = (
-                Path(opts).start_at(x_pos - opts.x_step, height_high).go_to(x_pos, height_high).draw(trailing=True)
-            )
+            # 1-mora heiban words start low, so the last mora is still low.
+            assert height_high == y_pos or len(moras) == 1, f"can't proceed: {entry}"
+            trail_line = Path(opts).start_at(x_pos - opts.x_step, y_pos).go_to(x_pos, height_high).draw(trailing=True)
             trail_circle = self.make_circle(x_pos, height_high, trailing=True)
             content.append(make_group([trail_line, trail_circle], "trail"))
 
