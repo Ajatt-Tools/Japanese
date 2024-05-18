@@ -267,11 +267,11 @@ def try_lookup_full_text(text: str) -> Iterable[AccDbParsedToken]:
     Avoids calling mecab when the text contains one word in dictionary form
     or multiple words in dictionary form separated by punctuation.
     """
+    word: str
+    entries: Sequence[FormattedEntry]
 
     if cfg.furigana.can_lookup_in_db(text) and (results := get_pronunciations(text, recurse=False)):
         for word, entries in results.items():
-            word: str
-            entries: Sequence[FormattedEntry]
             yield AccDbParsedToken(
                 headword=word,
                 word=word,

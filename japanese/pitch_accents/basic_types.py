@@ -34,6 +34,7 @@ def pitch_type_from_pitch_num(pitch_num_as_str: str, n_moras: int) -> PitchType:
     try:
         pitch_num = int(pitch_num_as_str)
     except ValueError:
+        # pitch num is not a number => pitch is unknown
         return PitchType.unknown
 
     assert pitch_num >= 0, "pitch number can't be less than 0"
@@ -77,7 +78,7 @@ class PitchAccentEntry(NamedTuple):
         )
 
     @classmethod
-    def from_formatted(cls, entry: FormattedEntry):
+    def from_formatted(cls, entry: FormattedEntry) -> "PitchAccentEntry":
         """
         Construct cls from a dictionary entry.
 
@@ -88,22 +89,9 @@ class PitchAccentEntry(NamedTuple):
         pitches: list[PitchParam] = []
 
         for symbol in split_pitch_numbers(entry.pitch_number):
-            try:
-                pitch_num = int(symbol)
-            except ValueError:
-                # pitch num is not a number => pitch is unknown
-                pitches.append(PitchParam(PitchType.unknown, symbol))
-                continue
-            try:
-                pitches.append(PitchParam(PitchType(pitch_num), symbol))
-            except ValueError:
-                # either nakadaka or odaka
-                pitches.append(
-                    PitchParam(PitchType.odaka, symbol)
-                    if len(kana_to_moras(entry.katakana_reading)) == int(pitch_num)
-                    else PitchParam(PitchType.nakadaka, symbol)
-                )
-                continue
+            pitches.append(
+                PitchParam(pitch_type_from_pitch_num(symbol, len(kana_to_moras(entry.katakana_reading))), symbol)
+            )
         return cls(
             katakana_reading=entry.katakana_reading,
             pitches=pitches,
