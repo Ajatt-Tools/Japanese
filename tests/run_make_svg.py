@@ -22,6 +22,21 @@ TEST_ENTRIES = (
         "<low_rise><devoiced>ツ</devoiced></low_rise><high>ケヒモ</high>",
         "0",
     ),
+    FormattedEntry(
+        "ニジュウヨジカン",
+        "<high_drop>ニ</high_drop><low>ジュー</low>・<low_rise>ヨ</low_rise><high_drop>ジ</high_drop><low>カン</low>",
+        "1+2",
+    ),
+    FormattedEntry(
+        "ニ",
+        "<low_rise>ニ</low_rise>",
+        "0",
+    ),
+    FormattedEntry(
+        "ヨ",
+        "<high_drop>ヨ</high_drop>",
+        "1",
+    ),
 )
 
 
