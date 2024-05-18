@@ -197,20 +197,24 @@ class SvgPitchGraphMaker:
         Make a circle around the mora text to show that it's devoiced.
         """
         if len(mora.txt) == 1:
-            x_pos = int(pos.x + self._opts.font_size / 2 + self._opts.text_dx)
-            y_pos = int(pos.y + self._opts.text_dx + math.ceil(self._opts.stroke_width))
+            pos = pos.shift_by(
+                x=self._opts.font_size / 2 + self._opts.text_dx,
+                y=self._opts.text_dx + math.ceil(self._opts.stroke_width),
+            )
             return (
-                f'<circle class="devoiced" fill="none" stroke="black" cx="{x_pos:.0f}" cy="{y_pos:.0f}" '
+                f'<circle class="devoiced" fill="none" stroke="black" cx="{pos.x:.0f}" cy="{pos.y:.0f}" '
                 f'stroke-width="{self._opts.devoiced_circle_width:.2f}" r="{self._opts.devoiced_circle_radius:.2f}" '
                 f'stroke-dasharray="{self._opts.devoiced_stroke_disarray}" />'
             )
         else:
-            x_pos = int(pos.x - self._opts.font_size - self._opts.devoiced_rectangle_padding)
-            y_pos = int(pos.y - self._opts.font_size - math.floor(self._opts.stroke_width))
+            pos = pos.shift_by(
+                x=-self._opts.font_size - self._opts.devoiced_rectangle_padding,
+                y=-self._opts.font_size - math.floor(self._opts.stroke_width),
+            )
             width = self._opts.font_size * 2 + self._opts.devoiced_rectangle_padding * 2
             height = self._opts.devoiced_circle_radius * 2
             return (
-                f'<rect class="devoiced" fill="none" stroke="black" x="{x_pos:.0f}" y="{y_pos:.0f}" '
+                f'<rect class="devoiced" fill="none" stroke="black" x="{pos.x:.0f}" y="{pos.y:.0f}" '
                 f'width="{width:.0f}" height="{height:.0f}" '
                 f'stroke-width="{self._opts.devoiced_circle_width:.2f}" rx="{self._opts.devoiced_circle_radius:.2f}" '
                 f'stroke-dasharray="{self._opts.devoiced_stroke_disarray}" />'
@@ -273,7 +277,7 @@ class SvgPitchGraphMaker:
 
             text_moras.append(self.make_text(mora, Point(pos.x, height_kana), dx=int(opts.text_dx) * len(mora.txt)))
 
-            pos = Point(pos.x + opts.x_step, pos.y)
+            pos = pos.shift_by(x=opts.x_step)
 
         content: list[str] = []
 
