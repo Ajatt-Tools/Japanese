@@ -5,9 +5,11 @@ import dataclasses
 import enum
 import html
 import re
-from typing import Optional
+import typing
 from collections.abc import Iterable
+from typing import Optional
 
+from .basic_types import PitchType, pitch_type_from_pitch_num
 from .common import FormattedEntry
 from .styles import XmlTags
 from ..mecab_controller import kana_to_moras
@@ -29,6 +31,7 @@ class PitchLevel(enum.Enum):
 class MoraFlag(enum.Flag):
     nasal = enum.auto()
     devoiced = enum.auto()
+    trailing = enum.auto()
 
 
 @dataclasses.dataclass
@@ -44,6 +47,12 @@ class Mora:
     flags: MoraFlag
     quark: Optional[Quark] = None
 
+    def is_trailing(self) -> bool:
+        if MoraFlag.trailing in self.flags:
+            assert not self.txt
+            return True
+        return False
+
 
 class SpecialSymbols:
     nasal_dakuten_esc = "&#176;"  # ° is used in the NHK dictionary before カ, etc.
@@ -51,7 +60,13 @@ class SpecialSymbols:
     nakaten = "・"
 
 
-def entry_to_moras(entry: FormattedEntry) -> list[Mora]:
+class MoraSequence(typing.NamedTuple):
+    moras: list[Mora]
+    pitch_type: PitchType
+    entry: FormattedEntry
+
+
+def entry_to_moras(entry: FormattedEntry) -> MoraSequence:
     moras: list[Mora] = []
     current_level: PitchLevel = PitchLevel.low
     current_flags = MoraFlag(0)
@@ -82,7 +97,13 @@ def entry_to_moras(entry: FormattedEntry) -> list[Mora]:
             assert token.isalpha(), f"can't proceed: {entry}"
             moras.extend(Mora(mora, current_level, flags=current_flags) for mora in kana_to_moras(token))
 
-    return moras
+    pitch_type = pitch_type_from_pitch_num(entry.pitch_number, len(moras))
+    if pitch_type == PitchType.heiban or len(moras) == 1:
+        assert pitch_type in (PitchType.heiban, PitchType.atamadaka)
+        level = PitchLevel.high if pitch_type == PitchType.heiban else PitchLevel.low
+        moras.append(Mora(txt="", level=level, flags=MoraFlag.trailing))
+
+    return MoraSequence(moras=moras, pitch_type=pitch_type, entry=entry)
 
 
 def mora_flags2class_name(flags: MoraFlag):

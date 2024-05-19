@@ -2,15 +2,23 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import dataclasses
+import enum
 import math
 import typing
 from collections.abc import Iterable
 from math import sqrt
 from typing import Optional
 
-from .basic_types import PitchType, pitch_type_from_pitch_num
+from .basic_types import pitch_type_from_pitch_num
 from .common import FormattedEntry
-from .entry_to_moras import entry_to_moras, PitchLevel, MoraFlag, Mora, mora_flags2class_name
+from .entry_to_moras import PitchLevel, MoraFlag, Mora, mora_flags2class_name, entry_to_moras
+
+
+@enum.unique
+class SvgColor(enum.Enum):
+    trail = "gray"
+    word = "black"
+    nasal = "red"
 
 
 @dataclasses.dataclass
@@ -55,11 +63,13 @@ class Point(typing.NamedTuple):
 
 class Line:
     _opts: SvgPitchGraphOptions
+    is_trailing: bool
     start: Optional[Point]
     end: Optional[Point]
 
     def __init__(self, options: SvgPitchGraphOptions):
         self._opts = options
+        self.is_trailing = False
         self.start = None
         self.end = None
 
@@ -74,11 +84,16 @@ class Line:
     def is_completed(self) -> bool:
         return self.start is not None and self.end is not None
 
-    def draw(self, trailing: bool = False) -> str:
+    def draw(self) -> str:
         assert self.start is not None and self.end is not None
-        stroke = "gray" if trailing else "black"
+
+        def attrs_line() -> str:
+            if self.is_trailing:
+                return f'class="{SvgColor.trail.name}" stroke="{SvgColor.trail.value}"'
+            return f'stroke="{SvgColor.word.value}"'
+
         return (
-            f'<line stroke="{stroke}" stroke-width="{self._opts.stroke_width:.2f}" '
+            f'<line {attrs_line()} stroke-width="{self._opts.stroke_width:.2f}" '
             f'x1="{self.start.x:.3f}" y1="{self.start.y:.3f}" '
             f'x2="{self.end.x:.3f}" y2="{self.end.y:.3f}" />'
         )
@@ -127,7 +142,7 @@ class Path:
         self.last.end_at(pos)
         return self
 
-    def push(self, pos: Point) -> "Path":
+    def push(self, pos: Point, is_trailing: bool) -> "Path":
         if len(self._lines) == 0:
             self.start_at(pos)
         elif self.last.is_completed():
@@ -136,14 +151,15 @@ class Path:
             self.go_to(pos)
         else:
             self.go_to(pos)
+        self.last.is_trailing = is_trailing
         return self
 
-    def draw(self, trailing: bool = False) -> str:
+    def draw(self) -> str:
         opts = self._opts
         drawn: list[str] = []
         line: Line
         for line in filter(lambda _line: _line.is_completed(), self._lines):
-            drawn.append(line.adjust_to_radius(opts.circle_radius).draw(trailing))
+            drawn.append(line.adjust_to_radius(opts.circle_radius).draw())
         return "".join(drawn)
 
 
@@ -151,14 +167,18 @@ class SvgPitchGraphMaker:
     def __init__(self, options: SvgPitchGraphOptions):
         self._opts = options
 
-    def make_circle(self, pos: Point, trailing: bool = False) -> str:
+    def make_circle(self, pos: Point, is_trailing: bool = False) -> str:
         """
         Create a circle that is positioned where two lines touch.
         """
-        fill = "none" if trailing else "black"
-        stroke = "gray" if trailing else "black"
+
+        def attrs_circle() -> str:
+            if is_trailing:
+                return f'class="{SvgColor.trail.name}" fill="none" stroke="{SvgColor.trail.value}"'
+            return f'fill="{SvgColor.word.value}" stroke="{SvgColor.word.value}"'
+
         return (
-            f'<circle fill="{fill}" stroke="{stroke}" stroke-width="{self._opts.stroke_width:.2f}" '
+            f'<circle {attrs_circle()} stroke-width="{self._opts.stroke_width:.2f}" '
             f'cx="{pos.x:.3f}" cy="{pos.y:.3f}" r="{self._opts.circle_radius:.2f}" />'
         )
 
@@ -194,9 +214,11 @@ class SvgPitchGraphMaker:
         """
         Create a text element with the mora inside.
         """
+        assert not mora.is_trailing()
         tspan_dx = self._opts.tspan_dx
         quark = (
-            f'<tspan{append_class_name(mora.quark.flags)} fill="red" dx="{tspan_dx:.0f}">{mora.quark.txt}</tspan>'
+            f'<tspan{append_class_name(mora.quark.flags)} fill="{SvgColor.nasal.value}" '
+            f'dx="{tspan_dx:.0f}">{mora.quark.txt}</tspan>'
             if mora.quark
             else ""
         )
@@ -205,9 +227,8 @@ class SvgPitchGraphMaker:
             f'x="{pos.x:.0f}" y="{pos.y:.0f}" dx="{dx:.0f}">{mora.txt}{quark}</text>'
         )
 
-    def calc_svg_width(self, moras: list[Mora], pitch_type: PitchType) -> int:
-        count = len(moras) + (1 if pitch_type == PitchType.heiban or len(moras) == 1 else 0)  # todo
-        return count * self._opts.x_step + self._opts.graph_horizontal_padding * 2
+    def calc_svg_width(self, moras: list[Mora]) -> int:
+        return len(moras) * self._opts.x_step + self._opts.graph_horizontal_padding * 2
 
     def make_svg(self, contents: str, *, width: int, height: int, visible_height: int) -> str:
         return (
@@ -215,17 +236,10 @@ class SvgPitchGraphMaker:
             f'height="{visible_height}px" xmlns="http://www.w3.org/2000/svg">{contents}</svg>'
         )
 
-    def make_trailing_line(self, start: Point, end: Point) -> str:
-        opts = self._opts
-        # 1-mora heiban words start low, so the last mora is still low.
-        trail_line = Path(opts).start_at(start).go_to(end).draw(trailing=True)
-        trail_circle = self.make_circle(end, trailing=True)
-        return make_group([trail_line, trail_circle], "trail")
-
     def make_graph(self, entry: FormattedEntry) -> str:
         opts = self._opts
-        moras = entry_to_moras(entry)
-        pitch_type = pitch_type_from_pitch_num(entry.pitch_number, len(moras))
+        seq = entry_to_moras(entry)
+        pitch_type = pitch_type_from_pitch_num(entry.pitch_number, len(seq.moras))
 
         height_high = opts.size_unit
         height_low = height_high + opts.graph_height
@@ -236,34 +250,28 @@ class SvgPitchGraphMaker:
         text_moras: list[str] = []
         path = Path(opts)
 
-        for idx, mora in enumerate(moras):
+        for idx, mora in enumerate(seq.moras):
             pos = pos.replace(y=height_high if mora.level == PitchLevel.high else height_low)
-            word_circles.append(self.make_circle(pos))
-            path.push(pos)
+            word_circles.append(self.make_circle(pos, is_trailing=mora.is_trailing()))
+            path.push(pos, is_trailing=mora.is_trailing())
 
             if MoraFlag.devoiced in mora.flags:
                 # circle around text
                 text_moras.append(self.make_devoiced_circle(mora, pos.replace(y=height_kana)))
 
-            text_moras.append(self.make_text(mora, pos.replace(y=height_kana), dx=int(opts.text_dx) * len(mora.txt)))
+            if not mora.is_trailing():
+                text_moras.append(
+                    self.make_text(mora, pos.replace(y=height_kana), dx=int(opts.text_dx) * len(mora.txt))
+                )
 
             pos = pos.shift_by(x=opts.x_step)
 
-        content: list[str] = []
+        content: list[str] = [
+            make_group([path.draw()], "lines"),
+            make_group(word_circles, "circles"),
+        ]
 
-        if pitch_type == PitchType.heiban or len(moras) == 1:  # todo
-            assert height_high == pos.y or len(moras) == 1, f"can't proceed: {entry}"
-            content.append(
-                self.make_trailing_line(
-                    start=pos.shift_by(x=-opts.x_step),
-                    end=pos.replace(y=height_low if pitch_type == PitchType.atamadaka else height_high),
-                )
-            )
-
-        content.append(make_group([path.draw()], "paths"))
-        content.append(make_group(word_circles, "circles"))
-
-        svg_width = self.calc_svg_width(moras, pitch_type)
+        svg_width = self.calc_svg_width(seq.moras)
         svg_height_with_text = height_kana + opts.size_unit
 
         if opts.include_text:

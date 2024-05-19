@@ -37,6 +37,11 @@ TEST_ENTRIES = (
         "<high_drop>ヨ</high_drop>",
         "1",
     ),
+    FormattedEntry(
+        "オトート",
+        "<low_rise>オ</low_rise><high_drop>トート</high_drop>",
+        "4",
+    ),
 )
 
 
