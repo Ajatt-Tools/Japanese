@@ -51,7 +51,7 @@ def mark_non_jp_token(m: re.Match) -> str:
     return "<no-jp>" + m.group() + "</no-jp>"
 
 
-def parts(expr: str, pattern: re.Pattern):
+def parts(expr: str, pattern: re.Pattern) -> list[str]:
     return re.split(
         r"(<no-jp>.*?</no-jp>)",
         string=re.sub(pattern, mark_non_jp_token, expr),
@@ -78,7 +78,7 @@ def _tokenize(expr: str, *, split_regexes: Sequence[re.Pattern]) -> Iterable[Tok
                     yield from _tokenize(part, split_regexes=split_regexes[1:])
 
 
-def tokenize(expr: str):
+def tokenize(expr: str) -> Iterable[Token]:
     """
     Splits expr to tokens.
     Each token can be either parseable with mecab or not.
@@ -88,25 +88,3 @@ def tokenize(expr: str):
         expr=clean_furigana(expr),
         split_regexes=(HTML_AND_MEDIA_REGEX, NON_JP_REGEX, JP_SEP_REGEX),
     )
-
-
-# Debug
-##########################################################################
-
-
-def main():
-    print(clean_furigana("手紙[てがみ]は、 男[おとこ]らしく 潔[いさぎよ]い<b>筆致[ひっち]</b>で 書[か]かれていた。"))
-    print(clean_furigana("富竹[とみたけ]さん 今[いま] 扉[とびら]の 南京錠[なんきんじょう]いじってませんでした？"))
-
-    expr = (
-        '<div>Lorem ipsum dolor sit amet, [sound:はな.mp3]<img src="はな.jpg"> '
-        "consectetur adipiscing<br> elit <b>私達</b>は昨日ロンドンに着いた。おはよう。 Тест.</div>"
-        "1月8日八日.彼女は１２月のある寒い夜に亡くなった。"
-        " 情報処理[じょうほうしょり]の 技術[ぎじゅつ]は 日々[にちにち,ひび] 進化[しんか]している。"
-    )
-    for token in tokenize(expr):
-        print(f"{token.__class__.__name__}({token})")
-
-
-if __name__ == "__main__":
-    main()
