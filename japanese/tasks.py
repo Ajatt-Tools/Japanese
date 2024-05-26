@@ -4,6 +4,7 @@
 import functools
 import io
 from typing import Optional
+from collections.abc import Iterable
 
 import anki.collection
 from anki import hooks
@@ -16,7 +17,7 @@ from aqt.utils import tooltip
 
 from .audio import format_audio_tags, AnkiAudioSourceManager, FileSaveResults
 from .config_view import config_view as cfg
-from .helpers import *
+from .helpers.http_client import FileUrlData
 from .helpers.profiles import Profile, ProfileFurigana, PitchOutputFormat, ProfilePitch, ProfileAudio, TaskCaller
 from .reading import format_pronunciations, get_pronunciations, generate_furigana
 
@@ -27,17 +28,18 @@ def note_type_matches(note_type: NotetypeDict, profile: Profile) -> bool:
 
 def iter_tasks(note: Note, src_field: Optional[str] = None) -> Iterable[Profile]:
     note_type = note.note_type()
+    assert note_type
     for profile in cfg.iter_profiles():
         if note_type_matches(note_type, profile) and (src_field is None or profile.source == src_field):
             yield profile
 
 
 class DoTask:
-    _subclasses_map = {}  # e.g. ProfileFurigana -> AddFurigana
-    _key_class_param = "task_type"
+    _subclasses_map: dict[type[Profile], type["DoTask"]] = {}  # e.g. ProfileFurigana -> AddFurigana
+    _key_class_param: str = "task_type"
 
-    def __init_subclass__(cls, **kwargs):
-        task_type: type(Profile) = kwargs.pop(cls._key_class_param)  # suppresses ide warning
+    def __init_subclass__(cls, **kwargs) -> None:
+        task_type: type[Profile] = kwargs.pop(cls._key_class_param)  # suppresses ide warning
         super().__init_subclass__(**kwargs)
         cls._subclasses_map[task_type] = cls
 
@@ -107,7 +109,13 @@ class AddAudio(DoTask, task_type=ProfileAudio):
             txt.write("</ol>")
         if r.fails:
             txt.write(f"<b>Failed {len(r.fails)} files.</b><ol>")
-            txt.write("".join(f"<li>{fail.file.desired_filename}: {fail.describe_short()}</li>" for fail in r.fails))
+            txt.write(
+                "".join(
+                    f"<li>{fail.file.desired_filename}: {fail.describe_short()}</li>"
+                    for fail in r.fails
+                    if isinstance(fail.file, FileUrlData)
+                )
+            )
             txt.write("</ol>")
         if txt := txt.getvalue():
             return tooltip(txt, period=7000, y_offset=80 + 18 * (len(r.successes) + len(r.fails)))
