@@ -8,10 +8,7 @@ from collections.abc import Iterable
 
 from anki.utils import no_bundled_libs
 
-try:
-    from ..ajt_common.utils import find_executable
-except ImportError:
-    from ajt_common.utils import find_executable
+from ..ajt_common.utils import find_executable
 
 THIS_ADDON_MODULE = __name__.split(".")[0]
 
@@ -78,13 +75,3 @@ def open_file(path: str) -> None:
     else:
         with no_bundled_libs():
             QDesktopServices.openUrl(QUrl(f"file://{path}"))
-
-
-def main():
-    print("config", find_config_json())
-    print("user files", user_files_dir())
-    print("open file", open_file("/etc/hosts"))
-
-
-if __name__ == "__main__":
-    main()
