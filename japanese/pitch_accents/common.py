@@ -5,6 +5,7 @@ import os
 import re
 from collections.abc import Iterable, Sequence
 from typing import NamedTuple, NewType
+from collections.abc import MutableSequence
 
 from .consts import NO_ACCENT, PITCH_DIR_PATH
 
@@ -53,7 +54,7 @@ class FormattedEntry(NamedTuple):
         return f'<span class="pitch_number">{self.pitch_number}</span>'
 
 
-AccentDict = NewType("AccentDict", dict[str, Sequence[FormattedEntry]])
+AccentDict = NewType("AccentDict", dict[str, MutableSequence[FormattedEntry]])
 
 RE_PITCH_NUM = re.compile(r"\d+|\?")
 

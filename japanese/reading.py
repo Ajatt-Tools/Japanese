@@ -6,6 +6,7 @@ import functools
 from collections import OrderedDict
 from collections.abc import Sequence
 from typing import Union
+from collections.abc import MutableSequence
 from collections.abc import Iterable
 
 from anki.utils import html_to_text_line
@@ -106,7 +107,8 @@ def get_pronunciations(expr: str, sanitize: bool = True, recurse: bool = True, u
     to a list of html-styled pronunciations.
     """
 
-    ret = OrderedDict()
+    ret: AccentDict
+    ret = AccentDict(OrderedDict())
 
     # Sanitize input
     if sanitize:
@@ -172,7 +174,11 @@ def get_notation(entry: FormattedEntry, mode: PitchOutputFormat) -> str:
         return entry.pitch_number
     elif mode == PitchOutputFormat.html_and_number:
         return update_html(f"{entry.html_notation} {entry.pitch_number_html}")
-    raise Exception("Unreachable.")
+    raise RuntimeError("Unreachable.")
+
+
+def sort_entries(entries: Sequence[FormattedEntry]) -> Sequence[FormattedEntry]:
+    return sorted(entries, key=lambda entry: (entry.katakana_reading, entry.pitch_number))
 
 
 def entries_to_html(
@@ -183,7 +189,7 @@ def entries_to_html(
     """
     Convert entries to HTML, sort and remove duplicates.
     """
-    entries = sorted(entries, key=lambda entry: (entry.katakana_reading, entry.pitch_number))
+    entries = sort_entries(entries)
     entries = dict.fromkeys(get_notation(entry, output_format) for entry in entries)
     entries = discard_extra_readings(
         list(entries),
@@ -358,7 +364,7 @@ def format_parsed_tokens(
 
 
 def generate_furigana(src_text: str, split_morphemes: bool = True, full_hiragana: bool = False) -> str:
-    substrings = []
+    substrings: MutableSequence[Union[AccDbParsedToken, Token]] = []
     for token in tokenize(src_text):
         if not isinstance(token, ParseableToken) or is_kana_str(token):
             # Skip tokens that can't be parsed (non-japanese text).
