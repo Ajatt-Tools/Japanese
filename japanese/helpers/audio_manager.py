@@ -1,4 +1,4 @@
-# Copyright: Ren Tatsumoto <tatsu at autistici.org> and contributors
+# Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import contextlib
@@ -11,35 +11,20 @@ import re
 import zipfile
 from collections.abc import Iterable
 from contextlib import contextmanager
-from types import SimpleNamespace
-from typing import Optional, cast, Protocol, Union, NamedTuple
+from typing import Optional, Protocol, Union
+from collections.abc import MutableMapping
 
-try:
-    from .http_client import (
-        AudioManagerException,
-        AudioSourceConfig,
-        AudioManagerHttpClient,
-        FileUrlData,
-        AudioSettingsProtocol,
-    )
-    from ..pitch_accents.common import split_pitch_numbers
-    from .audio_json_schema import FileInfo
-    from .sqlite3_buddy import Sqlite3Buddy, BoundFile
-    from .file_ops import find_config_json
-    from ..mecab_controller.kana_conv import to_katakana
-except ImportError:
-    from helpers.http_client import (
-        AudioManagerException,
-        AudioSourceConfig,
-        AudioManagerHttpClient,
-        FileUrlData,
-        AudioSettingsProtocol,
-    )
-    from pitch_accents.common import split_pitch_numbers
-    from helpers.audio_json_schema import FileInfo
-    from helpers.sqlite3_buddy import Sqlite3Buddy, BoundFile
-    from helpers.file_ops import find_config_json
-    from mecab_controller.kana_conv import to_katakana
+from .audio_json_schema import FileInfo
+from .http_client import (
+    AudioManagerException,
+    AudioSourceConfig,
+    AudioManagerHttpClient,
+    FileUrlData,
+    AudioSettingsProtocol,
+)
+from .sqlite3_buddy import Sqlite3Buddy, BoundFile
+from ..mecab_controller.kana_conv import to_katakana
+from ..pitch_accents.common import split_pitch_numbers
 
 
 def file_exists(file_path: str):
@@ -161,26 +146,29 @@ def read_zip(zip_in: zipfile.ZipFile, audio_source: AudioSource) -> bytes:
 
 
 class AddonConfigProtocol(Protocol):
-    audio_sources: dict
+    audio_sources: MutableMapping
     audio_settings: AudioSettingsProtocol
 
-    def iter_audio_sources(self): ...
+    def iter_audio_sources(self) -> Iterable[AudioSourceConfig]: ...
 
 
 class AudioSourceManager:
+    _config: AddonConfigProtocol
+    _http_client: Optional[AudioManagerHttpClient]
+    _db: Sqlite3Buddy
+    _audio_sources: dict[str, AudioSource]
+
     def __init__(
         self,
         config: AddonConfigProtocol,
         http_client: Optional[AudioManagerHttpClient],
         db: Sqlite3Buddy,
         audio_sources: list[AudioSource],
-    ):
+    ) -> None:
         self._config = config
         self._http_client = http_client
-        self._db: Sqlite3Buddy = db
-        self._audio_sources: dict[str, AudioSource] = {
-            source.name: dataclasses.replace(source, db=self._db) for source in audio_sources
-        }
+        self._db = db
+        self._audio_sources = {source.name: dataclasses.replace(source, db=self._db) for source in audio_sources}
 
     @property
     def audio_sources(self) -> Iterable[AudioSource]:
@@ -190,10 +178,10 @@ class AudioSourceManager:
     def db(self) -> Sqlite3Buddy:
         return self._db
 
-    def distinct_file_count(self):
+    def distinct_file_count(self) -> int:
         return self._db.distinct_file_count(source_names=tuple(source.name for source in self.audio_sources))
 
-    def distinct_headword_count(self):
+    def distinct_headword_count(self) -> int:
         return self._db.distinct_headword_count(source_names=tuple(source.name for source in self.audio_sources))
 
     def total_stats(self) -> TotalAudioStats:
@@ -218,7 +206,7 @@ class AudioSourceManager:
                     # Accessing a disabled source results in a key error.
                     yield self._resolve_file(self._audio_sources[file.source_name], file)
 
-    def read_pronunciation_data(self, source: AudioSource):
+    def read_pronunciation_data(self, source: AudioSource) -> None:
         if source.is_cached:
             # Check if the URLs mismatch,
             # e.g. when the user changed the URL without changing the name.
@@ -264,7 +252,7 @@ class AudioSourceManager:
             pitch_number=(file_info["pitch_number"] or "?"),
         )
 
-    def _read_local_json(self, source: AudioSource):
+    def _read_local_json(self, source: AudioSource) -> None:
         if source.url.endswith(".zip"):
             # Read from a zip file that is expected to contain a json file with audio source data.
             with zipfile.ZipFile(source.url) as zip_in:
@@ -276,7 +264,7 @@ class AudioSourceManager:
                 print(f"Reading local json audio source: {source.url}")
                 self.db.insert_data(source.name, json.load(f))
 
-    def _download_remote_json(self, source: AudioSource):
+    def _download_remote_json(self, source: AudioSource) -> None:
         print(f"Downloading a remote audio source: {source.url}")
         bytes_data = self._http_client.download(source)
 
@@ -295,6 +283,11 @@ class AudioSourceManager:
 
 
 class AudioSourceManagerFactory:
+    _mgr_class: type
+    _config: AddonConfigProtocol
+    _http_client: AudioManagerHttpClient
+    _audio_sources: list[AudioSource]
+
     def __new__(cls, *args, **kwargs):
         try:
             obj = cls._instance  # type: ignore
@@ -302,13 +295,13 @@ class AudioSourceManagerFactory:
             obj = cls._instance = super().__new__(cls)
         return obj
 
-    def __init__(self, config: AddonConfigProtocol, mgr_class: type):
+    def __init__(self, config: AddonConfigProtocol, mgr_class: type) -> None:
         self._mgr_class = mgr_class
         self._config = config
         self._http_client = AudioManagerHttpClient(self._config.audio_settings)
-        self._audio_sources: list[AudioSource] = []
+        self._audio_sources = []
 
-    def purge_everything(self):
+    def purge_everything(self) -> None:
         self._audio_sources = []
         Sqlite3Buddy.remove_database_file()
 
@@ -326,10 +319,10 @@ class AudioSourceManagerFactory:
                 audio_sources=self._audio_sources,
             )
 
-    def init_sources(self):
+    def init_sources(self) -> None:
         self._set_sources(self._get_sources().sources)
 
-    def _set_sources(self, sources: list[AudioSource]):
+    def _set_sources(self, sources: list[AudioSource]) -> None:
         self._audio_sources = [dataclasses.replace(source, db=None) for source in sources]
 
     def _get_sources(self) -> InitResult:
@@ -352,50 +345,3 @@ class AudioSourceManagerFactory:
                     sources.append(source)
                     print(f"Initialized audio source: {source.name}")
             return InitResult(sources, errors)
-
-
-# Debug
-##########################################################################
-
-
-def init_testing_audio_manager():
-    # Used for testing when Anki isn't running.
-    class Settings(NamedTuple):
-        audio_settings: AudioSettingsProtocol
-        audio_sources: dict
-
-        def iter_audio_sources(self):
-            pass
-
-    with open(find_config_json()) as f:
-        loaded = json.load(f)
-        cfg = Settings(
-            audio_sources=loaded["audio_sources"],
-            audio_settings=cast(AudioSettingsProtocol, SimpleNamespace(**loaded["audio_settings"])),
-        )
-
-    return AudioSourceManagerFactory(
-        config=cfg,
-        mgr_class=AudioSourceManager,
-    )
-
-
-def main():
-    factory = init_testing_audio_manager()
-    factory.init_sources()
-
-    with factory.request_new_session() as aud_mgr:
-        aud_mgr: AudioSourceManager
-        stats: TotalAudioStats = aud_mgr.total_stats()
-        print(f"{stats.unique_files=}")
-        print(f"{stats.unique_headwords=}")
-        for source_stats in stats.sources:
-            print(source_stats)
-        for file in aud_mgr.search_word("ひらがな"):
-            print(file)
-        for source in aud_mgr.audio_sources:
-            print(f"source {source.name} media dir {source.media_dir}")
-
-
-if __name__ == "__main__":
-    main()

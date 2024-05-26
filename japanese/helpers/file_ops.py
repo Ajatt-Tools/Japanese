@@ -27,6 +27,7 @@ def resolve_relative_path(*paths) -> str:
     for parent_dir in walk_parents(__file__):
         if os.path.basename(parent_dir) == THIS_ADDON_MODULE:
             return os.path.join(parent_dir, *paths)
+    raise RuntimeError(f"couldn't find addon module")
 
 
 def touch(path):
@@ -34,11 +35,17 @@ def touch(path):
         os.utime(path, None)
 
 
-def find_config_json() -> str:
+def find_file_in_parents(file_name: str) -> str:
     """Used when testing/debugging."""
     for parent_dir in walk_parents(__file__):
-        if os.path.isfile(path := os.path.join(parent_dir, "config.json")):
+        if os.path.isfile(path := os.path.join(parent_dir, file_name)):
             return path
+    raise RuntimeError(f"couldn't find file '{file_name}'")
+
+
+def find_config_json() -> str:
+    """Used when testing/debugging."""
+    return find_file_in_parents("config.json")
 
 
 @functools.cache
@@ -47,6 +54,7 @@ def user_files_dir() -> str:
     for parent_dir in walk_parents(__file__):
         if os.path.isdir(dir_path := os.path.join(parent_dir, "user_files")):
             return dir_path
+    raise RuntimeError("couldn't find user_files directory")
 
 
 def open_file(path: str) -> None:
