@@ -13,7 +13,7 @@ from aqt.utils import restoreGeom, saveGeom, openLink
 
 from .ajt_common.utils import ui_translate
 from .ajt_common.about_menu import tweak_window, menu_root_entry
-from .ajt_common.addon_config import set_config_action
+from .ajt_common.addon_config import set_config_action, ConfigSubViewBase
 from .ajt_common.checkable_combobox import CheckableComboBox
 from .ajt_common.consts import ADDON_SERIES
 from .ajt_common.grab_key import ShortCutGrabButton
@@ -381,8 +381,8 @@ class WordsEdit(QTextEdit):
 
 
 class SettingsForm(QWidget):
-    _title = None
-    _config = None
+    _title: Optional[str] = None
+    _config: Optional[ConfigSubViewBase] = None
 
     def __init__(self, *args):
         super().__init__(*args)
@@ -756,12 +756,13 @@ class AudioSourcesEditTable(QWidget):
     A table that shows imported audio sources.
     The stats are shown at the bottom.
     """
+    _audio_stats: Optional[TotalAudioStats]
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self._audio_sources_table = AudioSourcesTable(aud_src_mgr).populate(cfg.iter_audio_sources())
         self._bottom_label = QLabel()
-        self._audio_stats: Optional[TotalAudioStats] = None
+        self._audio_stats = None
         self._stats_button = QPushButton("Statistics")
         self._purge_button = QPushButton("Purge database")
         self.setLayout(self._make_layout())
