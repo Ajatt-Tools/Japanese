@@ -13,6 +13,7 @@ class PitchOutputFormat(enum.Enum):
     number = enum.auto()
     html = enum.auto()
     html_and_number = enum.auto()
+    svg = enum.auto()
 
 
 @dataclasses.dataclass(frozen=True)

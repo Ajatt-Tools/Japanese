@@ -2,11 +2,12 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 import math
 from collections.abc import Sequence, Iterable
+from typing import TypeVar
 
 from anki.utils import html_to_text_line
 from aqt import mw
 
-from japanese.helpers import T
+T = TypeVar("T")
 
 
 def strip_html_and_media(text: str) -> str:

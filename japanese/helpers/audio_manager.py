@@ -12,6 +12,7 @@ import zipfile
 from collections.abc import Iterable
 from contextlib import contextmanager
 from typing import Optional, Protocol, Union
+from collections.abc import MutableSequence
 from collections.abc import MutableMapping
 
 from .audio_json_schema import FileInfo
@@ -146,7 +147,7 @@ def read_zip(zip_in: zipfile.ZipFile, audio_source: AudioSource) -> bytes:
 
 
 class AddonConfigProtocol(Protocol):
-    audio_sources: MutableMapping
+    audio_sources: MutableSequence
     audio_settings: AudioSettingsProtocol
 
     def iter_audio_sources(self) -> Iterable[AudioSourceConfig]: ...

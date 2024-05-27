@@ -6,9 +6,10 @@ import enum
 import re
 from collections.abc import Iterable
 from typing import NamedTuple, final
+from collections.abc import MutableMapping, MutableSequence
 
 from .ajt_common.addon_config import AddonConfigManager, ConfigSubViewBase
-from .helpers.audio_manager import AudioSourceConfig
+from .helpers.audio_manager import AudioSourceConfig, AddonConfigProtocol
 from .helpers.profiles import Profile, get_default_profile
 from .helpers.sakura_client import DictName, SearchType, AddDefBehavior
 from .helpers.tokens import RE_FLAGS
@@ -284,7 +285,7 @@ class JapaneseConfig(AddonConfigManager):
         return self._audio_settings
 
     @property
-    def audio_sources(self) -> list[dict]:
+    def audio_sources(self) -> MutableSequence[MutableMapping]:
         return self["audio_sources"]
 
     @property

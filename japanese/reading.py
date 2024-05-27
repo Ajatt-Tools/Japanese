@@ -4,10 +4,10 @@
 import dataclasses
 import functools
 from collections import OrderedDict
-from collections.abc import Sequence
-from typing import Union
-from collections.abc import MutableSequence
 from collections.abc import Iterable
+from collections.abc import MutableSequence
+from collections.abc import Sequence
+from typing import Union, Optional
 
 from anki.utils import html_to_text_line
 from aqt import gui_hooks
@@ -32,6 +32,7 @@ from .mecab_controller.unify_readings import literal_pronunciation as pr, unify_
 from .pitch_accents.acc_dict_mgr import AccentDict, FormattedEntry, AccentDictManager
 from .pitch_accents.basic_types import AccDbParsedToken, PitchAccentEntry
 from .pitch_accents.styles import STYLE_MAP
+from .pitch_accents.svg_graphs import SvgPitchGraphMaker, SvgPitchGraphOptions
 
 
 # Lookup
@@ -174,6 +175,8 @@ def get_notation(entry: FormattedEntry, mode: PitchOutputFormat) -> str:
         return entry.pitch_number
     elif mode == PitchOutputFormat.html_and_number:
         return update_html(f"{entry.html_notation} {entry.pitch_number_html}")
+    elif mode == PitchOutputFormat.svg:
+        return svg_graph_maker.make_graph(entry)
     raise RuntimeError("Unreachable.")
 
 
@@ -184,19 +187,16 @@ def sort_entries(entries: Sequence[FormattedEntry]) -> Sequence[FormattedEntry]:
 def entries_to_html(
     entries: Sequence[FormattedEntry],
     output_format: PitchOutputFormat,
-    max_results: int,
+    max_results: Optional[int],
 ) -> Sequence[str]:
     """
     Convert entries to HTML, sort and remove duplicates.
     """
-    entries = sort_entries(entries)
-    entries = dict.fromkeys(get_notation(entry, output_format) for entry in entries)
-    entries = discard_extra_readings(
-        list(entries),
+    return discard_extra_readings(
+        tuple(dict.fromkeys(get_notation(entry, output_format) for entry in sort_entries(entries))),
         max_results=max_results or cfg.pitch_accent.maximum_results,
         discard_mode=cfg.pitch_accent.discard_mode,
     )
-    return entries
 
 
 def format_pronunciations(
@@ -204,13 +204,13 @@ def format_pronunciations(
     output_format: PitchOutputFormat = PitchOutputFormat.html,
     sep_single: str = "・",
     sep_multi: str = "、",
-    expr_sep: str = None,
-    max_results: int = None,
+    expr_sep: Optional[str] = None,
+    max_results: Optional[int] = None,
 ) -> str:
     ordered_dict = OrderedDict()
     for word, entries in pronunciations.items():
-        if entries := entries_to_html(entries, output_format, max_results=max_results):
-            ordered_dict[word] = sep_single.join(entries)
+        if entries_html := entries_to_html(entries, output_format, max_results=max_results):
+            ordered_dict[word] = sep_single.join(entries_html)
 
     # expr_sep is used to separate entries on lookup
     if expr_sep:
@@ -391,5 +391,6 @@ def generate_furigana(src_text: str, split_morphemes: bool = True, full_hiragana
 
 
 mecab = MecabController(verbose=True)
+svg_graph_maker = SvgPitchGraphMaker(options=SvgPitchGraphOptions())
 acc_dict = AccentDictManager()
 gui_hooks.main_window_did_init.append(acc_dict.reload_from_disk)

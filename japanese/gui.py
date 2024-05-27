@@ -19,8 +19,8 @@ from .ajt_common.consts import ADDON_SERIES
 from .ajt_common.grab_key import ShortCutGrabButton
 from .audio import aud_src_mgr
 from .config_view import config_view as cfg, ReadingsDiscardMode, PitchPatternStyle
-from .helpers import split_list
 from .helpers.audio_manager import TotalAudioStats
+from .helpers.misc import split_list
 from .helpers.profiles import Profile, ProfileFurigana, ProfilePitch, PitchOutputFormat, ProfileAudio, TaskCaller
 from .helpers.sakura_client import DictName, SearchType, AddDefBehavior
 from .pitch_accents.user_accents import UserAccentData
