@@ -18,7 +18,16 @@ from .ajt_common.checkable_combobox import CheckableComboBox
 from .ajt_common.consts import ADDON_SERIES
 from .ajt_common.grab_key import ShortCutGrabButton
 from .audio import aud_src_mgr
-from .config_view import config_view as cfg, ReadingsDiscardMode, PitchPatternStyle
+from .config_view import (
+    config_view as cfg,
+    ReadingsDiscardMode,
+    PitchPatternStyle,
+    AudioSettingsConfigView,
+    ContextMenuConfigView,
+    DefinitionsConfigView,
+    PitchConfigView,
+    FuriganaConfigView,
+)
 from .helpers.audio_manager import TotalAudioStats
 from .helpers.misc import split_list
 from .helpers.profiles import Profile, ProfileFurigana, ProfilePitch, PitchOutputFormat, ProfileAudio, TaskCaller
@@ -438,8 +447,8 @@ class GroupBoxWrapper(QGroupBox):
 
 
 class ContextMenuSettingsForm(SettingsForm):
-    _title = "Context menu"
-    _config = cfg.context_menu
+    _title: str = "Context menu"
+    _config: ContextMenuConfigView = cfg.context_menu
 
     def _add_tooltips(self):
         super()._add_tooltips()
@@ -448,8 +457,8 @@ class ContextMenuSettingsForm(SettingsForm):
 
 
 class DefinitionsSettingsForm(SettingsForm):
-    _title = "Add definition"
-    _config = cfg.definitions
+    _title: str = "Add definition"
+    _config: DefinitionsConfigView = cfg.definitions
 
     def _add_widgets(self):
         super()._add_widgets()
@@ -546,8 +555,8 @@ class NarrowLineEdit(QLineEdit):
 
 
 class PitchSettingsForm(MultiColumnSettingsForm):
-    _title = "Pitch Options"
-    _config = cfg.pitch_accent
+    _title: str = "Pitch Options"
+    _config: PitchConfigView = cfg.pitch_accent
 
     def _add_widgets(self):
         super()._add_widgets()
@@ -597,8 +606,8 @@ class PitchSettingsForm(MultiColumnSettingsForm):
 
 
 class FuriganaSettingsForm(MultiColumnSettingsForm):
-    _title = "Furigana Options"
-    _config = cfg.furigana
+    _title: str = "Furigana Options"
+    _config: FuriganaConfigView = cfg.furigana
 
     def _add_widgets(self):
         super()._add_widgets()
@@ -642,8 +651,8 @@ class FuriganaSettingsForm(MultiColumnSettingsForm):
 
 
 class AudioSettingsForm(MultiColumnSettingsForm):
-    _title = "Audio settings"
-    _config = cfg.audio_settings
+    _title: str = "Audio settings"
+    _config: AudioSettingsConfigView = cfg.audio_settings
 
     def _add_widgets(self):
         super()._add_widgets()
@@ -756,6 +765,7 @@ class AudioSourcesEditTable(QWidget):
     A table that shows imported audio sources.
     The stats are shown at the bottom.
     """
+
     _audio_stats: Optional[TotalAudioStats]
 
     def __init__(self, parent=None) -> None:
