@@ -2,7 +2,7 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/copyleft/gpl.html
 
 import dataclasses
-from collections.abc import Iterable, Collection
+from collections.abc import Iterable
 from types import SimpleNamespace
 from typing import Optional, TypedDict, cast
 
@@ -11,12 +11,11 @@ from aqt.operations import QueryOp
 from aqt.qt import *
 from aqt.utils import restoreGeom, saveGeom, openLink
 
-from .ajt_common.utils import ui_translate
 from .ajt_common.about_menu import tweak_window, menu_root_entry
-from .ajt_common.addon_config import set_config_action, ConfigSubViewBase
-from .ajt_common.checkable_combobox import CheckableComboBox
+from .ajt_common.addon_config import set_config_action
 from .ajt_common.consts import ADDON_SERIES
 from .ajt_common.grab_key import ShortCutGrabButton
+from .ajt_common.utils import ui_translate
 from .audio import aud_src_mgr
 from .config_view import (
     config_view as cfg,
@@ -30,15 +29,18 @@ from .config_view import (
 )
 from .helpers.audio_manager import TotalAudioStats
 from .helpers.misc import split_list
-from .helpers.profiles import Profile, ProfileFurigana, ProfilePitch, PitchOutputFormat, ProfileAudio, TaskCaller
+from .helpers.profiles import Profile, ProfileFurigana, ProfilePitch, PitchOutputFormat, ProfileAudio
 from .helpers.sakura_client import DictName, SearchType, AddDefBehavior
 from .pitch_accents.user_accents import UserAccentData
 from .reading import acc_dict
+from .widgets.addon_opts import WordsEdit, TriggeredBySelector
 from .widgets.anki_style import fix_default_anki_style
 from .widgets.audio_sources import AudioSourcesTable
 from .widgets.audio_sources_stats import AudioStatsDialog
 from .widgets.enum_selector import EnumSelectCombo
 from .widgets.pitch_override_widget import PitchOverrideWidget
+from .widgets.settings_form import SettingsForm
+from .widgets.widgets_to_config_dict import as_config_dict
 
 EDIT_MIN_WIDTH = 100
 NARROW_WIDGET_MAX_WIDTH = 64
@@ -108,30 +110,6 @@ class NoteTypeSelector(EditableSelector):
             self.setCurrentIndex(0)
 
 
-def as_config_dict(widgets: dict[str, QWidget]) -> dict[str, Union[bool, str, int]]:
-    d = {}
-    for key, widget in widgets.items():
-        if isinstance(widget, TriggeredBySelector):
-            d[key] = widget.comma_separated_callers()
-        elif isinstance(widget, EnumSelectCombo):
-            d[key] = widget.currentName()
-        elif isinstance(widget, QComboBox):
-            d[key] = widget.currentText()
-        elif isinstance(widget, QLineEdit):
-            d[key] = widget.text()
-        elif isinstance(widget, QCheckBox):
-            d[key] = widget.isChecked()
-        elif isinstance(widget, ShortCutGrabButton):
-            d[key] = widget.value()
-        elif isinstance(widget, WordsEdit):
-            d[key] = widget.as_text()
-        elif isinstance(widget, QSpinBox):
-            d[key] = widget.value()
-        else:
-            raise RuntimeError(f"Don't know how to handle widget of type {type(widget).__name__}.")
-    return d
-
-
 class ProfileList(QGroupBox):
     def __init__(self, profile_class: type(Profile), *args):
         super().__init__(*args)
@@ -190,22 +168,6 @@ class ProfileList(QGroupBox):
         item.setData(Qt.ItemDataRole.UserRole, profile)
         self._list_widget.addItem(item)
         self._list_widget.setCurrentRow(count)
-
-
-class TriggeredBySelector(CheckableComboBox):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._populate_options()
-
-    def _populate_options(self):
-        for caller in TaskCaller:
-            self.addCheckableItem(ui_translate(caller.name), caller)
-
-    def set_enabled_callers(self, callers: Collection[TaskCaller]):
-        return self.setCheckedData(callers)
-
-    def comma_separated_callers(self):
-        return ",".join(caller.name for caller in self.checkedData())
 
 
 class ProfileEditForm(QGroupBox):
@@ -364,76 +326,6 @@ class AudioProfilesEdit(ProfileEdit, profile_class=ProfileAudio):
     pass
 
 
-class WordsEdit(QTextEdit):
-    _min_height = 32
-    _font_size = 16
-
-    def __init__(self, initial_values: Optional[list[str]] = None, *args):
-        super().__init__(*args)
-        self.setAcceptRichText(False)
-        self.set_values(initial_values)
-        self.setMinimumHeight(self._min_height)
-        self._adjust_font_size()
-        self.setPlaceholderText("Comma-separated list of words...")
-
-    def _adjust_font_size(self):
-        font = self.font()
-        font.setPixelSize(self._font_size)
-        self.setFont(font)
-
-    def set_values(self, values: list[str]):
-        if values:
-            self.setPlainText(",".join(dict.fromkeys(values)))
-
-    def as_text(self) -> str:
-        return ",".join(dict.fromkeys(filter(bool, self.toPlainText().replace(" ", "").split("\n"))))
-
-
-class SettingsForm(QWidget):
-    _title: Optional[str] = None
-    _config: Optional[ConfigSubViewBase] = None
-
-    def __init__(self, *args):
-        super().__init__(*args)
-        assert self._title, "Title must be set."
-        assert self._config, "Config must be set."
-
-        self._widgets = SimpleNamespace()
-        self._add_widgets()
-        self._add_tooltips()
-        self.setLayout(self._make_layout())
-
-    @property
-    def title(self) -> str:
-        return self._title
-
-    def _add_widgets(self):
-        """Subclasses add new widgets here."""
-        self._widgets.__dict__.update(self._create_checkboxes())
-
-    def _add_tooltips(self):
-        """Subclasses add new tooltips here."""
-        pass
-
-    def as_dict(self) -> dict[str, Union[bool, str, int]]:
-        return as_config_dict(self._widgets.__dict__)
-
-    def _create_checkboxes(self) -> Iterable[tuple[str, QCheckBox]]:
-        for key, value in self._config.toggleables():
-            checkbox = QCheckBox(ui_translate(key))
-            checkbox.setChecked(value)
-            yield key, checkbox
-
-    def _make_layout(self) -> QLayout:
-        layout = QFormLayout()
-        for key, widget in self._widgets.__dict__.items():
-            if isinstance(widget, QCheckBox):
-                layout.addRow(widget)
-            else:
-                layout.addRow(ui_translate(key), widget)
-        return layout
-
-
 class GroupBoxWrapper(QGroupBox):
     def __init__(self, settings_form: SettingsForm, *args):
         super().__init__(*args)
@@ -521,8 +413,8 @@ class MultiColumnSettingsForm(SettingsForm):
         for index, chunk in enumerate(split_list(list(self._widgets.__dict__.items()), self._columns)):
             layout.addLayout(form := QFormLayout())
             form.setAlignment(self._alignment)
+            widget: QWidget
             for key, widget in chunk:
-                widget: QWidget
                 widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
                 widget.setMinimumHeight(max(widget.minimumHeight(), self._widget_min_height))
                 if isinstance(widget, QCheckBox):
