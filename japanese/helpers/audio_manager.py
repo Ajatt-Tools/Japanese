@@ -10,10 +10,9 @@ import posixpath
 import re
 import zipfile
 from collections.abc import Iterable
+from collections.abc import MutableSequence
 from contextlib import contextmanager
 from typing import Optional, Protocol, Union
-from collections.abc import MutableSequence
-from collections.abc import MutableMapping
 
 from .audio_json_schema import FileInfo
 from .http_client import (
