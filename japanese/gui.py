@@ -17,33 +17,29 @@ from .ajt_common.consts import ADDON_SERIES
 from .ajt_common.grab_key import ShortCutGrabButton
 from .ajt_common.utils import ui_translate
 from .audio import aud_src_mgr
-from .config_view import (
-    config_view as cfg,
-    ReadingsDiscardMode,
-    PitchPatternStyle,
-    AudioSettingsConfigView,
-    ContextMenuConfigView,
-    DefinitionsConfigView,
-    PitchConfigView,
-    FuriganaConfigView,
-)
+from .config_view import config_view as cfg
 from .helpers.audio_manager import TotalAudioStats
 from .helpers.misc import split_list
 from .helpers.profiles import Profile, ProfileFurigana, ProfilePitch, PitchOutputFormat, ProfileAudio
-from .helpers.sakura_client import DictName, SearchType, AddDefBehavior
 from .pitch_accents.user_accents import UserAccentData
 from .reading import acc_dict
-from .widgets.addon_opts import WordsEdit, TriggeredBySelector
+from .widgets.addon_opts import TriggeredBySelector, relevant_field_names, EditableSelector
 from .widgets.anki_style import fix_default_anki_style
 from .widgets.audio_sources import AudioSourcesTable
 from .widgets.audio_sources_stats import AudioStatsDialog
 from .widgets.enum_selector import EnumSelectCombo
 from .widgets.pitch_override_widget import PitchOverrideWidget
-from .widgets.settings_form import SettingsForm
+from .widgets.settings_form import (
+    SettingsForm,
+    ContextMenuSettingsForm,
+    DefinitionsSettingsForm,
+    PitchSettingsForm,
+    FuriganaSettingsForm,
+    AudioSettingsForm,
+)
 from .widgets.widgets_to_config_dict import as_config_dict
 
 EDIT_MIN_WIDTH = 100
-NARROW_WIDGET_MAX_WIDTH = 64
 EXAMPLE_DECK_ANKIWEB_URL = "https://ankiweb.net/shared/info/1557722832"
 ADDON_SETUP_GUIDE = "https://tatsumoto-ren.github.io/blog/anki-japanese-support.html"
 
@@ -73,31 +69,6 @@ class ControlPanel(QHBoxLayout):
         self.addWidget(self.add_btn)
         self.addWidget(self.remove_btn)
         self.addWidget(self.clone_btn)
-
-
-def relevant_field_names(note_type_name_fuzzy: Optional[str] = None) -> Iterable[str]:
-    """
-    Return an iterable of field names present in note types whose names contain the first parameter.
-    """
-    for model in mw.col.models.all_names_and_ids():
-        if not note_type_name_fuzzy or note_type_name_fuzzy.lower() in model.name.lower():
-            for field in mw.col.models.get(model.id)["flds"]:
-                yield field["name"]
-
-
-class EditableSelector(QComboBox):
-    def __init__(self, *args):
-        super().__init__(*args)
-        self.setEditable(True)
-
-
-class FieldNameSelector(EditableSelector):
-    def __init__(self, initial_value: Optional[str] = None, *args):
-        super().__init__(*args)
-        self.clear()
-        self.addItems(dict.fromkeys(relevant_field_names()))
-        if initial_value:
-            self.setCurrentText(initial_value)
 
 
 class NoteTypeSelector(EditableSelector):
@@ -171,18 +142,19 @@ class ProfileList(QGroupBox):
 
 
 class ProfileEditForm(QGroupBox):
-    _subclasses_map = {}  # e.g. ProfileFurigana => FuriganaProfileEditForm
+    # e.g. ProfileFurigana => FuriganaProfileEditForm
+    _subclasses_map: dict[type[Profile], type["ProfileEditForm"]] = {}
 
-    def __init_subclass__(cls, **kwargs):
-        profile_class: type(Profile) = kwargs.pop("profile_class")  # suppresses ide warning
+    def __init_subclass__(cls, **kwargs) -> None:
+        profile_class: type[Profile] = kwargs.pop("profile_class")  # suppresses ide warning
         super().__init_subclass__(**kwargs)
         cls._subclasses_map[profile_class] = cls
 
-    def __new__(cls, profile_class: type(Profile), *args, **kwargs):
+    def __new__(cls, profile_class: type[Profile], *args, **kwargs):
         subclass = cls._subclasses_map[profile_class]
         return QGroupBox.__new__(subclass)
 
-    def __init__(self, profile_class: type(Profile), *args):
+    def __init__(self, profile_class: type[Profile], *args):
         super().__init__(*args)
         self.setEnabled(False)
         self._profile_class = profile_class
@@ -276,11 +248,11 @@ class AudioProfileEditForm(ProfileEditForm, profile_class=ProfileAudio):
 
 
 class ProfileEdit(QWidget):
-    def __init_subclass__(cls, **kwargs):
-        cls._profile_class: type(Profile) = kwargs.pop("profile_class")  # suppresses ide warning
+    def __init_subclass__(cls, **kwargs) -> None:
+        cls._profile_class: type[Profile] = kwargs.pop("profile_class")  # suppresses ide warning
         super().__init_subclass__(**kwargs)
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self._profile_list = ProfileList(profile_class=self._profile_class)
         self._edit_form = ProfileEditForm(profile_class=self._profile_class)
@@ -288,14 +260,14 @@ class ProfileEdit(QWidget):
         qconnect(self._profile_list.current_item_changed, self._edit_profile)
         self._profile_list.populate()
 
-    def _create_layout(self):
+    def _create_layout(self) -> QLayout:
         layout = QHBoxLayout()
         layout.addWidget(self._profile_list)
         layout.addWidget(self._edit_form)
         layout.setContentsMargins(0, 0, 0, 0)
         return layout
 
-    def _edit_profile(self, current: QListWidgetItem, previous: QListWidgetItem):
+    def _edit_profile(self, current: QListWidgetItem, previous: QListWidgetItem) -> None:
         self._apply_profile(previous)
         if current:
             self._edit_form.setEnabled(True)
@@ -303,7 +275,7 @@ class ProfileEdit(QWidget):
         else:
             self._edit_form.setEnabled(False)
 
-    def _apply_profile(self, item: QListWidgetItem):
+    def _apply_profile(self, item: QListWidgetItem) -> None:
         if item:
             profile = self._edit_form.as_profile()
             item.setData(Qt.ItemDataRole.UserRole, profile)
@@ -336,248 +308,6 @@ class GroupBoxWrapper(QGroupBox):
 
     def as_dict(self) -> dict[str, Union[bool, str, int]]:
         return self._form.as_dict()
-
-
-class ContextMenuSettingsForm(SettingsForm):
-    _title: str = "Context menu"
-    _config: ContextMenuConfigView = cfg.context_menu
-
-    def _add_tooltips(self):
-        super()._add_tooltips()
-        for action in self._widgets.__dict__.values():
-            action.setToolTip("Show this action in the context menu.")
-
-
-class DefinitionsSettingsForm(SettingsForm):
-    _title: str = "Add definition"
-    _config: DefinitionsConfigView = cfg.definitions
-
-    def _add_widgets(self):
-        super()._add_widgets()
-        self._widgets.source = FieldNameSelector(
-            initial_value=self._config.source,
-        )
-        self._widgets.destination = FieldNameSelector(
-            initial_value=self._config.destination,
-        )
-        self._widgets.dict_name = EnumSelectCombo(
-            enum_type=DictName,
-            initial_value=self._config.dict_name,
-            show_values=True,
-        )
-        self._widgets.search_type = EnumSelectCombo(
-            enum_type=SearchType,
-            initial_value=self._config.search_type,
-        )
-        self._widgets.behavior = EnumSelectCombo(
-            enum_type=AddDefBehavior,
-            initial_value=self._config.behavior,
-        )
-        self._widgets.timeout = NarrowSpinBox(
-            initial_value=self._config.timeout,
-        )
-
-    def _add_tooltips(self):
-        super()._add_tooltips()
-        self._widgets.timeout.setToolTip(
-            "Download timeout in seconds.",
-        )
-        self._widgets.remove_marks.setToolTip(
-            "Strip all <mark> tags from definitions.\n"
-            "Usually <mark> tags simply repeat the headword and are not needed."
-        )
-        self._widgets.dict_name.setToolTip(
-            "Dictionary to fetch definitions from.",
-        )
-        self._widgets.search_type.setToolTip(
-            "How to search.\n"
-            "Prefix — headwords starting with the search string.\n"
-            "Suffix — headwords ending with the search string.\n"
-            "Exact — headwords equal to the search string."
-        )
-        self._widgets.behavior.setToolTip(
-            "How to add fetched definitions.\n" "Replace existing definitions, append or prepend."
-        )
-
-
-class MultiColumnSettingsForm(SettingsForm):
-    _columns = 3
-    _alignment = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop
-    _widget_min_height = 25
-    _column_spacing = 16
-    _equal_col_width = False
-
-    def _make_layout(self) -> QLayout:
-        layout = QHBoxLayout()
-        layout.setSpacing(self._column_spacing)
-        for index, chunk in enumerate(split_list(list(self._widgets.__dict__.items()), self._columns)):
-            layout.addLayout(form := QFormLayout())
-            form.setAlignment(self._alignment)
-            widget: QWidget
-            for key, widget in chunk:
-                widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
-                widget.setMinimumHeight(max(widget.minimumHeight(), self._widget_min_height))
-                if isinstance(widget, QCheckBox):
-                    form.addRow(widget)
-                else:
-                    form.addRow(ui_translate(key), widget)
-            if self._equal_col_width:
-                layout.setStretch(index, 1)
-        return layout
-
-
-class NarrowSpinBox(QSpinBox):
-    _default_allowed_range: tuple[int, int] = (1, 99)
-    _max_width: int = NARROW_WIDGET_MAX_WIDTH
-
-    def __init__(self, initial_value: int = None, *args):
-        super().__init__(*args)
-        self.setRange(*self._default_allowed_range)
-        self.setMaximumWidth(self._max_width)
-        if initial_value:
-            self.setValue(initial_value)
-
-
-class NarrowLineEdit(QLineEdit):
-    _max_width: int = NARROW_WIDGET_MAX_WIDTH
-
-    def __init__(self, *args):
-        super().__init__(*args)
-        self.setMaximumWidth(self._max_width)
-
-
-class PitchSettingsForm(MultiColumnSettingsForm):
-    _title: str = "Pitch Options"
-    _config: PitchConfigView = cfg.pitch_accent
-
-    def _add_widgets(self):
-        super()._add_widgets()
-        self._widgets.maximum_results = NarrowSpinBox(
-            initial_value=self._config.maximum_results,
-        )
-        self._widgets.discard_mode = EnumSelectCombo(
-            enum_type=ReadingsDiscardMode,
-            initial_value=self._config.discard_mode,
-        )
-        self._widgets.html_style = EnumSelectCombo(
-            enum_type=PitchPatternStyle,
-            initial_value=self._config.html_style,
-        )
-        self._widgets.reading_separator = NarrowLineEdit(self._config.reading_separator)
-        self._widgets.word_separator = NarrowLineEdit(self._config.word_separator)
-        self._widgets.lookup_shortcut = ShortCutGrabButton(initial_value=self._config.lookup_shortcut)
-        self._widgets.blocklisted_words = WordsEdit(initial_values=self._config.blocklisted_words)
-
-    def _add_tooltips(self):
-        super()._add_tooltips()
-        self._widgets.output_hiragana.setToolTip(
-            "Print pitch accents using hiragana.\n" "Normally katakana is used to print pitch accent."
-        )
-        self._widgets.kana_lookups.setToolTip(
-            "Attempt to look up a word using its kana reading\n" "if there's no entry for its kanji form."
-        )
-        self._widgets.skip_numbers.setToolTip("Don't add pitch accents to numbers.")
-        self._widgets.reading_separator.setToolTip("String used to separate multiple accents of a word.")
-        self._widgets.word_separator.setToolTip("String used to separate multiple words.")
-        self._widgets.blocklisted_words.setToolTip("A comma-separated list of words that won't be looked up.")
-        self._widgets.maximum_results.setToolTip(
-            "Maximum number of results to output.\n" "Too many results are not informative and will bloat Anki cards."
-        )
-        self._widgets.discard_mode.setToolTip(
-            "Approach used when the number of results exceeds the maximum number of results.\n"
-            "Keep first — Output only the first accent.\n"
-            "Discard extra — Output the first few accents, no more than the maximum number.\n"
-            "Discard all — Output nothing."
-        )
-        self._widgets.lookup_shortcut.setToolTip("A keyboard shortcut for looking up selected text.")
-        self._widgets.html_style.setToolTip(
-            "Style of pitch accent patterns.\n"
-            'If set to "none", you can configure your own styles\n'
-            "in the Styling section of your card type using CSS class names."
-        )
-
-
-class FuriganaSettingsForm(MultiColumnSettingsForm):
-    _title: str = "Furigana Options"
-    _config: FuriganaConfigView = cfg.furigana
-
-    def _add_widgets(self):
-        super()._add_widgets()
-        self._widgets.maximum_results = NarrowSpinBox(initial_value=self._config.maximum_results)
-        self._widgets.discard_mode = EnumSelectCombo(
-            enum_type=ReadingsDiscardMode,
-            initial_value=self._config.discard_mode,
-        )
-        self._widgets.reading_separator = NarrowLineEdit(self._config.reading_separator)
-        self._widgets.blocklisted_words = WordsEdit(initial_values=self._config.blocklisted_words)
-        self._widgets.mecab_only = WordsEdit(initial_values=self._config.mecab_only)
-
-    def _add_tooltips(self):
-        super()._add_tooltips()
-        self._widgets.skip_numbers.setToolTip("Don't add furigana to numbers.")
-        self._widgets.prefer_literal_pronunciation.setToolTip(
-            "Print furigana in a way that shows a word's literal pronunciation."
-        )
-        self._widgets.reading_separator.setToolTip(
-            "String used to separate multiple readings of a word.\n\n"
-            "Note that to show more than one reading over a word\n"
-            "you need to import a compatible Note Type,\n"
-            "like the one provided by Ajatt-Tools."
-        )
-        self._widgets.blocklisted_words.setToolTip(
-            "A comma-separated list of words that won't be looked up.\n" "Furigana won't be added."
-        )
-        self._widgets.mecab_only.setToolTip(
-            "A comma-separted list of words that won't be looked up in the bundled dictionary.\n"
-            "However, they will still be looked up using Mecab."
-        )
-        self._widgets.maximum_results.setToolTip(
-            "Maximum number of results to output.\n" "Too many results are not informative and will bloat Anki cards."
-        )
-        self._widgets.discard_mode.setToolTip(
-            "Approach used when the number of results exceeds the maximum number of results.\n"
-            "Keep first — Output only the first accent.\n"
-            "Discard extra — Output the first few accents, no more than the maximum number.\n"
-            "Discard all — Output nothing."
-        )
-
-
-class AudioSettingsForm(MultiColumnSettingsForm):
-    _title: str = "Audio settings"
-    _config: AudioSettingsConfigView = cfg.audio_settings
-
-    def _add_widgets(self):
-        super()._add_widgets()
-        self._widgets.dictionary_download_timeout = NarrowSpinBox(
-            initial_value=self._config.dictionary_download_timeout
-        )
-        self._widgets.audio_download_timeout = NarrowSpinBox(initial_value=self._config.audio_download_timeout)
-        self._widgets.attempts = NarrowSpinBox(initial_value=self._config.attempts)
-        self._widgets.maximum_results = NarrowSpinBox(initial_value=self._config.maximum_results)
-        self._widgets.tag_separator = NarrowLineEdit(self._config.tag_separator)
-
-    def _add_tooltips(self):
-        super()._add_tooltips()
-        self._widgets.dictionary_download_timeout.setToolTip("Download timeout in seconds.")
-        self._widgets.audio_download_timeout.setToolTip("Download timeout in seconds.")
-        self._widgets.attempts.setToolTip(
-            "Number of attempts before giving up.\n" "Applies to both dictionary downloads and audio downloads."
-        )
-        self._widgets.ignore_inflections.setToolTip(
-            "If enabled, audio recordings of inflected readings won't be added."
-        )
-        self._widgets.stop_if_one_source_has_results.setToolTip(
-            "If enabled, stop searching after audio files were found in at least one source.\n"
-            "The order of sources in the table matters."
-        )
-        self._widgets.maximum_results.setToolTip(
-            "Maximum number of audio files to add.\n\n"
-            "Note: If a word has several pitch accents,\n"
-            "this setting may result in some of them not being represented."
-        )
-        self._widgets.tag_separator.setToolTip(
-            "Separate [sound:filename.ogg] tags with this string\n" "when adding audio files to cards."
-        )
 
 
 class ToolbarButtonConfig(TypedDict):
@@ -735,21 +465,21 @@ class SettingsDialog(QDialog):
 
         # Furigana tab
         self._furigana_profiles_edit = FuriganaProfilesEdit()
-        self._furigana_settings = GroupBoxWrapper(FuriganaSettingsForm())
+        self._furigana_settings = GroupBoxWrapper(FuriganaSettingsForm(cfg.furigana))
 
         # Pitch tab
         self._pitch_profiles_edit = PitchProfilesEdit()
-        self._pitch_settings = GroupBoxWrapper(PitchSettingsForm())
+        self._pitch_settings = GroupBoxWrapper(PitchSettingsForm(cfg.pitch_accent))
 
         # Audio tab
         self._audio_profiles_edit = AudioProfilesEdit()
         self._audio_sources_edit = AudioSourcesEditTable()
-        self._audio_settings = AudioSettingsForm()
+        self._audio_settings = AudioSettingsForm(cfg.audio_settings)
 
         # Menus tab
         self._toolbar_settings = ToolbarSettingsForm()
-        self._context_menu_settings = GroupBoxWrapper(ContextMenuSettingsForm())
-        self._definitions_settings = GroupBoxWrapper(DefinitionsSettingsForm())
+        self._context_menu_settings = GroupBoxWrapper(ContextMenuSettingsForm(cfg.context_menu))
+        self._definitions_settings = GroupBoxWrapper(DefinitionsSettingsForm(cfg.definitions))
 
         # Overrides tab
         self._accents_override = PitchOverrideWidget(self, file_path=UserAccentData.source_csv_path)

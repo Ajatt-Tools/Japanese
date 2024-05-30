@@ -2,12 +2,17 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 from collections.abc import Collection
+from typing import Optional
+from collections.abc import Iterable
 
+from aqt import mw
 from aqt.qt import *
 
 from ..ajt_common.checkable_combobox import CheckableComboBox
 from ..ajt_common.utils import ui_translate
 from ..helpers.profiles import TaskCaller
+
+NARROW_WIDGET_MAX_WIDTH = 64
 
 
 class TriggeredBySelector(CheckableComboBox):
@@ -49,3 +54,49 @@ class WordsEdit(QTextEdit):
 
     def as_text(self) -> str:
         return ",".join(dict.fromkeys(filter(bool, self.toPlainText().replace(" ", "").split("\n"))))
+
+
+class NarrowLineEdit(QLineEdit):
+    _max_width: int = NARROW_WIDGET_MAX_WIDTH
+
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.setMaximumWidth(self._max_width)
+
+
+class NarrowSpinBox(QSpinBox):
+    _default_allowed_range: tuple[int, int] = (1, 99)
+    _max_width: int = NARROW_WIDGET_MAX_WIDTH
+
+    def __init__(self, initial_value: Optional[int] = None, *args):
+        super().__init__(*args)
+        self.setRange(*self._default_allowed_range)
+        self.setMaximumWidth(self._max_width)
+        if initial_value:
+            self.setValue(initial_value)
+
+
+class EditableSelector(QComboBox):
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.setEditable(True)
+
+
+def relevant_field_names(note_type_name_fuzzy: Optional[str] = None) -> Iterable[str]:
+    """
+    Return an iterable of field names present in note types whose names contain the first parameter.
+    """
+    assert mw
+    for model in mw.col.models.all_names_and_ids():
+        if not note_type_name_fuzzy or note_type_name_fuzzy.lower() in model.name.lower():
+            for field in mw.col.models.get(model.id)["flds"]:
+                yield field["name"]
+
+
+class FieldNameSelector(EditableSelector):
+    def __init__(self, initial_value: Optional[str] = None, *args):
+        super().__init__(*args)
+        self.clear()
+        self.addItems(dict.fromkeys(relevant_field_names()))
+        if initial_value:
+            self.setCurrentText(initial_value)
