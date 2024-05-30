@@ -5,11 +5,13 @@ import dataclasses
 import enum
 import re
 from collections.abc import Iterable
-from typing import NamedTuple, final
 from collections.abc import MutableMapping, MutableSequence
+from typing import NamedTuple, final
+
+from aqt import mw
 
 from .ajt_common.addon_config import AddonConfigManager, ConfigSubViewBase
-from .helpers.audio_manager import AudioSourceConfig, AddonConfigProtocol
+from .helpers.audio_manager import AudioSourceConfig
 from .helpers.profiles import Profile, get_default_profile
 from .helpers.sakura_client import DictName, SearchType, AddDefBehavior
 from .helpers.tokens import RE_FLAGS
@@ -258,12 +260,12 @@ class DefinitionsConfigView(ConfigSubViewBase):
 class JapaneseConfig(AddonConfigManager):
     def __init__(self) -> None:
         super().__init__()
-        self._furigana = FuriganaConfigView()
-        self._pitch = PitchConfigView()
-        self._context_menu = ContextMenuConfigView()
-        self._toolbar = ToolbarConfigView()
-        self._audio_settings = AudioSettingsConfigView()
-        self._definitions = DefinitionsConfigView()
+        self._furigana = FuriganaConfigView(self)
+        self._pitch = PitchConfigView(self)
+        self._context_menu = ContextMenuConfigView(self)
+        self._toolbar = ToolbarConfigView(self)
+        self._audio_settings = AudioSettingsConfigView(self)
+        self._definitions = DefinitionsConfigView(self)
 
     def iter_profiles(self) -> Iterable[Profile]:
         for profile_dict in self["profiles"]:
@@ -313,4 +315,5 @@ class JapaneseConfig(AddonConfigManager):
         return self._definitions
 
 
-config_view = JapaneseConfig()
+if mw:
+    config_view = JapaneseConfig()
