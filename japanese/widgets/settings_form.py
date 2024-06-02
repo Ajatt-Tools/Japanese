@@ -320,6 +320,7 @@ class SvgSettingsForm(MultiColumnSettingsForm):
         int: PxNarrowSpinBox,
         float: PxDoubleNarrowSpinBox,
     }
+    opts_changed = pyqtSignal()
 
     def _create_spinboxes(self) -> Iterable[tuple[str, SvgOptSpinbox]]:
         assert self._config
@@ -338,6 +339,18 @@ class SvgSettingsForm(MultiColumnSettingsForm):
         super()._add_widgets()
         self._widgets.__dict__.update(self._create_spinboxes())
         self._widgets.devoiced_stroke_dasharray = StrokeDisarrayLineEdit(self._config.devoiced_stroke_dasharray)
+        self._connect_widgets()
+
+    def _connect_widgets(self) -> None:
+        for widget in self._widgets.__dict__.values():
+            if isinstance(widget, QCheckBox):
+                qconnect(widget.checkStateChanged, lambda: self.opts_changed.emit())
+            elif isinstance(widget, QAbstractSpinBox):
+                qconnect(widget.valueChanged, lambda: self.opts_changed.emit())
+            elif isinstance(widget, QLineEdit):
+                qconnect(widget.textChanged, lambda: self.opts_changed.emit())
+            else:
+                raise ValueError(f"Unhandled widget type: {type(widget)}")
 
     def _add_tooltips(self) -> None:
         super()._add_tooltips()
