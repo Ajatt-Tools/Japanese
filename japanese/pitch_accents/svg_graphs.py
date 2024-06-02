@@ -30,7 +30,7 @@ class SvgPitchGraphOptions:
     include_text: bool = True
     stroke_width: float = 2.5
     circle_radius: float = 5.25
-    font_size: float = 24
+    font_size: float = 24.0
     text_dx: int = -12
     tspan_dx: int = -3
     devoiced_circle_width: float = 1.5
@@ -223,7 +223,7 @@ class SvgPitchGraphMaker:
             else ""
         )
         return (
-            f'<text{append_class_name(mora.flags)} fill="black" font-size="{self._opts.font_size}px" '
+            f'<text{append_class_name(mora.flags)} fill="black" font-size="{self._opts.font_size:.1f}px" '
             f'x="{pos.x:.0f}" y="{pos.y:.0f}" dx="{dx:.0f}">{mora.txt}{quark}</text>'
         )
 
