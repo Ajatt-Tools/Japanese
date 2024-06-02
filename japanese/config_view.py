@@ -258,8 +258,8 @@ class DefinitionsConfigView(ConfigSubViewBase):
 
 @final
 class JapaneseConfig(AddonConfigManager):
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, default: bool = False) -> None:
+        super().__init__(default)
         self._furigana = FuriganaConfigView(self)
         self._pitch = PitchConfigView(self)
         self._context_menu = ContextMenuConfigView(self)
