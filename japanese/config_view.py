@@ -68,7 +68,7 @@ class PitchAndFuriganaCommon(WordBlockListManager):
 
 @final
 class FuriganaConfigView(PitchAndFuriganaCommon):
-    _view_key = "furigana"
+    _view_key: str = "furigana"
 
     @property
     def prefer_literal_pronunciation(self) -> bool:
@@ -85,7 +85,7 @@ class FuriganaConfigView(PitchAndFuriganaCommon):
 
 @final
 class PitchConfigView(PitchAndFuriganaCommon):
-    _view_key = "pitch_accent"
+    _view_key: str = "pitch_accent"
 
     @property
     def lookup_shortcut(self) -> str:
@@ -110,7 +110,7 @@ class PitchConfigView(PitchAndFuriganaCommon):
 
 @final
 class ContextMenuConfigView(ConfigSubViewBase):
-    _view_key = "context_menu"
+    _view_key: str = "context_menu"
 
     @property
     def generate_furigana(self) -> bool:
@@ -137,7 +137,7 @@ class ToolbarButtonConfig(NamedTuple):
 
 @final
 class ToolbarConfigView(ConfigSubViewBase):
-    _view_key = "toolbar"
+    _view_key: str = "toolbar"
 
     def __getitem__(self, item) -> ToolbarButtonConfig:
         try:
@@ -176,7 +176,7 @@ class ToolbarConfigView(ConfigSubViewBase):
 
 @final
 class AudioSettingsConfigView(ConfigSubViewBase):
-    _view_key = "audio_settings"
+    _view_key: str = "audio_settings"
 
     @property
     def dictionary_download_timeout(self) -> int:
@@ -225,7 +225,7 @@ class AudioSettingsConfigView(ConfigSubViewBase):
 
 @final
 class DefinitionsConfigView(ConfigSubViewBase):
-    _view_key = "definitions"
+    _view_key: str = "definitions"
 
     @property
     def timeout(self) -> int:
