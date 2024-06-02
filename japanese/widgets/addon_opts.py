@@ -2,8 +2,8 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 from collections.abc import Collection
-from typing import Optional
 from collections.abc import Iterable
+from typing import Optional
 
 from aqt import mw
 from aqt.qt import *
@@ -12,7 +12,7 @@ from ..ajt_common.checkable_combobox import CheckableComboBox
 from ..ajt_common.utils import ui_translate
 from ..helpers.profiles import TaskCaller
 
-NARROW_WIDGET_MAX_WIDTH = 64
+NARROW_WIDGET_MAX_WIDTH = 96
 
 
 class TriggeredBySelector(CheckableComboBox):
@@ -59,21 +59,69 @@ class WordsEdit(QTextEdit):
 class NarrowLineEdit(QLineEdit):
     _max_width: int = NARROW_WIDGET_MAX_WIDTH
 
-    def __init__(self, *args):
+    def __init__(self, *args) -> None:
         super().__init__(*args)
         self.setMaximumWidth(self._max_width)
 
 
 class NarrowSpinBox(QSpinBox):
-    _default_allowed_range: tuple[int, int] = (1, 99)
+    _allowed_range: tuple[int, int] = (1, 99)
     _max_width: int = NARROW_WIDGET_MAX_WIDTH
 
-    def __init__(self, initial_value: Optional[int] = None, *args):
+    def __init__(
+        self,
+        initial_value: Optional[int] = None,
+        allowed_range: Optional[tuple[int, int]] = None,
+        *args,
+    ) -> None:
         super().__init__(*args)
-        self.setRange(*self._default_allowed_range)
+        self._allowed_range = allowed_range or self._allowed_range
+        self.setRange(*self._allowed_range)
         self.setMaximumWidth(self._max_width)
         if initial_value:
             self.setValue(initial_value)
+
+
+class PxNarrowSpinBox(NarrowSpinBox):
+    def __init__(
+        self,
+        initial_value: Optional[int] = None,
+        allowed_range: Optional[tuple[int, int]] = None,
+        *args,
+    ) -> None:
+        super().__init__(initial_value, allowed_range, *args)
+        self.setSuffix(" px")
+
+
+class PxDoubleNarrowSpinBox(QDoubleSpinBox):
+    _allowed_range: tuple[float, float] = (1, 99)
+    _max_width: int = NARROW_WIDGET_MAX_WIDTH
+    _decimals: int = 2
+
+    def __init__(
+        self,
+        initial_value: Optional[float] = None,
+        allowed_range: Optional[tuple[float, float]] = None,
+        *args,
+    ) -> None:
+        super().__init__(*args)
+        self._allowed_range = allowed_range or self._allowed_range
+        self.setRange(*self._allowed_range)
+        self.setMaximumWidth(self._max_width)
+        self.setDecimals(self._decimals)
+        self.setSuffix(" px")
+        if initial_value:
+            self.setValue(initial_value)
+
+
+class StrokeDisarrayLineEdit(NarrowLineEdit):
+    """Only used to edit SVG devoiced stroke dasharray."""
+
+    def __init__(self, *args) -> None:
+        super().__init__(*args)
+        rx = QRegularExpression(r"^(\d )*\d$")
+        validator = QRegularExpressionValidator(rx)
+        self.setValidator(validator)
 
 
 class EditableSelector(QComboBox):

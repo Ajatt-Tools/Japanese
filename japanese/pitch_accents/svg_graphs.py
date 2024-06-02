@@ -38,7 +38,7 @@ class SvgPitchGraphOptions:
     devoiced_circle_width: float = 1.5
     devoiced_circle_radius: float = 17.0
     devoiced_rectangle_padding: float = 5.0
-    devoiced_stroke_disarray: str = "2 3"
+    devoiced_stroke_dasharray: str = "2 3"
     graph_font: str = "Noto Sans, Noto Sans CJK JP, IPAexGothic, IPAPGothic, IPAGothic, Yu Gothic, Sans, Sans-Serif"
 
 
@@ -198,7 +198,7 @@ class SvgPitchGraphMaker:
             return (
                 f'<circle class="devoiced" fill="none" stroke="black" cx="{pos.x:.0f}" cy="{pos.y:.0f}" '
                 f'stroke-width="{self._opts.devoiced_circle_width:.2f}" r="{self._opts.devoiced_circle_radius:.2f}" '
-                f'stroke-dasharray="{self._opts.devoiced_stroke_disarray}" />'
+                f'stroke-dasharray="{self._opts.devoiced_stroke_dasharray}" />'
             )
         else:
             pos = pos.shift_by(
@@ -211,7 +211,7 @@ class SvgPitchGraphMaker:
                 f'<rect class="devoiced" fill="none" stroke="black" x="{pos.x:.0f}" y="{pos.y:.0f}" '
                 f'width="{width:.0f}" height="{height:.0f}" '
                 f'stroke-width="{self._opts.devoiced_circle_width:.2f}" rx="{self._opts.devoiced_circle_radius:.2f}" '
-                f'stroke-dasharray="{self._opts.devoiced_stroke_disarray}" />'
+                f'stroke-dasharray="{self._opts.devoiced_stroke_dasharray}" />'
             )
 
     def make_text(self, mora: Mora, pos: Point, dx: int) -> str:

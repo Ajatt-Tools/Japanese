@@ -7,7 +7,15 @@ from typing import Optional
 
 from aqt.qt import *
 
-from .addon_opts import NarrowSpinBox, FieldNameSelector, NarrowLineEdit, WordsEdit
+from .addon_opts import (
+    NarrowSpinBox,
+    FieldNameSelector,
+    NarrowLineEdit,
+    WordsEdit,
+    StrokeDisarrayLineEdit,
+    PxDoubleNarrowSpinBox,
+    PxNarrowSpinBox,
+)
 from .enum_selector import EnumSelectCombo
 from .widgets_to_config_dict import as_config_dict
 from ..ajt_common.addon_config import ConfigSubViewBase
@@ -20,6 +28,7 @@ from ..config_view import (
     ReadingsDiscardMode,
     FuriganaConfigView,
     AudioSettingsConfigView,
+    SvgPitchGraphOptionsConfigView,
 )
 from ..helpers.misc import split_list
 from ..helpers.sakura_client import DictName, SearchType, AddDefBehavior
@@ -48,11 +57,11 @@ class SettingsForm(QWidget):
         assert self._title
         return self._title
 
-    def _add_widgets(self):
+    def _add_widgets(self) -> None:
         """Subclasses add new widgets here."""
         self._widgets.__dict__.update(self._create_checkboxes())
 
-    def _add_tooltips(self):
+    def _add_tooltips(self) -> None:
         """Subclasses add new tooltips here."""
         pass
 
@@ -90,7 +99,7 @@ class DefinitionsSettingsForm(SettingsForm):
     _config: DefinitionsConfigView
     _title: str = "Add definition"
 
-    def _add_widgets(self):
+    def _add_widgets(self) -> None:
         super()._add_widgets()
         self._widgets.source = FieldNameSelector(
             initial_value=self._config.source,
@@ -115,7 +124,7 @@ class DefinitionsSettingsForm(SettingsForm):
             initial_value=self._config.timeout,
         )
 
-    def _add_tooltips(self):
+    def _add_tooltips(self) -> None:
         super()._add_tooltips()
         self._widgets.timeout.setToolTip(
             "Download timeout in seconds.",
@@ -169,7 +178,7 @@ class PitchSettingsForm(MultiColumnSettingsForm):
     _title: str = "Pitch Options"
     _config: PitchConfigView
 
-    def _add_widgets(self):
+    def _add_widgets(self) -> None:
         super()._add_widgets()
         self._widgets.maximum_results = NarrowSpinBox(
             initial_value=self._config.maximum_results,
@@ -187,7 +196,7 @@ class PitchSettingsForm(MultiColumnSettingsForm):
         self._widgets.lookup_shortcut = ShortCutGrabButton(initial_value=self._config.lookup_shortcut)
         self._widgets.blocklisted_words = WordsEdit(initial_values=self._config.blocklisted_words)
 
-    def _add_tooltips(self):
+    def _add_tooltips(self) -> None:
         super()._add_tooltips()
         self._widgets.output_hiragana.setToolTip(
             "Print pitch accents using hiragana.\n" "Normally katakana is used to print pitch accent."
@@ -220,7 +229,7 @@ class FuriganaSettingsForm(MultiColumnSettingsForm):
     _title: str = "Furigana Options"
     _config: FuriganaConfigView
 
-    def _add_widgets(self):
+    def _add_widgets(self) -> None:
         super()._add_widgets()
         self._widgets.maximum_results = NarrowSpinBox(initial_value=self._config.maximum_results)
         self._widgets.discard_mode = EnumSelectCombo(
@@ -231,7 +240,7 @@ class FuriganaSettingsForm(MultiColumnSettingsForm):
         self._widgets.blocklisted_words = WordsEdit(initial_values=self._config.blocklisted_words)
         self._widgets.mecab_only = WordsEdit(initial_values=self._config.mecab_only)
 
-    def _add_tooltips(self):
+    def _add_tooltips(self) -> None:
         super()._add_tooltips()
         self._widgets.skip_numbers.setToolTip("Don't add furigana to numbers.")
         self._widgets.prefer_literal_pronunciation.setToolTip(
@@ -265,7 +274,7 @@ class AudioSettingsForm(MultiColumnSettingsForm):
     _title: str = "Audio settings"
     _config: AudioSettingsConfigView
 
-    def _add_widgets(self):
+    def _add_widgets(self) -> None:
         super()._add_widgets()
         self._widgets.dictionary_download_timeout = NarrowSpinBox(
             initial_value=self._config.dictionary_download_timeout
@@ -275,7 +284,7 @@ class AudioSettingsForm(MultiColumnSettingsForm):
         self._widgets.maximum_results = NarrowSpinBox(initial_value=self._config.maximum_results)
         self._widgets.tag_separator = NarrowLineEdit(self._config.tag_separator)
 
-    def _add_tooltips(self):
+    def _add_tooltips(self) -> None:
         super()._add_tooltips()
         self._widgets.dictionary_download_timeout.setToolTip("Download timeout in seconds.")
         self._widgets.audio_download_timeout.setToolTip("Download timeout in seconds.")
@@ -296,4 +305,43 @@ class AudioSettingsForm(MultiColumnSettingsForm):
         )
         self._widgets.tag_separator.setToolTip(
             "Separate [sound:filename.ogg] tags with this string\n" "when adding audio files to cards."
+        )
+
+
+SvgOptValueType = type[Union[int, float]]
+SvgOptSpinbox = Union[PxNarrowSpinBox, PxDoubleNarrowSpinBox]
+
+
+class SvgSettingsForm(MultiColumnSettingsForm):
+    _columns: int = 2
+    _title: str = "SVG settings"
+    _config: SvgPitchGraphOptionsConfigView
+    _value_type_to_widget_type: dict[SvgOptValueType, type[SvgOptSpinbox]] = {
+        int: PxNarrowSpinBox,
+        float: PxDoubleNarrowSpinBox,
+    }
+
+    def _create_spinboxes(self) -> Iterable[tuple[str, SvgOptSpinbox]]:
+        assert self._config
+        spinbox: SvgOptSpinbox
+        for key, value in self._config.items():
+            try:
+                spinbox = self._value_type_to_widget_type[type(value)](
+                    initial_value=value,
+                    allowed_range=(-999, 999),
+                )
+                yield key, spinbox
+            except KeyError:
+                pass
+
+    def _add_widgets(self) -> None:
+        super()._add_widgets()
+        self._widgets.__dict__.update(self._create_spinboxes())
+        self._widgets.devoiced_stroke_dasharray = StrokeDisarrayLineEdit(self._config.devoiced_stroke_dasharray)
+
+    def _add_tooltips(self) -> None:
+        super()._add_tooltips()
+        self._widgets.graph_horizontal_padding.setToolTip("Padding to the left and right of the image.")
+        self._widgets.devoiced_stroke_dasharray.setToolTip(
+            "Pattern of dashes and gaps used to paint\nthe outline of the devoiced circle."
         )

@@ -172,6 +172,6 @@
     "devoiced_circle_width": 1.5,
     "devoiced_circle_radius": 17.0,
     "devoiced_rectangle_padding": 5.0,
-    "devoiced_stroke_disarray": "2 3"
+    "devoiced_stroke_dasharray": "2 3"
   }
 }

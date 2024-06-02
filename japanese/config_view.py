@@ -6,7 +6,7 @@ import enum
 import re
 from collections.abc import Iterable
 from collections.abc import MutableMapping, MutableSequence
-from typing import NamedTuple, final
+from typing import NamedTuple, final, TypeVar
 
 from aqt import mw
 
@@ -317,8 +317,8 @@ class SvgPitchGraphOptionsConfigView(ConfigSubViewBase):
         return self["devoiced_rectangle_padding"]
 
     @property
-    def devoiced_stroke_disarray(self) -> str:
-        return self["devoiced_stroke_disarray"]
+    def devoiced_stroke_dasharray(self) -> str:
+        return self["devoiced_stroke_dasharray"]
 
     graph_font: str = "Noto Sans, Noto Sans CJK JP, IPAexGothic, IPAPGothic, IPAGothic, Yu Gothic, Sans, Sans-Serif"
 

@@ -25,7 +25,7 @@ def as_config_dict(widgets: dict[str, QWidget]) -> dict[str, Union[bool, str, in
             d[key] = widget.value()
         elif isinstance(widget, WordsEdit):
             d[key] = widget.as_text()
-        elif isinstance(widget, QSpinBox):
+        elif isinstance(widget, QAbstractSpinBox):
             d[key] = widget.value()
         else:
             raise RuntimeError(f"Don't know how to handle widget of type {type(widget).__name__}.")
