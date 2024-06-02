@@ -27,8 +27,9 @@ class NoAnkiConfigView(AddonConfigABC):
 class MockWindow(QDialog):
     def __init__(self):
         super().__init__()
-        self._config = ContextMenuConfigView(NoAnkiConfigView())
-        self.form = ContextMenuSettingsForm(self._config)
+        self._config = NoAnkiConfigView()
+        self._context_menu_config = ContextMenuConfigView(NoAnkiConfigView())
+        self.form = ContextMenuSettingsForm(self._context_menu_config)
         self.initUI()
 
     def initUI(self):

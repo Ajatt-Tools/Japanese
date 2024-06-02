@@ -156,5 +156,22 @@
     "source": "VocabKanji",
     "destination": "VocabDef",
     "behavior": "append"
+  },
+  "svg_graphs": {
+    "include_text": true,
+    "graph_horizontal_padding": 6,
+    "size_unit": 25,
+    "x_step": 50,
+    "text_dx": -12,
+    "tspan_dx": -3,
+    "graph_height": 40,
+    "graph_visible_height": 100,
+    "stroke_width": 2.5,
+    "circle_radius": 5.25,
+    "font_size": 24.0,
+    "devoiced_circle_width": 1.5,
+    "devoiced_circle_radius": 17.0,
+    "devoiced_rectangle_padding": 5.0,
+    "devoiced_stroke_disarray": "2 3"
   }
 }

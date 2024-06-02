@@ -391,6 +391,6 @@ def generate_furigana(src_text: str, split_morphemes: bool = True, full_hiragana
 
 
 mecab = MecabController(verbose=True)
-svg_graph_maker = SvgPitchGraphMaker(options=SvgPitchGraphOptions())
+svg_graph_maker = SvgPitchGraphMaker(options=cfg.svg_graphs)
 acc_dict = AccentDictManager()
 gui_hooks.main_window_did_init.append(acc_dict.reload_from_disk)

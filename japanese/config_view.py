@@ -257,6 +257,73 @@ class DefinitionsConfigView(ConfigSubViewBase):
 
 
 @final
+class SvgPitchGraphOptionsConfigView(ConfigSubViewBase):
+    _view_key: str = "svg_graphs"
+
+    @property
+    def include_text(self) -> bool:
+        return self["include_text"]
+
+    @property
+    def graph_horizontal_padding(self) -> int:
+        return self["graph_horizontal_padding"]
+
+    @property
+    def size_unit(self) -> int:
+        return self["size_unit"]
+
+    @property
+    def x_step(self) -> int:
+        return self["x_step"]
+
+    @property
+    def text_dx(self) -> int:
+        return self["text_dx"]
+
+    @property
+    def tspan_dx(self) -> int:
+        return self["tspan_dx"]
+
+    @property
+    def graph_height(self) -> int:
+        return self["graph_height"]
+
+    @property
+    def graph_visible_height(self) -> int:
+        return self["graph_visible_height"]
+
+    @property
+    def stroke_width(self) -> float:
+        return self["stroke_width"]
+
+    @property
+    def circle_radius(self) -> float:
+        return self["circle_radius"]
+
+    @property
+    def font_size(self) -> float:
+        return self["font_size"]
+
+    @property
+    def devoiced_circle_width(self) -> float:
+        return self["devoiced_circle_width"]
+
+    @property
+    def devoiced_circle_radius(self) -> float:
+        return self["devoiced_circle_radius"]
+
+    @property
+    def devoiced_rectangle_padding(self) -> float:
+        return self["devoiced_rectangle_padding"]
+
+    @property
+    def devoiced_stroke_disarray(self) -> str:
+        return self["devoiced_stroke_disarray"]
+
+    graph_font: str = "Noto Sans, Noto Sans CJK JP, IPAexGothic, IPAPGothic, IPAGothic, Yu Gothic, Sans, Sans-Serif"
+
+
+@final
 class JapaneseConfig(AddonConfigManager):
     def __init__(self, default: bool = False) -> None:
         super().__init__(default)
@@ -266,6 +333,7 @@ class JapaneseConfig(AddonConfigManager):
         self._toolbar = ToolbarConfigView(self)
         self._audio_settings = AudioSettingsConfigView(self)
         self._definitions = DefinitionsConfigView(self)
+        self._svg_graphs = SvgPitchGraphOptionsConfigView(self)
 
     def iter_profiles(self) -> Iterable[Profile]:
         for profile_dict in self["profiles"]:
@@ -313,6 +381,10 @@ class JapaneseConfig(AddonConfigManager):
     @property
     def definitions(self) -> DefinitionsConfigView:
         return self._definitions
+
+    @property
+    def svg_graphs(self) -> SvgPitchGraphOptionsConfigView:
+        return self._svg_graphs
 
 
 if mw:
