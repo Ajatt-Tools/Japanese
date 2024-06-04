@@ -10,9 +10,8 @@ import posixpath
 import re
 import zipfile
 from collections.abc import Iterable
-from collections.abc import MutableSequence
 from contextlib import contextmanager
-from typing import Optional, Protocol, Union
+from typing import Optional, Union
 
 from .audio_json_schema import FileInfo
 from .http_client import (
@@ -20,9 +19,9 @@ from .http_client import (
     AudioSourceConfig,
     AudioManagerHttpClient,
     FileUrlData,
-    AudioSettingsProtocol,
 )
 from .sqlite3_buddy import Sqlite3Buddy, BoundFile
+from ..config_view import JapaneseConfig
 from ..mecab_controller.kana_conv import to_katakana
 from ..pitch_accents.common import split_pitch_numbers
 
@@ -65,6 +64,10 @@ def norm_pitch_numbers(s: str) -> str:
 class AudioSource(AudioSourceConfig):
     # current schema has three fields: "meta", "headwords", "files"
     db: Optional[Sqlite3Buddy]
+
+    @classmethod
+    def from_cfg(cls, source: AudioSourceConfig, db: Sqlite3Buddy):
+        return cls(**dataclasses.asdict(source), db=db)
 
     def raise_if_not_ready(self):
         if not self.is_cached:
@@ -145,22 +148,15 @@ def read_zip(zip_in: zipfile.ZipFile, audio_source: AudioSource) -> bytes:
         )
 
 
-class AddonConfigProtocol(Protocol):
-    audio_sources: MutableSequence
-    audio_settings: AudioSettingsProtocol
-
-    def iter_audio_sources(self) -> Iterable[AudioSourceConfig]: ...
-
-
 class AudioSourceManager:
-    _config: AddonConfigProtocol
+    _config: JapaneseConfig
     _http_client: Optional[AudioManagerHttpClient]
     _db: Sqlite3Buddy
     _audio_sources: dict[str, AudioSource]
 
     def __init__(
         self,
-        config: AddonConfigProtocol,
+        config: JapaneseConfig,
         http_client: Optional[AudioManagerHttpClient],
         db: Sqlite3Buddy,
         audio_sources: list[AudioSource],
@@ -284,7 +280,7 @@ class AudioSourceManager:
 
 class AudioSourceManagerFactory:
     _mgr_class: type
-    _config: AddonConfigProtocol
+    _config: JapaneseConfig
     _http_client: AudioManagerHttpClient
     _audio_sources: list[AudioSource]
 
@@ -295,7 +291,7 @@ class AudioSourceManagerFactory:
             obj = cls._instance = super().__new__(cls)
         return obj
 
-    def __init__(self, config: AddonConfigProtocol, mgr_class: type) -> None:
+    def __init__(self, config: JapaneseConfig, mgr_class: type) -> None:
         self._mgr_class = mgr_class
         self._config = config
         self._http_client = AudioManagerHttpClient(self._config.audio_settings)
@@ -332,7 +328,7 @@ class AudioSourceManagerFactory:
         """
         sources, errors = [], []
         with self.request_new_session() as session:
-            for source in [AudioSource(**source, db=session.db) for source in self._config.audio_sources]:
+            for source in [AudioSource.from_cfg(source, session.db) for source in self._config.iter_audio_sources()]:
                 if not source.enabled:
                     continue
                 try:

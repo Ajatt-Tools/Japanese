@@ -11,7 +11,7 @@ from typing import NamedTuple, final, TypeVar
 from aqt import mw
 
 from .ajt_common.addon_config import AddonConfigManager, ConfigSubViewBase
-from .helpers.audio_manager import AudioSourceConfig
+from .helpers.http_client import AudioSourceConfig
 from .helpers.profiles import Profile, get_default_profile
 from .helpers.sakura_client import DictName, SearchType, AddDefBehavior
 from .helpers.tokens import RE_FLAGS

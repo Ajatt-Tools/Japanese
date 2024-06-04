@@ -21,7 +21,7 @@ class ExpandingTableWidget(QTableWidget):
     _columns: Collection[str] = None
     _sep_regex: re.Pattern = None
 
-    def __init__(self, *args):
+    def __init__(self, *args) -> None:
         super().__init__(*args)
         self.setColumnCount(len(self._columns))
         self.setHorizontalHeaderLabels(self._columns)
@@ -35,35 +35,35 @@ class ExpandingTableWidget(QTableWidget):
         qconnect(self.cellChanged, self.onCellChanged)
         self.setRowCount(0)
 
-    def setRowCount(self, rows: int):
+    def setRowCount(self, rows: int) -> None:
         super().setRowCount(rows)
         if rows < 1:
             self.addEmptyLastRow()
 
-    def setStretchAllColumns(self):
+    def setStretchAllColumns(self) -> None:
         header = self.horizontalHeader()
         for column_number in range(len(self._columns)):
             header.setSectionResizeMode(column_number, QHeaderView.ResizeMode.Stretch)
 
-    def addDeleteSelectedRowsContextAction(self):
+    def addDeleteSelectedRowsContextAction(self) -> None:
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.ActionsContextMenu)
         action = QAction("Delete selected rows", self)
         qconnect(action.triggered, self.deleteSelectedRows)
         self.addAction(action)
 
-    def addCreateNewRowContextAction(self):
+    def addCreateNewRowContextAction(self) -> None:
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.ActionsContextMenu)
         action = QAction("Add a new empty row", self)
         qconnect(action.triggered, self.addEmptyLastRow)
         self.addAction(action)
 
-    def addPasteContextAction(self):
+    def addPasteContextAction(self) -> None:
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.ActionsContextMenu)
         action = QAction("Paste (Ctrl+V)", self)
         qconnect(action.triggered, self.fillCurrentRowFromClipBoard)
         self.addAction(action)
 
-    def deleteSelectedRows(self):
+    def deleteSelectedRows(self) -> None:
         for row_n in reversed(sorted(index.row() for index in self.selectedIndexes())):
             self.removeRow(row_n)
 
@@ -84,7 +84,7 @@ class ExpandingTableWidget(QTableWidget):
         """
         return bool(cell.text())
 
-    def onCellChanged(self, row_n: int, _col_n: int = UNUSED):
+    def onCellChanged(self, row_n: int, _col_n: int = UNUSED) -> None:
         """
         If the last row is full, add a new row.
         If the row is empty, and it's not last, delete it.
@@ -103,7 +103,7 @@ class ExpandingTableWidget(QTableWidget):
         elif is_empty_not_last_row(row_cells):
             self.removeRow(row_n)
 
-    def addRow(self, cells: Iterable[Union[str, QWidget]], index: int = None):
+    def addRow(self, cells: Iterable[Union[str, QWidget]], index: int = None) -> None:
         if index is None:
             # Insert before the last row, since the last row is always an empty row for new data.
             index = self.rowCount() - 1
@@ -111,7 +111,7 @@ class ExpandingTableWidget(QTableWidget):
         for col_n, cell_content in enumerate(cells):
             self.insertCellContent(row_n, col_n, cell_content)
 
-    def insertCellContent(self, row_n: int, col_n: int, content: Union[str, QWidget]):
+    def insertCellContent(self, row_n: int, col_n: int, content: Union[str, QWidget]) -> None:
         """
         Depending on the type of content, either set a new item, or set a cell widget.
         """
@@ -122,7 +122,7 @@ class ExpandingTableWidget(QTableWidget):
         else:
             raise ValueError("Invalid parameter passed.")
 
-    def addEmptyLastRow(self):
+    def addEmptyLastRow(self) -> None:
         return self.addRow(cells=("" for _column in self._columns), index=self.rowCount())
 
     def getCellContent(self, row_n: int, col_n: int) -> Optional[CellContent]:
@@ -141,7 +141,7 @@ class ExpandingTableWidget(QTableWidget):
         for row_number in range(self.rowCount()):
             yield self.getRowCellContents(row_number)
 
-    def fillCurrentRowFromClipBoard(self):
+    def fillCurrentRowFromClipBoard(self) -> None:
         """
         Takes text from the clipboard, splits it by the defined separators,
         then maps each part to a cell in the current row.
@@ -156,13 +156,13 @@ class ExpandingTableWidget(QTableWidget):
         for col_n, text in zip(column_iter(), text_parts()):
             self.fillCellContent(self.currentRow(), col_n, text)
 
-    def fillCellContent(self, row_n: int, col_n: int, content: str):
+    def fillCellContent(self, row_n: int, col_n: int, content: str) -> None:
         try:
             self.getCellContent(row_n, col_n).setText(content)
         except AttributeError:
             pass
 
-    def keyPressEvent(self, event: QKeyEvent):
+    def keyPressEvent(self, event: QKeyEvent) -> None:
         if event.key() == Qt.Key.Key_Delete:
             self.removeRow(self.currentRow())
         if is_ctrl_v_pressed(event):

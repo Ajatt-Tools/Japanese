@@ -6,6 +6,7 @@ from types import SimpleNamespace
 from typing import cast
 from collections.abc import MutableMapping, Iterable
 
+from japanese.config_view import JapaneseConfig
 from japanese.helpers.audio_manager import AudioSourceManagerFactory, AudioSourceManager, TotalAudioStats
 from japanese.helpers.file_ops import find_file_in_parents
 from japanese.helpers.http_client import AudioSettingsProtocol
@@ -33,7 +34,7 @@ def init_testing_audio_manager() -> AudioSourceManagerFactory:
         )
 
     return AudioSourceManagerFactory(
-        config=cfg,
+        config=cast(JapaneseConfig, cfg),
         mgr_class=AudioSourceManager,
     )
 

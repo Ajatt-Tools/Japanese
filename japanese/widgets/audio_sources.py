@@ -32,7 +32,7 @@ class SourceEnableCheckbox(QCheckBox):
         )
 
 
-def tooltip_cache_remove_complete(removed: list[AudioSourceConfig]):
+def tooltip_cache_remove_complete(removed: list[AudioSourceConfig]) -> None:
     from aqt.utils import tooltip
     from aqt import mw
 
@@ -59,7 +59,7 @@ class AudioSourcesTable(ExpandingTableWidget):
     # since names and file paths can contain a wide range of characters.
     _sep_regex: re.Pattern = re.compile(r"[\r\t\n；;。、・]+", flags=re.IGNORECASE | re.MULTILINE)
 
-    def __init__(self, audio_mgr: AudioManagerInterface, *args):
+    def __init__(self, audio_mgr: AudioManagerInterface, *args) -> None:
         super().__init__(*args)
         self._audio_mgr = audio_mgr
         self.addMoveRowContextActions()
@@ -69,13 +69,13 @@ class AudioSourcesTable(ExpandingTableWidget):
         self.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
         self.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
 
-    def addClearCacheContextAction(self):
+    def addClearCacheContextAction(self) -> None:
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.ActionsContextMenu)
         action = QAction("Clear cache for selected sources", self)
         qconnect(action.triggered, self.clearCacheForSelectedSources)
         self.addAction(action)
 
-    def clearCacheForSelectedSources(self):
+    def clearCacheForSelectedSources(self) -> None:
         """
         Remove cache files for the selected audio sources.
         Missing cache files are skipped.
@@ -92,7 +92,7 @@ class AudioSourcesTable(ExpandingTableWidget):
                     print(f"Source isn't cached: {cached.name} ({cached.url})")
         tooltip_cache_remove_complete(removed)
 
-    def addMoveRowContextActions(self):
+    def addMoveRowContextActions(self) -> None:
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.ActionsContextMenu)
 
         def move_current_row(offset: int):
@@ -125,14 +125,14 @@ class AudioSourcesTable(ExpandingTableWidget):
         # so the user has to uncheck it to trigger an automatic row deletion.
         return isinstance(cell, QCheckBox) and cell.isChecked() or super().isCellFilled(cell)
 
-    def addSource(self, source: AudioSourceConfig, index: int = None):
+    def addSource(self, source: AudioSourceConfig, index: int = None) -> None:
         self.addRow((checkbox := SourceEnableCheckbox(), source.name, source.url), index=index)
         # The checkbox widget has to notify the table widget when its state changes.
         # Otherwise, the table will not automatically add/remove rows.
         qconnect(checkbox.stateChanged, lambda checked: self.onCellChanged(self.currentRow()))
         checkbox.setChecked(source.enabled)
 
-    def addEmptyLastRow(self):
+    def addEmptyLastRow(self) -> None:
         """Redefine this method."""
         return self.addSource(AudioSourceConfig(True, "", ""), index=self.rowCount())
 
@@ -155,13 +155,13 @@ class AudioSourcesTable(ExpandingTableWidget):
             if index in selected_row_numbers:
                 yield config
 
-    def populate(self, sources: Iterable[AudioSourceConfig]):
+    def populate(self, sources: Iterable[AudioSourceConfig]) -> None:
         self.setRowCount(0)
         for source in sources:
             self.addSource(source)
         return self
 
-    def fillCellContent(self, row_n: int, col_n: int, content: str):
+    def fillCellContent(self, row_n: int, col_n: int, content: str) -> None:
         if isinstance(cell := self.getCellContent(row_n, col_n), QCheckBox):
             return cell.setChecked(any(value in content.lower() for value in ("true", "yes", "y")))
         return super().fillCellContent(row_n, col_n, content)
@@ -181,7 +181,7 @@ def pack_back(row: TableRow) -> AudioSourceConfig:
 
 
 class App(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         from helpers.audio_manager import init_testing_audio_manager
 
         super().__init__(parent)
@@ -189,7 +189,7 @@ class App(QWidget):
         self.table = AudioSourcesTable(init_testing_audio_manager(), self)
         self.initUI()
 
-    def initUI(self):
+    def initUI(self) -> None:
         self.setMinimumSize(640, 480)
         self.setLayout(layout := QVBoxLayout())
         layout.addWidget(self.table)
