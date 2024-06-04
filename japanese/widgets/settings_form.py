@@ -325,7 +325,8 @@ class SvgSettingsForm(MultiColumnSettingsForm):
     def _create_spinboxes(self) -> Iterable[tuple[str, SvgOptSpinbox]]:
         assert self._config
         spinbox: SvgOptSpinbox
-        skip_keys = ("text_dx", "tspan_dx", "x_step", "devoiced_circle_dy")
+        # skipped options have different defaults and will be handled separately
+        skip_keys = ("text_dx", "tspan_dx", "x_step", "devoiced_circle_dy", "devoiced_rectangle_padding")
         for key, value in self._config.items():
             if key in skip_keys:
                 continue
