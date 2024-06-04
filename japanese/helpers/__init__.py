@@ -8,5 +8,6 @@ except ImportError:
     # Running as a standalone script.
     ADDON_SERIES = "TEST"
 
-LONG_VOWEL_MARK = "ー"
-ADDON_NAME = f"{ADDON_SERIES} Japanese"
+LONG_VOWEL_MARK: str = "ー"
+ADDON_NAME: str = f"{ADDON_SERIES} Japanese"
+THIS_ADDON_MODULE: str = __name__.split(".")[0]

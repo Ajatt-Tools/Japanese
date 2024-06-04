@@ -313,4 +313,3 @@ class Sqlite3Buddy:
         cur = self._con.cursor()
         query_result = cur.execute(""" SELECT source_name FROM meta; """).fetchall()
         return [result_tuple[0] for result_tuple in query_result]
-

@@ -344,7 +344,9 @@ class SvgSettingsForm(MultiColumnSettingsForm):
 
         # dy/dx are allowed to be negative.
         self._widgets.text_dx = PxNarrowSpinBox(initial_value=self._config.text_dx, allowed_range=(-999, 999))
-        self._widgets.devoiced_circle_dy = PxNarrowSpinBox(initial_value=self._config.devoiced_circle_dy, allowed_range=(-999, 999))
+        self._widgets.devoiced_circle_dy = PxNarrowSpinBox(
+            initial_value=self._config.devoiced_circle_dy, allowed_range=(-999, 999)
+        )
         self._widgets.tspan_dx = PxNarrowSpinBox(initial_value=self._config.tspan_dx, allowed_range=(-999, 999))
 
         # x step can't be 0 because it will cause division by zero.
