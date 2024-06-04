@@ -12,7 +12,7 @@ from aqt.qt import *
 from aqt.utils import restoreGeom, saveGeom, openLink
 
 from .ajt_common.about_menu import tweak_window, menu_root_entry
-from .ajt_common.addon_config import set_config_action
+from .ajt_common.addon_config import set_config_action, MgrPropMixIn
 from .ajt_common.consts import ADDON_SERIES
 from .ajt_common.grab_key import ShortCutGrabButton
 from .ajt_common.utils import ui_translate
@@ -458,7 +458,7 @@ class AudioSourcesEditTable(QWidget):
         self._purge_button.setToolTip("Remove the database file.\n" "It will be recreated from scratch again.")
 
 
-class SettingsDialog(QDialog):
+class SettingsDialog(QDialog, MgrPropMixIn):
     name = "Japanese Options"
 
     def __init__(self, *args) -> None:
