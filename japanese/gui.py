@@ -460,7 +460,7 @@ class AudioSourcesEditTable(QWidget):
 class SettingsDialog(QDialog):
     name = "Japanese Options"
 
-    def __init__(self, *args):
+    def __init__(self, *args) -> None:
         super().__init__(*args)
 
         # Furigana tab
