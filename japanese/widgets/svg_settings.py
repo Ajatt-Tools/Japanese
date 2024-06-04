@@ -20,6 +20,11 @@ SHOW_ENTRIES = (
         "<low_rise>ス</low_rise><high_drop>ウカ</high_drop><low>ゲツ</low>",
         "3",
     ),
+    FormattedEntry(
+        "ジンセイ",
+        "<high_drop>ジ</high_drop><low>ンセイ</low>",
+        "1",
+    ),
 )
 
 STYLE = """
