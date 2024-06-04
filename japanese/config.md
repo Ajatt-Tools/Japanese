@@ -84,6 +84,40 @@ Parameters:
 * `text`.
   Customize the button's label.
 
+### Audio sources
+
+A list of audio sources used to add audio to cards.
+
+Parameters:
+
+* `enabled`.
+  Control whether a source is used.
+* `name`.
+  User-specified name of the source.
+* `url`.
+  Path or URL of the audio index.
+
+### Audio settings
+
+* `dictionary_download_timeout`.
+  Give up when dictionary downloads take more time than specified.
+* `audio_download_timeout`.
+  Same but for audio files stored remotely.
+* `attempts`.
+  Number of times to try to download a file.
+* `maximum_results`.
+  Limit on the number of files that can be added at once.
+* `ignore_inflections`.
+  Try to filter out audio files where the word is not in the dictionary form.
+* `stop_if_one_source_has_results`.
+  If one audio source contains files for a word, skip other audio sources.
+* `search_dialog_src_field_name`.
+  Remembers last used field name.
+* `search_dialog_dest_field_name`.
+  Remembers last used field name.
+* `tag_separator`.
+  String used to separate `[sound:filename.ogg]` tags.
+
 ### Other
 
 * `cache_lookups`.
