@@ -155,7 +155,7 @@ class AudioSourcesTable(ExpandingTableWidget):
             if index in selected_row_numbers:
                 yield config
 
-    def populate(self, sources: Iterable[AudioSourceConfig]) -> None:
+    def populate(self, sources: Iterable[AudioSourceConfig]) -> "AudioSourcesTable":
         self.setRowCount(0)
         for source in sources:
             self.addSource(source)
