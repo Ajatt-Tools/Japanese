@@ -1,14 +1,18 @@
-## AJT Japanese &mdash; config
+<img style="float: right; width: 128px;" src="https://avatars.githubusercontent.com/u/69172625?s=200&v=4">
 
-*Anki needs to be restarted for changes to be applied.*
+## AJT Japanese &mdash; edit config
+
+Here you can edit the config file.
+Doing so can be dangerous.
+You must know what you're doing.
+Read [the manual](https://tatsumoto.neocities.org/blog/anki-japanese-support.html) before you proceed.
+Anki needs to be restarted for changes to be applied.
+To restore default settings, click the **"Restore Defaults"** button.
+
+If you have any questions,
+ask other users in the [user group](https://tatsumoto.neocities.org/blog/join-our-community.html).
 
 ****
-
-### General
-
-* `cache_lookups`.
-  Size of cache.
-  Used internally.
 
 ### Profiles
 
@@ -28,7 +32,7 @@ Default field names match the [TSC](https://ankiweb.net/shared/info/1557722832) 
 * `prefer_literal_pronunciation`.
   The database has readings with the `ー` symbol in place of long vowels.
   Prioritize them, and use single kana to show equivalent sounds, e.g. `を` and `お`.
-* `reading_separator`.  String used to separate multiple readings of one word. For example, `<br>` or `,`.
+* `reading_separator`. String used to separate multiple readings of one word. For example, `<br>` or `,`.
 * `blocklisted_words`. Furigana won't be added to these words. Comma-separated.
 * `mecab_only`. A comma-separated list of words that don't need to be looked up in the database.
 * `maximum_results`. Used when database lookups are enabled. Will abort if fetched more results than this number.
@@ -73,12 +77,18 @@ Controls additional buttons on the Anki Editor toolbar.
 
 Parameters:
 
-* `enable`.
+* `enabled`.
   Control whether a button is shown.
 * `shortcut`.
   Specify a keyboard shortcut for the button.
 * `text`.
   Customize the button's label.
+
+### Other
+
+* `cache_lookups`.
+  Size of cache.
+  Used internally.
 
 ****
 
