@@ -140,11 +140,11 @@ def should_ignore_incorrect_reading(expr_reading: str, cfg_reading_sep: str) -> 
     https://tatsumoto-ren.github.io/blog/discussing-various-card-templates.html#distinguishing-readings
     """
     return (
-            expr_reading.isnumeric()
-            or cfg_reading_sep.strip() in expr_reading
-            or MULTIPLE_READING_SEP in expr_reading
-            or expr_reading.startswith("x")
-            or expr_reading.startswith("×")
+        expr_reading.isnumeric()
+        or cfg_reading_sep.strip() in expr_reading
+        or MULTIPLE_READING_SEP in expr_reading
+        or expr_reading.startswith("x")
+        or expr_reading.startswith("×")
     )
 
 
