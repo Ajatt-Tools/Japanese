@@ -10,14 +10,9 @@ from contextlib import contextmanager
 from typing import Optional, NamedTuple
 from collections.abc import Sequence
 
-try:
-    from .sqlite_schema import CURRENT_DB
-    from .audio_json_schema import SourceIndex, FileInfo
-    from .file_ops import user_files_dir
-except ImportError:
-    from sqlite_schema import CURRENT_DB
-    from audio_json_schema import SourceIndex, FileInfo
-    from file_ops import user_files_dir
+from .sqlite_schema import CURRENT_DB
+from .audio_json_schema import SourceIndex, FileInfo
+from .file_ops import user_files_dir
 
 NoneType = type(None)  # fix for the official binary bundle
 
@@ -41,18 +36,19 @@ def build_or_clause(repeated_field_name: str, count: int) -> str:
 class Sqlite3Buddy:
     """Db holds three tables: ('meta', 'headwords', 'files')"""
 
-    _db_path = os.path.join(user_files_dir(), CURRENT_DB.name)
+    _db_path: str = os.path.join(user_files_dir(), CURRENT_DB.name)
+    _con: Optional[sqlite3.Connection]
 
-    def __init__(self):
-        self._con: Optional[sqlite3.Connection] = None
+    def __init__(self) -> None:
+        self._con = None
 
     @property
-    def can_execute(self):
+    def can_execute(self) -> bool:
         return self._con is not None
 
     @classmethod
     @contextmanager
-    def new_session(cls):
+    def new_session(cls) -> "Sqlite3Buddy":
         """
         Create, use, then clean up a temporary connection.
         Use when working in a different thread since the same connection can't be reused in another thread.
@@ -64,13 +60,13 @@ class Sqlite3Buddy:
         ins.end_session()
         del ins
 
-    def start_session(self):
+    def start_session(self) -> None:
         if self.can_execute:
             self.end_session()
         self._con: sqlite3.Connection = sqlite3.connect(self._db_path)
         self._prepare_tables()
 
-    def end_session(self):
+    def end_session(self) -> None:
         if self.can_execute:
             self._con.commit()
             self._con.close()
@@ -318,18 +314,3 @@ class Sqlite3Buddy:
         query_result = cur.execute(""" SELECT source_name FROM meta; """).fetchall()
         return [result_tuple[0] for result_tuple in query_result]
 
-
-# Debug
-##########################################################################
-
-
-def main():
-    with Sqlite3Buddy.new_session() as s:
-        source_names = s.source_names()
-        print(f"source names: {source_names}")
-        print(f"word count: {s.distinct_headword_count(source_names)}")
-        print(f"file count: {s.distinct_file_count(source_names)}")
-
-
-if __name__ == "__main__":
-    main()
