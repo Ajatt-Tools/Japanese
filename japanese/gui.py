@@ -13,7 +13,7 @@ from aqt.qt import *
 from aqt.utils import restoreGeom, saveGeom, openLink
 
 from .ajt_common.about_menu import tweak_window, menu_root_entry
-from .ajt_common.addon_config import set_config_action, MgrPropMixIn
+from .ajt_common.addon_config import set_config_action, MgrPropMixIn, set_config_update_action
 from .ajt_common.consts import ADDON_SERIES
 from .ajt_common.grab_key import ShortCutGrabButton
 from .ajt_common.utils import ui_translate
@@ -625,3 +625,4 @@ def init():
     add_settings_action(root_menu)
     add_deck_download_action(root_menu)
     set_config_action(lambda: SettingsDialog(mw))
+    set_config_update_action(cfg.update_from_addon_manager)

@@ -10,7 +10,7 @@ from typing import NamedTuple, final
 
 from aqt import mw
 
-from .ajt_common.addon_config import AddonConfigManager, ConfigSubViewBase, set_config_update_action
+from .ajt_common.addon_config import AddonConfigManager, ConfigSubViewBase
 from .helpers.http_client import AudioSourceConfig
 from .helpers.profiles import Profile, get_default_profile
 from .helpers.sakura_client import DictName, SearchType, AddDefBehavior
@@ -337,7 +337,6 @@ class JapaneseConfig(AddonConfigManager):
         self._audio_settings = AudioSettingsConfigView(self)
         self._definitions = DefinitionsConfigView(self)
         self._svg_graphs = SvgPitchGraphOptionsConfigView(self)
-        set_config_update_action(self.update_from_addon_manager)
 
     def iter_profiles(self) -> Iterable[Profile]:
         for profile_dict in self["profiles"]:
