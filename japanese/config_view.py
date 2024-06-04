@@ -327,7 +327,6 @@ class SvgPitchGraphOptionsConfigView(ConfigSubViewBase):
     graph_font: str = "Noto Sans, Noto Sans CJK JP, IPAexGothic, IPAPGothic, IPAGothic, Yu Gothic, Sans, Sans-Serif"
 
 
-@final
 class JapaneseConfig(AddonConfigManager):
     def __init__(self, default: bool = False) -> None:
         super().__init__(default)

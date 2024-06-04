@@ -3,23 +3,15 @@
 
 import json
 
-from japanese.ajt_common.addon_config import AddonConfigABC
+from japanese.config_view import JapaneseConfig
 from japanese.helpers.file_ops import find_config_json
 
 
-class NoAnkiConfigView(AddonConfigABC):
+class NoAnkiConfigView(JapaneseConfig):
     """
     Loads the default config without starting Anki.
     """
 
-    def __init__(self):
+    def _set_underlying_dicts(self) -> None:
         with open(find_config_json()) as f:
-            self._config = json.load(f)
-
-    @property
-    def config(self) -> dict:
-        return self._config
-
-    @property
-    def default_config(self) -> dict:
-        return self._config
+            self._default_config = self._config = json.load(f)

@@ -1,37 +1,16 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
-import dataclasses
-import json
-from types import SimpleNamespace
 from typing import cast
-from collections.abc import MutableMapping, Iterable
 
 from japanese.config_view import JapaneseConfig
 from japanese.helpers.audio_manager import AudioSourceManagerFactory, AudioSourceManager, TotalAudioStats
-from japanese.helpers.file_ops import find_file_in_parents
-from japanese.helpers.http_client import AudioSettingsProtocol
-
-
-@dataclasses.dataclass
-class Settings:
-    audio_settings: AudioSettingsProtocol
-    audio_sources: MutableMapping
-
-    # noinspection PyMethodMayBeStatic
-    def iter_audio_sources(self) -> Iterable:
-        # NOOP
-        yield 1
+from tests.no_anki_config import NoAnkiConfigView
 
 
 def init_testing_audio_manager() -> AudioSourceManagerFactory:
     # Used for testing when Anki isn't running.
 
-    with open(find_file_in_parents("meta.json")) as f:
-        loaded = json.load(f)["config"]
-        cfg = Settings(
-            audio_sources=loaded["audio_sources"],
-            audio_settings=cast(AudioSettingsProtocol, SimpleNamespace(**loaded["audio_settings"])),
-        )
+    cfg = NoAnkiConfigView()
 
     return AudioSourceManagerFactory(
         config=cast(JapaneseConfig, cfg),
