@@ -7,6 +7,7 @@ from types import SimpleNamespace
 from typing import Optional, TypedDict, cast
 
 from aqt import mw
+from aqt.addons import AddonsDialog, ConfigEditor
 from aqt.operations import QueryOp
 from aqt.qt import *
 from aqt.utils import restoreGeom, saveGeom, openLink
@@ -18,6 +19,7 @@ from .ajt_common.grab_key import ShortCutGrabButton
 from .ajt_common.utils import ui_translate
 from .audio import aud_src_mgr
 from .config_view import config_view as cfg
+from .helpers import THIS_ADDON_MODULE
 from .helpers.audio_manager import TotalAudioStats
 from .helpers.misc import split_list
 from .helpers.profiles import Profile, ProfileFurigana, ProfilePitch, PitchOutputFormat, ProfileAudio
@@ -496,6 +498,7 @@ class SettingsDialog(QDialog, MgrPropMixIn):
         self._setup_tabs()
         self._add_tooltips()
         self._setup_ui()
+        self._add_advanced_button()
 
         # Show window
         restoreGeom(self, self.name, adjustSize=True)
@@ -591,6 +594,18 @@ class SettingsDialog(QDialog, MgrPropMixIn):
         acc_dict.reload_from_disk()
         aud_src_mgr.init_sources(notify_on_finish=True)
         return super().accept()
+
+    def _add_advanced_button(self) -> None:
+        def on_advanced_clicked() -> None:
+            d = ConfigEditor(
+                dlg=cast(AddonsDialog, self),
+                addon=THIS_ADDON_MODULE,
+                conf=cfg.dict_copy(),
+            )
+            qconnect(d.accepted, self.reject)
+
+        b = self._button_box.addButton("Advanced", QDialogButtonBox.ButtonRole.ResetRole)
+        qconnect(b.clicked, on_advanced_clicked)
 
 
 def add_settings_action(root_menu: QMenu):
