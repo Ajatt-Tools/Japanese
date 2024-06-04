@@ -313,6 +313,10 @@ class SvgPitchGraphOptionsConfigView(ConfigSubViewBase):
         return self["devoiced_circle_radius"]
 
     @property
+    def devoiced_circle_dy(self) -> int:
+        return self["devoiced_circle_dy"]
+
+    @property
     def devoiced_rectangle_padding(self) -> float:
         return self["devoiced_rectangle_padding"]
 

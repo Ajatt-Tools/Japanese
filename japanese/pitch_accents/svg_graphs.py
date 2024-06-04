@@ -168,7 +168,7 @@ class SvgPitchGraphMaker:
         if len(mora.txt) == 1:
             pos = pos.shift_by(
                 x=self._opts.font_size / 2 + self._opts.text_dx,
-                y=self._opts.text_dx + math.ceil(self._opts.stroke_width),
+                y=-self._opts.font_size / 2 + self._opts.devoiced_circle_dy,
             )
             return (
                 f'<circle class="devoiced" fill="none" stroke="black" cx="{pos.x:.0f}" cy="{pos.y:.0f}" '
@@ -177,8 +177,8 @@ class SvgPitchGraphMaker:
             )
         else:
             pos = pos.shift_by(
-                x=-self._opts.font_size - self._opts.devoiced_rectangle_padding,
-                y=-self._opts.font_size - math.floor(self._opts.stroke_width),
+                x=-self._opts.font_size / 2 - self._opts.devoiced_rectangle_padding + self._opts.text_dx,
+                y=-self._opts.font_size / 2 - self._opts.devoiced_circle_radius + self._opts.devoiced_circle_dy,
             )
             width = self._opts.font_size * 2 + self._opts.devoiced_rectangle_padding * 2
             height = self._opts.devoiced_circle_radius * 2
