@@ -226,12 +226,25 @@ class AnkiAudioSourceManager(AudioSourceManager):
 
 
 class AnkiAudioSourceManagerFactory(AudioSourceManagerFactory):
-    def init_sources(self, notify_on_finish: bool = False):
+    def init_sources(self, notify_on_finish: bool = False) -> None:
+        if not self._source_config_changed():
+            print("audio sources haven't changed.")
+            return
         QueryOp(
             parent=mw,
             op=lambda collection: self._get_sources(),
             success=lambda result: self._after_init(result, notify_on_finish),
         ).run_in_background()
+
+    def _source_config_changed(self) -> bool:
+        """
+        Returns true if the configuration of audio sources has changed.
+        Used to skip unnecessary re-init operations.
+        Count only enabled sources. Disabled sources have no effect on the audio manager's operation.
+        """
+        prev_cfg = tuple(s.to_cfg() for s in self._audio_sources if s.enabled)
+        new_cfg = tuple(s for s in self._config.iter_audio_sources() if s.enabled)
+        return prev_cfg != new_cfg
 
     def get_statistics(self) -> TotalAudioStats:
         """

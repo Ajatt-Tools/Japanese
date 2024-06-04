@@ -66,8 +66,16 @@ class AudioSource(AudioSourceConfig):
     db: Optional[Sqlite3Buddy]
 
     @classmethod
-    def from_cfg(cls, source: AudioSourceConfig, db: Sqlite3Buddy):
+    def from_cfg(cls, source: AudioSourceConfig, db: Sqlite3Buddy) -> "AudioSource":
         return cls(**dataclasses.asdict(source), db=db)
+
+    def to_cfg(self) -> AudioSourceConfig:
+        """
+        Used to compare changes in the config file.
+        """
+        data = dataclasses.asdict(self)
+        del data["db"]
+        return AudioSourceConfig(**data)
 
     def raise_if_not_ready(self):
         if not self.is_cached:
