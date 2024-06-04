@@ -1,34 +1,18 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
-import json
 
 from aqt.qt import *
 
-from japanese.ajt_common.addon_config import AddonConfigABC
 from japanese.config_view import ContextMenuConfigView
-from japanese.helpers.file_ops import find_config_json
 from japanese.widgets.settings_form import ContextMenuSettingsForm
-
-
-class NoAnkiConfigView(AddonConfigABC):
-    def __init__(self):
-        with open(find_config_json()) as f:
-            self._config = json.load(f)
-
-    @property
-    def config(self) -> dict:
-        return self._config
-
-    @property
-    def default_config(self) -> dict:
-        return self._config
+from tests.no_anki_config import NoAnkiConfigView
 
 
 class MockWindow(QDialog):
     def __init__(self):
         super().__init__()
         self._config = NoAnkiConfigView()
-        self._context_menu_config = ContextMenuConfigView(NoAnkiConfigView())
+        self._context_menu_config = ContextMenuConfigView(self._config)
         self.form = ContextMenuSettingsForm(self._context_menu_config)
         self.initUI()
 

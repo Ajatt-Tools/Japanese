@@ -4,14 +4,14 @@ from aqt.qt import *
 
 from japanese.config_view import SvgPitchGraphOptionsConfigView
 from japanese.widgets.svg_settings import SvgSettingsWidget
-from tests.run_context_menu_form import NoAnkiConfigView
+from tests.no_anki_config import NoAnkiConfigView
 
 
 class MockWindow(QDialog):
     def __init__(self):
         super().__init__()
         self._config = NoAnkiConfigView()
-        self._svg_config = SvgPitchGraphOptionsConfigView(NoAnkiConfigView())
+        self._svg_config = SvgPitchGraphOptionsConfigView(self._config)
         self._settings_widget = SvgSettingsWidget(self._svg_config)
         self.initUI()
 

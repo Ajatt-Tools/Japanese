@@ -1,9 +1,7 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
-import dataclasses
 import enum
-import math
 import typing
 from collections.abc import Iterable
 from math import sqrt
@@ -20,29 +18,6 @@ class SvgColor(enum.Enum):
     trail = "gray"
     word = "black"
     nasal = "red"
-
-
-@dataclasses.dataclass
-class SvgPitchGraphOptions:
-    graph_horizontal_padding: int = 6
-    size_unit: int = 25
-    x_step: int = 50
-    graph_height: int = 40
-    graph_visible_height: int = 100
-    include_text: bool = True
-    stroke_width: float = 2.5
-    circle_radius: float = 5.25
-    font_size: float = 24.0
-    text_dx: int = -12
-    tspan_dx: int = -3
-    devoiced_circle_width: float = 1.5
-    devoiced_circle_radius: float = 17.0
-    devoiced_rectangle_padding: float = 5.0
-    devoiced_stroke_dasharray: str = "2 3"
-    graph_font: str = "Noto Sans, Noto Sans CJK JP, IPAexGothic, IPAPGothic, IPAGothic, Yu Gothic, Sans, Sans-Serif"
-
-
-SupportsSvgOpts = typing.Union[SvgPitchGraphOptionsConfigView, SvgPitchGraphOptions]
 
 
 def append_class_name(mora_flag: MoraFlag) -> str:
@@ -66,12 +41,12 @@ class Point(typing.NamedTuple):
 
 
 class Line:
-    _opts: SupportsSvgOpts
+    _opts: SvgPitchGraphOptionsConfigView
     is_trailing: bool
     start: Optional[Point]
     end: Optional[Point]
 
-    def __init__(self, options: SupportsSvgOpts):
+    def __init__(self, options: SvgPitchGraphOptionsConfigView) -> None:
         self._opts = options
         self.is_trailing = False
         self.start = None
@@ -127,10 +102,10 @@ class Line:
 
 
 class Path:
-    _opts: SupportsSvgOpts
+    _opts: SvgPitchGraphOptionsConfigView
     _lines: list[Line]
 
-    def __init__(self, options: SupportsSvgOpts):
+    def __init__(self, options: SvgPitchGraphOptionsConfigView) -> None:
         self._opts = options
         self._lines = []
 
@@ -168,7 +143,7 @@ class Path:
 
 
 class SvgPitchGraphMaker:
-    def __init__(self, options: SupportsSvgOpts):
+    def __init__(self, options: SvgPitchGraphOptionsConfigView) -> None:
         self._opts = options
 
     def make_circle(self, pos: Point, is_trailing: bool = False) -> str:
