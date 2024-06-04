@@ -325,11 +325,14 @@ class SvgSettingsForm(MultiColumnSettingsForm):
     def _create_spinboxes(self) -> Iterable[tuple[str, SvgOptSpinbox]]:
         assert self._config
         spinbox: SvgOptSpinbox
+        skip_keys = ("text_dx", "tspan_dx")
         for key, value in self._config.items():
+            if key in skip_keys:
+                continue
             try:
                 spinbox = self._value_type_to_widget_type[type(value)](
                     initial_value=value,
-                    allowed_range=(-999, 999),
+                    allowed_range=(0, 999),
                 )
                 yield key, spinbox
             except KeyError:
@@ -337,6 +340,8 @@ class SvgSettingsForm(MultiColumnSettingsForm):
 
     def _add_widgets(self) -> None:
         super()._add_widgets()
+        self._widgets.text_dx = PxNarrowSpinBox(initial_value=self._config.text_dx, allowed_range=(-999, 999))
+        self._widgets.tspan_dx = PxNarrowSpinBox(initial_value=self._config.tspan_dx, allowed_range=(-999, 999))
         self._widgets.__dict__.update(self._create_spinboxes())
         self._widgets.devoiced_stroke_dasharray = StrokeDisarrayLineEdit(self._config.devoiced_stroke_dasharray)
         self._connect_widgets()
