@@ -116,20 +116,3 @@ class AudioManagerHttpClient:
                 response=response,
             )
         return self._client.stream_content(response)
-
-
-def main():
-    class AudioSettings:
-        dictionary_download_timeout = 10
-        audio_download_timeout = 10
-        attempts = 10
-
-    client = AudioManagerHttpClient(audio_settings=AudioSettings())
-    try:
-        client.download(FileUrlData(url="x", word="x", desired_filename="x", source_name="x"))
-    except AudioManagerException:
-        print("Done.")
-
-
-if __name__ == "__main__":
-    main()
