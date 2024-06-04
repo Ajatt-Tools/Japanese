@@ -29,7 +29,7 @@ from .mecab_controller.unify_readings import literal_pronunciation as pr, unify_
 from .pitch_accents.acc_dict_mgr import AccentDict, FormattedEntry, AccentDictManager
 from .pitch_accents.basic_types import AccDbParsedToken, PitchAccentEntry
 from .pitch_accents.styles import STYLE_MAP
-from .pitch_accents.svg_graphs import SvgPitchGraphMaker, SvgPitchGraphOptions
+from .pitch_accents.svg_graphs import SvgPitchGraphMaker
 
 
 # Lookup
@@ -64,10 +64,36 @@ def single_word_reading(word: str) -> str:
     return ""
 
 
+def get_pronunciations_part(expr_part: str, use_mecab: bool) -> AccentDict:
+    """
+    Search pitch accent info (pronunciations) for a part of expression.
+    The part must be already sanitized.
+    (If enabled and) if the part is not present in the accent dictionary, Mecab is used to split it further.
+    """
+    ret: AccentDict
+    ret = AccentDict(OrderedDict())
+    # Sanitize is always set to False because the part must be already sanitized.
+    ret.update(get_pronunciations(expr_part, sanitize=False, recurse=False))
+
+    # Only if lookups were not successful, we try splitting with Mecab
+    if not ret and use_mecab is True:
+        for out in mecab_translate(expr_part):
+            # Avoid infinite recursion by saying that we should not try
+            # Mecab again if we do not find any matches for this sub-expression.
+            ret.update(get_pronunciations(out.headword, sanitize=False, recurse=False))
+
+            # If everything failed, try katakana lookups.
+            # Katakana lookups are possible because of the additional key in the pitch accents dictionary.
+            # If the word was in conjugated form, this lookup will also fail.
+            if out.headword not in ret and out.katakana_reading and cfg.pitch_accent.kana_lookups is True:
+                ret.update(get_pronunciations(out.katakana_reading, sanitize=False, recurse=False))
+    return ret
+
+
 @functools.lru_cache(maxsize=cfg.cache_lookups)
 def get_pronunciations(expr: str, sanitize: bool = True, recurse: bool = True, use_mecab: bool = True) -> AccentDict:
     """
-    Search pronunciations for a particular expression.
+    Search pitch accent info (pronunciations) for a particular expression.
 
     Returns a dictionary mapping the expression (or sub-expressions contained in the expression)
     to a list of html-styled pronunciations.
@@ -79,7 +105,6 @@ def get_pronunciations(expr: str, sanitize: bool = True, recurse: bool = True, u
     # Sanitize input
     if sanitize:
         expr = html_to_text_line(expr)
-        sanitize = False
 
     # Handle furigana, if present.
     expr, expr_reading = split_possible_furigana(expr, cfg.furigana.reading_separator)
@@ -110,20 +135,7 @@ def get_pronunciations(expr: str, sanitize: bool = True, recurse: bool = True, u
     if not ret and recurse:
         if len(split_expr := split_separators(expr)) > 1:
             for section in split_expr:
-                ret.update(get_pronunciations(section, sanitize, recurse=False))
-
-        # Only if lookups were not successful, we try splitting with Mecab
-        if not ret and use_mecab is True:
-            for out in mecab_translate(expr):
-                # Avoid infinite recursion by saying that we should not try
-                # Mecab again if we do not find any matches for this sub-expression.
-                ret.update(get_pronunciations(out.headword, sanitize, recurse=False))
-
-                # If everything failed, try katakana lookups.
-                # Katakana lookups are possible because of the additional key in the pitch accents dictionary.
-                # If the word was in conjugated form, this lookup will also fail.
-                if out.headword not in ret and out.katakana_reading and cfg.pitch_accent.kana_lookups is True:
-                    ret.update(get_pronunciations(out.katakana_reading, sanitize, recurse=False))
+                ret.update(get_pronunciations_part(section, use_mecab=use_mecab))
 
     return ret
 
