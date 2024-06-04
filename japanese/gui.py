@@ -37,6 +37,7 @@ from .widgets.settings_form import (
     FuriganaSettingsForm,
     AudioSettingsForm,
 )
+from .widgets.svg_settings import SvgSettingsWidget
 from .widgets.widgets_to_config_dict import as_config_dict
 
 EDIT_MIN_WIDTH = 100
@@ -469,7 +470,8 @@ class SettingsDialog(QDialog):
 
         # Pitch tab
         self._pitch_profiles_edit = PitchProfilesEdit()
-        self._pitch_settings = GroupBoxWrapper(PitchSettingsForm(cfg.pitch_accent))
+        self._pitch_settings = PitchSettingsForm(cfg.pitch_accent)
+        self._svg_settings = SvgSettingsWidget(cfg.svg_graphs)
 
         # Audio tab
         self._audio_profiles_edit = AudioProfilesEdit()
@@ -515,7 +517,9 @@ class SettingsDialog(QDialog):
         tab = QWidget()
         tab.setLayout(layout := QVBoxLayout())
         layout.addWidget(self._pitch_profiles_edit)
-        layout.addWidget(self._pitch_settings)
+        layout.addWidget(pitch_opts_inner_tabs := QTabWidget())
+        pitch_opts_inner_tabs.addTab(self._pitch_settings, "Pitch settings")
+        pitch_opts_inner_tabs.addTab(self._svg_settings, "SVG graphs")
         self._tabs.addTab(tab, "Pitch accent")
 
         # Audio
@@ -568,6 +572,7 @@ class SettingsDialog(QDialog):
 
     def accept(self) -> None:
         cfg["pitch_accent"].update(self._pitch_settings.as_dict())
+        cfg["svg_graphs"].update(self._svg_settings.as_dict())
         cfg["furigana"].update(self._furigana_settings.as_dict())
         cfg["context_menu"].update(self._context_menu_settings.as_dict())
         cfg["definitions"].update(self._definitions_settings.as_dict())
