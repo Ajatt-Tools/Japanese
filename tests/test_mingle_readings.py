@@ -9,6 +9,7 @@ from japanese.helpers.mingle_readings import (
     word_reading,
     whitespace_split,
     strip_non_jp_furigana,
+    split_possible_furigana,
 )
 
 
@@ -28,6 +29,7 @@ def test_strip_non_jp_furigana() -> None:
 
 
 def test_word_reading() -> None:
+    assert word_reading("テスト[1]") == WordReading(word="テスト", reading="1")
     assert word_reading("有[あ]り 得[う]る") == WordReading(word="有り得る", reading="ありうる")
     assert word_reading("有る") == WordReading(word="有る", reading="")
     assert word_reading("お 前[まい<br>まえ<br>めえ]") == WordReading(word="お前", reading="おまい<br>まえ<br>めえ")
@@ -36,7 +38,10 @@ def test_word_reading() -> None:
     )
     assert word_reading(
         "妹[いもうと]は 自分[じぶん]の 我[わ]が 儘[まま]が 通[とお]らないと、すぐ 拗[す]ねる。"
-    ) == WordReading(word="妹は自分の我が儘が通らないと、すぐ拗ねる。", reading="いもうとはじぶんのわがままがとおらないと、すぐすねる。")
+    ) == WordReading(
+        word="妹は自分の我が儘が通らないと、すぐ拗ねる。",
+        reading="いもうとはじぶんのわがままがとおらないと、すぐすねる。",
+    )
 
 
 def test_mingle_readings() -> None:
@@ -46,3 +51,11 @@ def test_mingle_readings() -> None:
     assert mingle_readings([" 故郷[こきょう]", " 故郷[ふるさと]"]) == " 故郷[こきょう, ふるさと]"
     assert mingle_readings(["お 前[まえ]", "お 前[めえ]"]) == "お 前[まえ, めえ]"
     assert mingle_readings([" 言[い]い 分[ぶん]", " 言い分[いーぶん]"]) == " 言[い]い 分[ぶん]"
+
+
+def test_split_possible_furigana() -> None:
+    assert split_possible_furigana("テスト[1]") == WordReading("テスト", "")
+    assert split_possible_furigana("明後日[×あさって]") == WordReading("明後日", "")
+    assert split_possible_furigana("明後日[あさって]") == WordReading("明後日", "あさって")
+    assert split_possible_furigana("明後日[zzz]") == WordReading("明後日", "")
+    assert split_possible_furigana("お 金[かね]") == WordReading("お金", "おかね")

@@ -29,7 +29,8 @@ from .helpers.unique_files import ensure_unique_files
 from .mecab_controller.kana_conv import to_hiragana, to_katakana
 from .mecab_controller.mecab_controller import MecabParsedToken
 from .mecab_controller.unify_readings import literal_pronunciation as pr
-from .reading import mecab_translate, split_possible_furigana
+from .reading import mecab_translate
+from .helpers.mingle_readings import split_possible_furigana
 
 
 class DownloadedData(NamedTuple):
@@ -120,7 +121,9 @@ class AnkiAudioSourceManager(AudioSourceManager):
         Search audio files (pronunciations) for words contained in search text.
         """
         hits: dict[str, list[FileUrlData]] = collections.defaultdict(list)
-        src_text, src_text_reading = split_possible_furigana(html_to_text_line(src_text))
+        src_text, src_text_reading = split_possible_furigana(
+            html_to_text_line(src_text), cfg.furigana.reading_separator
+        )
 
         # Try full text search.
         hits[src_text].extend(self._search_word_variants(src_text))

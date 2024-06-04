@@ -6,6 +6,8 @@ import re
 from collections.abc import Iterable
 from typing import NamedTuple, Final, Union
 
+from .tokens import clean_furigana
+
 MULTIPLE_READING_SEP: Final[str] = "・"
 
 
@@ -128,3 +130,35 @@ def mingle_readings(words_furigana: list[str], *, sep: str = ", ") -> str:
         words_furigana = sep.join(dict.fromkeys(word.reading for word in (first, *map(decompose_word, rest))))
         packs.append(f" {first.head}[{words_furigana}]{first.suffix}" if words_furigana != first.head else first.head)
     return "".join(packs)
+
+
+def should_ignore_incorrect_reading(expr_reading: str, cfg_reading_sep: str) -> bool:
+    """
+    Don't bother handling readings that contain multiple different words or readings that are numbers.
+    Sometimes the reading starts with x or ×, like 明後日[×あさって].
+    Used to indicate that one of the two possible readings is not the answer.
+    https://tatsumoto-ren.github.io/blog/discussing-various-card-templates.html#distinguishing-readings
+    """
+    return (
+            expr_reading.isnumeric()
+            or cfg_reading_sep.strip() in expr_reading
+            or MULTIPLE_READING_SEP in expr_reading
+            or expr_reading.startswith("x")
+            or expr_reading.startswith("×")
+    )
+
+
+def split_possible_furigana(expr: str, cfg_reading_sep: str = ", ") -> WordReading:
+    # Sometimes furigana notation is being used by the users to distinguish otherwise duplicate notes.
+    # E.g., テスト[1], テスト[2]
+    expr = strip_non_jp_furigana(expr)
+
+    # If the expression contains furigana, split it.
+    expr, expr_reading = word_reading(expr)
+    expr, expr_reading = clean_furigana(expr), clean_furigana(expr_reading)
+
+    # If there are numbers or multiple readings present, ignore all of them.
+    if expr_reading and should_ignore_incorrect_reading(expr_reading, cfg_reading_sep):
+        expr_reading = ""
+
+    return WordReading(expr, expr_reading)

@@ -16,14 +16,11 @@ from .config_view import config_view as cfg, ReadingsDiscardMode
 from .helpers import LONG_VOWEL_MARK
 from .helpers.common_kana import adjust_to_inflection
 from .helpers.mingle_readings import (
-    MULTIPLE_READING_SEP,
-    WordReading,
-    strip_non_jp_furigana,
-    word_reading,
     mingle_readings,
+    split_possible_furigana,
 )
 from .helpers.profiles import PitchOutputFormat
-from .helpers.tokens import tokenize, split_separators, ParseableToken, clean_furigana, Token
+from .helpers.tokens import tokenize, split_separators, ParseableToken, Token
 from .mecab_controller.basic_types import PartOfSpeech, Inflection
 from .mecab_controller.format import format_output
 from .mecab_controller.kana_conv import is_kana_str, to_hiragana
@@ -58,38 +55,6 @@ def mecab_translate(expr: str) -> tuple[MecabParsedToken, ...]:
     return tuple(mecab.translate(expr))
 
 
-def should_ignore_incorrect_reading(expr_reading: str) -> bool:
-    """
-    Don't bother handling readings that contain multiple different words or readings that are numbers.
-    Sometimes the reading starts with x or ×, like 明後日[×あさって].
-    Used to indicate that one of the two possible readings is not the answer.
-    https://tatsumoto-ren.github.io/blog/discussing-various-card-templates.html#distinguishing-readings
-    """
-    return (
-        expr_reading.isnumeric()
-        or cfg.furigana.reading_separator.strip() in expr_reading
-        or MULTIPLE_READING_SEP in expr_reading
-        or expr_reading.startswith("x")
-        or expr_reading.startswith("×")
-    )
-
-
-def split_possible_furigana(expr: str) -> WordReading:
-    # Sometimes furigana notation is being used by the users to distinguish otherwise duplicate notes.
-    # E.g., テスト[1], テスト[2]
-    expr = strip_non_jp_furigana(expr)
-
-    # If the expression contains furigana, split it.
-    expr, expr_reading = word_reading(expr)
-    expr, expr_reading = clean_furigana(expr), clean_furigana(expr_reading)
-
-    # If there are numbers or multiple readings present, ignore all of them.
-    if expr_reading and should_ignore_incorrect_reading(expr_reading):
-        expr_reading = ""
-
-    return WordReading(expr, expr_reading)
-
-
 def single_word_reading(word: str) -> str:
     """
     Try to look up the reading of a single word using mecab.
@@ -117,7 +82,7 @@ def get_pronunciations(expr: str, sanitize: bool = True, recurse: bool = True, u
         sanitize = False
 
     # Handle furigana, if present.
-    expr, expr_reading = split_possible_furigana(expr)
+    expr, expr_reading = split_possible_furigana(expr, cfg.furigana.reading_separator)
 
     # Skip empty strings and user-specified blocklisted words
     if not expr or cfg.pitch_accent.is_blocklisted(expr):
