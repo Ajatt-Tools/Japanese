@@ -34,12 +34,17 @@ path = "japanese/__about__.py"
 [tool.hatch.build.hooks.vcs]
 version-file = "japanese/__about__.py"
 
-[tool.hatch.envs.types]
+[tool.hatch.envs.dev]
 extra-dependencies = [
   "mypy>=1.0.0",
+  "isort",
+  "pytest",
 ]
-[tool.hatch.envs.types.scripts]
+[tool.hatch.envs.dev.scripts]
+# run as `hatch run dev:scriptname`
 check = "mypy --install-types --non-interactive {args:japanese tests}"
+format = "black japanese tests; isort japanese tests;"
+test = "pytest;"
 
 [tool.coverage.run]
 source_pkgs = ["japanese", "tests"]
@@ -63,3 +68,6 @@ exclude_lines = [
 [tool.black]
 line-length = 120
 target-version = ['py39']
+
+[tool.isort]
+profile = "black"
