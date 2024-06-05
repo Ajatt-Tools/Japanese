@@ -24,3 +24,8 @@ def split_list(input_list: Sequence[T], n_chunks: int) -> Iterable[Sequence[T]]:
     chunk_size = math.ceil(len(input_list) / n_chunks)
     for i in range(0, len(input_list), chunk_size):
         yield input_list[i : i + chunk_size]
+
+
+def q_emit(signal: Union[Callable, pyqtSignal, pyqtBoundSignal]) -> None:
+    """Helper to work around type checking not working with signal.emit(func)."""
+    signal.emit()  # type: ignore

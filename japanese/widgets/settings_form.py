@@ -357,17 +357,14 @@ class SvgSettingsForm(MultiColumnSettingsForm):
         self._connect_widgets()
 
     def _connect_widgets(self) -> None:
-        def _q_emit(signal: Union[Callable, pyqtSignal, pyqtBoundSignal]) -> None:
-            """Helper to work around type checking not working with signal.emit(func)."""
-            signal.emit()  # type: ignore
-
         for widget in self._widgets.__dict__.values():
             if isinstance(widget, QCheckBox):
-                qconnect(widget.checkStateChanged, lambda: _q_emit(self.opts_changed))
+                # checkStateChanged in pyqt 6.7+
+                qconnect(widget.stateChanged, lambda: q_emit(self.opts_changed))
             elif isinstance(widget, QAbstractSpinBox):
-                qconnect(widget.valueChanged, lambda: _q_emit(self.opts_changed))
+                qconnect(widget.valueChanged, lambda: q_emit(self.opts_changed))
             elif isinstance(widget, QLineEdit):
-                qconnect(widget.textChanged, lambda: _q_emit(self.opts_changed))
+                qconnect(widget.textChanged, lambda: q_emit(self.opts_changed))
             else:
                 raise ValueError(f"Unhandled widget type: {type(widget)}")
 
