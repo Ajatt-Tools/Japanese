@@ -7,10 +7,16 @@ from collections.abc import Iterable
 from math import sqrt
 from typing import Optional
 
+from ..config_view import SvgPitchGraphOptionsConfigView
 from .basic_types import pitch_type_from_pitch_num
 from .common import FormattedEntry
-from .entry_to_moras import PitchLevel, MoraFlag, Mora, mora_flags2class_name, entry_to_moras
-from ..config_view import SvgPitchGraphOptionsConfigView
+from .entry_to_moras import (
+    Mora,
+    MoraFlag,
+    PitchLevel,
+    entry_to_moras,
+    mora_flags2class_name,
+)
 
 
 @enum.unique

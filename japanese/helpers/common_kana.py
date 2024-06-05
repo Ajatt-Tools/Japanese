@@ -2,9 +2,11 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 try:
-    from ..mecab_controller.kana_conv import is_kana_str, to_katakana as _
+    from ..mecab_controller.kana_conv import is_kana_str
+    from ..mecab_controller.kana_conv import to_katakana as _
 except ImportError:
-    from mecab_controller.kana_conv import is_kana_str, to_katakana as _
+    from mecab_controller.kana_conv import is_kana_str
+    from mecab_controller.kana_conv import to_katakana as _
 
 
 def adjust_to_inflection(raw_word: str, headword: str, headword_reading: str) -> str:

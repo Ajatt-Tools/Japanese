@@ -4,15 +4,13 @@
 import contextlib
 import os
 import sqlite3
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from contextlib import contextmanager
+from typing import NamedTuple, Optional
 
-from typing import Optional, NamedTuple
-from collections.abc import Sequence
-
-from .sqlite_schema import CURRENT_DB
-from .audio_json_schema import SourceIndex, FileInfo
+from .audio_json_schema import FileInfo, SourceIndex
 from .file_ops import user_files_dir
+from .sqlite_schema import CURRENT_DB
 
 NoneType = type(None)  # fix for the official binary bundle
 

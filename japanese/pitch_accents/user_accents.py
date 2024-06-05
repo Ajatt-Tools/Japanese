@@ -3,14 +3,14 @@
 
 import collections
 import os
-from collections.abc import MutableMapping, Iterable, Sequence
-from typing import Union, NamedTuple
+from collections.abc import Iterable, MutableMapping, Sequence
+from typing import NamedTuple, Union
 
-from .common import FormattedEntry, AccentDict
-from .consts import NO_ACCENT
-from .format_accents import format_entry
 from ..helpers.file_ops import touch, user_files_dir
 from ..mecab_controller.kana_conv import kana_to_moras, to_katakana
+from .common import AccentDict, FormattedEntry
+from .consts import NO_ACCENT
+from .format_accents import format_entry
 
 
 def search_pitch_accent_numbers(accents: str) -> Iterable[Union[str, int]]:

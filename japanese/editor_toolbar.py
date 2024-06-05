@@ -14,7 +14,8 @@ from aqt.operations import CollectionOp
 
 from .ajt_common.consts import ADDON_SERIES
 from .audio import aud_src_mgr, format_audio_tags
-from .config_view import config_view as cfg, ToolbarButtonConfig
+from .config_view import ToolbarButtonConfig
+from .config_view import config_view as cfg
 from .definitions import sakura_client
 from .helpers.profiles import TaskCaller
 from .helpers.tokens import clean_furigana

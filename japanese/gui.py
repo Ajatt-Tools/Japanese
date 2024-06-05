@@ -10,10 +10,14 @@ from aqt import mw
 from aqt.addons import AddonsDialog, ConfigEditor
 from aqt.operations import QueryOp
 from aqt.qt import *
-from aqt.utils import restoreGeom, saveGeom, openLink
+from aqt.utils import openLink, restoreGeom, saveGeom
 
-from .ajt_common.about_menu import tweak_window, menu_root_entry
-from .ajt_common.addon_config import set_config_action, MgrPropMixIn, set_config_update_action
+from .ajt_common.about_menu import menu_root_entry, tweak_window
+from .ajt_common.addon_config import (
+    MgrPropMixIn,
+    set_config_action,
+    set_config_update_action,
+)
 from .ajt_common.consts import ADDON_SERIES
 from .ajt_common.grab_key import ShortCutGrabButton
 from .ajt_common.utils import ui_translate
@@ -22,22 +26,32 @@ from .config_view import config_view as cfg
 from .helpers import THIS_ADDON_MODULE
 from .helpers.audio_manager import TotalAudioStats
 from .helpers.misc import split_list
-from .helpers.profiles import Profile, ProfileFurigana, ProfilePitch, PitchOutputFormat, ProfileAudio
+from .helpers.profiles import (
+    PitchOutputFormat,
+    Profile,
+    ProfileAudio,
+    ProfileFurigana,
+    ProfilePitch,
+)
 from .pitch_accents.user_accents import UserAccentData
 from .reading import acc_dict
-from .widgets.addon_opts import TriggeredBySelector, relevant_field_names, EditableSelector
+from .widgets.addon_opts import (
+    EditableSelector,
+    TriggeredBySelector,
+    relevant_field_names,
+)
 from .widgets.anki_style import fix_default_anki_style
 from .widgets.audio_sources import AudioSourcesTable
 from .widgets.audio_sources_stats import AudioStatsDialog
 from .widgets.enum_selector import EnumSelectCombo
 from .widgets.pitch_override_widget import PitchOverrideWidget
 from .widgets.settings_form import (
-    SettingsForm,
+    AudioSettingsForm,
     ContextMenuSettingsForm,
     DefinitionsSettingsForm,
-    PitchSettingsForm,
     FuriganaSettingsForm,
-    AudioSettingsForm,
+    PitchSettingsForm,
+    SettingsForm,
 )
 from .widgets.svg_settings import SvgSettingsWidget
 from .widgets.widgets_to_config_dict import as_config_dict
@@ -85,7 +99,7 @@ class NoteTypeSelector(EditableSelector):
 
 
 class ProfileList(QGroupBox):
-    def __init__(self, profile_class: type(Profile), *args):
+    def __init__(self, profile_class: type[Profile], *args):
         super().__init__(*args)
         self.setTitle("Profiles")
         self.setCheckable(False)
@@ -97,7 +111,7 @@ class ProfileList(QGroupBox):
         self._setup_signals()
         adjust_to_contents(self._list_widget)
 
-    def current_item(self) -> QListWidgetItem:
+    def current_item(self) -> Optional[QListWidgetItem]:
         return self._list_widget.currentItem()
 
     def profiles(self) -> Iterable[Profile]:
@@ -117,6 +131,7 @@ class ProfileList(QGroupBox):
         if (current := self.current_item()) and current.isSelected():
             self._list_widget.takeItem(row := self._list_widget.currentRow())
             return row
+        return None
 
     def clone_profile(self):
         if (current := self.current_item()) and current.isSelected():
@@ -213,7 +228,7 @@ class ProfileEditForm(QGroupBox):
         self._form.overwrite_destination.setChecked(profile.overwrite_destination)
         self._repopulate_fields(profile)
 
-    def _as_dict(self) -> dict[str, str]:
+    def _as_dict(self) -> dict[str, Union[str, bool]]:
         return dataclasses.asdict(self._last_used_profile) | as_config_dict(self._form.__dict__)
 
     def _make_layout(self) -> QLayout:
@@ -251,8 +266,10 @@ class AudioProfileEditForm(ProfileEditForm, profile_class=ProfileAudio):
 
 
 class ProfileEdit(QWidget):
+    _profile_class: type[Profile]
+
     def __init_subclass__(cls, **kwargs) -> None:
-        cls._profile_class: type[Profile] = kwargs.pop("profile_class")  # suppresses ide warning
+        cls._profile_class = kwargs.pop("profile_class")  # suppresses ide warning
         super().__init_subclass__(**kwargs)
 
     def __init__(self, *args, **kwargs) -> None:
@@ -278,7 +295,7 @@ class ProfileEdit(QWidget):
         else:
             self._edit_form.setEnabled(False)
 
-    def _apply_profile(self, item: QListWidgetItem) -> None:
+    def _apply_profile(self, item: Optional[QListWidgetItem]) -> None:
         if item:
             profile = self._edit_form.as_profile()
             item.setData(Qt.ItemDataRole.UserRole, profile)

@@ -1,8 +1,7 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
-from collections.abc import Collection
-from collections.abc import Iterable
+from collections.abc import Collection, Iterable
 from typing import Optional
 
 from aqt import mw

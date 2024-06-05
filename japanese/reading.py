@@ -4,33 +4,29 @@
 import dataclasses
 import functools
 from collections import OrderedDict
-from collections.abc import Iterable
-from collections.abc import MutableSequence
-from collections.abc import Sequence
-from typing import Union, Optional
+from collections.abc import Iterable, MutableSequence, Sequence
+from typing import Optional, Union
 
 from anki.utils import html_to_text_line
 from aqt import gui_hooks
 
-from .config_view import config_view as cfg, ReadingsDiscardMode
+from .config_view import ReadingsDiscardMode
+from .config_view import config_view as cfg
 from .helpers import LONG_VOWEL_MARK
 from .helpers.common_kana import adjust_to_inflection
-from .helpers.mingle_readings import (
-    mingle_readings,
-    split_possible_furigana,
-)
+from .helpers.mingle_readings import mingle_readings, split_possible_furigana
 from .helpers.profiles import PitchOutputFormat
-from .helpers.tokens import tokenize, split_separators, ParseableToken, Token
-from .mecab_controller.basic_types import PartOfSpeech, Inflection
+from .helpers.tokens import ParseableToken, Token, split_separators, tokenize
+from .mecab_controller.basic_types import Inflection, PartOfSpeech
 from .mecab_controller.format import format_output
 from .mecab_controller.kana_conv import is_kana_str, to_hiragana
 from .mecab_controller.mecab_controller import MecabController, MecabParsedToken
-from .mecab_controller.unify_readings import literal_pronunciation as pr, unify_repr
-from .pitch_accents.acc_dict_mgr import AccentDict, FormattedEntry, AccentDictManager
+from .mecab_controller.unify_readings import literal_pronunciation as pr
+from .mecab_controller.unify_readings import unify_repr
+from .pitch_accents.acc_dict_mgr import AccentDict, AccentDictManager, FormattedEntry
 from .pitch_accents.basic_types import AccDbParsedToken, PitchAccentEntry
 from .pitch_accents.styles import STYLE_MAP
 from .pitch_accents.svg_graphs import SvgPitchGraphMaker
-
 
 # Lookup
 ##########################################################################

@@ -3,7 +3,11 @@
 from typing import cast
 
 from japanese.config_view import JapaneseConfig
-from japanese.helpers.audio_manager import AudioSourceManagerFactory, AudioSourceManager, TotalAudioStats
+from japanese.helpers.audio_manager import (
+    AudioSourceManager,
+    AudioSourceManagerFactory,
+    TotalAudioStats,
+)
 from tests.no_anki_config import NoAnkiConfigView
 
 

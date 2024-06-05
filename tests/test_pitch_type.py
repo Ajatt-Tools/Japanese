@@ -1,6 +1,6 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
-from japanese.pitch_accents.basic_types import pitch_type_from_pitch_num, PitchType
+from japanese.pitch_accents.basic_types import PitchType, pitch_type_from_pitch_num
 
 
 def test_pitch_type_from_pitch_num() -> None:

@@ -2,7 +2,11 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 import pytest
 
-from japanese.helpers.http_client import AudioManagerHttpClient, FileUrlData, AudioManagerException
+from japanese.helpers.http_client import (
+    AudioManagerException,
+    AudioManagerHttpClient,
+    FileUrlData,
+)
 
 
 def test_client_download() -> None:

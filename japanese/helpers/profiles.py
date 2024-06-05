@@ -60,13 +60,13 @@ class Profile(ProfileBase):
     triggered_by: str
     overwrite_destination: bool
 
-    def __init_subclass__(cls, **kwargs):
+    def __init_subclass__(cls, **kwargs) -> None:
         mode = kwargs.pop("mode")  # suppresses ide warning
         super().__init_subclass__(**kwargs)
         cls._subclasses_map[mode] = cls
         cls.mode = mode
 
-    def __new__(cls, mode: str, *args, **kwargs):
+    def __new__(cls, mode: str, *args, **kwargs) -> "Profile":
         subclass = cls._subclasses_map[mode]
         return object.__new__(subclass)
 

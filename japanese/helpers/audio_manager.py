@@ -13,17 +13,17 @@ from collections.abc import Iterable
 from contextlib import contextmanager
 from typing import Optional, Union
 
-from .audio_json_schema import FileInfo
-from .http_client import (
-    AudioManagerException,
-    AudioSourceConfig,
-    AudioManagerHttpClient,
-    FileUrlData,
-)
-from .sqlite3_buddy import Sqlite3Buddy, BoundFile
 from ..config_view import JapaneseConfig
 from ..mecab_controller.kana_conv import to_katakana
 from ..pitch_accents.common import split_pitch_numbers
+from .audio_json_schema import FileInfo
+from .http_client import (
+    AudioManagerException,
+    AudioManagerHttpClient,
+    AudioSourceConfig,
+    FileUrlData,
+)
+from .sqlite3_buddy import BoundFile, Sqlite3Buddy
 
 
 def file_exists(file_path: str):

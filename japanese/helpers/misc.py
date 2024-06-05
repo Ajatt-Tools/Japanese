@@ -1,11 +1,12 @@
 # Copyright: Ren Tatsumoto <tatsu at autistici.org> and contributors
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 import math
-from collections.abc import Sequence, Iterable
-from typing import TypeVar
+from collections.abc import Iterable, Sequence
+from typing import Callable, TypeVar, Union
 
 from anki.utils import html_to_text_line
 from aqt import mw
+from aqt.qt import pyqtBoundSignal, pyqtSignal
 
 T = TypeVar("T")
 

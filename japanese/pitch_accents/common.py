@@ -3,9 +3,8 @@
 
 import os
 import re
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, MutableSequence, Sequence
 from typing import NamedTuple, NewType
-from collections.abc import MutableSequence
 
 from .consts import NO_ACCENT, PITCH_DIR_PATH
 

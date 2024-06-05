@@ -4,7 +4,7 @@
 import io
 import re
 from collections.abc import Iterable
-from typing import NamedTuple, Final, Union
+from typing import Final, NamedTuple, Union
 
 from .tokens import clean_furigana
 

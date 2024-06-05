@@ -3,9 +3,18 @@
 
 import os.path
 
-from japanese.mecab_controller.basic_types import PartOfSpeech, Inflection
-from japanese.pitch_accents.basic_types import AccDbParsedToken, PitchAccentEntry, PitchParam, PitchType
-from japanese.pitch_accents.common import FormattedEntry, files_in_dir, split_pitch_numbers
+from japanese.mecab_controller.basic_types import Inflection, PartOfSpeech
+from japanese.pitch_accents.basic_types import (
+    AccDbParsedToken,
+    PitchAccentEntry,
+    PitchParam,
+    PitchType,
+)
+from japanese.pitch_accents.common import (
+    FormattedEntry,
+    files_in_dir,
+    split_pitch_numbers,
+)
 from japanese.pitch_accents.consts import PITCH_DIR_PATH
 from japanese.pitch_accents.format_accents import format_entry
 

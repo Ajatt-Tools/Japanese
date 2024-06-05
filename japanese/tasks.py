@@ -3,8 +3,8 @@
 
 import functools
 import io
-from typing import Optional
 from collections.abc import Iterable
+from typing import Optional
 
 import anki.collection
 from anki import hooks
@@ -15,11 +15,18 @@ from anki.utils import strip_html_media
 from aqt import mw
 from aqt.utils import tooltip
 
-from .audio import format_audio_tags, AnkiAudioSourceManager, FileSaveResults
+from .audio import AnkiAudioSourceManager, FileSaveResults, format_audio_tags
 from .config_view import config_view as cfg
 from .helpers.http_client import FileUrlData
-from .helpers.profiles import Profile, ProfileFurigana, PitchOutputFormat, ProfilePitch, ProfileAudio, TaskCaller
-from .reading import format_pronunciations, get_pronunciations, generate_furigana
+from .helpers.profiles import (
+    PitchOutputFormat,
+    Profile,
+    ProfileAudio,
+    ProfileFurigana,
+    ProfilePitch,
+    TaskCaller,
+)
+from .reading import format_pronunciations, generate_furigana, get_pronunciations
 
 
 def note_type_matches(note_type: NotetypeDict, profile: Profile) -> bool:

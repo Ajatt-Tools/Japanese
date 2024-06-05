@@ -4,8 +4,7 @@
 import dataclasses
 import enum
 import re
-from collections.abc import Iterable
-from collections.abc import MutableMapping, MutableSequence
+from collections.abc import Iterable, MutableMapping, MutableSequence
 from typing import NamedTuple, final
 
 from aqt import mw
@@ -13,7 +12,7 @@ from aqt import mw
 from .ajt_common.addon_config import AddonConfigManager, ConfigSubViewBase
 from .helpers.http_client import AudioSourceConfig
 from .helpers.profiles import Profile, get_default_profile
-from .helpers.sakura_client import DictName, SearchType, AddDefBehavior
+from .helpers.sakura_client import AddDefBehavior, DictName, SearchType
 from .helpers.tokens import RE_FLAGS
 from .mecab_controller.kana_conv import to_katakana
 from .pitch_accents.styles import PitchPatternStyle

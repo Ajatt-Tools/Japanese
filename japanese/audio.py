@@ -6,31 +6,31 @@ import concurrent.futures
 import itertools
 from collections.abc import Collection, Iterable, Sequence
 from concurrent.futures import Future
-from typing import NamedTuple, Optional, Callable, Any
+from typing import Any, Callable, NamedTuple, Optional
 
 import anki.collection
 from anki.utils import html_to_text_line
 from aqt import gui_hooks, mw
 from aqt.operations import QueryOp
-from aqt.utils import tooltip, showWarning
+from aqt.utils import showWarning, tooltip
 
 from .config_view import config_view as cfg
 from .helpers.audio_manager import (
-    AudioSourceManager,
-    FileUrlData,
     AudioManagerException,
-    InitResult,
+    AudioSourceManager,
     AudioSourceManagerFactory,
+    FileUrlData,
+    InitResult,
     TotalAudioStats,
 )
 from .helpers.inflections import is_inflected
-from .helpers.tokens import tokenize, ParseableToken
+from .helpers.mingle_readings import split_possible_furigana
+from .helpers.tokens import ParseableToken, tokenize
 from .helpers.unique_files import ensure_unique_files
 from .mecab_controller.kana_conv import to_hiragana, to_katakana
 from .mecab_controller.mecab_controller import MecabParsedToken
 from .mecab_controller.unify_readings import literal_pronunciation as pr
 from .reading import mecab_translate
-from .helpers.mingle_readings import split_possible_furigana
 
 
 class DownloadedData(NamedTuple):

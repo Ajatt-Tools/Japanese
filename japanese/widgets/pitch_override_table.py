@@ -3,21 +3,20 @@
 
 import os.path
 import re
-from typing import NamedTuple
 from collections.abc import Collection, Iterable
+from typing import NamedTuple
 
 from aqt.qt import *
 from aqt.utils import showInfo
 
-
 try:
-    from .table import ExpandingTableWidget
-    from ..pitch_accents.consts import NO_ACCENT
     from ..ajt_common.utils import ui_translate
+    from ..pitch_accents.consts import NO_ACCENT
+    from .table import ExpandingTableWidget
 except ImportError:
-    from table import ExpandingTableWidget
-    from pitch_accents.consts import NO_ACCENT
     from ajt_common.utils import ui_translate
+    from pitch_accents.consts import NO_ACCENT
+    from table import ExpandingTableWidget
 
 
 def is_comma_separated_list_of_numbers(text: str):

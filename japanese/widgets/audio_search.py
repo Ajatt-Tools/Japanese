@@ -9,28 +9,27 @@ from typing import cast
 
 from anki.sound import SoundOrVideoTag
 from anki.utils import no_bundled_libs
-from aqt import sound, mw
+from aqt import mw, sound
 from aqt.qt import *
 from aqt.utils import restoreGeom, saveGeom, tooltip, tr
 
-
 try:
-    from ..helpers.misc import strip_html_and_media
-    from ..helpers.file_ops import open_file
+    from ..ajt_common.utils import ui_translate
     from ..helpers import ADDON_NAME
     from ..helpers.audio_manager import FileUrlData
+    from ..helpers.file_ops import open_file
+    from ..helpers.misc import strip_html_and_media
     from .audio_sources import SourceEnableCheckbox
-    from ..ajt_common.utils import ui_translate
 except ImportError:
 
     def strip_html_and_media(s: str) -> str:
         return s  # noop
 
     ADDON_NAME = "Test window"
-    from helpers.file_ops import open_file
-    from helpers.audio_manager import FileUrlData
-    from widgets.audio_sources import SourceEnableCheckbox
     from ajt_common.utils import ui_translate
+    from helpers.audio_manager import FileUrlData
+    from helpers.file_ops import open_file
+    from widgets.audio_sources import SourceEnableCheckbox
 
 
 class FileSaveResultsProtocol(typing.Protocol):

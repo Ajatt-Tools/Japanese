@@ -3,7 +3,12 @@
 from collections.abc import Sequence
 
 from japanese.pitch_accents.common import FormattedEntry
-from japanese.pitch_accents.entry_to_moras import entry_to_moras, PitchLevel, MoraFlag, mora_flags2class_name
+from japanese.pitch_accents.entry_to_moras import (
+    MoraFlag,
+    PitchLevel,
+    entry_to_moras,
+    mora_flags2class_name,
+)
 
 
 def filter_by_level(moras, level: PitchLevel) -> Sequence[str]:

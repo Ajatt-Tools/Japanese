@@ -10,7 +10,6 @@ from anki.utils import is_mac
 
 from ..ajt_common.utils import find_executable
 
-
 GD_PROGRAM_NAME = "GoldenDict-NG"
 GD_MACOS_PATH = (
     "/Applications/GoldenDict-ng.app/Contents/MacOS/GoldenDict-ng",

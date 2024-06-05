@@ -11,11 +11,15 @@ from aqt.qt import *
 from aqt.utils import restoreGeom, saveGeom, tooltip
 from aqt.webview import AnkiWebView
 
-from .ajt_common.about_menu import menu_root_entry, tweak_window, garbage_collect_on_dialog_finish
+from .ajt_common.about_menu import (
+    garbage_collect_on_dialog_finish,
+    menu_root_entry,
+    tweak_window,
+)
 from .config_view import config_view as cfg
 from .helpers.tokens import clean_furigana
 from .pitch_accents.common import AccentDict
-from .reading import get_pronunciations, format_pronunciations, update_html
+from .reading import format_pronunciations, get_pronunciations, update_html
 
 ACTION_NAME = "Pitch Accent lookup"
 

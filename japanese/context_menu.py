@@ -6,14 +6,14 @@ from typing import Optional
 
 import aqt
 from aqt import gui_hooks
-from aqt.editor import EditorWebView, Editor
+from aqt.editor import Editor, EditorWebView
 from aqt.qt import *
 from aqt.utils import tooltip
 from aqt.webview import AnkiWebView
 
 from .config_view import config_view as cfg
-from .helpers.goldendict_lookups import lookup_goldendict, GD_PROGRAM_NAME
-from .mecab_controller.kana_conv import to_katakana, to_hiragana
+from .helpers.goldendict_lookups import GD_PROGRAM_NAME, lookup_goldendict
+from .mecab_controller.kana_conv import to_hiragana, to_katakana
 from .mecab_controller.unify_readings import literal_pronunciation
 from .reading import generate_furigana
 

@@ -7,32 +7,32 @@ from typing import Optional
 
 from aqt.qt import *
 
-from .addon_opts import (
-    NarrowSpinBox,
-    FieldNameSelector,
-    NarrowLineEdit,
-    WordsEdit,
-    StrokeDisarrayLineEdit,
-    PxDoubleNarrowSpinBox,
-    PxNarrowSpinBox,
-)
-from .enum_selector import EnumSelectCombo
-from .widgets_to_config_dict import as_config_dict
 from ..ajt_common.addon_config import ConfigSubViewBase
 from ..ajt_common.grab_key import ShortCutGrabButton
 from ..ajt_common.utils import ui_translate
 from ..config_view import (
+    AudioSettingsConfigView,
     ContextMenuConfigView,
     DefinitionsConfigView,
+    FuriganaConfigView,
     PitchConfigView,
     ReadingsDiscardMode,
-    FuriganaConfigView,
-    AudioSettingsConfigView,
     SvgPitchGraphOptionsConfigView,
 )
-from ..helpers.misc import split_list
-from ..helpers.sakura_client import DictName, SearchType, AddDefBehavior
+from ..helpers.misc import q_emit, split_list
+from ..helpers.sakura_client import AddDefBehavior, DictName, SearchType
 from ..pitch_accents.styles import PitchPatternStyle
+from .addon_opts import (
+    FieldNameSelector,
+    NarrowLineEdit,
+    NarrowSpinBox,
+    PxDoubleNarrowSpinBox,
+    PxNarrowSpinBox,
+    StrokeDisarrayLineEdit,
+    WordsEdit,
+)
+from .enum_selector import EnumSelectCombo
+from .widgets_to_config_dict import as_config_dict
 
 
 class SettingsForm(QWidget):

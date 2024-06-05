@@ -4,10 +4,10 @@ from aqt import mw
 from aqt.qt import *
 from aqt.webview import AnkiWebView
 
-from .settings_form import SvgSettingsForm
 from ..config_view import SvgPitchGraphOptionsConfigView
 from ..pitch_accents.common import FormattedEntry
 from ..pitch_accents.svg_graphs import SvgPitchGraphMaker
+from .settings_form import SvgSettingsForm
 
 SHOW_ENTRIES = (
     FormattedEntry(

@@ -9,15 +9,14 @@ from collections.abc import Iterable
 
 from aqt.qt import *
 
-
 try:
-    from .table import ExpandingTableWidget, CellContent, TableRow
     from ..helpers.audio_manager import AudioSourceConfig, normalize_filename
     from ..helpers.misc import clamp
+    from .table import CellContent, ExpandingTableWidget, TableRow
 except ImportError:
-    from table import ExpandingTableWidget, CellContent, TableRow
     from helpers.audio_manager import AudioSourceConfig, normalize_filename
     from helpers.misc import clamp
+    from table import CellContent, ExpandingTableWidget, TableRow
 
 
 class SourceEnableCheckbox(QCheckBox):
@@ -33,8 +32,8 @@ class SourceEnableCheckbox(QCheckBox):
 
 
 def tooltip_cache_remove_complete(removed: list[AudioSourceConfig]) -> None:
-    from aqt.utils import tooltip
     from aqt import mw
+    from aqt.utils import tooltip
 
     msg = io.StringIO()
     if removed:

@@ -7,7 +7,7 @@ from aqt import mw
 
 
 def start_addon():
-    from . import tasks, lookup, bulk_add, gui, context_menu, editor_toolbar
+    from . import bulk_add, context_menu, editor_toolbar, gui, lookup, tasks
 
     tasks.init()
     lookup.init()

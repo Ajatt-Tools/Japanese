@@ -2,7 +2,7 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 
-from typing import TypedDict, NewType
+from typing import NewType, TypedDict
 
 FileList = NewType("FileList", list[str])
 

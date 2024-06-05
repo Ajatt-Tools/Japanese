@@ -2,14 +2,14 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 from japanese.helpers.mingle_readings import (
-    decompose_word,
     SplitFurigana,
     WordReading,
+    decompose_word,
     mingle_readings,
-    word_reading,
-    whitespace_split,
-    strip_non_jp_furigana,
     split_possible_furigana,
+    strip_non_jp_furigana,
+    whitespace_split,
+    word_reading,
 )
 
 

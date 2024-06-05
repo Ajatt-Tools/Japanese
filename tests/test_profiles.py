@@ -6,7 +6,12 @@ import json
 import pytest
 
 from japanese.helpers.file_ops import find_config_json
-from japanese.helpers.profiles import Profile, ProfileFurigana, ProfilePitch, ProfileAudio
+from japanese.helpers.profiles import (
+    Profile,
+    ProfileAudio,
+    ProfileFurigana,
+    ProfilePitch,
+)
 
 
 @pytest.fixture

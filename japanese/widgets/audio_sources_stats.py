@@ -5,13 +5,12 @@ import dataclasses
 
 from aqt.qt import *
 
-
 try:
-    from ..helpers.audio_manager import TotalAudioStats, AudioStats
     from ..ajt_common.utils import ui_translate
+    from ..helpers.audio_manager import AudioStats, TotalAudioStats
 except ImportError:
-    from helpers.audio_manager import TotalAudioStats, AudioStats
     from ajt_common.utils import ui_translate
+    from helpers.audio_manager import AudioStats, TotalAudioStats
 
 
 class AudioStatsTable(QTableWidget):

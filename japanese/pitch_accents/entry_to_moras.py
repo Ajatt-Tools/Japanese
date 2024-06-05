@@ -9,10 +9,10 @@ import typing
 from collections.abc import Iterable
 from typing import Optional
 
+from ..mecab_controller import kana_to_moras
 from .basic_types import PitchType, pitch_type_from_pitch_num
 from .common import FormattedEntry
 from .styles import XmlTags
-from ..mecab_controller import kana_to_moras
 
 RE_PITCH_TAG = re.compile(r"(<[^<>]+>)")
 
