@@ -61,6 +61,7 @@ class Profile(ProfileBase):
     overwrite_destination: bool
 
     def __init_subclass__(cls, **kwargs) -> None:
+        # mode is one of ("furigana", "pitch", "audio")
         mode = kwargs.pop("mode")  # suppresses ide warning
         super().__init_subclass__(**kwargs)
         cls._subclasses_map[mode] = cls
