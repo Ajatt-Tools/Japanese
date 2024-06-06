@@ -69,6 +69,7 @@
     "generate_furigana": true,
     "to_katakana": true,
     "to_hiragana": true,
+    "to_half_width_katakana": true,
     "literal_pronunciation": true,
     "look_up_word": true,
     "browser_search": true

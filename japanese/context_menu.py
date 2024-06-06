@@ -13,6 +13,7 @@ from aqt.webview import AnkiWebView
 
 from .config_view import config_view as cfg
 from .helpers.goldendict_lookups import GD_PROGRAM_NAME, lookup_goldendict
+from .helpers.half_kata import to_half_width_katakana
 from .mecab_controller.kana_conv import to_hiragana, to_katakana
 from .mecab_controller.unify_readings import literal_pronunciation
 from .reading import generate_furigana
@@ -62,9 +63,10 @@ class ContextMenuAction(abc.ABC):
 
     def get_selected_text(self) -> Optional[str]:
         if self.editor is not None and self.editor.currentField is None:
-            return
+            return None
         if len(sel_text := self.webview.selectedText()) > 0:
             return sel_text
+        return None
 
     def __call__(self, *args, **kwargs) -> None:
         if sel_text := self.get_selected_text():
@@ -84,6 +86,12 @@ class ToKatakana(ContextMenuAction):
     key = "to_katakana"
     label = "Convert to katakana"
     action = staticmethod(to_katakana)
+
+
+class ToHalfWidthKatakana(ContextMenuAction):
+    key = "to_half_width_katakana"
+    label = "Convert to half-width katakana"
+    action = staticmethod(to_half_width_katakana)
 
 
 class ToHiragana(ContextMenuAction):
