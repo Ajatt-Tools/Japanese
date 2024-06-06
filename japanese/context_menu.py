@@ -23,11 +23,11 @@ class ContextMenuAction(abc.ABC):
     subclasses: list[type["ContextMenuAction"]] = []
     shown_when_not_editing = False
 
-    def __init_subclass__(cls, **kwargs):
+    def __init_subclass__(cls, **kwargs) -> None:
         super().__init_subclass__(**kwargs)
         cls.subclasses.append(cls)
 
-    def __init__(self, editor: Editor = None, webview: AnkiWebView = None):
+    def __init__(self, editor: Optional[Editor] = None, webview: Optional[AnkiWebView] = None) -> None:
         self.editor = editor
         self.webview = webview or editor.web
 
