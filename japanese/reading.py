@@ -129,10 +129,8 @@ def get_pronunciations(expr: str, sanitize: bool = True, recurse: bool = True, u
     # Try to split the expression in various ways (punctuation, whitespace, etc.),
     # and check if any of those brings results.
     if not ret and recurse:
-        if len(split_expr := split_separators(expr)) > 1:
-            for section in split_expr:
-                ret.update(get_pronunciations_part(section, use_mecab=use_mecab))
-
+        for section in split_separators(expr):
+            ret.update(get_pronunciations_part(section, use_mecab=use_mecab))
     return ret
 
 
