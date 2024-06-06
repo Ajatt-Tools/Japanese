@@ -59,3 +59,4 @@ def test_split_possible_furigana() -> None:
     assert split_possible_furigana("明後日[あさって]") == WordReading("明後日", "あさって")
     assert split_possible_furigana("明後日[zzz]") == WordReading("明後日", "")
     assert split_possible_furigana("お 金[かね]") == WordReading("お金", "おかね")
+    assert split_possible_furigana("日") == WordReading("日", "")
