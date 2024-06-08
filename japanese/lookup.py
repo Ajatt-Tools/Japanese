@@ -71,15 +71,18 @@ class ViewPitchAccentsDialog(QDialog):
         return hbox
 
     def _copy_pronunciations(self) -> None:
-        return QApplication.clipboard().setText(
-            format_pronunciations(
-                self._pronunciations,
-                sep_single="、",
-                sep_multi="<br>",
-                expr_sep="：",
-                max_results=99,
+        assert self._pronunciations
+        if clip := QApplication.clipboard():
+            return clip.setText(
+                format_pronunciations(
+                    self._pronunciations,
+                    sep_single="、",
+                    sep_multi="<br>",
+                    expr_sep="：",
+                    max_results=99,
+                )
             )
-        )
+        tooltip("couldn't get clipboard.", parent=self)
 
     def lookup_pronunciations(self, search: str):
         self._pronunciations = lookup.get_pronunciations(search)
