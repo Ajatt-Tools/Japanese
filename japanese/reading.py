@@ -2,21 +2,19 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import dataclasses
-import functools
 from collections import OrderedDict
 from collections.abc import Iterable, MutableSequence, Sequence
 from typing import Optional, Union
 
-from anki.utils import html_to_text_line
 from aqt import gui_hooks
 
 from .config_view import ReadingsDiscardMode
 from .config_view import config_view as cfg
 from .helpers import LONG_VOWEL_MARK
 from .helpers.common_kana import adjust_to_inflection
-from .helpers.mingle_readings import mingle_readings, split_possible_furigana
+from .helpers.mingle_readings import mingle_readings
 from .helpers.profiles import PitchOutputFormat
-from .helpers.tokens import ParseableToken, Token, split_separators, tokenize
+from .helpers.tokens import ParseableToken, Token, tokenize
 from .mecab_controller.basic_types import Inflection, PartOfSpeech
 from .mecab_controller.format import format_output
 from .mecab_controller.kana_conv import is_kana_str, to_hiragana
@@ -24,6 +22,7 @@ from .mecab_controller.mecab_controller import MecabController, MecabParsedToken
 from .mecab_controller.unify_readings import literal_pronunciation as pr
 from .mecab_controller.unify_readings import unify_repr
 from .pitch_accents.acc_dict_mgr import AccentDict, AccentDictManager, FormattedEntry
+from .pitch_accents.accent_lookup import AccentLookup
 from .pitch_accents.basic_types import AccDbParsedToken, PitchAccentEntry
 from .pitch_accents.styles import STYLE_MAP
 from .pitch_accents.svg_graphs import SvgPitchGraphMaker
@@ -46,96 +45,8 @@ def update_html(html_notation: str) -> str:
     return html_notation
 
 
-@functools.lru_cache(maxsize=cfg.cache_lookups)
-def mecab_translate(expr: str) -> tuple[MecabParsedToken, ...]:
-    return tuple(mecab.translate(expr))
-
-
-def single_word_reading(word: str) -> str:
-    """
-    Try to look up the reading of a single word using mecab.
-    """
-    if len(tokens := mecab_translate(word)) == 1 and (token := tokens[-1]).katakana_reading:
-        return token.katakana_reading
-    return ""
-
-
-def get_pronunciations_part(expr_part: str, use_mecab: bool) -> AccentDict:
-    """
-    Search pitch accent info (pronunciations) for a part of expression.
-    The part must be already sanitized.
-    (If enabled and) if the part is not present in the accent dictionary, Mecab is used to split it further.
-    """
-    ret: AccentDict
-    ret = AccentDict(OrderedDict())
-    # Sanitize is always set to False because the part must be already sanitized.
-    ret.update(get_pronunciations(expr_part, sanitize=False, recurse=False))
-
-    # Only if lookups were not successful, we try splitting with Mecab
-    if not ret and use_mecab is True:
-        for out in mecab_translate(expr_part):
-            # Avoid infinite recursion by saying that we should not try
-            # Mecab again if we do not find any matches for this sub-expression.
-            ret.update(get_pronunciations(out.headword, sanitize=False, recurse=False))
-
-            # If everything failed, try katakana lookups.
-            # Katakana lookups are possible because of the additional key in the pitch accents dictionary.
-            # If the word was in conjugated form, this lookup will also fail.
-            if out.headword not in ret and out.katakana_reading and cfg.pitch_accent.kana_lookups is True:
-                ret.update(get_pronunciations(out.katakana_reading, sanitize=False, recurse=False))
-    return ret
-
-
-@functools.lru_cache(maxsize=cfg.cache_lookups)
-def get_pronunciations(expr: str, sanitize: bool = True, recurse: bool = True, use_mecab: bool = True) -> AccentDict:
-    """
-    Search pitch accent info (pronunciations) for a particular expression.
-
-    Returns a dictionary mapping the expression (or sub-expressions contained in the expression)
-    to a list of html-styled pronunciations.
-    """
-
-    ret: AccentDict
-    ret = AccentDict(OrderedDict())
-
-    # Sanitize input
-    if sanitize:
-        expr = html_to_text_line(expr)
-
-    # Handle furigana, if present.
-    expr, expr_reading = split_possible_furigana(expr, cfg.furigana.reading_separator)
-
-    # Skip empty strings and user-specified blocklisted words
-    if not expr or cfg.pitch_accent.is_blocklisted(expr):
-        return ret
-
-    # Look up the main expression.
-    if lookup_main := acc_dict.lookup(expr):
-        ret.setdefault(expr, []).extend(
-            entry
-            for entry in lookup_main
-            # if there's furigana, and it doesn't match the entry, skip.
-            if not expr_reading or pr(entry.katakana_reading) == pr(expr_reading)
-        )
-
-    # If there's furigana, e.g. when using the VocabFurigana field as the source,
-    # or if the kana reading of the full expression can be sourced from mecab,
-    # and the user wants to perform kana lookups, then try the reading.
-    if not ret and cfg.pitch_accent.kana_lookups:
-        expr_reading = expr_reading or single_word_reading(expr)
-        if expr_reading and (lookup_reading := acc_dict.lookup(expr_reading)):
-            ret.setdefault(expr, []).extend(lookup_reading)
-
-    # Try to split the expression in various ways (punctuation, whitespace, etc.),
-    # and check if any of those brings results.
-    if not ret and recurse:
-        for section in split_separators(expr):
-            ret.update(get_pronunciations_part(section, use_mecab=use_mecab))
-    return ret
-
-
 def iter_accents(word: str) -> Iterable[FormattedEntry]:
-    if word in (accents := get_pronunciations(word, recurse=False)):
+    if word in (accents := lookup.get_pronunciations(word, recurse=False)):
         yield from accents[word]
 
 
@@ -247,7 +158,7 @@ def try_lookup_full_text(text: str) -> Iterable[AccDbParsedToken]:
     word: str
     entries: Sequence[FormattedEntry]
 
-    if cfg.furigana.can_lookup_in_db(text) and (results := get_pronunciations(text, recurse=False)):
+    if cfg.furigana.can_lookup_in_db(text) and (results := lookup.get_pronunciations(text, recurse=False)):
         for word, entries in results.items():
             yield AccDbParsedToken(
                 headword=word,
@@ -346,8 +257,8 @@ def generate_furigana(src_text: str, split_morphemes: bool = True, full_hiragana
             substrings.extend(acc_db_result)
         elif split_morphemes is True:
             # Split with mecab, format furigana for each word.
-            substrings.extend(append_accents(out) for out in mecab_translate(token))
-        elif (out := mecab_translate(token)) and out[0].word == token:
+            substrings.extend(append_accents(out) for out in mecab.translate(token))
+        elif (out := mecab.translate(token)) and out[0].word == token:
             # If the user doesn't want to split morphemes, still try to find the reading using mecab
             # but abort if mecab outputs more than one word.
             substrings.append(append_accents(out[0]))
@@ -361,7 +272,8 @@ def generate_furigana(src_text: str, split_morphemes: bool = True, full_hiragana
 ##########################################################################
 
 
-mecab = MecabController(verbose=True)
+mecab = MecabController(verbose=True, cache_max_size=cfg.cache_lookups)
 svg_graph_maker = SvgPitchGraphMaker(options=cfg.svg_graphs)
 acc_dict = AccentDictManager()
+lookup = AccentLookup(acc_dict, cfg, mecab)
 gui_hooks.main_window_did_init.append(acc_dict.reload_from_disk)

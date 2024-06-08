@@ -16,6 +16,7 @@ from .common import AccentDict
 
 def html_to_text_line(text: str) -> str:
     from anki.utils import html_to_text_line as fn
+
     try:
         return fn(text)
     except AttributeError:
