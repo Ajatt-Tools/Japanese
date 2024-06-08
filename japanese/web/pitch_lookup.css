@@ -84,3 +84,25 @@ li + li {
     line-height: 14px;
     user-select: none;
 }
+
+svg,
+img {
+    display:block;
+}
+
+.heiban :is(line, circle):not(.trail) {
+    stroke: #3366CC;
+    fill: #3366CC;
+}
+.atamadaka :is(line, circle):not(.trail) {
+    stroke: red;
+    fill: red;
+}
+.odaka :is(line, circle):not(.trail) {
+    stroke: green;
+    fill: green;
+}
+.nakadaka :is(line, circle):not(.trail) {
+    stroke: #ff6207;
+    fill: #ff6207;
+}
