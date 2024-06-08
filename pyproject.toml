@@ -43,8 +43,9 @@ extra-dependencies = [
 [tool.hatch.envs.dev.scripts]
 # run as `hatch run dev:scriptname`
 check = "mypy --install-types --non-interactive {args:japanese tests}"
-format = "black japanese tests; isort japanese tests;"
 test = "pytest;"
+format = "bash \"$(git rev-parse --show-toplevel)/scripts/format.sh\" "
+package = "bash \"$(git rev-parse --show-toplevel)/scripts/package.sh\" "
 
 [tool.coverage.run]
 source_pkgs = ["japanese", "tests"]
