@@ -26,7 +26,7 @@ from .helpers.profiles import (
     ProfilePitch,
     TaskCaller,
 )
-from .reading import format_pronunciations, generate_furigana, get_pronunciations
+from .reading import format_pronunciations, generate_furigana, lookup
 
 
 def note_type_matches(note_type: NotetypeDict, profile: Profile) -> bool:
@@ -78,7 +78,7 @@ class AddFurigana(DoTask, task_type=ProfileFurigana):
 class AddPitch(DoTask, task_type=ProfilePitch):
     def _generate_text(self, src_text: str) -> str:
         return format_pronunciations(
-            pronunciations=get_pronunciations(src_text, use_mecab=self._task.split_morphemes),
+            pronunciations=lookup.get_pronunciations(src_text, use_mecab=self._task.split_morphemes),
             output_format=PitchOutputFormat[self._task.output_format],
             sep_single=cfg.pitch_accent.reading_separator,
             sep_multi=cfg.pitch_accent.word_separator,
