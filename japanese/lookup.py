@@ -19,7 +19,7 @@ from .ajt_common.about_menu import (
 from .config_view import config_view as cfg
 from .helpers.tokens import clean_furigana
 from .pitch_accents.common import AccentDict
-from .reading import format_pronunciations, get_pronunciations, update_html
+from .reading import format_pronunciations, lookup, update_html
 
 ACTION_NAME = "Pitch Accent lookup"
 
@@ -77,7 +77,7 @@ class ViewPitchAccentsDialog(QDialog):
         )
 
     def lookup_pronunciations(self, search: str):
-        self._pronunciations = get_pronunciations(search)
+        self._pronunciations = lookup.get_pronunciations(search)
         return self
 
     def _format_html_result(self) -> str:
