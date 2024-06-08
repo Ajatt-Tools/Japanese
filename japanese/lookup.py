@@ -3,7 +3,7 @@
 
 import io
 from gettext import gettext as _
-from typing import Optional
+from typing import Optional, Sequence
 
 from aqt import gui_hooks, mw
 from aqt.browser import Browser
@@ -17,11 +17,16 @@ from .ajt_common.about_menu import (
     tweak_window,
 )
 from .config_view import config_view as cfg
+from .helpers.profiles import PitchOutputFormat
 from .helpers.tokens import clean_furigana
-from .pitch_accents.common import AccentDict
-from .reading import format_pronunciations, lookup, update_html
+from .pitch_accents.common import AccentDict, FormattedEntry
+from .reading import format_pronunciations, lookup, get_notation
 
 ACTION_NAME = "Pitch Accent lookup"
+
+
+def entries_to_html(entries: Sequence[FormattedEntry]) -> Sequence[str]:
+    return tuple(dict.fromkeys(get_notation(entry, mode=PitchOutputFormat.html_and_number) for entry in entries))
 
 
 class ViewPitchAccentsDialog(QDialog):
@@ -90,8 +95,7 @@ class ViewPitchAccentsDialog(QDialog):
             html.write(f'<div class="keyword">{word}</div>')
             html.write('<div class="pitch_accents">')
             html.write("<ol>")
-            entries = dict.fromkeys(f"{update_html(entry.html_notation)}[{entry.pitch_number}]" for entry in entries)
-            for entry in entries:
+            for entry in entries_to_html(entries):
                 html.write(f"<li>{entry}</li>")
             html.write("</ol>")
             html.write(f"</div>")
