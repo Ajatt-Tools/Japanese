@@ -49,3 +49,38 @@ ul {
 li + li {
     margin-top: 0.4rem;
 }
+
+.pitch_number {
+    vertical-align: top;
+    font-family:
+        "Noto Sans",
+        "Droid Sans",
+        "DejaVu Sans",
+        "Liberation Sans",
+        Roboto,
+        Cantarell,
+        "Segoe UI",
+        Arial,
+        Meiryo,
+        Oxygen,
+        Ubuntu,
+        "Helvetica Neue",
+        Helvetica,
+        "Noto Color Emoji",
+        "Noto Sans CJK JP",
+        Sans,
+        sans-serif;
+    text-align: center;
+    display: inline-block;
+    text-transform: lowercase;
+    background-color: #333;
+    color: #fffaf0;
+    font-weight: bold;
+    padding: 1px 3px;
+    margin: 0;
+    cursor: pointer;
+    border-radius: 3px;
+    font-size: 12px;
+    line-height: 14px;
+    user-select: none;
+}
