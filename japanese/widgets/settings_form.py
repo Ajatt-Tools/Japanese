@@ -20,6 +20,7 @@ from ..config_view import (
     SvgPitchGraphOptionsConfigView,
 )
 from ..helpers.misc import q_emit, split_list
+from ..helpers.profiles import PitchOutputFormat
 from ..helpers.sakura_client import AddDefBehavior, DictName, SearchType
 from ..pitch_accents.styles import PitchPatternStyle
 from .addon_opts import (
@@ -194,6 +195,9 @@ class PitchSettingsForm(MultiColumnSettingsForm):
         self._widgets.reading_separator = NarrowLineEdit(self._config.reading_separator)
         self._widgets.word_separator = NarrowLineEdit(self._config.word_separator)
         self._widgets.lookup_shortcut = ShortCutGrabButton(initial_value=self._config.lookup_shortcut)
+        self._widgets.lookup_pitch_format = EnumSelectCombo(
+            enum_type=PitchOutputFormat, initial_value=self._config.lookup_pitch_format
+        )
         self._widgets.blocklisted_words = WordsEdit(initial_values=self._config.blocklisted_words)
 
     def _add_tooltips(self) -> None:
@@ -218,6 +222,9 @@ class PitchSettingsForm(MultiColumnSettingsForm):
             "Discard all — Output nothing."
         )
         self._widgets.lookup_shortcut.setToolTip("A keyboard shortcut for looking up selected text.")
+        self._widgets.lookup_pitch_format.setToolTip(
+            "Pitch output format used when the lookup window is shown.\n" "Has no effect on Profiles."
+        )
         self._widgets.html_style.setToolTip(
             "Style of pitch accent patterns.\n"
             'If set to "none", you can configure your own styles\n'
