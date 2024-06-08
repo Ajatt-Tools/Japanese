@@ -2,8 +2,9 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import io
+from collections.abc import Sequence
 from gettext import gettext as _
-from typing import Optional, Sequence
+from typing import Optional
 
 from aqt import gui_hooks, mw
 from aqt.browser import Browser
@@ -20,7 +21,7 @@ from .config_view import config_view as cfg
 from .helpers.profiles import PitchOutputFormat
 from .helpers.tokens import clean_furigana
 from .pitch_accents.common import AccentDict, FormattedEntry
-from .reading import format_pronunciations, lookup, get_notation
+from .reading import format_pronunciations, get_notation, lookup
 
 ACTION_NAME = "Pitch Accent lookup"
 
@@ -124,7 +125,7 @@ class ViewPitchAccentsDialog(QDialog):
 def on_lookup_pronunciation(parent: QWidget, text: str) -> None:
     """Do a lookup on the selection"""
     if text := clean_furigana(text).strip():
-        (ViewPitchAccentsDialog(parent).lookup_pronunciations(text).set_html_result().exec())
+        ViewPitchAccentsDialog(parent).lookup_pronunciations(text).set_html_result().exec()
     else:
         tooltip(_("Empty selection."), parent=((parent.window() or mw) if isinstance(parent, AnkiWebView) else parent))
 
@@ -147,7 +148,10 @@ def add_context_menu_item(webview: AnkiWebView, menu: QMenu) -> None:
 def setup_browser_menu(browser: Browser) -> None:
     """Add a browser entry"""
     action = QAction(ACTION_NAME, browser)
-    qconnect(action.triggered, lambda: on_lookup_pronunciation(browser, browser.editor.web.selectedText()))
+    qconnect(
+        action.triggered,
+        lambda: on_lookup_pronunciation(browser, browser.editor.web.selectedText() if browser.editor else ""),
+    )
     if shortcut := cfg.pitch_accent.lookup_shortcut:
         action.setShortcut(shortcut)
     # This is the "Go" menu.
