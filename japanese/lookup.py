@@ -27,7 +27,7 @@ ACTION_NAME = "Pitch Accent lookup"
 
 
 def entries_to_html(entries: Sequence[FormattedEntry]) -> Sequence[str]:
-    return tuple(dict.fromkeys(get_notation(entry, mode=PitchOutputFormat.html_and_number) for entry in entries))
+    return tuple(dict.fromkeys(get_notation(entry, mode=cfg.pitch_accent.lookup_pitch_format) for entry in entries))
 
 
 class ViewPitchAccentsDialog(QDialog):

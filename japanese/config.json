@@ -46,6 +46,7 @@
   ],
   "pitch_accent": {
     "lookup_shortcut": "Ctrl+8",
+    "lookup_pitch_format": "svg",
     "output_hiragana": false,
     "kana_lookups": true,
     "skip_numbers": true,

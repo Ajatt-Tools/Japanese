@@ -11,7 +11,7 @@ from aqt import mw
 
 from .ajt_common.addon_config import AddonConfigManager, ConfigSubViewBase
 from .helpers.http_client import AudioSourceConfig
-from .helpers.profiles import Profile, get_default_profile
+from .helpers.profiles import PitchOutputFormat, Profile, get_default_profile
 from .helpers.sakura_client import AddDefBehavior, DictName, SearchType
 from .helpers.tokens import RE_FLAGS
 from .mecab_controller.kana_conv import to_katakana
@@ -105,6 +105,10 @@ class PitchConfigView(PitchAndFuriganaCommon):
     @property
     def html_style(self) -> PitchPatternStyle:
         return PitchPatternStyle[self["html_style"]]
+
+    @property
+    def lookup_pitch_format(self) -> PitchOutputFormat:
+        return PitchOutputFormat[self["lookup_pitch_format"]]
 
 
 @final
