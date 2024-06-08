@@ -30,7 +30,7 @@ from .helpers.unique_files import ensure_unique_files
 from .mecab_controller.kana_conv import to_hiragana, to_katakana
 from .mecab_controller.mecab_controller import MecabParsedToken
 from .mecab_controller.unify_readings import literal_pronunciation as pr
-from .reading import mecab_translate
+from .reading import mecab
 
 
 class DownloadedData(NamedTuple):
@@ -190,7 +190,7 @@ class AnkiAudioSourceManager(AudioSourceManager):
 
     def _parse_and_search_audio(self, src_text: ParseableToken) -> dict[str, list[FileUrlData]]:
         hits: dict[str, list[FileUrlData]] = collections.defaultdict(list)
-        for parsed in mecab_translate(src_text):
+        for parsed in mecab.translate(src_text):
             for variant in iter_mecab_variants(parsed):
                 if files := tuple(self._search_word_variants(variant)):
                     hits[parsed.headword].extend(files)
