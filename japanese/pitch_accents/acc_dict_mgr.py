@@ -8,6 +8,9 @@ import pickle
 from collections.abc import Mapping, MutableSequence, Sequence
 from typing import Optional
 
+from aqt import mw
+from aqt.operations import QueryOp
+
 from ..mecab_controller.kana_conv import to_hiragana, to_katakana
 from .common import AccentDict, FormattedEntry, should_regenerate
 from .consts import FORMATTED_ACCENTS_PICKLE, FORMATTED_ACCENTS_TSV, RES_DIR_PATH
@@ -75,12 +78,11 @@ class AccentDictManager:
                 return self[variant]
         return None
 
-    def reload_from_disk(self):
-        from aqt import mw
-        from aqt.operations import QueryOp
-
+    def reload_from_disk(self) -> None:
         """Reads pitch accents file from disk."""
+
         print("Reading pitch accents file...")
+        assert mw
         QueryOp(
             parent=mw,
             op=lambda collection: accents_dict_init(),
@@ -89,9 +91,14 @@ class AccentDictManager:
             "Reloading pitch accent dictionary...",
         ).run_in_background()
 
-    def _reload_dict(self, new_dict: AccentDict):
+    def _reload_dict(self, new_dict: AccentDict) -> None:
         """Reloads accent db (e.g. when the user changed settings)."""
         print("Reloading accent dictionary...")
         self._db.clear()
         self._db = new_dict
         print(f"Total pitch accent entries: {len(self._db)}.")
+
+    def reload_on_main(self) -> None:
+        """Used in tests"""
+        assert mw is None
+        self._reload_dict(accents_dict_init())
