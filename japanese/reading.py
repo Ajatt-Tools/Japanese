@@ -225,7 +225,12 @@ def format_acc_db_result(out: AccDbParsedToken, full_hiragana: bool = False) -> 
     return format_furigana_readings(out.word, readings)
 
 
-def append_accents(token: MecabParsedToken) -> AccDbParsedToken:
+def append_accents(token: MecabParsedToken) -> Union[AccDbParsedToken]:
+    """
+    Append readings from the accent dictionary to the reading given by mecab.
+    """
+    if not cfg.furigana.can_lookup_in_db(token.headword):
+        return AccDbParsedToken(**dataclasses.asdict(token), headword_accents=[])
     return AccDbParsedToken(
         **dataclasses.asdict(token),
         headword_accents=[PitchAccentEntry.from_formatted(entry) for entry in iter_accents(token.headword)],
