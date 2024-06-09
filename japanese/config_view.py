@@ -392,6 +392,14 @@ class JapaneseConfig(AddonConfigManager):
     def svg_graphs(self) -> SvgPitchGraphOptionsConfigView:
         return self._svg_graphs
 
+    @property
+    def show_welcome_guide(self) -> bool:
+        return self["show_welcome_guide"]
+
+    @show_welcome_guide.setter
+    def show_welcome_guide(self, value: bool) -> None:
+        self["show_welcome_guide"] = value
+
 
 if mw:
     config_view = JapaneseConfig()

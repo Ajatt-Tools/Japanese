@@ -12,10 +12,7 @@ from aqt.qt import *
 from aqt.utils import restoreGeom, saveGeom, tooltip
 from aqt.webview import AnkiWebView
 
-from .ajt_common.about_menu import (
-    menu_root_entry,
-    tweak_window,
-)
+from .ajt_common.about_menu import menu_root_entry, tweak_window
 from .config_view import config_view as cfg
 from .helpers import ADDON_NAME
 from .helpers.tokens import clean_furigana

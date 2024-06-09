@@ -8,11 +8,16 @@
 
 body {
     margin: 0;
+    padding: 0 2px;
     font-size: 1rem;
     font-family: "Noto Serif", "Noto Serif CJK JP", "Yu Mincho", "Liberation Serif", "Times New Roman", Times, Georgia,
         Serif;
     line-height: 1.4;
     text-align: left;
+}
+
+a {
+    cursor: pointer;
 }
 
 /* Pitch accent lookup */
@@ -108,4 +113,31 @@ img {
 }
 .nightMode .ajt__pitch_lookup svg text {
     fill: white;
+}
+
+/* Welcome page */
+
+.ajt__welcome h1 {
+    text-align: center;
+}
+.ajt__welcome {
+    line-height: 1.5;
+}
+.ajt__welcome code {
+    word-break: keep-all;
+    padding: 0 0.2em;
+    background-color: #f3f3f3;
+    border-radius: 4px;
+    outline: 1px solid #ccc;
+}
+.ajt__welcome p + p {
+    margin-top: 1rem;
+}
+
+/* Welcome page - dark mode */
+
+.nightMode .ajt__welcome code {
+    color: #ccc;
+    background-color: #444;
+    outline: 1px solid #4f4f4f;
 }

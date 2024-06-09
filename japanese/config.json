@@ -1,6 +1,7 @@
 {
   "cache_lookups": 1024,
   "last_file_save_location": "",
+  "show_welcome_guide": true,
   "profiles": [
     {
       "name": "Add furigana for sentence",
