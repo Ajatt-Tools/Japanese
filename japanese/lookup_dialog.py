@@ -13,13 +13,13 @@ from aqt.utils import restoreGeom, saveGeom, tooltip
 from aqt.webview import AnkiWebView
 
 from .ajt_common.about_menu import (
-    garbage_collect_on_dialog_finish,
     menu_root_entry,
     tweak_window,
 )
 from .config_view import config_view as cfg
-from .helpers.profiles import PitchOutputFormat
+from .helpers import ADDON_NAME
 from .helpers.tokens import clean_furigana
+from .helpers.webview_utils import anki_addon_set_web_exports, anki_addon_web_relpath
 from .pitch_accents.common import AccentDict, FormattedEntry
 from .reading import format_pronunciations, get_notation, lookup
 
@@ -31,32 +31,28 @@ def entries_to_html(entries: Sequence[FormattedEntry]) -> Sequence[str]:
 
 
 class ViewPitchAccentsDialog(QDialog):
-    assert mw, "Anki must be initialized."
-
-    _web_relpath = f"/_addons/{mw.addonManager.addonFromModule(__name__)}/web"
-    _css_relpath = f"{_web_relpath}/pitch_lookup.css"
-
-    mw.addonManager.setWebExports(__name__, r"(img|web)/.*\.(js|css|html|png|svg)")
-
+    _name = "ajt__pitch_accent_lookup"
+    _css_relpath = f"{anki_addon_web_relpath()}/ajt_webview.css"
     _pronunciations: Optional[AccentDict]
-    _webview: Optional[AnkiWebView]
+    _web: Optional[AnkiWebView]
 
     def __init__(self, parent: QWidget):
         super().__init__(parent)
-        self._webview = AnkiWebView(parent=self, title=ACTION_NAME)
+        self._web = AnkiWebView(parent=self, title=ACTION_NAME)
+        self._web.setProperty("url", QUrl("about:blank"))
+        self._web.setObjectName(self._name)
         self._pronunciations = None
         self._setup_ui()
-        garbage_collect_on_dialog_finish(self)
         tweak_window(self)
 
     def _setup_ui(self) -> None:
-        self.setWindowModality(Qt.WindowModality.ApplicationModal)
-        self.setWindowTitle(ACTION_NAME)
+        self.setWindowModality(Qt.WindowModality.NonModal)
+        self.setWindowTitle(f"{ADDON_NAME} - {ACTION_NAME}")
         self.setMinimumSize(420, 240)
         self.setLayout(layout := QVBoxLayout())
-        layout.addWidget(self._webview)
+        layout.addWidget(self._web)
         layout.addLayout(self._make_bottom_buttons())
-        restoreGeom(self, ACTION_NAME)
+        restoreGeom(self, self._name)
 
     def _make_bottom_buttons(self) -> QLayout:
         buttons = (
@@ -94,7 +90,7 @@ class ViewPitchAccentsDialog(QDialog):
         assert self._pronunciations is not None, "Populate pronunciations first."
 
         html = io.StringIO()
-        html.write('<main class="pitch_lookup">')
+        html.write('<main class="ajt__pitch_lookup">')
         for word, entries in self._pronunciations.items():
             html.write(f'<div class="keyword">{word}</div>')
             html.write('<div class="pitch_accents">')
@@ -108,24 +104,27 @@ class ViewPitchAccentsDialog(QDialog):
 
     def set_html_result(self):
         """Format pronunciations as an HTML list."""
-        self._webview.stdHtml(
+        self._web.stdHtml(
             body=self._format_html_result(),
             css=[self._css_relpath],
         )
         return self
 
     def done(self, *args, **kwargs) -> None:
-        print("closing AJT lookup window...")
-        saveGeom(self, ACTION_NAME)
-        self._webview = None
-        self._pronunciations = None
+        self.on_close()
         return super().done(*args, **kwargs)
+
+    def on_close(self) -> None:
+        print("closing AJT lookup window...")
+        saveGeom(self, self._name)
+        self._web = None
+        self._pronunciations = None
 
 
 def on_lookup_pronunciation(parent: QWidget, text: str) -> None:
     """Do a lookup on the selection"""
     if text := clean_furigana(text).strip():
-        ViewPitchAccentsDialog(parent).lookup_pronunciations(text).set_html_result().exec()
+        ViewPitchAccentsDialog(parent).lookup_pronunciations(text).set_html_result().show()
     else:
         tooltip(_("Empty selection."), parent=((parent.window() or mw) if isinstance(parent, AnkiWebView) else parent))
 

@@ -8,20 +8,23 @@
 
 body {
     margin: 0;
-    font-size: 1.5rem;
+    font-size: 1rem;
     font-family: "Noto Serif", "Noto Serif CJK JP", "Yu Mincho", "Liberation Serif", "Times New Roman", Times, Georgia,
         Serif;
-    background-color: #fffaf0;
-    color: #2a1b0a;
     line-height: 1.4;
     text-align: left;
 }
 
-.pitch_lookup {
+/* Pitch accent lookup */
+
+.ajt__pitch_lookup {
+    background-color: #fffaf0;
+    color: #2a1b0a;
     display: grid;
     grid-template-columns: max-content 1fr;
     row-gap: 0.2rem;
     column-gap: 0.2rem;
+    font-size: 1.5rem;
 }
 
 .keyword {
@@ -52,24 +55,8 @@ li + li {
 
 .pitch_number {
     vertical-align: top;
-    font-family:
-        "Noto Sans",
-        "Droid Sans",
-        "DejaVu Sans",
-        "Liberation Sans",
-        Roboto,
-        Cantarell,
-        "Segoe UI",
-        Arial,
-        Meiryo,
-        Oxygen,
-        Ubuntu,
-        "Helvetica Neue",
-        Helvetica,
-        "Noto Color Emoji",
-        "Noto Sans CJK JP",
-        Sans,
-        sans-serif;
+    font-family: "Noto Sans", "Droid Sans", "DejaVu Sans", "Liberation Sans", Roboto, Cantarell, "Segoe UI", Arial,
+        Meiryo, Oxygen, Ubuntu, "Helvetica Neue", Helvetica, "Noto Color Emoji", "Noto Sans CJK JP", Sans, sans-serif;
     text-align: center;
     display: inline-block;
     text-transform: lowercase;
@@ -87,22 +74,38 @@ li + li {
 
 svg,
 img {
-    display:block;
+    display: block;
 }
 
-.heiban :is(line, circle):not(.trail) {
-    stroke: #3366CC;
-    fill: #3366CC;
+.heiban :is(line, circle):not(.trail, .devoiced) {
+    stroke: #3366cc;
+    fill: #3366cc;
 }
-.atamadaka :is(line, circle):not(.trail) {
+.atamadaka :is(line, circle):not(.trail, .devoiced) {
     stroke: red;
     fill: red;
 }
-.odaka :is(line, circle):not(.trail) {
+.odaka :is(line, circle):not(.trail, .devoiced) {
     stroke: green;
     fill: green;
 }
-.nakadaka :is(line, circle):not(.trail) {
+.nakadaka :is(line, circle):not(.trail, .devoiced) {
     stroke: #ff6207;
     fill: #ff6207;
+}
+
+/* Pitch accent lookup - dark mode */
+
+.nightMode .ajt__pitch_lookup {
+    background-color: #333;
+    color: #ccc;
+}
+.nightMode .ajt__pitch_lookup .keyword {
+    color: #ffc0cb;
+}
+.nightMode .ajt__pitch_lookup svg circle.devoiced {
+    stroke: white;
+}
+.nightMode .ajt__pitch_lookup svg text {
+    fill: white;
 }
