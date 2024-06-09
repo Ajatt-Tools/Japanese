@@ -3,6 +3,7 @@
 
 import dataclasses
 import enum
+import functools
 import re
 from collections.abc import Iterable, MutableMapping, MutableSequence
 from typing import NamedTuple, final
@@ -17,10 +18,13 @@ from .helpers.tokens import RE_FLAGS
 from .mecab_controller.kana_conv import to_katakana
 from .pitch_accents.styles import PitchPatternStyle
 
+RE_CFG_WORD_SEP = re.compile(r"[、, ]+", flags=RE_FLAGS)
 
-def split_words(config_value: str) -> list[str]:
+
+@functools.cache
+def split_cfg_words(config_value: str) -> list[str]:
     """Splits string by comma."""
-    return re.split(r"[、, ]+", config_value, flags=RE_FLAGS)
+    return re.split(RE_CFG_WORD_SEP, config_value)
 
 
 class WordBlockListManager(ConfigSubViewBase):
@@ -33,7 +37,7 @@ class WordBlockListManager(ConfigSubViewBase):
     @property
     def blocklisted_words(self) -> list[str]:
         """Returns a user-defined list of blocklisted words."""
-        return split_words(self["blocklisted_words"])
+        return split_cfg_words(self["blocklisted_words"])
 
     def is_blocklisted(self, word: str) -> bool:
         """Returns True if the user specified that the word should not be looked up."""
@@ -76,7 +80,7 @@ class FuriganaConfigView(PitchAndFuriganaCommon):
     @property
     def mecab_only(self) -> list[str]:
         """Words that shouldn't be looked up in the accent dictionary."""
-        return split_words(self["mecab_only"])
+        return split_cfg_words(self["mecab_only"])
 
     def can_lookup_in_db(self, word: str) -> bool:
         return self.maximum_results > 1 and word not in self.mecab_only
