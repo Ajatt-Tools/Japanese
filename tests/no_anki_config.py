@@ -3,6 +3,8 @@
 
 import json
 
+import pytest
+
 from japanese.config_view import JapaneseConfig
 from japanese.helpers.file_ops import find_config_json
 
@@ -15,3 +17,8 @@ class NoAnkiConfigView(JapaneseConfig):
     def _set_underlying_dicts(self) -> None:
         with open(find_config_json()) as f:
             self._default_config = self._config = json.load(f)
+
+
+@pytest.fixture
+def no_anki_config() -> NoAnkiConfigView:
+    return NoAnkiConfigView()

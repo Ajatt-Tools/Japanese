@@ -1,23 +1,15 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
-import json
-
 import pytest
 
-from japanese.helpers.file_ops import find_config_json
 from japanese.helpers.profiles import (
     Profile,
     ProfileAudio,
     ProfileFurigana,
     ProfilePitch,
 )
-
-
-@pytest.fixture
-def config_dict() -> dict[str, dict[str, object]]:
-    with open(find_config_json()) as f:
-        return json.load(f)
+from tests.no_anki_config import no_anki_config
 
 
 @pytest.fixture
@@ -31,6 +23,7 @@ def furigana_dict() -> dict[str, object]:
         "split_morphemes": True,
         "triggered_by": "focus_lost,toolbar_button,note_added,bulk_add",
         "overwrite_destination": False,
+        "color_code_pitch": "none",
     }
 
 
@@ -63,8 +56,8 @@ def audio_dict() -> dict[str, object]:
     }
 
 
-def test_read_profiles(config_dict):
-    profiles = [Profile(**p) for p in config_dict["profiles"]]
+def test_read_profiles(no_anki_config):
+    profiles = [*no_anki_config.iter_profiles()]
     assert len(profiles) > 0
 
 

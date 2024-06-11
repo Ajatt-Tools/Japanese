@@ -51,3 +51,4 @@ def test_tokenize() -> None:
         "Token(。)",
     ]
     assert list(f"{token.__class__.__name__}({token})" for token in tokenize(expr)) == expected
+    assert list(tokenize("")) == list()
