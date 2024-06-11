@@ -224,7 +224,6 @@ class SvgPitchGraphMaker:
     def make_graph(self, entry: FormattedEntry) -> str:
         opts = self._opts
         seq = entry_to_moras(entry)
-        pitch_type = pitch_type_from_pitch_num(entry.pitch_number, len(seq.moras))
 
         height_high = opts.size_unit
         height_low = height_high + opts.graph_height
@@ -269,7 +268,7 @@ class SvgPitchGraphMaker:
             visible_height = int(ratio * opts.graph_visible_height)
 
         return self.make_svg(
-            make_group(content, pitch_type.name),
+            make_group(content, seq.pitch_type.name),
             width=svg_width,
             height=svg_height,
             visible_height=visible_height,
