@@ -40,18 +40,21 @@ def accents_dict_init() -> AccentDict:
     if not os.path.isdir(RES_DIR_PATH):
         raise OSError("Pitch accents folder is missing!")
 
+    acc_dict = AccentDict({})
     # If a pickle exists of the derivative file, use that.
     # Otherwise, read from the derivative file and generate a pickle.
     if should_regenerate(FORMATTED_ACCENTS_PICKLE):
+        assert not acc_dict
         print("The pickle needs updating.")
-        acc_dict = read_formatted_accents()
+        acc_dict.update(read_formatted_accents())
         with open(FORMATTED_ACCENTS_PICKLE, "wb") as f:
             # Pickle the dictionary using the highest protocol available.
             pickle.dump(acc_dict, f, pickle.HIGHEST_PROTOCOL)
     else:
+        assert not acc_dict
         print("Reading from existing accents pickle.")
         with open(FORMATTED_ACCENTS_PICKLE, "rb") as f:
-            acc_dict = pickle.load(f)
+            acc_dict.update(pickle.load(f))
 
     # Finally, patch with user-defined entries.
     acc_dict.update(UserAccentData().create_formatted())
