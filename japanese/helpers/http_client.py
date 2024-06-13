@@ -1,17 +1,14 @@
 # Copyright: Ren Tatsumoto <tatsu at autistici.org> and contributors
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
-
+import abc
 import dataclasses
-from typing import Optional, Protocol, Union
+from typing import Optional, Union
 
 import anki.httpclient
 import requests
 from requests import RequestException
 
-try:
-    from .misc import clamp
-except ImportError:
-    from misc import clamp
+from .misc import clamp
 
 
 @dataclasses.dataclass(frozen=True)
@@ -46,7 +43,7 @@ class AudioManagerException(RequestException):
         return str(self.exception.__class__.__name__ if self.exception else self.response.status_code)
 
 
-class AudioSettingsProtocol(Protocol):
+class AudioSettingsConfigViewABC(abc.ABC):
     dictionary_download_timeout: int
     audio_download_timeout: int
     attempts: int
@@ -70,7 +67,7 @@ class AudioManagerHttpClient:
 
     def __init__(
         self,
-        audio_settings: AudioSettingsProtocol,
+        audio_settings: AudioSettingsConfigViewABC,
         progress_hook: Optional[anki.httpclient.ProgressCallback] = None,
     ) -> None:
         self._audio_settings = audio_settings

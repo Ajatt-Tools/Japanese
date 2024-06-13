@@ -4,19 +4,18 @@
 import dataclasses
 import io
 import re
-import typing
 from collections.abc import Iterable
 
 from aqt.qt import *
 
-try:
-    from ..helpers.audio_manager import AudioSourceConfig, normalize_filename
-    from ..helpers.misc import clamp
-    from .table import CellContent, ExpandingTableWidget, TableRow
-except ImportError:
-    from helpers.audio_manager import AudioSourceConfig, normalize_filename
-    from helpers.misc import clamp
-    from table import CellContent, ExpandingTableWidget, TableRow
+from ..helpers.audio_manager import (
+    AudioSourceConfig,
+    AudioSourceManagerFactoryABC,
+    normalize_filename,
+)
+from ..helpers.misc import clamp
+from ..helpers.sqlite3_buddy import sqlite3_buddy
+from .table import CellContent, ExpandingTableWidget, TableRow
 
 
 class SourceEnableCheckbox(QCheckBox):
@@ -48,17 +47,13 @@ def tooltip_cache_remove_complete(removed: list[AudioSourceConfig]) -> None:
         tooltip(msg.getvalue(), period=5000)
 
 
-class AudioManagerInterface(typing.Protocol):
-    def request_new_session(self): ...
-
-
 class AudioSourcesTable(ExpandingTableWidget):
     _columns = tuple(field.name.capitalize() for field in dataclasses.fields(AudioSourceConfig))
     # Slightly tightened the separator regex compared to the pitch override widget
     # since names and file paths can contain a wide range of characters.
     _sep_regex: re.Pattern = re.compile(r"[\r\t\n；;。、・]+", flags=re.IGNORECASE | re.MULTILINE)
 
-    def __init__(self, audio_mgr: AudioManagerInterface, *args) -> None:
+    def __init__(self, audio_mgr: AudioSourceManagerFactoryABC, *args) -> None:
         super().__init__(*args)
         self._audio_mgr = audio_mgr
         self.addMoveRowContextActions()
@@ -81,10 +76,12 @@ class AudioSourcesTable(ExpandingTableWidget):
         """
         removed: list[AudioSourceConfig] = []
         gui_selected_sources = [(selected.name, selected.url) for selected in self.iterateSelectedConfigs()]
-        with self._audio_mgr.request_new_session() as session:
+
+        with sqlite3_buddy() as db:
+            session = self._audio_mgr.request_new_session(db)
             for cached in session.audio_sources:
                 if (cached.name, cached.url) in gui_selected_sources:
-                    session.db.remove_data(cached.name)
+                    session.remove_data(cached.name)
                     removed.append(cached)
                     print(f"Removed cache for source: {cached.name} ({cached.url})")
                 else:
@@ -173,42 +170,3 @@ def pack_back(row: TableRow) -> AudioSourceConfig:
         return item.text()
 
     return AudioSourceConfig(*(to_json_compatible(item) for item in row))
-
-
-# Debug
-##########################################################################
-
-
-class App(QWidget):
-    def __init__(self, parent=None) -> None:
-        from helpers.audio_manager import init_testing_audio_manager
-
-        super().__init__(parent)
-        self.setWindowTitle("Test")
-        self.table = AudioSourcesTable(init_testing_audio_manager(), self)
-        self.initUI()
-
-    def initUI(self) -> None:
-        self.setMinimumSize(640, 480)
-        self.setLayout(layout := QVBoxLayout())
-        layout.addWidget(self.table)
-
-        # example rows
-        self.table.addSource(AudioSourceConfig(True, "NHK1", "/test/nhk/1.json"))
-        self.table.addSource(AudioSourceConfig(False, "NHK2", "/test/nhk/2.json"))
-        self.table.addSource(AudioSourceConfig(True, "NHK3", "/test/nhk/3.json"))
-        self.table.addSource(AudioSourceConfig(False, "NHK4", "/test/nhk/4.json"))
-
-
-def main():
-    app = QApplication(sys.argv)
-    ex: QWidget = App()
-    ex.show()
-    app.exec()
-    for item in ex.table.iterateConfigs():
-        print(item)
-    sys.exit()
-
-
-if __name__ == "__main__":
-    main()
