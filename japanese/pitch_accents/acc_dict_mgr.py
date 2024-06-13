@@ -5,16 +5,46 @@ import collections
 import csv
 import os
 import pickle
-from collections.abc import Mapping, MutableSequence, Sequence
-from typing import Optional
+import typing
+from collections.abc import Sequence
 
 from aqt import mw
 from aqt.operations import QueryOp
 
-from ..mecab_controller.kana_conv import to_hiragana, to_katakana
+from ..mecab_controller.kana_conv import to_katakana
 from .common import AccentDict, FormattedEntry, should_regenerate
 from .consts import FORMATTED_ACCENTS_PICKLE, FORMATTED_ACCENTS_TSV, RES_DIR_PATH
 from .user_accents import UserAccentData
+
+Stored = typing.TypeVar("Stored")
+
+
+class AccDictRawTSVEntry(typing.TypedDict):
+    """Entry as it appears in the pitch accents file."""
+
+    headword: str
+    katakana_reading: str
+    html_notation: str
+    pitch_number: str  # can't be converted to int. might contain separators and special symbols.
+    frequency: str  # must be converted to int. larger number => more occurrences.
+
+
+def get_tsv_reader(f: typing.Iterable[str]) -> csv.DictReader:
+    """
+    Prepare a reader to load the accent dictionary.
+    Keys are already included in the csv file.
+    """
+    return csv.DictReader(
+        f,
+        dialect="excel-tab",
+        delimiter="\t",
+        quoting=csv.QUOTE_NONE,
+    )
+
+
+class OrderedSet(collections.OrderedDict, typing.Sequence[Stored]):
+    def add(self, value: Stored):
+        self[value] = None
 
 
 def read_formatted_accents() -> AccentDict:
@@ -25,14 +55,17 @@ def read_formatted_accents() -> AccentDict:
     Example entry as it appears in the formatted file:
     新年会 シンネンカイ <low_rise>シ</low_rise><high_drop>ンネ</high_drop><low>ンカイ</low> 3
     """
-    acc_dict: Mapping[str, MutableSequence[FormattedEntry]] = collections.defaultdict(list)
+    acc_dict: dict[str, OrderedSet[FormattedEntry]] = collections.defaultdict(OrderedSet)
+    row: AccDictRawTSVEntry
     with open(FORMATTED_ACCENTS_TSV, newline="", encoding="utf-8") as f:
-        reader = csv.reader(f, delimiter="\t", quoting=csv.QUOTE_NONE)
-        for word, kana, *pitch_data in reader:
-            entry = FormattedEntry(kana, *pitch_data)
-            for key in (word, kana):
-                if entry not in acc_dict[key]:
-                    acc_dict[key].append(entry)
+        for row in get_tsv_reader(f):
+            entry = FormattedEntry(
+                katakana_reading=row["katakana_reading"],
+                html_notation=row["html_notation"],
+                pitch_number=row["pitch_number"],
+            )
+            for key in (row["headword"], row["katakana_reading"]):
+                acc_dict[to_katakana(key)].add(entry)
     return AccentDict({headword: tuple(entries) for headword, entries in acc_dict.items()})
 
 
@@ -65,21 +98,21 @@ class AccentDictManager:
     def __init__(self) -> None:
         self._db: AccentDict = AccentDict({})
 
-    def __contains__(self, item: str):
+    def __contains__(self, item: str) -> bool:
         return self._db.__contains__(item)
 
     def __getitem__(self, item: str) -> Sequence[FormattedEntry]:
         return self._db.__getitem__(item)
 
-    def lookup(self, expr: str) -> Optional[Sequence[FormattedEntry]]:
+    def lookup(self, expr: str) -> typing.Optional[Sequence[FormattedEntry]]:
         """
-        Look up various forms of expr in accent db.
+        Look up expr in accent db, always as katakana.
         Return None if there's no pitch accent for expr.
         """
-        for variant in (expr, to_katakana(expr), to_hiragana(expr)):
-            if variant in self:
-                return self[variant]
-        return None
+        try:
+            return self[to_katakana(expr)]
+        except KeyError:
+            return None
 
     def reload_from_disk(self) -> None:
         """Reads pitch accents file from disk."""
@@ -98,7 +131,7 @@ class AccentDictManager:
         """Reloads accent db (e.g. when the user changed settings)."""
         print("Reloading accent dictionary...")
         self._db.clear()
-        self._db = new_dict
+        self._db.update(new_dict)
         print(f"Total pitch accent entries: {len(self._db)}.")
 
     def reload_on_main(self) -> None:

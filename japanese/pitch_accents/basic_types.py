@@ -3,10 +3,10 @@
 
 import dataclasses
 import enum
-from collections.abc import Sequence
+from collections.abc import MutableSequence, Sequence
 from typing import NamedTuple
 
-from ..mecab_controller.basic_types import MecabParsedToken
+from ..mecab_controller.basic_types import Inflection, MecabParsedToken, PartOfSpeech
 from ..mecab_controller.kana_conv import kana_to_moras
 from .common import FormattedEntry, split_pitch_numbers
 from .consts import NO_ACCENT
