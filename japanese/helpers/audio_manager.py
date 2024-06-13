@@ -1,6 +1,6 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
-
+import abc
 import contextlib
 import dataclasses
 import io
@@ -10,7 +10,6 @@ import posixpath
 import re
 import zipfile
 from collections.abc import Iterable
-from contextlib import contextmanager
 from typing import Optional, Union
 
 from ..config_view import JapaneseConfig
@@ -23,7 +22,7 @@ from .http_client import (
     AudioSourceConfig,
     FileUrlData,
 )
-from .sqlite3_buddy import BoundFile, Sqlite3Buddy
+from .sqlite3_buddy import BoundFile, Sqlite3Buddy, sqlite3_buddy
 
 
 def file_exists(file_path: str):
@@ -65,6 +64,9 @@ class AudioSource(AudioSourceConfig):
     # current schema has three fields: "meta", "headwords", "files"
     db: Optional[Sqlite3Buddy]
 
+    def with_db(self, db: Optional[Sqlite3Buddy]):
+        return dataclasses.replace(self, db=db)
+
     @classmethod
     def from_cfg(cls, source: AudioSourceConfig, db: Sqlite3Buddy) -> "AudioSource":
         return cls(**dataclasses.asdict(source), db=db)
@@ -77,8 +79,13 @@ class AudioSource(AudioSourceConfig):
         del data["db"]
         return AudioSourceConfig(**data)
 
+    def is_cached(self) -> bool:
+        if not self.db:
+            raise RuntimeError("db is none")
+        return self.db.is_source_cached(self.name)
+
     def raise_if_not_ready(self):
-        if not self.is_cached:
+        if not self.is_cached():
             raise RuntimeError("Attempt to access property of an uninitialized source.")
 
     @property
@@ -87,6 +94,7 @@ class AudioSource(AudioSourceConfig):
         # which will be used if set.
         # Otherwise, fall back to relative path.
         self.raise_if_not_ready()
+        assert self.db
         return self.db.get_media_dir_abs(self.name) or self.join(
             os.path.dirname(self.url), self.db.get_media_dir_rel(self.name)
         )
@@ -101,27 +109,29 @@ class AudioSource(AudioSourceConfig):
             return posixpath.join(*args)
 
     @property
-    def is_cached(self) -> bool:
-        return self.db.is_source_cached(self.name)
-
-    @property
     def is_local(self) -> bool:
         return file_exists(self.url)
 
     @property
     def original_url(self):
         self.raise_if_not_ready()
+        assert self.db
         return self.db.get_original_url(self.name)
 
     def update_original_url(self):
         # Remember where the file was downloaded from.
         self.raise_if_not_ready()
+        assert self.db
         self.db.set_original_url(self.name, self.url)
 
     def distinct_file_count(self) -> int:
+        self.raise_if_not_ready()
+        assert self.db
         return self.db.distinct_file_count(source_names=(self.name,))
 
     def distinct_headword_count(self) -> int:
+        self.raise_if_not_ready()
+        assert self.db
         return self.db.distinct_headword_count(source_names=(self.name,))
 
 
@@ -158,29 +168,25 @@ def read_zip(zip_in: zipfile.ZipFile, audio_source: AudioSource) -> bytes:
 
 class AudioSourceManager:
     _config: JapaneseConfig
-    _http_client: Optional[AudioManagerHttpClient]
+    _http_client: AudioManagerHttpClient
     _db: Sqlite3Buddy
     _audio_sources: dict[str, AudioSource]
 
     def __init__(
         self,
         config: JapaneseConfig,
-        http_client: Optional[AudioManagerHttpClient],
+        http_client: AudioManagerHttpClient,
         db: Sqlite3Buddy,
         audio_sources: list[AudioSource],
     ) -> None:
         self._config = config
         self._http_client = http_client
         self._db = db
-        self._audio_sources = {source.name: dataclasses.replace(source, db=self._db) for source in audio_sources}
+        self._audio_sources = {source.name: source.with_db(db) for source in audio_sources}
 
     @property
     def audio_sources(self) -> Iterable[AudioSource]:
         return self._audio_sources.values()
-
-    @property
-    def db(self) -> Sqlite3Buddy:
-        return self._db
 
     def distinct_file_count(self) -> int:
         return self._db.distinct_file_count(source_names=tuple(source.name for source in self.audio_sources))
@@ -211,13 +217,13 @@ class AudioSourceManager:
                     yield self._resolve_file(self._audio_sources[file.source_name], file)
 
     def read_pronunciation_data(self, source: AudioSource) -> None:
-        if source.is_cached:
+        if source.is_cached():
             # Check if the URLs mismatch,
             # e.g. when the user changed the URL without changing the name.
             if source.url == source.original_url:
                 return
             else:
-                self.db.remove_data(source.name)
+                self._db.remove_data(source.name)
         if source.is_local:
             self._read_local_json(source)
         else:
@@ -261,22 +267,22 @@ class AudioSourceManager:
             # Read from a zip file that is expected to contain a json file with audio source data.
             with zipfile.ZipFile(source.url) as zip_in:
                 print(f"Reading local zip audio source: {source.url}")
-                self.db.insert_data(source.name, json.loads(read_zip(zip_in, source)))
+                self._db.insert_data(source.name, json.loads(read_zip(zip_in, source)))
         else:
             # Read an uncompressed json file.
             with open(source.url, encoding="utf8") as f:
                 print(f"Reading local json audio source: {source.url}")
-                self.db.insert_data(source.name, json.load(f))
+                self._db.insert_data(source.name, json.load(f))
 
     def _download_remote_json(self, source: AudioSource) -> None:
         print(f"Downloading a remote audio source: {source.url}")
         bytes_data = self._http_client.download(source)
 
         try:
-            self.db.insert_data(source.name, json.loads(bytes_data))
+            self._db.insert_data(source.name, json.loads(bytes_data))
         except UnicodeDecodeError:
             with zipfile.ZipFile(io.BytesIO(bytes_data)) as zip_in:
-                self.db.insert_data(source.name, json.loads(read_zip(zip_in, source)))
+                self._db.insert_data(source.name, json.loads(read_zip(zip_in, source)))
 
     def _get_file(self, file: FileUrlData) -> bytes:
         if os.path.isfile(file.url):
@@ -285,9 +291,26 @@ class AudioSourceManager:
         else:
             return self._http_client.download(file)
 
+    def remove_data(self, source_name: str) -> None:
+        self._db.remove_data(source_name)
 
-class AudioSourceManagerFactory:
-    _mgr_class: type
+
+class AnkiAudioSourceManagerABC(abc.ABC):
+    def search_audio(
+        self,
+        src_text: str,
+        *,
+        split_morphemes: bool,
+        ignore_inflections: bool,
+        stop_if_one_source_has_results: bool,
+    ) -> list[FileUrlData]:
+        raise NotImplementedError()
+
+    def download_and_save_tags(self, hits, *, on_finish):
+        raise NotImplementedError()
+
+
+class AudioSourceManagerFactoryABC(abc.ABC):
     _config: JapaneseConfig
     _http_client: AudioManagerHttpClient
     _audio_sources: list[AudioSource]
@@ -299,8 +322,7 @@ class AudioSourceManagerFactory:
             obj = cls._instance = super().__new__(cls)
         return obj
 
-    def __init__(self, config: JapaneseConfig, mgr_class: type) -> None:
-        self._mgr_class = mgr_class
+    def __init__(self, config: JapaneseConfig) -> None:
         self._config = config
         self._http_client = AudioManagerHttpClient(self._config.audio_settings)
         self._audio_sources = []
@@ -309,25 +331,14 @@ class AudioSourceManagerFactory:
         self._audio_sources = []
         Sqlite3Buddy.remove_database_file()
 
-    @contextmanager
-    def request_new_session(self):
-        """
-        If tasks are being done in a different thread, prepare a new db connection
-        to avoid sqlite3 throwing an instance of sqlite3.ProgrammingError.
-        """
-        with Sqlite3Buddy.new_session() as db:
-            yield self._mgr_class(
-                config=self._config,
-                http_client=self._http_client,
-                db=db,
-                audio_sources=self._audio_sources,
-            )
+    def request_new_session(self, db: Sqlite3Buddy) -> AudioSourceManager:
+        raise NotImplementedError()
 
     def init_sources(self) -> None:
         self._set_sources(self._get_sources().sources)
 
     def _set_sources(self, sources: list[AudioSource]) -> None:
-        self._audio_sources = [dataclasses.replace(source, db=None) for source in sources]
+        self._audio_sources = [source.with_db(None) for source in sources]
 
     def _get_sources(self) -> InitResult:
         """
@@ -335,8 +346,9 @@ class AudioSourceManagerFactory:
         A separate db connection is used.
         """
         sources, errors = [], []
-        with self.request_new_session() as session:
-            for source in [AudioSource.from_cfg(source, session.db) for source in self._config.iter_audio_sources()]:
+        with sqlite3_buddy() as db:
+            session = self.request_new_session(db)
+            for source in [AudioSource.from_cfg(source, db) for source in self._config.iter_audio_sources()]:
                 if not source.enabled:
                     continue
                 try:

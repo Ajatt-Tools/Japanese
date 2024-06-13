@@ -13,38 +13,22 @@ from aqt import mw, sound
 from aqt.qt import *
 from aqt.utils import restoreGeom, saveGeom, tooltip, tr
 
-try:
-    from ..ajt_common.utils import ui_translate
-    from ..helpers import ADDON_NAME
-    from ..helpers.audio_manager import FileUrlData
-    from ..helpers.file_ops import open_file
-    from ..helpers.misc import strip_html_and_media
-    from .audio_sources import SourceEnableCheckbox
-except ImportError:
+from ..ajt_common.utils import ui_translate
+from ..helpers import ADDON_NAME
+from ..helpers.audio_manager import AnkiAudioSourceManagerABC, FileUrlData
+from ..helpers.file_ops import open_file
+from ..helpers.misc import strip_html_and_media
+from .audio_sources import SourceEnableCheckbox
 
-    def strip_html_and_media(s: str) -> str:
-        return s  # noop
+if mw is None:
 
-    ADDON_NAME = "Test window"
-    from ajt_common.utils import ui_translate
-    from helpers.audio_manager import FileUrlData
-    from helpers.file_ops import open_file
-    from widgets.audio_sources import SourceEnableCheckbox
+    def strip_html_and_media(text: str) -> str:
+        return text  # noop
 
 
 class FileSaveResultsProtocol(typing.Protocol):
     successes: list
     fails: list
-
-
-class AudioManagerProtocol(typing.Protocol):
-    def search_audio(self, src_text: str, **kwargs) -> list[FileUrlData]: ...
-
-    def download_and_save_tags(
-        self,
-        hits: typing.Sequence[FileUrlData],
-        on_finish: Callable[[FileSaveResultsProtocol], typing.Any],
-    ): ...
 
 
 class SearchBar(QWidget):
@@ -157,7 +141,7 @@ class SearchResultsTable(QTableWidget):
 
 
 class AudioSearchDialog(QDialog):
-    def __init__(self, audio_manager: AudioManagerProtocol, parent=None):
+    def __init__(self, audio_manager: AnkiAudioSourceManagerABC, parent=None):
         super().__init__(parent)
         self._audio_manager = audio_manager
         self.setMinimumSize(600, 400)
@@ -261,7 +245,7 @@ class AudioSearchDialog(QDialog):
 class AnkiAudioSearchDialog(AudioSearchDialog):
     name = "ajt__audio_search_dialog"
 
-    def __init__(self, audio_manager: AudioManagerProtocol, parent=None):
+    def __init__(self, audio_manager: AnkiAudioSourceManagerABC, parent=None):
         super().__init__(audio_manager, parent)
         # Restore previous geom
         restoreGeom(self, self.name, adjustSize=True)
@@ -294,64 +278,3 @@ class AnkiAudioSearchDialog(AudioSearchDialog):
     def done(self, *args, **kwargs) -> None:
         saveGeom(self, self.name)
         return super().done(*args, **kwargs)
-
-
-# Debug
-##########################################################################
-
-
-def main():
-    def get_rand_file() -> FileUrlData:
-        import string
-
-        def gen_rand_str(length: int = 10):
-            return "".join(random.choices(string.ascii_lowercase + string.digits, k=length))
-
-        return FileUrlData(
-            url=f"https://example.com/{gen_rand_str()}.ogg",
-            desired_filename=f"{gen_rand_str()}.ogg",
-            word=gen_rand_str(),
-            reading="あいうえお",
-            source_name=f"src{gen_rand_str()}",
-        )
-
-    class MockAudioManager:
-        # noinspection PyMethodMayBeStatic
-        # noinspection PyUnusedLocal
-        def search_audio(self, src_text: str, **kwargs) -> list[FileUrlData]:
-            """
-            Used for testing purposes.
-            """
-            output = []
-            if src_text:
-                for _ in range(random.randint(1, 10)):
-                    output.append(get_rand_file())
-            return output
-
-        def download_and_save_tags(self, *args):
-            pass
-
-    app = QApplication(sys.argv)
-    dialog = AudioSearchDialog(MockAudioManager())
-    dialog.set_note_fields(
-        [
-            "Question",
-            "Answer",
-            "Audio",
-            "Image",
-        ],
-        selected_dest_field_name="Audio",
-        selected_src_field_name="Question",
-    )
-    dialog.search("test")
-    dialog.show()
-    app.exec()
-    print("chosen:")
-    for file in dialog.files_to_add():
-        print(file)
-    print(f"source: {dialog.source_field_name}")
-    print(f"destination: {dialog.destination_field_name}")
-
-
-if __name__ == "__main__":
-    main()
