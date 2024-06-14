@@ -12,11 +12,15 @@ from aqt import mw
 from aqt.operations import QueryOp
 
 from ..mecab_controller.kana_conv import to_katakana
-from .common import AccentDict, FormattedEntry, should_regenerate
+from .common import (
+    AccentDict,
+    FormattedEntry,
+    OrderedSet,
+    repack_accent_dict,
+    should_regenerate,
+)
 from .consts import FORMATTED_ACCENTS_PICKLE, FORMATTED_ACCENTS_TSV, RES_DIR_PATH
 from .user_accents import UserAccentData
-
-Stored = typing.TypeVar("Stored")
 
 
 class AccDictRawTSVEntry(typing.TypedDict):
@@ -42,11 +46,6 @@ def get_tsv_reader(f: typing.Iterable[str]) -> csv.DictReader:
     )
 
 
-class OrderedSet(collections.OrderedDict, typing.Sequence[Stored]):
-    def add(self, value: Stored):
-        self[value] = None
-
-
 def read_formatted_accents() -> AccentDict:
     """
     Read the formatted pitch accents file to memory.
@@ -66,7 +65,7 @@ def read_formatted_accents() -> AccentDict:
             )
             for key in (row["headword"], row["katakana_reading"]):
                 acc_dict[to_katakana(key)].add(entry)
-    return AccentDict({headword: tuple(entries) for headword, entries in acc_dict.items()})
+    return repack_accent_dict(acc_dict)
 
 
 def accents_dict_init() -> AccentDict:

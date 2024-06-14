@@ -1,12 +1,38 @@
 # Copyright: Ren Tatsumoto <tatsu at autistici.org>
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
-
+import collections
 import os
 import re
-from collections.abc import Iterable, MutableSequence, Sequence
+import typing
+from collections.abc import Iterable, Sequence
 from typing import NamedTuple, NewType
 
 from .consts import NO_ACCENT, PITCH_DIR_PATH
+
+Stored = typing.TypeVar("Stored")
+
+RE_PITCH_NUM = re.compile(r"\d+|\?")
+
+
+class FormattedEntry(NamedTuple):
+    katakana_reading: str
+    html_notation: str
+    pitch_number: str
+
+    def has_accent(self) -> bool:
+        return self.pitch_number != NO_ACCENT
+
+    @property
+    def pitch_number_html(self):
+        return f'<span class="pitch_number">{self.pitch_number}</span>'
+
+
+AccentDict = NewType("AccentDict", dict[str, Sequence[FormattedEntry]])
+
+
+class OrderedSet(collections.OrderedDict, typing.Sequence[Stored]):
+    def add(self, value: Stored):
+        self[value] = None
 
 
 def is_dunder(name: str) -> bool:
@@ -40,23 +66,9 @@ def should_regenerate(pickle_file_path: str) -> bool:
     return not os.path.isfile(pickle_file_path) or os.path.getsize(pickle_file_path) < 1 or is_old(pickle_file_path)
 
 
-class FormattedEntry(NamedTuple):
-    katakana_reading: str
-    html_notation: str
-    pitch_number: str
-
-    def has_accent(self) -> bool:
-        return self.pitch_number != NO_ACCENT
-
-    @property
-    def pitch_number_html(self):
-        return f'<span class="pitch_number">{self.pitch_number}</span>'
-
-
-AccentDict = NewType("AccentDict", dict[str, MutableSequence[FormattedEntry]])
-
-RE_PITCH_NUM = re.compile(r"\d+|\?")
-
-
 def split_pitch_numbers(s: str) -> list[str]:
     return re.findall(RE_PITCH_NUM, s)
+
+
+def repack_accent_dict(acc_dict: dict[str, OrderedSet[FormattedEntry]]) -> AccentDict:
+    return AccentDict({headword: tuple(entries) for headword, entries in acc_dict.items()})
