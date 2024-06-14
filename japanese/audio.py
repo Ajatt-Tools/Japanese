@@ -14,17 +14,19 @@ from aqt import gui_hooks, mw
 from aqt.operations import QueryOp
 from aqt.utils import showWarning, tooltip
 
-from .config_view import config_view as cfg
-from .helpers.audio_manager import (
+from .audio_manager.abstract import AnkiAudioSourceManagerABC
+from .audio_manager.audio_manager import AudioSourceManagerFactory
+from .audio_manager.source_manager import (
     AudioManagerException,
     AudioSourceManager,
-    AudioSourceManagerFactory,
     FileUrlData,
     InitResult,
     TotalAudioStats,
 )
+from .config_view import config_view as cfg
 from .helpers.inflections import is_inflected
 from .helpers.mingle_readings import split_possible_furigana
+from .helpers.sqlite3_buddy import Sqlite3Buddy, sqlite3_buddy
 from .helpers.tokens import ParseableToken, tokenize
 from .helpers.unique_files import ensure_unique_files
 from .mecab_controller.kana_conv import to_hiragana, to_katakana
@@ -54,6 +56,7 @@ def save_files(
         except AudioManagerException as ex:
             results.fails.append(ex)
         else:
+            assert mw
             mw.col.media.write_data(
                 desired_fname=result.desired_filename,
                 data=result.data,
@@ -108,7 +111,7 @@ def take_first_source(hits: dict[str, list[FileUrlData]]):
             hits[word] = [hit for hit in word_hits if hit.source_name == word_hits[0].source_name]
 
 
-class AnkiAudioSourceManager(AudioSourceManager):
+class AnkiAudioSourceManager(AudioSourceManager, AnkiAudioSourceManagerABC):
     def search_audio(
         self,
         src_text: str,
@@ -170,6 +173,7 @@ class AnkiAudioSourceManager(AudioSourceManager):
             # Sequence is empty. Nothing to do.
             return
 
+        assert mw
         return QueryOp(
             parent=mw,
             op=lambda col: self._download_tags(only_missing(col, hits)),
@@ -222,14 +226,27 @@ class AnkiAudioSourceManager(AudioSourceManager):
         sources_to_remove = source_names_in_db - user_specified_source_names
         for source_name in sources_to_remove:
             print(f"Removing unused cache data for audio source: {source_name}")
-            self.db.remove_data(source_name)
+            self.remove_data(source_name)
 
 
 class AnkiAudioSourceManagerFactory(AudioSourceManagerFactory):
+    def request_new_session(self, db: Sqlite3Buddy) -> AnkiAudioSourceManager:
+        """
+        If tasks are being done in a different thread, prepare a new db connection
+        to avoid sqlite3 throwing an instance of sqlite3.ProgrammingError.
+        """
+        return AnkiAudioSourceManager(
+            config=self._config,
+            http_client=self._http_client,
+            db=db,
+            audio_sources=self._audio_sources,
+        )
+
     def init_sources(self, notify_on_finish: bool = False) -> None:
         if not self._source_config_changed():
             print("audio sources haven't changed.")
             return
+        assert mw
         QueryOp(
             parent=mw,
             op=lambda collection: self._get_sources(),
@@ -250,12 +267,14 @@ class AnkiAudioSourceManagerFactory(AudioSourceManagerFactory):
         """
         Return statistics, running in a new session.
         """
-        with self.request_new_session() as session:
+        with sqlite3_buddy() as db:
+            session = self.request_new_session(db)
             return session.total_stats()
 
     def _after_init(self, result: InitResult, notify_on_finish: bool):
         self._set_sources(result.sources)
-        with self.request_new_session() as session:
+        with sqlite3_buddy() as db:
+            session = self.request_new_session(db)
             session.remove_unused_audio_data()
         self._report_init_results(result, notify_on_finish)
 
@@ -263,6 +282,7 @@ class AnkiAudioSourceManagerFactory(AudioSourceManagerFactory):
         if result.errors:
             showWarning("\n".join(f"Couldn't download audio source: {error.explanation}." for error in result.errors))
         elif notify_on_finish and result.sources:
+            assert mw
             QueryOp(
                 parent=mw,
                 op=lambda collection: self.get_statistics(),
@@ -280,6 +300,6 @@ class AnkiAudioSourceManagerFactory(AudioSourceManagerFactory):
 ##########################################################################
 
 
-aud_src_mgr = AnkiAudioSourceManagerFactory(cfg, AnkiAudioSourceManager)
+aud_src_mgr = AnkiAudioSourceManagerFactory(cfg)
 # react to anki's state changes
 gui_hooks.profile_did_open.append(aud_src_mgr.init_sources)

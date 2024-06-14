@@ -1,33 +1,25 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
-import abc
 import contextlib
 import dataclasses
 import io
 import json
 import os
-import posixpath
 import re
 import zipfile
 from collections.abc import Iterable
-from typing import Optional, Union
 
 from ..config_view import JapaneseConfig
-from ..mecab_controller.kana_conv import to_katakana
-from ..pitch_accents.common import split_pitch_numbers
-from .audio_json_schema import FileInfo
-from .http_client import (
+from ..helpers.audio_json_schema import FileInfo
+from ..helpers.http_client import (
     AudioManagerException,
     AudioManagerHttpClient,
-    AudioSourceConfig,
     FileUrlData,
 )
-from .sqlite3_buddy import BoundFile, Sqlite3Buddy, sqlite3_buddy
-
-
-def file_exists(file_path: str):
-    return file_path and os.path.isfile(file_path) and os.stat(file_path).st_size > 0
-
+from ..helpers.sqlite3_buddy import BoundFile, Sqlite3Buddy
+from ..mecab_controller.kana_conv import to_katakana
+from ..pitch_accents.common import split_pitch_numbers
+from .audio_source import AudioSource
 
 RE_FILENAME_PROHIBITED = re.compile(r'[\\\n\t\r#%&\[\]{}<>^*?/$!\'":@+`|=]+', flags=re.MULTILINE | re.IGNORECASE)
 MAX_LEN_BYTES = 120 - 4
@@ -57,82 +49,6 @@ def norm_pitch_numbers(s: str) -> str:
     E.g., かも-知れない (1-0), 黒い-霧 (2-0), 作用,反作用の,法則 (1-3-0), 八幡,大菩薩 (2-3), 入り代わり-立ち代わり (0-0), 七転,八起き (3-1)
     """
     return "-".join(split_pitch_numbers(s)) or "?"
-
-
-@dataclasses.dataclass
-class AudioSource(AudioSourceConfig):
-    # current schema has three fields: "meta", "headwords", "files"
-    db: Optional[Sqlite3Buddy]
-
-    def with_db(self, db: Optional[Sqlite3Buddy]):
-        return dataclasses.replace(self, db=db)
-
-    @classmethod
-    def from_cfg(cls, source: AudioSourceConfig, db: Sqlite3Buddy) -> "AudioSource":
-        return cls(**dataclasses.asdict(source), db=db)
-
-    def to_cfg(self) -> AudioSourceConfig:
-        """
-        Used to compare changes in the config file.
-        """
-        data = dataclasses.asdict(self)
-        del data["db"]
-        return AudioSourceConfig(**data)
-
-    def is_cached(self) -> bool:
-        if not self.db:
-            raise RuntimeError("db is none")
-        return self.db.is_source_cached(self.name)
-
-    def raise_if_not_ready(self):
-        if not self.is_cached():
-            raise RuntimeError("Attempt to access property of an uninitialized source.")
-
-    @property
-    def media_dir(self) -> str:
-        # Meta can specify absolute path to the media dir,
-        # which will be used if set.
-        # Otherwise, fall back to relative path.
-        self.raise_if_not_ready()
-        assert self.db
-        return self.db.get_media_dir_abs(self.name) or self.join(
-            os.path.dirname(self.url), self.db.get_media_dir_rel(self.name)
-        )
-
-    def join(self, *args) -> Union[str, bytes]:
-        """Join multiple paths."""
-        if self.is_local:
-            # Local paths are platform-dependent.
-            return os.path.join(*args)
-        else:
-            # URLs are always joined with '/'.
-            return posixpath.join(*args)
-
-    @property
-    def is_local(self) -> bool:
-        return file_exists(self.url)
-
-    @property
-    def original_url(self):
-        self.raise_if_not_ready()
-        assert self.db
-        return self.db.get_original_url(self.name)
-
-    def update_original_url(self):
-        # Remember where the file was downloaded from.
-        self.raise_if_not_ready()
-        assert self.db
-        self.db.set_original_url(self.name, self.url)
-
-    def distinct_file_count(self) -> int:
-        self.raise_if_not_ready()
-        assert self.db
-        return self.db.distinct_file_count(source_names=(self.name,))
-
-    def distinct_headword_count(self) -> int:
-        self.raise_if_not_ready()
-        assert self.db
-        return self.db.distinct_headword_count(source_names=(self.name,))
 
 
 @dataclasses.dataclass
@@ -293,71 +209,3 @@ class AudioSourceManager:
 
     def remove_data(self, source_name: str) -> None:
         self._db.remove_data(source_name)
-
-
-class AnkiAudioSourceManagerABC(abc.ABC):
-    def search_audio(
-        self,
-        src_text: str,
-        *,
-        split_morphemes: bool,
-        ignore_inflections: bool,
-        stop_if_one_source_has_results: bool,
-    ) -> list[FileUrlData]:
-        raise NotImplementedError()
-
-    def download_and_save_tags(self, hits, *, on_finish):
-        raise NotImplementedError()
-
-
-class AudioSourceManagerFactoryABC(abc.ABC):
-    _config: JapaneseConfig
-    _http_client: AudioManagerHttpClient
-    _audio_sources: list[AudioSource]
-
-    def __new__(cls, *args, **kwargs):
-        try:
-            obj = cls._instance  # type: ignore
-        except AttributeError:
-            obj = cls._instance = super().__new__(cls)
-        return obj
-
-    def __init__(self, config: JapaneseConfig) -> None:
-        self._config = config
-        self._http_client = AudioManagerHttpClient(self._config.audio_settings)
-        self._audio_sources = []
-
-    def purge_everything(self) -> None:
-        self._audio_sources = []
-        Sqlite3Buddy.remove_database_file()
-
-    def request_new_session(self, db: Sqlite3Buddy) -> AudioSourceManager:
-        raise NotImplementedError()
-
-    def init_sources(self) -> None:
-        self._set_sources(self._get_sources().sources)
-
-    def _set_sources(self, sources: list[AudioSource]) -> None:
-        self._audio_sources = [source.with_db(None) for source in sources]
-
-    def _get_sources(self) -> InitResult:
-        """
-        This method is normally run in a different thread.
-        A separate db connection is used.
-        """
-        sources, errors = [], []
-        with sqlite3_buddy() as db:
-            session = self.request_new_session(db)
-            for source in [AudioSource.from_cfg(source, db) for source in self._config.iter_audio_sources()]:
-                if not source.enabled:
-                    continue
-                try:
-                    session.read_pronunciation_data(source)
-                except AudioManagerException as ex:
-                    print(f"Ignoring audio source {source.name}: {ex.describe_short()}.")
-                    errors.append(ex)
-                    continue
-                else:
-                    sources.append(source)
-                    print(f"Initialized audio source: {source.name}")
-            return InitResult(sources, errors)
