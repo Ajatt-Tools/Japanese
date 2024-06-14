@@ -260,6 +260,13 @@ class PitchProfileEditForm(ProfileEditForm, profile_class=ProfilePitch):
         super().load_profile(profile)
         self._form.output_format.setCurrentName(profile.output_format)
 
+    def _add_tooltips(self) -> None:
+        super()._add_tooltips()
+        self._form.output_format.setToolTip(
+            "Format of the pitch accent information written to Destination.\n"
+            "SVG will output an SVG image. Other options output HTML code."
+        )
+
 
 class AudioProfileEditForm(ProfileEditForm, profile_class=ProfileAudio):
     pass
