@@ -85,8 +85,13 @@ def accents_dict_init() -> AccentDict:
     else:
         assert not acc_dict
         print("Reading from existing accents pickle.")
-        with open(FORMATTED_ACCENTS_PICKLE, "rb") as f:
-            acc_dict.update(pickle.load(f))
+        try:
+            with open(FORMATTED_ACCENTS_PICKLE, "rb") as f:
+                acc_dict.update(pickle.load(f))
+        except ModuleNotFoundError:
+            # tried to load the pickle file and failed
+            os.unlink(FORMATTED_ACCENTS_PICKLE)
+            return accents_dict_init()
 
     # Finally, patch with user-defined entries.
     acc_dict.update(UserAccentData().create_formatted())
