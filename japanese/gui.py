@@ -172,7 +172,7 @@ class ProfileEditForm(QGroupBox):
         subclass = cls._subclasses_map[profile_class]
         return QGroupBox.__new__(subclass)
 
-    def __init__(self, profile_class: type[Profile], *args):
+    def __init__(self, profile_class: type[Profile], *args) -> None:
         super().__init__(*args)
         self.setEnabled(False)
         self._profile_class = profile_class
@@ -195,11 +195,11 @@ class ProfileEditForm(QGroupBox):
         qconnect(self._form.note_type.currentIndexChanged, lambda index: self._repopulate_fields())
         self._add_tooltips()
 
-    def _expand_form(self):
+    def _expand_form(self) -> None:
         """Subclasses add new widgets here."""
         pass
 
-    def _add_tooltips(self):
+    def _add_tooltips(self) -> None:
         """Subclasses add new tooltips here."""
         self._form.note_type.setToolTip(
             "Profile will be triggered for Note Type names that contain this string.\n"
@@ -237,7 +237,7 @@ class ProfileEditForm(QGroupBox):
             layout.addRow(ui_translate(key), widget)
         return layout
 
-    def _repopulate_fields(self, profile: Optional[Profile] = None):
+    def _repopulate_fields(self, profile: Optional[Profile] = None) -> None:
         for key in ("source", "destination"):
             widget: QComboBox = self._form.__dict__[key]
             current_text = dataclasses.asdict(profile)[key] if profile else widget.currentText()
@@ -252,11 +252,11 @@ class FuriganaProfileEditForm(ProfileEditForm, profile_class=ProfileFurigana):
 
 class PitchProfileEditForm(ProfileEditForm, profile_class=ProfilePitch):
 
-    def _expand_form(self):
+    def _expand_form(self) -> None:
         super()._expand_form()
         self._form.output_format = EnumSelectCombo(enum_type=PitchOutputFormat)
 
-    def load_profile(self, profile: ProfilePitch):
+    def load_profile(self, profile: ProfilePitch) -> None:
         super().load_profile(profile)
         self._form.output_format.setCurrentName(profile.output_format)
 
