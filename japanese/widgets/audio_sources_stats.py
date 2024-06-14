@@ -5,12 +5,9 @@ import dataclasses
 
 from aqt.qt import *
 
-try:
-    from ..ajt_common.utils import ui_translate
-    from ..helpers.audio_manager import AudioStats, TotalAudioStats
-except ImportError:
-    from ajt_common.utils import ui_translate
-    from helpers.audio_manager import AudioStats, TotalAudioStats
+from ..audio_manager.source_manager import AudioStats, TotalAudioStats
+
+from ..ajt_common.utils import ui_translate
 
 
 class AudioStatsTable(QTableWidget):
@@ -63,15 +60,3 @@ def get_mock_stats() -> TotalAudioStats:
             AudioStats("toe", 10, 9),
         ],
     )
-
-
-def main():
-    app = QApplication(sys.argv)
-    dialog: QDialog = AudioStatsDialog()
-    dialog.load_data(get_mock_stats())
-    dialog.show()
-    app.exec()
-
-
-if __name__ == "__main__":
-    main()
