@@ -107,6 +107,10 @@ class AccDbParsedToken(MecabParsedToken):
     headword_accents: Sequence[PitchAccentEntry]
 
     def describe_pitches(self) -> str:
+        """
+        reading1:pitch_type reading2:pitch_type
+        コッキョウ:heiban クニザカイ:nakadaka-3
+        """
         return SEP_PITCH_GROUP.join(pitch.describe_pitches() for pitch in self.headword_accents)
 
     def has_pitch(self) -> bool:
