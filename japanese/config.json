@@ -61,7 +61,7 @@
   "furigana": {
     "skip_numbers": true,
     "prefer_literal_pronunciation": false,
-    "reading_separator": ", ",
+    "reading_separator": ",",
     "blocklisted_words": "人",
     "mecab_only": "お,彼,猫,首,母,顔,木,頭,私,弟,空,体,行く",
     "maximum_results": 3,
