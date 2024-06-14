@@ -117,27 +117,27 @@
     {
       "enabled": true,
       "name": "NHK-2016",
-      "url": "https://github.com/Ajatt-Tools/nhk_2016_pronunciations_index/releases/download/v1.3/NHK-2016_main.zip"
+      "url": "https://github.com/Ajatt-Tools/nhk_2016_pronunciations_index/releases/latest/download/NHK-2016_main.zip"
     },
     {
       "enabled": true,
       "name": "NHK-1998",
-      "url": "https://github.com/Ajatt-Tools/nhk_1998_pronunciations_index/releases/download/v1.2/NHK-1998_main.zip"
+      "url": "https://github.com/Ajatt-Tools/nhk_1998_pronunciations_index/releases/latest/download/NHK-1998_main.zip"
     },
     {
       "enabled": true,
       "name": "Shinmeikai-8",
-      "url": "https://github.com/Ajatt-Tools/shinmeikai_8_pronunciations_index/releases/download/v1.5/Shinmeikai-8_main.zip"
+      "url": "https://github.com/Ajatt-Tools/shinmeikai_8_pronunciations_index/releases/latest/download/Shinmeikai-8_main.zip"
     },
     {
       "enabled": true,
       "name": "Daijisen",
-      "url": "https://github.com/Ajatt-Tools/daijisen_pronunciations_index/releases/download/v1.0/Daijisen_main.zip"
+      "url": "https://github.com/Ajatt-Tools/daijisen_pronunciations_index/releases/latest/download/Daijisen_main.zip"
     },
     {
       "enabled": true,
       "name": "TAAS",
-      "url": "https://github.com/Ajatt-Tools/taas_pronunciations_index/releases/download/v1.0/TAAS_main.zip"
+      "url": "https://github.com/Ajatt-Tools/taas_pronunciations_index/releases/latest/download/TAAS_main.zip"
     }
   ],
   "audio_settings": {
