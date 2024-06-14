@@ -40,32 +40,17 @@ class Sqlite3Buddy:
     def __init__(self) -> None:
         self._con = None
 
-    @property
     def can_execute(self) -> bool:
         return self._con is not None
 
-    @classmethod
-    @contextmanager
-    def new_session(cls) -> "Sqlite3Buddy":
-        """
-        Create, use, then clean up a temporary connection.
-        Use when working in a different thread since the same connection can't be reused in another thread.
-        """
-        ins = cls()
-        ins.start_session()
-        assert ins.can_execute
-        yield ins
-        ins.end_session()
-        del ins
-
     def start_session(self) -> None:
-        if self.can_execute:
+        if self.can_execute():
             self.end_session()
         self._con: sqlite3.Connection = sqlite3.connect(self._db_path)
         self._prepare_tables()
 
     def end_session(self) -> None:
-        if self.can_execute:
+        if self.can_execute():
             self._con.commit()
             self._con.close()
             self._con = None
@@ -311,3 +296,19 @@ class Sqlite3Buddy:
         cur = self._con.cursor()
         query_result = cur.execute(""" SELECT source_name FROM meta; """).fetchall()
         return [result_tuple[0] for result_tuple in query_result]
+
+
+@contextmanager
+def sqlite3_buddy():
+    """
+    Create, use, then clean up a temporary connection.
+    Use when working in a different thread since the same connection can't be reused in another thread.
+    """
+    ins = Sqlite3Buddy()
+    ins.start_session()
+    assert ins.can_execute()
+    try:
+        yield ins
+    finally:
+        ins.end_session()
+        del ins
