@@ -8,7 +8,7 @@ import anki.httpclient
 import requests
 from requests import RequestException
 
-from .misc import clamp
+from ..ajt_common.utils import clamp
 
 
 @dataclasses.dataclass(frozen=True)

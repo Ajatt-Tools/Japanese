@@ -8,12 +8,10 @@ from collections.abc import Iterable
 
 from aqt.qt import *
 
-from ..helpers.audio_manager import (
-    AudioSourceConfig,
-    AudioSourceManagerFactoryABC,
-    normalize_filename,
-)
-from ..helpers.misc import clamp
+from ..audio_manager.abstract import AudioSourceManagerFactoryABC
+from ..audio_manager.source_manager import normalize_filename
+from ..helpers.http_client import AudioSourceConfig
+from ..ajt_common.utils import clamp
 from ..helpers.sqlite3_buddy import sqlite3_buddy
 from .table import CellContent, ExpandingTableWidget, TableRow
 
