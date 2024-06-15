@@ -156,7 +156,9 @@ class AJTWelcomeDialog(QDialog):
         self._project_buttons = ProjectButtons()
         self._show_at_start_checkbox = QCheckBox("Show this dialog when Anki starts")
         self._show_at_start_checkbox.setChecked(cfg.show_welcome_guide)
+        self._button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Cancel)
         self._setup_ui()
+        self._connect_widgets()
         tweak_window(self)
         self.setFocus()
 
@@ -172,8 +174,19 @@ class AJTWelcomeDialog(QDialog):
         layout.addWidget(self._learn_buttons, 2, 0, 1, 1)
         layout.addWidget(self._community_buttons, 2, 1, 1, 1)
         layout.addWidget(self._project_buttons, 2, 2, 1, 1)
-        layout.addWidget(self._show_at_start_checkbox, 3, 0, 1, 3)
+        layout.addLayout(self._make_bottom_layout(), 3, 0, 1, 3)
         restoreGeom(self, self._name)
+
+    def _make_bottom_layout(self):
+        layout = QHBoxLayout()
+        layout.addWidget(self._show_at_start_checkbox)
+        layout.addStretch(1)
+        layout.addWidget(self._button_box)
+        return layout
+
+    def _connect_widgets(self) -> None:
+        qconnect(self._button_box.accepted, self.accept)
+        qconnect(self._button_box.rejected, self.reject)
 
     def done(self, *args, **kwargs) -> None:
         self.on_close()
