@@ -1,16 +1,13 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
-from japanese.helpers.audio_manager import (
-    AudioSourceManager,
-    AudioSourceManagerFactoryABC,
-    TotalAudioStats,
-)
+from japanese.audio_manager.audio_manager import AudioSourceManagerFactory
+from japanese.audio_manager.source_manager import AudioSourceManager, TotalAudioStats
 from japanese.helpers.sqlite3_buddy import Sqlite3Buddy, sqlite3_buddy
 from tests.no_anki_config import NoAnkiConfigView
 
 
-class NoAnkiAudioSourceManagerFactory(AudioSourceManagerFactoryABC):
+class NoAnkiAudioSourceManagerFactory(AudioSourceManagerFactory):
     def request_new_session(self, db: Sqlite3Buddy) -> AudioSourceManager:
         """
         If tasks are being done in a different thread, prepare a new db connection

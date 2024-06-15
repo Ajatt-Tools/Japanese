@@ -6,7 +6,7 @@ import string
 
 from aqt.qt import *
 
-from japanese.helpers.audio_manager import AnkiAudioSourceManagerABC
+from japanese.audio_manager.abstract import AnkiAudioSourceManagerABC
 from japanese.helpers.http_client import FileUrlData
 from japanese.widgets.audio_search import AudioSearchDialog
 

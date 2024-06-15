@@ -5,7 +5,11 @@ from japanese.helpers.inflections import is_inflected, longest_kana_suffix
 
 def test_longest_kana_suffix() -> None:
     assert longest_kana_suffix("分かる") == "かる"
-    assert longest_kana_suffix("綺麗") is None
+    assert longest_kana_suffix("弄ばれてしまった") == "ばれてしまった"
+    assert longest_kana_suffix("思い切ったなぁ") == "ったなぁ"
+    assert longest_kana_suffix("綺麗") == ""
+    assert longest_kana_suffix("しまった") == "しまった"
+    assert longest_kana_suffix("") == ""
 
 
 def test_is_inflected() -> None:

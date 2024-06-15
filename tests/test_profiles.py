@@ -12,7 +12,7 @@ from japanese.helpers.profiles import (
 from tests.no_anki_config import no_anki_config
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def furigana_dict() -> dict[str, object]:
     return {
         "name": "Add furigana for sentence",
@@ -27,7 +27,7 @@ def furigana_dict() -> dict[str, object]:
     }
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def pitch_dict() -> dict[str, object]:
     return {
         "name": "Add pitch accent for word",
@@ -42,7 +42,7 @@ def pitch_dict() -> dict[str, object]:
     }
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def audio_dict() -> dict[str, object]:
     return {
         "name": "Add audio for word",

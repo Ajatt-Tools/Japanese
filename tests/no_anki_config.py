@@ -19,6 +19,6 @@ class NoAnkiConfigView(JapaneseConfig):
             self._default_config = self._config = json.load(f)
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def no_anki_config() -> NoAnkiConfigView:
     return NoAnkiConfigView()

@@ -5,6 +5,7 @@ from japanese.helpers.common_kana import adjust_to_inflection
 
 def test_adjust_to_inflection() -> None:
     assert adjust_to_inflection("食べた", "食べる", "たべる") == "たべた"
+    assert adjust_to_inflection("食べ", "食べる", "たべる") == "たべ"
     assert adjust_to_inflection("跪いた", "跪く", "ひざまずく") == "ひざまずいた"
     assert adjust_to_inflection("跪かなかった", "跪く", "ひざまずく") == "ひざまずかなかった"
     assert adjust_to_inflection("安くなかった", "安い", "やすい") == "やすくなかった"
@@ -20,3 +21,5 @@ def test_adjust_to_inflection() -> None:
     assert adjust_to_inflection("唸りました", "唸る", "うなる") == "うなりました"
     assert adjust_to_inflection("可愛くない", "可愛い", "かわいい") == "かわいくない"
     assert adjust_to_inflection("かわいくない", "可愛い", "かわいい") == "かわいくない"
+    assert adjust_to_inflection("赤く", "赤い", "あかい") == "あかく"
+    assert adjust_to_inflection("死ん", "死ぬ", "しぬ") == "しん"
