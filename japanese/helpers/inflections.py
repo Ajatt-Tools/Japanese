@@ -9,9 +9,11 @@ from ..mecab_controller.unify_readings import replace_handakuten
 
 
 def longest_kana_suffix(word: str) -> Optional[str]:
-    for i in range(len(word)):
-        if is_kana_str(substr := word[i:]):
-            return substr
+    last_idx = len(word)
+    while (last_idx := last_idx - 1) >= 0:
+        if not is_kana_str(word[last_idx]):
+            break
+    return word[last_idx + 1 :]
 
 
 def is_inflected(headword: str, reading: str) -> bool:
