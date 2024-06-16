@@ -16,7 +16,11 @@ from aqt.utils import showWarning, tooltip
 
 from .audio_manager.abstract import AnkiAudioSourceManagerABC
 from .audio_manager.audio_manager import AudioSourceManagerFactory
-from .audio_manager.basic_types import AudioManagerException, FileUrlData
+from .audio_manager.basic_types import (
+    AudioManagerException,
+    AudioSourceConfig,
+    FileUrlData,
+)
 from .audio_manager.source_manager import (
     AudioSourceManager,
     InitResult,
@@ -230,6 +234,19 @@ class AnkiAudioSourceManager(AudioSourceManager, AnkiAudioSourceManagerABC):
             print(f"Removing unused cache data for audio source: {source_name}")
             self.remove_data(source_name)
 
+    def already_initialized(self) -> Sequence[AudioSourceConfig]:
+        """
+        Returns audio sources that have been fully initialized,
+        meaning they are enabled and the database has cached them.
+        """
+        return tuple(s.to_cfg() for s in self._audio_sources.values() if s.enabled and s.is_cached())
+
+    def must_be_initialized(self) -> Sequence[AudioSourceConfig]:
+        """
+        Returns audio sources that the add-on needs right now based on the current config.
+        """
+        return tuple(s for s in self._config.iter_audio_sources() if s.enabled)
+
 
 def describe_audio_stats(stats: TotalAudioStats) -> str:
     return (
@@ -271,9 +288,9 @@ class AnkiAudioSourceManagerFactory(AudioSourceManagerFactory):
         Used to skip unnecessary re-init operations.
         Count only enabled sources. Disabled sources have no effect on the audio manager's operation.
         """
-        prev_cfg = tuple(s.to_cfg() for s in self._audio_sources if s.enabled)
-        new_cfg = tuple(s for s in self._config.iter_audio_sources() if s.enabled)
-        return prev_cfg != new_cfg
+        with sqlite3_buddy() as db:
+            session = self.request_new_session(db)
+            return session.already_initialized() != session.must_be_initialized()
 
     def get_statistics(self) -> TotalAudioStats:
         """
@@ -283,14 +300,17 @@ class AnkiAudioSourceManagerFactory(AudioSourceManagerFactory):
             session = self.request_new_session(db)
             return session.total_stats()
 
-    def _after_init(self, result: InitResult, notify_on_finish: bool):
-        self._set_sources(result.sources)
+    def _remove_unused_audio_data(self) -> None:
         with sqlite3_buddy() as db:
             session = self.request_new_session(db)
             session.remove_unused_audio_data()
+
+    def _after_init(self, result: InitResult, notify_on_finish: bool) -> None:
+        self._set_sources(result.sources)
+        self._remove_unused_audio_data()
         self._report_init_results(result, notify_on_finish)
 
-    def _report_init_results(self, result: InitResult, notify_on_finish: bool):
+    def _report_init_results(self, result: InitResult, notify_on_finish: bool) -> None:
         if result.errors:
             showWarning("\n".join(f"Couldn't download audio source: {error.explanation}." for error in result.errors))
         elif notify_on_finish and result.sources:
