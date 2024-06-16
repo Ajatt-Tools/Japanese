@@ -26,7 +26,7 @@ class AudioSource(AudioSourceConfig):
         """
         Used to compare changes in the config file.
         """
-        data = dataclasses.asdict(self)
+        data = dataclasses.asdict(self.with_db(None))
         del data["db"]
         return AudioSourceConfig(**data)
 
