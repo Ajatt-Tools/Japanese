@@ -151,17 +151,3 @@ class ProfileAudio(Profile, mode="audio"):
             source="VocabKanji",
             destination="VocabAudio",
         )
-
-
-def main():
-    import json
-
-    with open("../config.json") as f:
-        config = json.load(f)
-
-    for p in config.get("profiles"):
-        print(Profile(**p))
-
-
-if __name__ == "__main__":
-    main()
