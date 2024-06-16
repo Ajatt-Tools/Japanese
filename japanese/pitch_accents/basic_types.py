@@ -115,6 +115,8 @@ class AccDbParsedToken(MecabParsedToken):
     """
 
     headword_accents: Sequence[PitchAccentEntry]
+    # Attached tokens are stored in this list to apply pitch color-code to them.
+    attached_tokens: MutableSequence[str] = dataclasses.field(default_factory=list)
 
     def describe_pitches(self) -> str:
         """
