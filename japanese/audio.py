@@ -16,13 +16,13 @@ from aqt.utils import showWarning, tooltip
 
 from .audio_manager.abstract import AnkiAudioSourceManagerABC
 from .audio_manager.audio_manager import AudioSourceManagerFactory
+from .audio_manager.basic_types import AudioManagerException, FileUrlData
 from .audio_manager.source_manager import (
-    AudioManagerException,
     AudioSourceManager,
-    FileUrlData,
     InitResult,
     TotalAudioStats,
 )
+from .config_view import JapaneseConfig
 from .config_view import config_view as cfg
 from .helpers.inflections import is_inflected
 from .helpers.mingle_readings import split_possible_furigana
@@ -112,6 +112,8 @@ def take_first_source(hits: dict[str, list[FileUrlData]]):
 
 
 class AnkiAudioSourceManager(AudioSourceManager, AnkiAudioSourceManagerABC):
+    _config: JapaneseConfig
+
     def search_audio(
         self,
         src_text: str,
@@ -221,15 +223,25 @@ class AnkiAudioSourceManager(AudioSourceManager, AnkiAudioSourceManagerABC):
         )
 
     def remove_unused_audio_data(self):
-        user_specified_source_names = {source.name for source in self._config.iter_audio_sources()}
-        source_names_in_db = set(self._db.source_names())
+        user_specified_source_names = frozenset(source.name for source in self._config.iter_audio_sources())
+        source_names_in_db = frozenset(self._db.source_names())
         sources_to_remove = source_names_in_db - user_specified_source_names
         for source_name in sources_to_remove:
             print(f"Removing unused cache data for audio source: {source_name}")
             self.remove_data(source_name)
 
 
+def describe_audio_stats(stats: TotalAudioStats) -> str:
+    return (
+        "<b>Initialized audio sources.</b><ul>"
+        f"<li>Unique audio files: <code>{stats.unique_files}</code></li>"
+        f"<li>Unique headwords: <code>{stats.unique_headwords}</code></li></ul>"
+    )
+
+
 class AnkiAudioSourceManagerFactory(AudioSourceManagerFactory):
+    _config: JapaneseConfig
+
     def request_new_session(self, db: Sqlite3Buddy) -> AnkiAudioSourceManager:
         """
         If tasks are being done in a different thread, prepare a new db connection
@@ -286,12 +298,7 @@ class AnkiAudioSourceManagerFactory(AudioSourceManagerFactory):
             QueryOp(
                 parent=mw,
                 op=lambda collection: self.get_statistics(),
-                success=lambda stats: tooltip(
-                    "<b>Initialized audio sources.</b><ul>"
-                    f"<li>Unique audio files: <code>{stats.unique_files}</code></li>"
-                    f"<li>Unique headwords: <code>{stats.unique_headwords}</code></li></ul>",
-                    period=5000,
-                ),
+                success=lambda stats: tooltip(describe_audio_stats(stats), period=5000),
             ).without_collection().run_in_background()
         print("Initialized all audio sources.")
 
