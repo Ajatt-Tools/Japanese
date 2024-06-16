@@ -5,13 +5,14 @@ import dataclasses
 import enum
 import functools
 import re
-from collections.abc import Iterable, MutableMapping, MutableSequence
-from typing import NamedTuple, final
+from collections.abc import Iterable, MutableMapping, MutableSequence, Sequence
+from typing import NamedTuple, cast, final
 
 from aqt import mw
 
 from .ajt_common.addon_config import AddonConfigManager, ConfigSubViewBase
 from .helpers.http_client import AudioSourceConfig
+from .audio_manager.abstract import AudioSettingsConfigViewABC
 from .helpers.profiles import PitchOutputFormat, Profile, get_default_profile
 from .helpers.sakura_client import AddDefBehavior, DictName, SearchType
 from .helpers.tokens import RE_FLAGS
@@ -35,7 +36,7 @@ class WordBlockListManager(ConfigSubViewBase):
         return self["skip_numbers"] is True
 
     @property
-    def blocklisted_words(self) -> list[str]:
+    def blocklisted_words(self) -> Sequence[str]:
         """Returns a user-defined list of blocklisted words."""
         return split_cfg_words(self["blocklisted_words"])
 
@@ -78,7 +79,7 @@ class FuriganaConfigView(PitchAndFuriganaCommon):
         return self["prefer_literal_pronunciation"] is True
 
     @property
-    def mecab_only(self) -> list[str]:
+    def mecab_only(self) -> Sequence[str]:
         """Words that shouldn't be looked up in the accent dictionary."""
         return split_cfg_words(self["mecab_only"])
 
@@ -182,7 +183,7 @@ class ToolbarConfigView(ConfigSubViewBase):
 
 
 @final
-class AudioSettingsConfigView(ConfigSubViewBase):
+class AudioSettingsConfigView(ConfigSubViewBase, AudioSettingsConfigViewABC):
     _view_key: str = "audio_settings"
 
     @property

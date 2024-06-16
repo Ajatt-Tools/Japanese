@@ -29,3 +29,20 @@ class AnkiAudioSourceManagerABC(abc.ABC):
     @abc.abstractmethod
     def download_and_save_tags(self, hits, *, on_finish):
         raise NotImplementedError()
+
+
+class AudioSettingsConfigViewABC(abc.ABC):
+    @property
+    @abc.abstractmethod
+    def dictionary_download_timeout(self) -> int:
+        raise NotImplementedError()
+
+    @property
+    @abc.abstractmethod
+    def audio_download_timeout(self) -> int:
+        raise NotImplementedError()
+
+    @property
+    @abc.abstractmethod
+    def attempts(self) -> int:
+        raise NotImplementedError()

@@ -1,6 +1,5 @@
 # Copyright: Ren Tatsumoto <tatsu at autistici.org> and contributors
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
-import abc
 import dataclasses
 from typing import Optional, Union
 
@@ -9,6 +8,7 @@ import requests
 from requests import RequestException
 
 from ..ajt_common.utils import clamp
+from ..audio_manager.abstract import AudioSettingsConfigViewABC
 
 
 @dataclasses.dataclass(frozen=True)
@@ -41,12 +41,6 @@ class AudioManagerException(RequestException):
 
     def describe_short(self) -> str:
         return str(self.exception.__class__.__name__ if self.exception else self.response.status_code)
-
-
-class AudioSettingsConfigViewABC(abc.ABC):
-    dictionary_download_timeout: int
-    audio_download_timeout: int
-    attempts: int
 
 
 class AudioManagerHttpClient:
