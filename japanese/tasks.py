@@ -16,8 +16,8 @@ from aqt import mw
 from aqt.utils import tooltip
 
 from .audio import AnkiAudioSourceManager, FileSaveResults, format_audio_tags
+from .audio_manager.basic_types import FileUrlData
 from .config_view import config_view as cfg
-from .helpers.http_client import FileUrlData
 from .helpers.profiles import (
     ColorCodePitchFormat,
     PitchOutputFormat,
@@ -74,7 +74,11 @@ class DoTask:
 
 class AddFurigana(DoTask, task_type=ProfileFurigana):
     def _generate_text(self, src_text: str) -> str:
-        return generate_furigana(src_text, split_morphemes=self._task.split_morphemes)
+        return generate_furigana(
+            src_text,
+            split_morphemes=self._task.split_morphemes,
+            output_format=ColorCodePitchFormat[self._task.color_code_pitch],
+        )
 
 
 class AddPitch(DoTask, task_type=ProfilePitch):
