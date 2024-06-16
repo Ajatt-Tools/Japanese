@@ -3,8 +3,8 @@
 
 import abc
 
-from ..helpers.http_client import FileUrlData
 from ..helpers.sqlite3_buddy import Sqlite3Buddy
+from .basic_types import FileUrlData
 from .source_manager import AudioSourceManager
 
 
@@ -27,7 +27,7 @@ class AnkiAudioSourceManagerABC(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def download_and_save_tags(self, hits, *, on_finish):
+    def download_and_save_tags(self, hits, *, on_finish) -> None:
         raise NotImplementedError()
 
 

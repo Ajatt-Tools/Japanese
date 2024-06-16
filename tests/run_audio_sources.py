@@ -3,12 +3,12 @@
 
 from aqt.qt import *
 
-from japanese.helpers.http_client import AudioSourceConfig
+from japanese.audio_manager.basic_types import AudioSourceConfig
 from japanese.widgets.audio_sources import AudioSourcesTable
 from tests.run_audio_manager import init_testing_audio_manager
 
 
-class App(QWidget):
+class App(QDialog):
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self.setWindowTitle("Test")

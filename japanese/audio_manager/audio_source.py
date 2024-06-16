@@ -6,8 +6,8 @@ import posixpath
 from typing import Optional, Union
 
 from ..helpers.file_ops import file_exists
-from ..helpers.http_client import AudioSourceConfig
 from ..helpers.sqlite3_buddy import Sqlite3Buddy
+from .basic_types import AudioSourceConfig
 
 
 @dataclasses.dataclass

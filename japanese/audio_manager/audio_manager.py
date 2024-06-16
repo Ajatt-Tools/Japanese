@@ -3,16 +3,18 @@
 import abc
 
 from ..config_view import JapaneseConfig
-from ..helpers.http_client import AudioManagerException, AudioManagerHttpClient
+from ..helpers.basic_types import AudioManagerHttpClientABC
+from ..helpers.http_client import AudioManagerHttpClient
 from ..helpers.sqlite3_buddy import Sqlite3Buddy, sqlite3_buddy
 from .abstract import AudioSourceManagerFactoryABC
 from .audio_source import AudioSource
+from .basic_types import AudioManagerException
 from .source_manager import InitResult
 
 
 class AudioSourceManagerFactory(AudioSourceManagerFactoryABC, abc.ABC):
     _config: JapaneseConfig
-    _http_client: AudioManagerHttpClient
+    _http_client: AudioManagerHttpClientABC
     _audio_sources: list[AudioSource]
 
     def __new__(cls, *args, **kwargs):

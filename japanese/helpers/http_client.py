@@ -1,49 +1,21 @@
 # Copyright: Ren Tatsumoto <tatsu at autistici.org> and contributors
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
-import dataclasses
 from typing import Optional, Union
 
 import anki.httpclient
 import requests
-from requests import RequestException
 
 from ..ajt_common.utils import clamp
 from ..audio_manager.abstract import AudioSettingsConfigViewABC
+from ..audio_manager.basic_types import (
+    AudioManagerException,
+    AudioSourceConfig,
+    FileUrlData,
+)
+from .basic_types import AudioManagerHttpClientABC
 
 
-@dataclasses.dataclass(frozen=True)
-class FileUrlData:
-    url: str
-    desired_filename: str
-    word: str
-    source_name: str
-    reading: str = ""
-    pitch_number: str = "?"
-
-
-@dataclasses.dataclass
-class AudioSourceConfig:
-    enabled: bool
-    name: str
-    url: str
-
-    @property
-    def is_valid(self) -> str:
-        return self.name and self.url
-
-
-@dataclasses.dataclass
-class AudioManagerException(RequestException):
-    file: Union[AudioSourceConfig, FileUrlData]
-    explanation: str
-    response: Optional[requests.Response] = None
-    exception: Optional[Exception] = None
-
-    def describe_short(self) -> str:
-        return str(self.exception.__class__.__name__ if self.exception else self.response.status_code)
-
-
-class AudioManagerHttpClient:
+class AudioManagerHttpClient(AudioManagerHttpClientABC):
     # add some fake headers to convince sites we're not a bot.
     headers = {
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",

@@ -5,7 +5,7 @@ import dataclasses
 import os
 from collections.abc import Iterable
 
-from .http_client import FileUrlData
+from ..audio_manager.basic_types import FileUrlData
 
 
 def ensure_unique_urls(files: Iterable[FileUrlData]) -> Iterable[FileUrlData]:

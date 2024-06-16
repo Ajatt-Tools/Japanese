@@ -9,17 +9,14 @@ import re
 import zipfile
 from collections.abc import Iterable
 
-from ..config_view import JapaneseConfig
+from ..ajt_common.addon_config import AddonConfigManager
 from ..helpers.audio_json_schema import FileInfo
-from ..helpers.http_client import (
-    AudioManagerException,
-    AudioManagerHttpClient,
-    FileUrlData,
-)
+from ..helpers.basic_types import AudioManagerHttpClientABC
 from ..helpers.sqlite3_buddy import BoundFile, Sqlite3Buddy
 from ..mecab_controller.kana_conv import to_katakana
 from ..pitch_accents.common import split_pitch_numbers
 from .audio_source import AudioSource
+from .basic_types import AudioManagerException, FileUrlData
 
 RE_FILENAME_PROHIBITED = re.compile(r'[\\\n\t\r#%&\[\]{}<>^*?/$!\'":@+`|=]+', flags=re.MULTILINE | re.IGNORECASE)
 MAX_LEN_BYTES = 120 - 4
@@ -83,15 +80,15 @@ def read_zip(zip_in: zipfile.ZipFile, audio_source: AudioSource) -> bytes:
 
 
 class AudioSourceManager:
-    _config: JapaneseConfig
-    _http_client: AudioManagerHttpClient
+    _config: AddonConfigManager
+    _http_client: AudioManagerHttpClientABC
     _db: Sqlite3Buddy
     _audio_sources: dict[str, AudioSource]
 
     def __init__(
         self,
-        config: JapaneseConfig,
-        http_client: AudioManagerHttpClient,
+        config: AddonConfigManager,
+        http_client: AudioManagerHttpClientABC,
         db: Sqlite3Buddy,
         audio_sources: list[AudioSource],
     ) -> None:

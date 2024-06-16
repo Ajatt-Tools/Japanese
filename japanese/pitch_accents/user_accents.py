@@ -54,7 +54,7 @@ def create_formatted(entry: TSVAccentEntry) -> OrderedSet[FormattedEntry]:
 
 
 class UserAccentData:
-    source_csv_path: str = USER_DATA_CSV_PATH # accessed by the settings dialog
+    source_csv_path: str = USER_DATA_CSV_PATH  # accessed by the settings dialog
 
     def __init__(self):
         self._self_check()
