@@ -73,7 +73,7 @@ class AudioSourcesTable(ExpandingTableWidget):
         Missing cache files are skipped.
         """
         removed: list[AudioSourceConfig] = []
-        gui_selected_sources = [(selected.name, selected.url) for selected in self.iterateSelectedConfigs()]
+        gui_selected_sources = frozenset((selected.name, selected.url) for selected in self.iterateSelectedConfigs())
 
         with sqlite3_buddy() as db:
             session = self._audio_mgr.request_new_session(db)
@@ -150,7 +150,7 @@ class AudioSourcesTable(ExpandingTableWidget):
         return name_to_source.values()
 
     def iterateSelectedConfigs(self) -> Iterable[AudioSourceConfig]:
-        selected_row_numbers = sorted(index.row() for index in self.selectedIndexes())
+        selected_row_numbers = frozenset(index.row() for index in self.selectedIndexes())
         for index, config in enumerate(self.iterateConfigs()):
             if index in selected_row_numbers:
                 yield config
