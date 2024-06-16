@@ -1,11 +1,12 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
-from typing import MutableSequence, Iterable, Union
+from collections.abc import Iterable, MutableSequence
+from typing import Union
 
 from ..helpers.tokens import Token
 from ..mecab_controller import is_kana_str
-from ..mecab_controller.basic_types import Inflection, ANY_ATTACHING, PartOfSpeech
+from ..mecab_controller.basic_types import ANY_ATTACHING, Inflection, PartOfSpeech
 from ..pitch_accents.basic_types import AccDbParsedToken
 
 AnyToken = Union[AccDbParsedToken, Token]
@@ -15,13 +16,13 @@ def is_attaching(self: Inflection) -> bool:
     if self == self.unknown:
         return False
     return (
-            ANY_ATTACHING in self.value
-            or self == self.hypothetical
-            or self == self.irrealis
-            or self == self.irrealis_nu
-            or self == self.irrealis_reru
-            or self == self.irrealis_special
-            or self == self.continuative
+        ANY_ATTACHING in self.value
+        or self == self.hypothetical
+        or self == self.irrealis
+        or self == self.irrealis_nu
+        or self == self.irrealis_reru
+        or self == self.irrealis_special
+        or self == self.continuative
     )
 
 
