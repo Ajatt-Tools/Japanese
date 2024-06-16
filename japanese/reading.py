@@ -1,23 +1,22 @@
 # Copyright: Ren Tatsumoto <tatsu at autistici.org>
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
-import collections
 import dataclasses
-import enum
-import io
 from collections import OrderedDict
-from collections.abc import Iterable, MutableSequence, Sequence
-from typing import Callable, Optional, TypeVar, Union
+from collections.abc import Iterable, Sequence
+from typing import Callable, Optional, TypeVar
 
 from aqt import gui_hooks
 
 from .config_view import ReadingsDiscardMode
 from .config_view import config_view as cfg
+from .furigana.color_code_wrapper import ColorCodeWrapper
+from .furigana.furigana_list import FuriganaList
 from .helpers import LONG_VOWEL_MARK
 from .helpers.common_kana import adjust_to_inflection
 from .helpers.mingle_readings import mingle_readings
 from .helpers.profiles import ColorCodePitchFormat, PitchOutputFormat
-from .helpers.tokens import ParseableToken, Token, tokenize
-from .mecab_controller.basic_types import ANY_ATTACHING, Inflection, PartOfSpeech
+from .helpers.tokens import ParseableToken, tokenize
+from .mecab_controller.basic_types import Inflection, PartOfSpeech
 from .mecab_controller.format import format_output
 from .mecab_controller.kana_conv import is_kana_str, to_hiragana
 from .mecab_controller.mecab_controller import MecabController, MecabParsedToken
@@ -151,6 +150,15 @@ def discard_extra_readings(
         raise ValueError(f"No handler for mode {discard_mode}.")
 
 
+def unique_headword_accents(entries: Iterable[FormattedEntry]) -> Sequence[PitchAccentEntry]:
+    return [
+        PitchAccentEntry.from_formatted(entry)
+        for entry in {
+            entry.html_notation: entry for entry in sorted_readings(entries, lambda entry: entry.katakana_reading)
+        }.values()
+    ]
+
+
 def try_lookup_full_text(text: str) -> Iterable[AccDbParsedToken]:
     """
     Try looking up whole text in the accent db.
@@ -160,7 +168,10 @@ def try_lookup_full_text(text: str) -> Iterable[AccDbParsedToken]:
     word: str
     entries: Sequence[FormattedEntry]
 
-    if cfg.furigana.can_lookup_in_db(text) and (results := lookup.get_pronunciations(text, recurse=False)):
+    if not cfg.furigana.can_lookup_in_db(text):
+        return
+
+    if results := lookup.get_pronunciations(text, recurse=False):
         for word, entries in results.items():
             yield AccDbParsedToken(
                 headword=word,
@@ -168,27 +179,37 @@ def try_lookup_full_text(text: str) -> Iterable[AccDbParsedToken]:
                 part_of_speech=PartOfSpeech.unknown,
                 inflection_type=Inflection.dictionary_form,
                 katakana_reading=None,
-                headword_accents=[PitchAccentEntry.from_formatted(entry) for entry in entries],
+                headword_accents=unique_headword_accents(entries),
             )
+
+
+T = TypeVar("T")
+
+
+def as_self(val):
+    return val
+
+
+def sorted_readings(readings: Iterable[T], access_reading: Callable[[T], str] = as_self) -> Sequence[T]:
+    """
+    Sort readings according to the user's preferences.
+    The long vowel symbol is used to identify readings that resemble literal pronunciation.
+    """
+    return sorted(
+        readings,
+        # represented by key as 0000...1111.
+        # if literal pronunciation is enabled,
+        # literal pronunciations are pushed to the end of the list.
+        key=(lambda reading: LONG_VOWEL_MARK in access_reading(reading)),
+        reverse=(not cfg.furigana.prefer_literal_pronunciation),
+    )
 
 
 def unique_readings(readings: Iterable[str]) -> Sequence[str]:
     """
     Return a list of readings without repetitions.
     """
-
-    def sorted_readings() -> Sequence[str]:
-        """
-        Sort readings according to the user's preferences.
-        The long vowel symbol is used to identify readings that resemble literal pronunciation.
-        """
-        return sorted(
-            readings,
-            key=(lambda reading: LONG_VOWEL_MARK in reading),
-            reverse=(not cfg.furigana.prefer_literal_pronunciation),
-        )
-
-    return list({pr(reading): reading for reading in sorted_readings()}.values())
+    return list({pr(reading): reading for reading in sorted_readings(readings)}.values())
 
 
 def all_hiragana_readings(token: AccDbParsedToken) -> Iterable[str]:
@@ -197,6 +218,11 @@ def all_hiragana_readings(token: AccDbParsedToken) -> Iterable[str]:
     """
     if token.katakana_reading:
         yield to_hiragana(token.katakana_reading)
+    if not cfg.furigana.can_lookup_in_db(token.headword):
+        # if the user doesn't want any more readings,
+        # e.g. the word is added to "mecab_only" or "maximum_results" is set to 1,
+        # then exit early.
+        return
     for entry in token.headword_accents:
         yield adjust_to_inflection(
             raw_word=token.word,
@@ -227,35 +253,49 @@ def format_acc_db_result(out: AccDbParsedToken, full_hiragana: bool = False) -> 
     return format_furigana_readings(out.word, readings)
 
 
-def append_accents(token: MecabParsedToken) -> Union[AccDbParsedToken]:
+def append_accents(token: MecabParsedToken) -> AccDbParsedToken:
     """
     Append readings from the accent dictionary to the reading given by mecab.
     """
-    if not cfg.furigana.can_lookup_in_db(token.headword):
-        return AccDbParsedToken(**dataclasses.asdict(token), headword_accents=[])
     return AccDbParsedToken(
         **dataclasses.asdict(token),
-        headword_accents=[PitchAccentEntry.from_formatted(entry) for entry in iter_accents(token.headword)],
+        headword_accents=unique_headword_accents(iter_accents(token.headword)),
     )
 
 
+def color_code_pitch(token: AccDbParsedToken, furigana_formatted: str, output_format: ColorCodePitchFormat) -> str:
+    with ColorCodeWrapper(token, output_format) as output:
+        output.write(furigana_formatted)
+        for attached in token.attached_tokens:
+            output.write(attached)
+        return output.getvalue()
+
+
 def format_parsed_tokens(
-    tokens: Sequence[Union[AccDbParsedToken, Token]],
-    full_hiragana: bool = False,
+    tokens: FuriganaList,
+    full_hiragana: bool,
+    output_format: ColorCodePitchFormat,
 ) -> Iterable[str]:
     for token in tokens:
         if isinstance(token, AccDbParsedToken):
-            yield format_acc_db_result(token, full_hiragana=full_hiragana)
+            yield color_code_pitch(token, format_acc_db_result(token, full_hiragana=full_hiragana), output_format)
         elif isinstance(token, str):
             yield token
         else:
             raise ValueError(f"Invalid type: {type(token)}")
 
 
-def generate_furigana(src_text: str, split_morphemes: bool = True, full_hiragana: bool = False) -> str:
-    substrings: MutableSequence[Union[AccDbParsedToken, Token]] = []
+def generate_furigana(
+    src_text: str,
+    *,
+    split_morphemes: bool = True,
+    full_hiragana: bool = False,
+    output_format: ColorCodePitchFormat = ColorCodePitchFormat.none,
+) -> str:
+    substrings = FuriganaList()
     for token in tokenize(src_text):
-        if not isinstance(token, ParseableToken) or is_kana_str(token):
+        assert token, "token can't be empty"
+        if not isinstance(token, ParseableToken):
             # Skip tokens that can't be parsed (non-japanese text).
             # Skip full-kana tokens (no furigana is needed).
             substrings.append(token)
@@ -272,7 +312,7 @@ def generate_furigana(src_text: str, split_morphemes: bool = True, full_hiragana
         else:
             # Add the string as is, without furigana.
             substrings.append(token)
-    return "".join(format_parsed_tokens(substrings, full_hiragana)).strip()
+    return "".join(format_parsed_tokens(substrings, full_hiragana, output_format)).strip()
 
 
 # Entry point
