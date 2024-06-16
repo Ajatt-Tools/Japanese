@@ -8,12 +8,12 @@ from collections.abc import Iterable
 
 from aqt.qt import *
 
-from .table import CellContent, ExpandingTableWidget, TableRow
 from ..ajt_common.utils import clamp
 from ..audio_manager.abstract import AudioSourceManagerFactoryABC
 from ..audio_manager.basic_types import AudioSourceConfig
 from ..audio_manager.source_manager import normalize_filename
 from ..helpers.sqlite3_buddy import sqlite3_buddy
+from .table import CellContent, ExpandingTableWidget, TableRow
 
 
 class SourceEnableCheckbox(QCheckBox):

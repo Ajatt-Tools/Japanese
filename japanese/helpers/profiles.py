@@ -114,6 +114,17 @@ class Profile(ProfileBase):
     def as_config_dict(self):
         return dataclasses.asdict(self)
 
+    @classmethod
+    def from_config_dict(cls, profile_dict: dict):
+        # In case new options are added or removed in the future,
+        # load default settings first, then overwrite them.
+        default = cls.get_default(profile_dict["mode"])
+        common_keys = dataclasses.asdict(default).keys() & profile_dict.keys()
+        return dataclasses.replace(
+            default,
+            **{key: profile_dict[key] for key in common_keys},
+        )
+
 
 @functools.cache
 def get_default_profile(mode: str) -> Profile:

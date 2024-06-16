@@ -348,14 +348,7 @@ class JapaneseConfig(AddonConfigManager):
 
     def iter_profiles(self) -> Iterable[Profile]:
         for profile_dict in self["profiles"]:
-            # In case new options are added or removed in the future,
-            # load default settings first, then overwrite them.
-            default = get_default_profile(profile_dict["mode"])
-            common_keys = dataclasses.asdict(default).keys() & profile_dict.keys()
-            yield dataclasses.replace(
-                default,
-                **{key: profile_dict[key] for key in common_keys},
-            )
+            yield Profile.from_config_dict(profile_dict)
 
     def iter_audio_sources(self) -> Iterable[AudioSourceConfig]:
         for source_dict in self.audio_sources:

@@ -56,15 +56,30 @@ def audio_dict() -> dict[str, object]:
     }
 
 
-def test_read_profiles(no_anki_config):
+def test_read_profiles(no_anki_config) -> None:
     profiles = [*no_anki_config.iter_profiles()]
     assert len(profiles) > 0
 
 
-def test_create_profile(furigana_dict, pitch_dict, audio_dict):
-    profile = Profile(**furigana_dict)
+def test_create_profile_furigana(furigana_dict) -> None:
+    profile = Profile.from_config_dict(furigana_dict)
     assert isinstance(profile, ProfileFurigana)
-    profile = Profile(**pitch_dict)
+    assert profile.mode == "furigana"
+    assert profile.source == "SentKanji"
+    assert profile.destination == "SentFurigana"
+
+
+def test_create_profile_pitch(pitch_dict) -> None:
+    profile = Profile.from_config_dict(pitch_dict)
     assert isinstance(profile, ProfilePitch)
-    profile = Profile(**audio_dict)
+    assert profile.mode == "pitch"
+    assert profile.source == "VocabKanji"
+    assert profile.destination == "VocabPitchPattern"
+
+
+def test_create_profile_audio(audio_dict) -> None:
+    profile = Profile.from_config_dict(audio_dict)
     assert isinstance(profile, ProfileAudio)
+    assert profile.mode == "audio"
+    assert profile.source == "VocabKanji"
+    assert profile.destination == "VocabAudio"
