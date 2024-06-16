@@ -22,10 +22,10 @@ from .pitch_accents.styles import PitchPatternStyle
 RE_CFG_WORD_SEP = re.compile(r"[、, ]+", flags=RE_FLAGS)
 
 
-@functools.cache
-def split_cfg_words(config_value: str) -> list[str]:
-    """Splits string by comma."""
-    return re.split(RE_CFG_WORD_SEP, config_value)
+@functools.lru_cache(maxsize=10)
+def split_cfg_words(config_value: str) -> Sequence[str]:
+    """Splits string by comma. Cache identical values."""
+    return cast(Sequence[str], frozenset(re.split(RE_CFG_WORD_SEP, config_value)))
 
 
 class WordBlockListManager(ConfigSubViewBase):
