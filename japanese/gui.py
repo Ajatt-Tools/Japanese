@@ -22,9 +22,9 @@ from .ajt_common.consts import ADDON_SERIES
 from .ajt_common.grab_key import ShortCutGrabButton
 from .ajt_common.utils import ui_translate
 from .audio import aud_src_mgr
+from .audio_manager.source_manager import TotalAudioStats
 from .config_view import config_view as cfg
 from .helpers import THIS_ADDON_MODULE
-from .helpers.audio_manager import TotalAudioStats
 from .helpers.misc import split_list
 from .helpers.profiles import (
     PitchOutputFormat,

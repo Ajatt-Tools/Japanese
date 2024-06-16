@@ -5,10 +5,7 @@ import dataclasses
 import os
 from collections.abc import Iterable
 
-try:
-    from .audio_manager import FileUrlData
-except ImportError:
-    from audio_manager import FileUrlData
+from .http_client import FileUrlData
 
 
 def ensure_unique_urls(files: Iterable[FileUrlData]) -> Iterable[FileUrlData]:
@@ -41,23 +38,3 @@ def ensure_unique_files(files: Iterable[FileUrlData]) -> Iterable[FileUrlData]:
     Ensure that the URLs are not repeated and that the desired filenames are unique.
     """
     return ensure_unique_names(ensure_unique_urls(files))
-
-
-# Debug
-##########################################################################
-
-
-def main():
-    examples = [
-        FileUrlData("/mnt/data/file1.png", "file1.png", "単語", "NHK"),
-        FileUrlData("/mnt/data/file1.png", "file2.png", "単語", "NHK"),
-        FileUrlData("/mnt/data/file1.png", "file1.png", "単語", "NHK"),
-        FileUrlData("/mnt/data/file2.png", "file2.png", "単語", "NHK"),
-        FileUrlData("/mnt/data/file2.png", "file1.png", "単語", "NHK"),
-    ]
-    for file in ensure_unique_files(examples):
-        print(file)
-
-
-if __name__ == "__main__":
-    main()

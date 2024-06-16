@@ -5,9 +5,8 @@ import dataclasses
 
 from aqt.qt import *
 
-from ..audio_manager.source_manager import AudioStats, TotalAudioStats
-
 from ..ajt_common.utils import ui_translate
+from ..audio_manager.source_manager import AudioStats, TotalAudioStats
 
 
 class AudioStatsTable(QTableWidget):

@@ -75,3 +75,7 @@ def open_file(path: str) -> None:
     else:
         with no_bundled_libs():
             QDesktopServices.openUrl(QUrl(f"file://{path}"))
+
+
+def file_exists(file_path: str) -> bool:
+    return file_path and os.path.isfile(file_path) and os.stat(file_path).st_size > 0

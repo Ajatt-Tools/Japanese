@@ -26,6 +26,7 @@ from .helpers.profiles import (
     ProfilePitch,
     TaskCaller,
 )
+from .helpers.sqlite3_buddy import sqlite3_buddy
 from .reading import format_pronunciations, generate_furigana, lookup
 
 
@@ -157,10 +158,11 @@ class DoTasks:
     def run(self, changed: bool = False) -> bool:
         from .audio import aud_src_mgr
 
-        with aud_src_mgr.request_new_session() as aud_mgr:
+        with sqlite3_buddy() as db:
+            session = aud_src_mgr.request_new_session(db)
             for task in self._tasks:
                 if task.should_answer_to(self._caller) and task.applies_to_note(self._note):
-                    changed = self._do_task(task, aud_mgr=aud_mgr) or changed
+                    changed = self._do_task(task, aud_mgr=session) or changed
             return changed
 
     def _do_task(self, task: Profile, aud_mgr: AnkiAudioSourceManager) -> bool:

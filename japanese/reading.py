@@ -1,10 +1,12 @@
 # Copyright: Ren Tatsumoto <tatsu at autistici.org>
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
-
+import collections
 import dataclasses
+import enum
+import io
 from collections import OrderedDict
 from collections.abc import Iterable, MutableSequence, Sequence
-from typing import Optional, Union
+from typing import Callable, Optional, TypeVar, Union
 
 from aqt import gui_hooks
 

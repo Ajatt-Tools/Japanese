@@ -54,18 +54,18 @@ def create_formatted(entry: TSVAccentEntry) -> OrderedSet[FormattedEntry]:
 
 
 class UserAccentData:
-    _source_csv_path: str = USER_DATA_CSV_PATH
+    source_csv_path: str = USER_DATA_CSV_PATH # accessed by the settings dialog
 
     def __init__(self):
         self._self_check()
 
     def _self_check(self):
-        if not os.path.isfile(self._source_csv_path):
-            touch(self._source_csv_path)
-            print(f"Created file: {self._source_csv_path}")
+        if not os.path.isfile(self.source_csv_path):
+            touch(self.source_csv_path)
+            print(f"Created file: {self.source_csv_path}")
 
     def _read_entries(self) -> Iterable[TSVAccentEntry]:
-        with open(self._source_csv_path, newline="", encoding="utf-8") as f:
+        with open(self.source_csv_path, newline="", encoding="utf-8") as f:
             for line in f:
                 if line := line.strip():
                     yield TSVAccentEntry.from_csv_line(line)
