@@ -248,7 +248,13 @@ class ProfileEditForm(QGroupBox):
 
 
 class FuriganaProfileEditForm(ProfileEditForm, profile_class=ProfileFurigana):
-    pass
+    def _expand_form(self) -> None:
+        super()._expand_form()
+        self._form.color_code_pitch = EnumSelectCombo(enum_type=ColorCodePitchFormat)
+
+    def load_profile(self, profile: ProfileFurigana) -> None:
+        super().load_profile(profile)
+        self._form.color_code_pitch.setCurrentName(profile.color_code_pitch)
 
 
 class PitchProfileEditForm(ProfileEditForm, profile_class=ProfilePitch):
