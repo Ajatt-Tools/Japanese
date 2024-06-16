@@ -70,7 +70,9 @@ class Sqlite3Buddy:
     def get_media_dir_rel(self, source_name: str) -> str:
         cur = self._con.cursor()
         query = """ SELECT media_dir FROM meta WHERE source_name = ? LIMIT 1; """
-        return "".join(cur.execute(query, (source_name,)).fetchone())
+        result = cur.execute(query, (source_name,)).fetchone()
+        assert len(result) == 1 and type(result[0]) is str
+        return result[0]
 
     def get_original_url(self, source_name: str) -> Optional[str]:
         cur = self._con.cursor()
