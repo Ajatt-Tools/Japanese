@@ -72,8 +72,8 @@ def _tokenize(expr: str, *, split_regexes: Sequence[re.Pattern]) -> Iterable[Tok
     else:
         for part in parts(expr, split_regexes[0]):
             if part:
-                if m := re.fullmatch(r"<no-jp>(.*?)</no-jp>", part, flags=RE_FLAGS):
-                    yield Token(m.group(1))
+                if m := re.fullmatch(r"<no-jp>(?P<token>.*?)</no-jp>", part, flags=RE_FLAGS):
+                    yield Token(m.group("token"))
                 else:
                     yield from _tokenize(part, split_regexes=split_regexes[1:])
 
