@@ -11,7 +11,8 @@
       "mode": "furigana",
       "split_morphemes": true,
       "triggered_by": "focus_lost,toolbar_button,note_added,bulk_add",
-      "overwrite_destination": false
+      "overwrite_destination": false,
+      "color_code_pitch": "none"
     },
     {
       "name": "Add furigana for word",
@@ -21,7 +22,8 @@
       "mode": "furigana",
       "split_morphemes": false,
       "triggered_by": "focus_lost,toolbar_button,note_added,bulk_add",
-      "overwrite_destination": false
+      "overwrite_destination": false,
+      "color_code_pitch": "none"
     },
     {
       "name": "Add pitch accent for word",
