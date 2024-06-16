@@ -163,6 +163,7 @@ class ProfileList(QGroupBox):
 class ProfileEditForm(QGroupBox):
     # e.g. ProfileFurigana => FuriganaProfileEditForm
     _subclasses_map: dict[type[Profile], type["ProfileEditForm"]] = {}
+    _last_used_profile: Optional[Profile]
 
     def __init_subclass__(cls, **kwargs) -> None:
         profile_class: type[Profile] = kwargs.pop("profile_class")  # suppresses ide warning
@@ -189,7 +190,7 @@ class ProfileEditForm(QGroupBox):
             overwrite_destination=QCheckBox(),
         )
         self._expand_form()
-        self._last_used_profile: Optional[Profile] = None
+        self._last_used_profile = None
         self.setLayout(self._make_layout())
         adjust_to_contents(self)
         self.setMinimumWidth(EDIT_MIN_WIDTH)
@@ -437,7 +438,7 @@ class AudioSourcesEditTable(QWidget):
         qconnect(self._stats_button.clicked, self._on_show_statistics_clicked)
         self._add_tooltips()
 
-    def _make_layout(self):
+    def _make_layout(self) -> QLayout:
         layout = QVBoxLayout()
         layout.setContentsMargins(4, 0, 4, 0)  # left, top, right, and bottom
         layout.setSpacing(8)
@@ -454,7 +455,7 @@ class AudioSourcesEditTable(QWidget):
         layout.addWidget(self._purge_button)
         return layout
 
-    def _populate(self):
+    def _populate(self) -> None:
         QueryOp(
             parent=mw,
             op=lambda collection: aud_src_mgr.get_statistics(),
@@ -470,7 +471,7 @@ class AudioSourcesEditTable(QWidget):
             f"<strong>Unique headwords</strong>: {audio_stats.unique_headwords}."
         )
 
-    def _on_show_statistics_clicked(self):
+    def _on_show_statistics_clicked(self) -> None:
         if not self._audio_stats:
             return
         d = AudioStatsDialog()
@@ -479,14 +480,14 @@ class AudioSourcesEditTable(QWidget):
         d.exec()
         saveGeom(d, d.name)
 
-    def _on_purge_db_clicked(self):
+    def _on_purge_db_clicked(self) -> None:
         aud_src_mgr.purge_everything()
         self._populate()
 
-    def iterateConfigs(self):
+    def iterateConfigs(self) -> Iterable[AudioSourceConfig]:
         return self._audio_sources_table.iterateConfigs()
 
-    def _add_tooltips(self):
+    def _add_tooltips(self) -> None:
         self._stats_button.setToolTip("Show statistics for each imported audio source.")
         self._purge_button.setToolTip("Remove the database file.\n" "It will be recreated from scratch again.")
 
