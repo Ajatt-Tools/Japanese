@@ -46,7 +46,8 @@ python = ['3.9',]
 [tool.hatch.envs.dev.scripts]
 # run as `hatch run dev:scriptname`
 check = "mypy --install-types --non-interactive {args:japanese tests}"
-test = "pytest;"
+test = "pytest"
+testv = "pytest -vvv -s"
 format = "bash \"$(git rev-parse --show-toplevel)/scripts/format.sh\" "
 package = "bash \"$(git rev-parse --show-toplevel)/scripts/package.sh\" "
 
