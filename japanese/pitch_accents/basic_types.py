@@ -27,6 +27,16 @@ class PitchType(enum.Enum):
     kifuku = object()
 
 
+@enum.unique
+class PitchColor(enum.Enum):
+    heiban = "#3366CC"  # blue
+    atamadaka = "red"
+    nakadaka = "#ff6207"  # orange
+    odaka = "green"
+    kifuku = "purple"
+    unknown = "gray"
+
+
 def pitch_type_from_pitch_num(pitch_num_as_str: str, n_moras: int) -> PitchType:
     if not pitch_num_as_str:
         return PitchType.unknown
