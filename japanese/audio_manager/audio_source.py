@@ -58,7 +58,7 @@ class AudioSource(AudioSourceConfig):
             return os.path.join(*args)
         else:
             # URLs are always joined with '/'.
-            return posixpath.join(*args)
+            return '/'.join(*args)
 
     @property
     def is_local(self) -> bool:
