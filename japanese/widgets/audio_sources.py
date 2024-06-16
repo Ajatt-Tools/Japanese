@@ -134,14 +134,20 @@ class AudioSourcesTable(ExpandingTableWidget):
         """
         Return a list of source config objects. Ensure that names don't clash.
         """
-        sources = {}
+        name_to_source: dict[str, AudioSourceConfig] = {}
+        urls: set[str] = set()  # remember previously seen URLs
         for row in self.iterateRows():
-            if all(row) and (row := pack_back(row)).is_valid:
-                row.name = normalize_filename(row.name)
-                while row.name in sources:
-                    row.name += "(new)"
-                sources[row.name] = row
-        return sources.values()
+            if all(row):
+                source = pack_back(row)
+                source.name = normalize_filename(source.name)
+                if not source.name:
+                    source.name = "unknown"
+                while source.name in name_to_source:
+                    source.name += "(new)"
+                if source.is_valid and source.url not in urls:
+                    name_to_source[source.name] = source
+                    urls.add(source.url)
+        return name_to_source.values()
 
     def iterateSelectedConfigs(self) -> Iterable[AudioSourceConfig]:
         selected_row_numbers = sorted(index.row() for index in self.selectedIndexes())
