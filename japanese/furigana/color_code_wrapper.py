@@ -5,7 +5,7 @@ from typing import Optional
 
 from ..helpers.profiles import ColorCodePitchFormat
 from ..mecab_controller.basic_types import PartOfSpeech
-from ..pitch_accents.basic_types import AccDbParsedToken, PitchType, PitchColor
+from ..pitch_accents.basic_types import AccDbParsedToken, PitchColor, PitchType
 
 SKIP_COLORING = (
     PartOfSpeech.other,
@@ -63,6 +63,8 @@ class ColorCodeWrapper(io.StringIO):
         elif should_skip_coloring(self._token):
             # don't color special symbols and words without known pitch.
             self._coloring_enabled = False
+        else:
+            self._coloring_enabled = True
 
     def getvalue(self) -> str:
         if self._coloring_enabled:
@@ -70,28 +72,35 @@ class ColorCodeWrapper(io.StringIO):
         return super().getvalue()
 
     def start_wrap(self) -> None:
+        assert self._output_format != ColorCodePitchFormat.none
         self.write(f'<span class="ajt__word_info"')
-        self.write(f' part_of_speech="{self._token.part_of_speech.name}"')
-        self.write(f' pitch="{self._token.describe_pitches()}"')
-        self._write_inline_style()
+        self._write_attributes()
         self.write(">")
 
     def end_wrap(self) -> None:
+        assert self._output_format != ColorCodePitchFormat.none
         self.write("</span>")
 
-    def _write_inline_style(self) -> None:
+    def _write_attributes(self):
+        assert self._output_format != ColorCodePitchFormat.none
+        if self._output_format == ColorCodePitchFormat.attributes:
+            self.write(f' part_of_speech="{self._token.part_of_speech.name}"')
+            self.write(f' pitch="{self._token.describe_pitches()}"')
+        elif html_color := get_main_pitch_color(self._token):
+            self._write_inline_color(html_color)
+
+    def _write_inline_color(self, html_color: str) -> None:
         """
         add inline styles for people who don't configure their css templates
         """
-        if html_color := get_main_pitch_color(self._token):
-            if self._output_format == ColorCodePitchFormat.none:
-                return
-            elif self._output_format == ColorCodePitchFormat.color:
-                self.write(f' style="color: {html_color}"')
-            elif self._output_format == ColorCodePitchFormat.underline:
-                self.write(
-                    f' style="text-decoration: underline; text-decoration-color: {html_color};'
-                    f' text-decoration-thickness: 2px; text-underline-offset: 3px;"'
-                )
-            else:
-                raise ValueError(f"can't handle {self._output_format}")
+        assert self._output_format != ColorCodePitchFormat.none
+        # apply inline styles only when the pitch accent is not ambiguous
+        if self._output_format == ColorCodePitchFormat.color:
+            self.write(f' style="color: {html_color}"')
+        elif self._output_format == ColorCodePitchFormat.underline:
+            self.write(
+                f' style="text-decoration: underline; text-decoration-color: {html_color};'
+                f' text-decoration-thickness: 2px; text-underline-offset: 3px;"'
+            )
+        else:
+            raise ValueError(f"can't handle {self._output_format}")
