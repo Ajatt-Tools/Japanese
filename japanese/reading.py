@@ -15,9 +15,9 @@ from .config_view import config_view as cfg
 from .helpers import LONG_VOWEL_MARK
 from .helpers.common_kana import adjust_to_inflection
 from .helpers.mingle_readings import mingle_readings
-from .helpers.profiles import PitchOutputFormat
+from .helpers.profiles import ColorCodePitchFormat, PitchOutputFormat
 from .helpers.tokens import ParseableToken, Token, tokenize
-from .mecab_controller.basic_types import Inflection, PartOfSpeech
+from .mecab_controller.basic_types import ANY_ATTACHING, Inflection, PartOfSpeech
 from .mecab_controller.format import format_output
 from .mecab_controller.kana_conv import is_kana_str, to_hiragana
 from .mecab_controller.mecab_controller import MecabController, MecabParsedToken

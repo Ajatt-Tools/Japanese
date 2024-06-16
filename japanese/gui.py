@@ -27,6 +27,7 @@ from .config_view import config_view as cfg
 from .helpers import THIS_ADDON_MODULE
 from .helpers.misc import split_list
 from .helpers.profiles import (
+    ColorCodePitchFormat,
     PitchOutputFormat,
     Profile,
     ProfileAudio,
