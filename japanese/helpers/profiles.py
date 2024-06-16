@@ -16,6 +16,13 @@ class PitchOutputFormat(enum.Enum):
     svg = enum.auto()
 
 
+@enum.unique
+class ColorCodePitchFormat(enum.Enum):
+    none = enum.auto()
+    color = enum.auto()
+    underline = enum.auto()
+
+
 @dataclasses.dataclass(frozen=True)
 class TaskCallerOpts:
     audio_download_report: bool = True
@@ -146,11 +153,14 @@ class ProfilePitch(Profile, mode="pitch"):
 
 @dataclasses.dataclass(frozen=True)
 class ProfileFurigana(Profile, mode="furigana"):
+    color_code_pitch: str
+
     @classmethod
     def new(cls):
         return super().new(
             source="VocabKanji",
             destination="VocabFurigana",
+            color_code_pitch="none",
         )
 
 

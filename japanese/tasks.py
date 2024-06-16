@@ -19,6 +19,7 @@ from .audio import AnkiAudioSourceManager, FileSaveResults, format_audio_tags
 from .config_view import config_view as cfg
 from .helpers.http_client import FileUrlData
 from .helpers.profiles import (
+    ColorCodePitchFormat,
     PitchOutputFormat,
     Profile,
     ProfileAudio,
