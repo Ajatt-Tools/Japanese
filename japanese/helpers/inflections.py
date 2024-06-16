@@ -3,7 +3,7 @@
 
 from typing import Optional
 
-from ..mecab_controller.kana_conv import is_kana_str
+from ..mecab_controller.kana_conv import is_kana_char
 from ..mecab_controller.unify_readings import literal_pronunciation as pr
 from ..mecab_controller.unify_readings import replace_handakuten
 
@@ -11,7 +11,7 @@ from ..mecab_controller.unify_readings import replace_handakuten
 def longest_kana_suffix(word: str) -> Optional[str]:
     last_idx = len(word)
     while (last_idx := last_idx - 1) >= 0:
-        if not is_kana_str(word[last_idx]):
+        if not is_kana_char(word[last_idx]):
             break
     return word[last_idx + 1 :]
 
