@@ -1,7 +1,6 @@
 # Copyright: (C) 2022 Ren Tatsumoto <tatsu at autistici.org>
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/copyleft/gpl.html
 
-import dataclasses
 from collections.abc import Iterable
 from types import SimpleNamespace
 from typing import Optional, TypedDict, cast
@@ -230,7 +229,7 @@ class ProfileEditForm(QGroupBox):
         self._repopulate_fields(profile)
 
     def _as_dict(self) -> dict[str, Union[str, bool]]:
-        return dataclasses.asdict(self._last_used_profile) | as_config_dict(self._form.__dict__)
+        return self._last_used_profile.as_config_dict() | as_config_dict(self._form.__dict__)
 
     def _make_layout(self) -> QLayout:
         layout = QFormLayout()
@@ -241,7 +240,7 @@ class ProfileEditForm(QGroupBox):
     def _repopulate_fields(self, profile: Optional[Profile] = None) -> None:
         for key in ("source", "destination"):
             widget: QComboBox = self._form.__dict__[key]
-            current_text = dataclasses.asdict(profile)[key] if profile else widget.currentText()
+            current_text = profile.as_config_dict()[key] if profile else widget.currentText()
             widget.clear()
             widget.addItems(dict.fromkeys(relevant_field_names(self._form.note_type.currentText())))
             widget.setCurrentText(current_text)
@@ -311,7 +310,7 @@ class ProfileEdit(QWidget):
 
     def as_list(self) -> list[dict[str, str]]:
         self._apply_profile(self._profile_list.current_item())
-        return [dataclasses.asdict(p) for p in self._profile_list.profiles()]
+        return [p.as_config_dict() for p in self._profile_list.profiles()]
 
 
 class FuriganaProfilesEdit(ProfileEdit, profile_class=ProfileFurigana):
@@ -610,7 +609,7 @@ class SettingsDialog(QDialog, MgrPropMixIn):
             *self._pitch_profiles_edit.as_list(),
             *self._audio_profiles_edit.as_list(),
         ]
-        cfg["audio_sources"] = [dataclasses.asdict(source) for source in self._audio_sources_edit.iterateConfigs()]
+        cfg["audio_sources"] = [source.as_config_dict() for source in self._audio_sources_edit.iterateConfigs()]
         cfg["audio_settings"].update(self._audio_settings.as_dict())
         # Write the new data to disk
         cfg.write_config()

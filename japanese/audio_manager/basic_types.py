@@ -28,6 +28,9 @@ class AudioSourceConfig:
     def is_valid(self) -> str:
         return self.name and self.url
 
+    def as_config_dict(self):
+        return dataclasses.asdict(self)
+
 
 @dataclasses.dataclass
 class AudioManagerException(RequestException):

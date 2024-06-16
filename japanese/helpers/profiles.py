@@ -111,6 +111,9 @@ class Profile(ProfileBase):
     def clone(cls, profile: "Profile"):
         return cls(**dataclasses.asdict(profile))
 
+    def as_config_dict(self):
+        return dataclasses.asdict(self)
+
 
 @functools.cache
 def get_default_profile(mode: str) -> Profile:
