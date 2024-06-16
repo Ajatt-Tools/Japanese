@@ -19,6 +19,7 @@ class PitchOutputFormat(enum.Enum):
 @enum.unique
 class ColorCodePitchFormat(enum.Enum):
     none = enum.auto()
+    attributes = enum.auto()
     color = enum.auto()
     underline = enum.auto()
 
