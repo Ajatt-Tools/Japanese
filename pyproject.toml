@@ -10,7 +10,7 @@ name = "japanese"
 dynamic = ["version"]
 description = 'Automatically generate furigana and other data on Anki cards.'
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = "~=3.9" # anki officially only runs on 3.9
 license = { file = "LICENSE" }
 keywords = ["ajatt"]
 authors = [
@@ -35,11 +35,14 @@ path = "japanese/__about__.py"
 version-file = "japanese/__about__.py"
 
 [tool.hatch.envs.dev]
-extra-dependencies = [
+dependencies = [
   "mypy>=1.0.0",
   "isort",
   "pytest",
+  "aqt[qt6]",
 ]
+[[tool.hatch.envs.dev.matrix]]
+python = ['3.9',]
 [tool.hatch.envs.dev.scripts]
 # run as `hatch run dev:scriptname`
 check = "mypy --install-types --non-interactive {args:japanese tests}"
