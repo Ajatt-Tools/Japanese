@@ -10,8 +10,8 @@ class PitchPatternStyle(enum.Enum):
     Styles for HTML pitch patterns.
     """
 
-    javdejong = enum.auto()
     u_biq = enum.auto()
+    javdejong = enum.auto()
     kanjium = enum.auto()
     none = enum.auto()
 
