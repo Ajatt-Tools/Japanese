@@ -12,17 +12,17 @@ from ..pitch_accents.basic_types import AccDbParsedToken
 AnyToken = Union[AccDbParsedToken, Token]
 
 
-def is_attaching(self: Inflection) -> bool:
-    if self == self.unknown:
+def is_attaching(inflection: Inflection) -> bool:
+    if inflection == inflection.unknown:
         return False
     return (
-        ANY_ATTACHING in self.value
-        or self == self.hypothetical
-        or self == self.irrealis
-        or self == self.irrealis_nu
-        or self == self.irrealis_reru
-        or self == self.irrealis_special
-        or self == self.continuative
+        ANY_ATTACHING in inflection.value
+        or inflection == inflection.hypothetical
+        or inflection == inflection.irrealis
+        or inflection == inflection.irrealis_nu
+        or inflection == inflection.irrealis_reru
+        or inflection == inflection.irrealis_special
+        or inflection == inflection.continuative
     )
 
 
