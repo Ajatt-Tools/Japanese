@@ -72,6 +72,13 @@ class PitchParam(NamedTuple):
         else:
             return self.type.name
 
+    @classmethod
+    def from_symbol(cls, katakana_reading: str, pitch_num_as_str: str):
+        return cls(
+            type=pitch_type_from_pitch_num(pitch_num_as_str, n_moras=len(kana_to_moras(katakana_reading))),
+            number=pitch_num_as_str,
+        )
+
 
 class PitchAccentEntry(NamedTuple):
     katakana_reading: str
@@ -96,15 +103,12 @@ class PitchAccentEntry(NamedTuple):
         The string can either be directly convertible to int, indicate that the pitch is unknown,
         or contain more than one number.
         """
-        pitches: list[PitchParam] = []
-
-        for symbol in split_pitch_numbers(entry.pitch_number):
-            pitches.append(
-                PitchParam(pitch_type_from_pitch_num(symbol, len(kana_to_moras(entry.katakana_reading))), symbol)
-            )
         return cls(
             katakana_reading=entry.katakana_reading,
-            pitches=pitches,
+            pitches=[
+                PitchParam.from_symbol(entry.katakana_reading, symbol)
+                for symbol in split_pitch_numbers(entry.pitch_number)
+            ],
         )
 
 
