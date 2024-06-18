@@ -28,7 +28,7 @@ from .helpers.profiles import (
     TaskCaller,
 )
 from .helpers.sqlite3_buddy import sqlite3_buddy
-from .reading import format_pronunciations, generate_furigana, lookup
+from .reading import fgen, format_pronunciations, lookup
 
 
 def note_type_matches(note_type: NotetypeDict, profile: Profile) -> bool:
@@ -74,7 +74,7 @@ class DoTask:
 
 class AddFurigana(DoTask, task_type=ProfileFurigana):
     def _generate_text(self, src_text: str) -> str:
-        return generate_furigana(
+        return fgen.generate_furigana(
             src_text,
             split_morphemes=self._task.split_morphemes,
             output_format=ColorCodePitchFormat[self._task.color_code_pitch],

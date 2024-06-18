@@ -20,7 +20,7 @@ from .definitions import sakura_client
 from .helpers.profiles import TaskCaller
 from .helpers.sqlite3_buddy import sqlite3_buddy
 from .helpers.tokens import clean_furigana
-from .reading import generate_furigana
+from .reading import fgen
 from .tasks import DoTasks
 from .widgets.anki_style import fix_default_anki_style
 from .widgets.audio_search import AnkiAudioSearchDialog
@@ -159,13 +159,13 @@ def query_buttons() -> Iterable[ToolbarButton]:
         ),
         ToolbarButton(
             id="furigana_button",
-            on_press=modify_field(generate_furigana),
+            on_press=modify_field(fgen.generate_furigana),
             tip="Generate furigana in the field",
             conf=cfg.toolbar.furigana_button,
         ),
         ToolbarButton(
             id="hiragana_button",
-            on_press=modify_field(functools.partial(generate_furigana, full_hiragana=True)),
+            on_press=modify_field(functools.partial(fgen.generate_furigana, full_hiragana=True)),
             tip="Reconvert the field as hiragana",
             conf=cfg.toolbar.hiragana_button,
         ),
