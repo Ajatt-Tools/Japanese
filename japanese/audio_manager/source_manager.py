@@ -52,6 +52,12 @@ def norm_pitch_numbers(s: str) -> str:
 class InitResult:
     sources: list[AudioSource]
     errors: list[AudioManagerException]
+    did_run: bool = True
+
+    @classmethod
+    def did_not_run(cls):
+        # indicates that the init operation didn't start (it wasn't necessary)
+        return cls([], [], did_run=False)
 
 
 @dataclasses.dataclass(frozen=True)

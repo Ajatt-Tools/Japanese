@@ -271,16 +271,25 @@ class AnkiAudioSourceManagerFactory(AudioSourceManagerFactory):
             audio_sources=self._audio_sources,
         )
 
-    def init_sources(self, notify_on_finish: bool = False) -> None:
-        if not self._source_config_changed():
-            print("audio sources haven't changed.")
-            return
+    def init_sources(
+        self,
+        *,
+        notify_on_finish: bool = False,
+        on_finish: Optional[Callable[[InitResult], Any]] = None,
+    ) -> None:
         assert mw
         QueryOp(
             parent=mw,
             op=lambda collection: self._get_sources(),
-            success=lambda result: self._after_init(result, notify_on_finish),
+            success=lambda result: self._after_init(result, notify_on_finish, on_finish),
         ).run_in_background()
+
+    def _get_sources(self) -> InitResult:
+        if not self._source_config_changed():
+            print("audio sources haven't changed.")
+            return InitResult.did_not_run()
+        else:
+            return super()._get_sources()
 
     def _source_config_changed(self) -> bool:
         """
@@ -305,10 +314,18 @@ class AnkiAudioSourceManagerFactory(AudioSourceManagerFactory):
             session = self.request_new_session(db)
             session.remove_unused_audio_data()
 
-    def _after_init(self, result: InitResult, notify_on_finish: bool) -> None:
-        self._set_sources(result.sources)
-        self._remove_unused_audio_data()
-        self._report_init_results(result, notify_on_finish)
+    def _after_init(
+        self,
+        result: InitResult,
+        notify_on_finish: bool,
+        on_finish: Optional[Callable[[InitResult], Any]] = None,
+    ) -> None:
+        if result.did_run:
+            self._set_sources(result.sources)
+            self._remove_unused_audio_data()
+            self._report_init_results(result, notify_on_finish)
+        if on_finish:
+            on_finish(result)
 
     def _report_init_results(self, result: InitResult, notify_on_finish: bool) -> None:
         if result.errors:
