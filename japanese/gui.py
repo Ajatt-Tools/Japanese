@@ -20,7 +20,7 @@ from .ajt_common.addon_config import (
 from .ajt_common.consts import ADDON_SERIES
 from .ajt_common.grab_key import ShortCutGrabButton
 from .ajt_common.utils import ui_translate
-from .audio import aud_src_mgr
+from .audio import aud_src_mgr, show_audio_init_result_tooltip
 from .audio_manager.basic_types import AudioSourceConfig
 from .audio_manager.source_manager import InitResult, TotalAudioStats
 from .config_view import config_view as cfg
@@ -494,7 +494,7 @@ class AudioSourcesEditTable(QWidget):
         self._apply_button.setEnabled(False)
         cfg["audio_sources"] = [source.as_config_dict() for source in self.iterateConfigs()]
         cfg.write_config()
-        aud_src_mgr.init_sources(notify_on_finish=False, on_finish=self._on_audio_sources_init_finished)
+        aud_src_mgr.init_sources(on_finish=self._on_audio_sources_init_finished)
 
     def _on_audio_sources_init_finished(self, result: InitResult) -> None:
         self._apply_button.setEnabled(True)
@@ -642,7 +642,7 @@ class SettingsDialog(QDialog, MgrPropMixIn):
         self._accents_override.save_to_disk()
         # Reload
         acc_dict.reload_from_disk()
-        aud_src_mgr.init_sources(notify_on_finish=True)
+        aud_src_mgr.init_sources(on_finish=show_audio_init_result_tooltip)
         return super().accept()
 
     def _add_advanced_button(self) -> None:
