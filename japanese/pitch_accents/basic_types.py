@@ -126,4 +126,4 @@ class AccDbParsedToken(MecabParsedToken):
         return SEP_PITCH_GROUP.join(pitch.describe_pitches() for pitch in self.headword_accents)
 
     def has_pitch(self) -> bool:
-        return all(token.has_accent() for token in self.headword_accents)
+        return bool(self.headword_accents and all(token.has_accent() for token in self.headword_accents))
