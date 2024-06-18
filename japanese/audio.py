@@ -256,6 +256,21 @@ def describe_audio_stats(stats: TotalAudioStats) -> str:
     )
 
 
+def show_audio_init_result_tooltip(result: InitResult) -> None:
+    if result.sources:
+        assert mw
+        QueryOp(
+            parent=mw,
+            op=lambda collection: aud_src_mgr.get_statistics(),
+            success=lambda stats: tooltip(describe_audio_stats(stats), period=5000),
+        ).without_collection().run_in_background()
+
+
+def report_audio_init_errors(result: InitResult) -> None:
+    if result.errors:
+        showWarning("\n".join(f"Couldn't download audio source: {error.explanation}." for error in result.errors))
+
+
 class AnkiAudioSourceManagerFactory(AudioSourceManagerFactory):
     _config: JapaneseConfig
 
@@ -274,14 +289,13 @@ class AnkiAudioSourceManagerFactory(AudioSourceManagerFactory):
     def init_sources(
         self,
         *,
-        notify_on_finish: bool = False,
         on_finish: Optional[Callable[[InitResult], Any]] = None,
     ) -> None:
         assert mw
         QueryOp(
             parent=mw,
             op=lambda collection: self._get_sources(),
-            success=lambda result: self._after_init(result, notify_on_finish, on_finish),
+            success=lambda result: self._after_init(result, on_finish),
         ).run_in_background()
 
     def _get_sources(self) -> InitResult:
@@ -317,27 +331,15 @@ class AnkiAudioSourceManagerFactory(AudioSourceManagerFactory):
     def _after_init(
         self,
         result: InitResult,
-        notify_on_finish: bool,
         on_finish: Optional[Callable[[InitResult], Any]] = None,
     ) -> None:
         if result.did_run:
             self._set_sources(result.sources)
             self._remove_unused_audio_data()
-            self._report_init_results(result, notify_on_finish)
+            report_audio_init_errors(result)
+            print("Initialized all audio sources.")
         if on_finish:
             on_finish(result)
-
-    def _report_init_results(self, result: InitResult, notify_on_finish: bool) -> None:
-        if result.errors:
-            showWarning("\n".join(f"Couldn't download audio source: {error.explanation}." for error in result.errors))
-        elif notify_on_finish and result.sources:
-            assert mw
-            QueryOp(
-                parent=mw,
-                op=lambda collection: self.get_statistics(),
-                success=lambda stats: tooltip(describe_audio_stats(stats), period=5000),
-            ).without_collection().run_in_background()
-        print("Initialized all audio sources.")
 
 
 # Entry point
