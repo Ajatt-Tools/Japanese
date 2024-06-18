@@ -434,8 +434,7 @@ class AudioSourcesEditTable(QWidget):
         self._purge_button = QPushButton("Purge database")
         self.setLayout(self._make_layout())
         self._populate()
-        qconnect(self._purge_button.clicked, self._on_purge_db_clicked)
-        qconnect(self._stats_button.clicked, self._on_show_statistics_clicked)
+        self._connect_widgets()
         self._add_tooltips()
 
     def _make_layout(self) -> QLayout:
@@ -454,6 +453,10 @@ class AudioSourcesEditTable(QWidget):
         layout.addWidget(self._stats_button)
         layout.addWidget(self._purge_button)
         return layout
+
+    def _connect_widgets(self):
+        qconnect(self._purge_button.clicked, self._on_purge_db_clicked)
+        qconnect(self._stats_button.clicked, self._on_show_statistics_clicked)
 
     def _populate(self) -> None:
         QueryOp(
