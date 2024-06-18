@@ -140,14 +140,14 @@ class BrowserSearch(ContextMenuAction):
 def add_editor_context_menu_items(webview: EditorWebView, menu: QMenu) -> None:
     for Action in ContextMenuAction.subclasses:
         if Action.enabled():
-            action = menu.addAction(str(Action.label))
+            action: QAction = menu.addAction(str(Action.label))
             qconnect(action.triggered, Action(editor=webview.editor))
 
 
 def add_webview_context_menu_items(webview: AnkiWebView, menu: QMenu) -> None:
     for Action in ContextMenuAction.subclasses:
         if Action.shown_when_not_editing and Action.enabled():
-            action = menu.addAction(str(Action.label))
+            action: QAction = menu.addAction(str(Action.label))
             qconnect(action.triggered, Action(webview=webview))
 
 
