@@ -22,7 +22,7 @@ from .ajt_common.grab_key import ShortCutGrabButton
 from .ajt_common.utils import ui_translate
 from .audio import aud_src_mgr
 from .audio_manager.basic_types import AudioSourceConfig
-from .audio_manager.source_manager import TotalAudioStats
+from .audio_manager.source_manager import InitResult, TotalAudioStats
 from .config_view import config_view as cfg
 from .helpers import THIS_ADDON_MODULE
 from .helpers.misc import split_list
@@ -430,6 +430,7 @@ class AudioSourcesEditTable(QWidget):
         self._audio_sources_table = AudioSourcesTable(aud_src_mgr).populate(cfg.iter_audio_sources())
         self._bottom_label = QLabel()
         self._audio_stats = None
+        self._apply_button = QPushButton("Apply")
         self._stats_button = QPushButton("Statistics")
         self._purge_button = QPushButton("Purge database")
         self.setLayout(self._make_layout())
@@ -448,6 +449,7 @@ class AudioSourcesEditTable(QWidget):
 
     def _make_bottom_layout(self) -> QLayout:
         layout = QHBoxLayout()
+        layout.addWidget(self._apply_button)
         layout.addWidget(self._bottom_label)
         layout.addStretch(1)
         layout.addWidget(self._stats_button)
@@ -457,6 +459,7 @@ class AudioSourcesEditTable(QWidget):
     def _connect_widgets(self):
         qconnect(self._purge_button.clicked, self._on_purge_db_clicked)
         qconnect(self._stats_button.clicked, self._on_show_statistics_clicked)
+        qconnect(self._apply_button.clicked, self._on_apply_clicked)
 
     def _populate(self) -> None:
         QueryOp(
@@ -487,12 +490,24 @@ class AudioSourcesEditTable(QWidget):
         aud_src_mgr.purge_everything()
         self._populate()
 
+    def _on_apply_clicked(self) -> None:
+        self._apply_button.setEnabled(False)
+        cfg["audio_sources"] = [source.as_config_dict() for source in self.iterateConfigs()]
+        cfg.write_config()
+        aud_src_mgr.init_sources(notify_on_finish=False, on_finish=self._on_audio_sources_init_finished)
+
+    def _on_audio_sources_init_finished(self, result: InitResult) -> None:
+        self._apply_button.setEnabled(True)
+        if result.did_run:
+            self._populate()
+
     def iterateConfigs(self) -> Iterable[AudioSourceConfig]:
         return self._audio_sources_table.iterateConfigs()
 
     def _add_tooltips(self) -> None:
         self._stats_button.setToolTip("Show statistics for each imported audio source.")
         self._purge_button.setToolTip("Remove the database file.\n" "It will be recreated from scratch again.")
+        self._apply_button.setToolTip("Apply current sources configuration.")
 
 
 class SettingsDialog(QDialog, MgrPropMixIn):
