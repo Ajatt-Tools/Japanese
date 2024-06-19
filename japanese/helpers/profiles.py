@@ -170,15 +170,32 @@ class ProfilePitch(Profile, mode="pitch"):
 
 @dataclasses.dataclass(frozen=True)
 class ProfileFurigana(Profile, mode="furigana"):
-    color_code_pitch: str
+    color_code_pitch: ColorCodePitchFormat
 
     @classmethod
     def new(cls):
         return super().new(
             source="VocabKanji",
             destination="VocabFurigana",
-            color_code_pitch="none",
+            color_code_pitch=ColorCodePitchFormat(0),
         )
+
+    def as_config_dict(self) -> dict[str, typing.Union[str, bool]]:
+        d = super().as_config_dict()
+        d["color_code_pitch"] = flag_as_comma_separated_list(self.color_code_pitch)
+        return d
+
+    def replace_from_config_dict(self, profile_dict):
+        if "color_code_pitch" in profile_dict:
+            profile_dict = dict(
+                profile_dict,
+                # convert from string to the right type.
+                color_code_pitch=flag_from_comma_separated_list(
+                    ColorCodePitchFormat,
+                    profile_dict["color_code_pitch"],
+                ),
+            )
+        return super().replace_from_config_dict(profile_dict)
 
 
 @dataclasses.dataclass(frozen=True)
