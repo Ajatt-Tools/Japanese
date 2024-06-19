@@ -223,7 +223,7 @@ class ProfileEditForm(QGroupBox):
         self._form.name.setText(profile.name)
         self._form.note_type.repopulate(profile.note_type)
         self._form.split_morphemes.setChecked(profile.split_morphemes)
-        self._form.triggered_by.set_checked_flags(profile.enabled_callers())
+        self._form.triggered_by.set_checked_flags(profile.triggered_by)
         self._form.overwrite_destination.setChecked(profile.overwrite_destination)
         self._repopulate_fields(profile)
 

@@ -1,10 +1,9 @@
-# Copyright: (C) 2022 Ren Tatsumoto <tatsu at autistici.org>
-# License: GNU AGPL, version 3 or later; http://www.gnu.org/copyleft/gpl.html
+# Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
+# License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import dataclasses
 import enum
 import typing
-from collections.abc import Iterable
 
 
 @enum.unique
@@ -28,23 +27,24 @@ class TaskCallerOpts:
 
 
 @enum.unique
-class TaskCaller(enum.Enum):
-    focus_lost = enum.auto(), TaskCallerOpts()
-    toolbar_button = enum.auto(), TaskCallerOpts()
-    note_added = enum.auto(), TaskCallerOpts()
-    bulk_add = enum.auto(), TaskCallerOpts(audio_download_report=False)
+class TaskCaller(enum.Flag):
+    focus_lost = enum.auto()
+    toolbar_button = enum.auto()
+    note_added = enum.auto()
+    bulk_add = enum.auto()
 
     @property
     def cfg(self) -> TaskCallerOpts:
-        return self.value[-1]
+        if self == self.bulk_add:
+            return TaskCallerOpts(audio_download_report=False)
+        return TaskCallerOpts()
 
     @classmethod
-    def all_names(cls) -> Iterable[str]:
-        return (caller.name for caller in cls)
-
-    @classmethod
-    def all_comma_separated_names(cls) -> str:
-        return ",".join(cls.all_names())
+    def all_enabled(cls):
+        flag = cls(0)
+        for add in cls:
+            flag |= add
+        return flag
 
 
 class AnkiNoteProtocol(typing.Protocol):
@@ -67,7 +67,7 @@ class Profile(ProfileBase):
     destination: str
     mode: str
     split_morphemes: bool
-    triggered_by: str
+    triggered_by: TaskCaller
     overwrite_destination: bool
 
     def __init_subclass__(cls, **kwargs) -> None:
@@ -81,15 +81,12 @@ class Profile(ProfileBase):
         subclass = cls._subclasses_map[mode]
         return object.__new__(subclass)
 
-    def enabled_callers(self) -> list[TaskCaller]:
-        return [TaskCaller[name] for name in self.triggered_by.split(",") if name]
-
     def should_answer_to(self, caller: TaskCaller) -> bool:
         """
         When a task starts, it can refuse to run
         if the caller isn't listed among the callers that the task can be triggered by.
         """
-        return caller in self.enabled_callers()
+        return caller in self.triggered_by
 
     def applies_to_note(self, note: AnkiNoteProtocol) -> bool:
         """
@@ -108,7 +105,7 @@ class Profile(ProfileBase):
             name="New profile",
             note_type="Japanese",
             split_morphemes=True,
-            triggered_by=TaskCaller.all_comma_separated_names(),
+            triggered_by=TaskCaller.all_enabled(),
             overwrite_destination=False,
             **kwargs,
         )
@@ -122,7 +119,9 @@ class Profile(ProfileBase):
         return cls(**dataclasses.asdict(profile))
 
     def as_config_dict(self) -> dict[str, typing.Union[str, bool]]:
-        return dataclasses.asdict(self)
+        d = dataclasses.asdict(self)
+        d["triggered_by"] = flag_as_comma_separated_list(self.triggered_by)
+        return d
 
     @classmethod
     def from_config_dict(cls, profile_dict: dict):
@@ -131,6 +130,15 @@ class Profile(ProfileBase):
         return cls.get_default(mode=profile_dict["mode"]).replace_from_config_dict(profile_dict)
 
     def replace_from_config_dict(self, profile_dict):
+        if "triggered_by" in profile_dict:
+            profile_dict = dict(
+                profile_dict,
+                # convert from string to the right type.
+                triggered_by=flag_from_comma_separated_list(
+                    TaskCaller,
+                    profile_dict["triggered_by"],
+                ),
+            )
         return dataclasses.replace(
             self,
             **{key: profile_dict[key] for key in get_common_keys(dataclasses.asdict(self), profile_dict)},
