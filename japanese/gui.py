@@ -33,18 +33,15 @@ from .helpers.profiles import (
     ProfileAudio,
     ProfileFurigana,
     ProfilePitch,
+    TaskCaller,
 )
 from .pitch_accents.user_accents import UserAccentData
 from .reading import acc_dict
-from .widgets.addon_opts import (
-    EditableSelector,
-    TriggeredBySelector,
-    relevant_field_names,
-)
+from .widgets.addon_opts import EditableSelector, relevant_field_names
 from .widgets.anki_style import fix_default_anki_style
 from .widgets.audio_sources import AudioSourcesTable
 from .widgets.audio_sources_stats import AudioStatsDialog
-from .widgets.enum_selector import EnumSelectCombo
+from .widgets.enum_selector import EnumSelectCombo, FlagSelectCombo
 from .widgets.pitch_override_widget import PitchOverrideWidget
 from .widgets.settings_form import (
     AudioSettingsForm,
@@ -185,7 +182,7 @@ class ProfileEditForm(QGroupBox):
             note_type=NoteTypeSelector(),
             source=EditableSelector(),
             destination=EditableSelector(),
-            triggered_by=TriggeredBySelector(),
+            triggered_by=FlagSelectCombo(enum_type=TaskCaller),
             split_morphemes=QCheckBox(),
             overwrite_destination=QCheckBox(),
         )
@@ -219,14 +216,14 @@ class ProfileEditForm(QGroupBox):
         )
 
     def as_profile(self) -> Profile:
-        return Profile(**self._as_dict())
+        return Profile.from_config_dict(self._as_dict())
 
     def load_profile(self, profile: Profile):
         self._last_used_profile = profile
         self._form.name.setText(profile.name)
         self._form.note_type.repopulate(profile.note_type)
         self._form.split_morphemes.setChecked(profile.split_morphemes)
-        self._form.triggered_by.set_enabled_callers(profile.enabled_callers())
+        self._form.triggered_by.set_checked_flags(profile.enabled_callers())
         self._form.overwrite_destination.setChecked(profile.overwrite_destination)
         self._repopulate_fields(profile)
 
@@ -251,11 +248,17 @@ class ProfileEditForm(QGroupBox):
 class FuriganaProfileEditForm(ProfileEditForm, profile_class=ProfileFurigana):
     def _expand_form(self) -> None:
         super()._expand_form()
-        self._form.color_code_pitch = EnumSelectCombo(enum_type=ColorCodePitchFormat)
+        self._form.color_code_pitch = FlagSelectCombo(enum_type=ColorCodePitchFormat)
 
     def load_profile(self, profile: ProfileFurigana) -> None:
         super().load_profile(profile)
-        self._form.color_code_pitch.setCurrentName(profile.color_code_pitch)
+        self._form.color_code_pitch.set_checked_flags(profile.color_code_pitch)
+
+    def _add_tooltips(self) -> None:
+        super()._add_tooltips()
+        self._form.color_code_pitch.setToolTip(
+            "One or more variants to color-code pitch accents in words or sentences."
+        )
 
 
 class PitchProfileEditForm(ProfileEditForm, profile_class=ProfilePitch):
