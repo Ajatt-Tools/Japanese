@@ -125,11 +125,12 @@ class Profile(ProfileBase):
     def from_config_dict(cls, profile_dict: dict):
         # In case new options are added or removed in the future,
         # load default settings first, then overwrite them.
-        default = cls.get_default(profile_dict["mode"])
-        common_keys = dataclasses.asdict(default).keys() & profile_dict.keys()
+        return cls.get_default(mode=profile_dict["mode"]).replace_from_config_dict(profile_dict)
+
+    def replace_from_config_dict(self, profile_dict):
         return dataclasses.replace(
-            default,
-            **{key: profile_dict[key] for key in common_keys},
+            self,
+            **{key: profile_dict[key] for key in get_common_keys(dataclasses.asdict(self), profile_dict)},
         )
 
 
