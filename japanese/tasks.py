@@ -77,7 +77,7 @@ class AddFurigana(DoTask, task_type=ProfileFurigana):
         return fgen.generate_furigana(
             src_text,
             split_morphemes=self._task.split_morphemes,
-            output_format=ColorCodePitchFormat[self._task.color_code_pitch],
+            output_format=self._task.color_code_pitch,
         )
 
 
