@@ -72,7 +72,7 @@ class FuriganaGen:
         *,
         split_morphemes: bool = True,
         full_hiragana: bool = False,
-        output_format: ColorCodePitchFormat = ColorCodePitchFormat.none,
+        output_format: ColorCodePitchFormat = ColorCodePitchFormat(0),
     ) -> str:
         substrings = FuriganaList()
         for token in tokenize(src_text):
