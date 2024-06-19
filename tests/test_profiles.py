@@ -4,10 +4,13 @@
 import pytest
 
 from japanese.helpers.profiles import (
+    ColorCodePitchFormat,
     Profile,
     ProfileAudio,
     ProfileFurigana,
     ProfilePitch,
+    flag_as_comma_separated_list,
+    flag_from_comma_separated_list,
 )
 from tests.no_anki_config import no_anki_config
 
@@ -17,13 +20,13 @@ def furigana_dict() -> dict[str, object]:
     return {
         "name": "Add furigana for sentence",
         "note_type": "japanese",
-        "source": "SentKanji",
-        "destination": "SentFurigana",
+        "source": "Expression",
+        "destination": "ExpressionFurigana",
         "mode": "furigana",
         "split_morphemes": True,
         "triggered_by": "focus_lost,toolbar_button,note_added,bulk_add",
         "overwrite_destination": False,
-        "color_code_pitch": "none",
+        "color_code_pitch": "color",
     }
 
 
@@ -62,11 +65,13 @@ def test_read_profiles(no_anki_config) -> None:
 
 
 def test_create_profile_furigana(furigana_dict) -> None:
-    profile = Profile.from_config_dict(furigana_dict)
-    assert isinstance(profile, ProfileFurigana)
-    assert profile.mode == "furigana"
-    assert profile.source == "SentKanji"
-    assert profile.destination == "SentFurigana"
+    for idx in range(2):
+        profile = Profile.from_config_dict(furigana_dict)
+        assert isinstance(profile, ProfileFurigana)
+        assert profile.mode == "furigana"
+        assert profile.source == "Expression"
+        assert profile.destination == "ExpressionFurigana"
+        assert profile.color_code_pitch == ColorCodePitchFormat.color
 
 
 def test_create_profile_pitch(pitch_dict) -> None:
@@ -83,3 +88,24 @@ def test_create_profile_audio(audio_dict) -> None:
     assert profile.mode == "audio"
     assert profile.source == "VocabKanji"
     assert profile.destination == "VocabAudio"
+
+
+def test_flag_as_comma_separated_list() -> None:
+    ccpf = ColorCodePitchFormat
+    assert flag_as_comma_separated_list(ccpf.attributes | ccpf.underline) == "attributes,underline"
+    assert flag_as_comma_separated_list(ccpf.attributes | ccpf.color) == "attributes,color"
+    assert flag_as_comma_separated_list(ccpf.color | ccpf.attributes) == "attributes,color"
+    assert flag_as_comma_separated_list(ccpf.color | ccpf.attributes | ccpf.underline) == "attributes,color,underline"
+    assert flag_as_comma_separated_list(ccpf(0) | ccpf.color) == "color"
+    assert flag_as_comma_separated_list(ccpf(0)) == ""
+
+
+def test_flag_from_comma_separated_list() -> None:
+    ccpf = ColorCodePitchFormat
+    get_flg = flag_from_comma_separated_list
+    assert get_flg(ccpf, "") == ccpf(0)
+    assert get_flg(ccpf, "color") == ccpf.color
+    assert get_flg(ccpf, "underline") == ccpf.underline
+    assert get_flg(ccpf, "color,attributes") == ccpf.color | ccpf.attributes
+    assert get_flg(ccpf, "color,attributes,underline") == ccpf.color | ccpf.attributes | ccpf.underline
+    assert get_flg(ccpf, "missing") == ccpf(0)
