@@ -59,4 +59,4 @@ class FlagSelectCombo(CheckableComboBox):
         """
         Used to serialize checked options to store them in json.
         """
-        return ",".join(flag.name for flag in self.checkedData())
+        return ",".join(flag_item.name for flag_item in self.checkedData())
