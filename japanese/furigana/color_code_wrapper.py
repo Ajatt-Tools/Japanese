@@ -4,15 +4,8 @@ import io
 from typing import Optional
 
 from ..helpers.profiles import ColorCodePitchFormat
-from ..mecab_controller.basic_types import PartOfSpeech
 from ..pitch_accents.basic_types import AccDbParsedToken, PitchColor, PitchType
-
-SKIP_COLORING = (
-    PartOfSpeech.other,
-    PartOfSpeech.filler,
-    PartOfSpeech.particle,
-    PartOfSpeech.symbol,
-)
+from .attach_rules import SKIP_COLORING
 
 
 def should_skip_coloring(token: AccDbParsedToken) -> bool:
@@ -96,12 +89,12 @@ class ColorCodeWrapper(io.StringIO):
             return
         self.write(f' style="')
         if ColorCodePitchFormat.color in self._output_format:
-            self.write(f'color: {html_color};')
+            self.write(f"color: {html_color};")
         if ColorCodePitchFormat.color | ColorCodePitchFormat.underline in self._output_format:
             self.write(" ")
         if ColorCodePitchFormat.underline in self._output_format:
             self.write(
-                f'text-decoration: underline; text-decoration-color: {html_color};'
-                f' text-decoration-thickness: 2px; text-underline-offset: 3px;'
+                f"text-decoration: underline; text-decoration-color: {html_color};"
+                f" text-decoration-thickness: 2px; text-underline-offset: 3px;"
             )
         self.write('"')
