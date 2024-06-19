@@ -118,7 +118,7 @@ class Profile(ProfileBase):
     def clone(cls, profile: "Profile"):
         return cls(**dataclasses.asdict(profile))
 
-    def as_config_dict(self):
+    def as_config_dict(self) -> dict[str, typing.Union[str, bool]]:
         return dataclasses.asdict(self)
 
     @classmethod
