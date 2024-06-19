@@ -4,15 +4,15 @@
 from aqt.qt import *
 
 from ..ajt_common.grab_key import ShortCutGrabButton
-from ..widgets.addon_opts import TriggeredBySelector, WordsEdit
-from .enum_selector import EnumSelectCombo
+from ..widgets.addon_opts import WordsEdit
+from .enum_selector import EnumSelectCombo, FlagSelectCombo
 
 
 def as_config_dict(widgets: dict[str, QWidget]) -> dict[str, Union[bool, str, int]]:
     d = {}
     for key, widget in widgets.items():
-        if isinstance(widget, TriggeredBySelector):
-            d[key] = widget.comma_separated_callers()
+        if isinstance(widget, FlagSelectCombo):
+            d[key] = widget.comma_separated_flags()
         elif isinstance(widget, EnumSelectCombo):
             d[key] = widget.currentName()
         elif isinstance(widget, QComboBox):

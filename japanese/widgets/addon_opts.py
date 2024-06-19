@@ -1,33 +1,13 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
-from collections.abc import Collection, Iterable
+from collections.abc import Iterable
 from typing import Optional
 
 from aqt import mw
 from aqt.qt import *
 
-from ..ajt_common.checkable_combobox import CheckableComboBox
-from ..ajt_common.utils import ui_translate
-from ..helpers.profiles import TaskCaller
-
 NARROW_WIDGET_MAX_WIDTH = 96
-
-
-class TriggeredBySelector(CheckableComboBox):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._populate_options()
-
-    def _populate_options(self):
-        for caller in TaskCaller:
-            self.addCheckableItem(ui_translate(caller.name), caller)
-
-    def set_enabled_callers(self, callers: Collection[TaskCaller]):
-        return self.setCheckedData(callers)
-
-    def comma_separated_callers(self):
-        return ",".join(caller.name for caller in self.checkedData())
 
 
 class WordsEdit(QTextEdit):

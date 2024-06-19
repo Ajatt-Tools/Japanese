@@ -5,6 +5,7 @@ import enum
 
 from aqt.qt import *
 
+from ..ajt_common.checkable_combobox import CheckableComboBox
 from ..ajt_common.utils import ui_translate
 
 
@@ -35,3 +36,27 @@ class EnumSelectCombo(QComboBox):
 
     def currentText(self) -> str:
         raise NotImplementedError()
+
+
+class FlagSelectCombo(CheckableComboBox):
+    def __init__(
+        self,
+        enum_type: enum.EnumMeta,
+        parent=None,
+    ):
+        super().__init__(parent)
+        self._enum_type = enum_type
+        self._populate_options()
+
+    def _populate_options(self):
+        for flag_item in self._enum_type:
+            self.addCheckableItem(ui_translate(flag_item.name), data=flag_item)
+
+    def set_checked_flags(self, flags: enum.Flag) -> None:
+        return self.setCheckedData(flags)
+
+    def comma_separated_flags(self) -> str:
+        """
+        Used to serialize checked options to store them in json.
+        """
+        return ",".join(flag.name for flag in self.checkedData())
