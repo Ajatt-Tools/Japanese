@@ -26,7 +26,15 @@ RE_COUNTERS = re.compile(
 
 
 class Token(str):
-    pass
+    @property
+    def word(self) -> str:
+        return self
+
+    headword = word
+
+    @property
+    def part_of_speech(self) -> None:
+        return None
 
 
 class ParseableToken(Token):
