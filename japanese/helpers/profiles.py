@@ -56,6 +56,10 @@ class ProfileBase:
     _subclasses_map: dict[str, type["Profile"]] = {}  # "furigana" (str) -> ProfileFurigana
 
 
+def get_common_keys(d1: dict, d2: dict):
+    return d1.keys() & d2.keys()
+
+
 @dataclasses.dataclass(frozen=True)
 class Profile(ProfileBase):
     name: str
