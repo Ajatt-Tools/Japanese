@@ -140,7 +140,7 @@ class Profile(ProfileBase):
 
 def flag_as_comma_separated_list(flag: enum.Flag):
     assert isinstance(flag, enum.Enum)
-    return ",".join(item.name for item in type(flag) if item in flag)
+    return ",".join(str(item.name) for item in flag)
 
 
 def flag_from_comma_separated_list(flag_type: enum.EnumMeta, comma_separated_flags: str) -> enum.Flag:
