@@ -13,7 +13,7 @@ from aqt import mw
 from .ajt_common.addon_config import AddonConfigManager, ConfigSubViewBase
 from .audio_manager.abstract import AudioSettingsConfigViewABC
 from .audio_manager.basic_types import AudioSourceConfig
-from .helpers.profiles import PitchOutputFormat, Profile, get_default_profile
+from .helpers.profiles import PitchOutputFormat, Profile
 from .helpers.sakura_client import AddDefBehavior, DictName, SearchType
 from .helpers.tokens import RE_FLAGS
 from .mecab_controller.kana_conv import to_katakana
