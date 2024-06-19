@@ -138,11 +138,6 @@ class Profile(ProfileBase):
         )
 
 
-@functools.cache
-def get_default_profile(mode: str) -> Profile:
-    return Profile.get_default(mode)
-
-
 def flag_as_comma_separated_list(flag: enum.Flag):
     assert isinstance(flag, enum.Enum)
     return ",".join(item.name for item in type(flag) if item in flag)
