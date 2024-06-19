@@ -9,6 +9,8 @@ from japanese.helpers.profiles import (
     ProfileAudio,
     ProfileFurigana,
     ProfilePitch,
+    TaskCaller,
+    TaskCallerOpts,
     flag_as_comma_separated_list,
     flag_from_comma_separated_list,
 )
@@ -54,7 +56,7 @@ def audio_dict() -> dict[str, object]:
         "destination": "VocabAudio",
         "mode": "audio",
         "split_morphemes": False,
-        "triggered_by": "focus_lost,toolbar_button,note_added,bulk_add",
+        "triggered_by": "focus_lost,bulk_add",
         "overwrite_destination": False,
     }
 
@@ -72,6 +74,7 @@ def test_create_profile_furigana(furigana_dict) -> None:
         assert profile.source == "Expression"
         assert profile.destination == "ExpressionFurigana"
         assert profile.color_code_pitch == ColorCodePitchFormat.color
+        assert profile.triggered_by == TaskCaller.all_enabled()
 
 
 def test_create_profile_pitch(pitch_dict) -> None:
@@ -80,6 +83,7 @@ def test_create_profile_pitch(pitch_dict) -> None:
     assert profile.mode == "pitch"
     assert profile.source == "VocabKanji"
     assert profile.destination == "VocabPitchPattern"
+    assert profile.triggered_by == TaskCaller.all_enabled()
 
 
 def test_create_profile_audio(audio_dict) -> None:
@@ -88,6 +92,7 @@ def test_create_profile_audio(audio_dict) -> None:
     assert profile.mode == "audio"
     assert profile.source == "VocabKanji"
     assert profile.destination == "VocabAudio"
+    assert profile.triggered_by == TaskCaller.focus_lost | TaskCaller.bulk_add
 
 
 def test_flag_as_comma_separated_list() -> None:
@@ -109,3 +114,10 @@ def test_flag_from_comma_separated_list() -> None:
     assert get_flg(ccpf, "color,attributes") == ccpf.color | ccpf.attributes
     assert get_flg(ccpf, "color,attributes,underline") == ccpf.color | ccpf.attributes | ccpf.underline
     assert get_flg(ccpf, "missing") == ccpf(0)
+
+
+def test_task_callers() -> None:
+    tc = TaskCaller
+    assert tc.all_enabled() == tc.focus_lost | tc.toolbar_button | tc.note_added | tc.bulk_add
+    assert tc.bulk_add.cfg == TaskCallerOpts(audio_download_report=False)
+    assert tc.focus_lost.cfg == TaskCallerOpts(audio_download_report=True)
