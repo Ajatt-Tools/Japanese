@@ -143,6 +143,23 @@ def get_default_profile(mode: str) -> Profile:
     return Profile.get_default(mode)
 
 
+def flag_as_comma_separated_list(flag: enum.Flag):
+    assert isinstance(flag, enum.Enum)
+    return ",".join(item.name for item in type(flag) if item in flag)
+
+
+def flag_from_comma_separated_list(flag_type: enum.EnumMeta, comma_separated_flags: str) -> enum.Flag:
+    assert isinstance(comma_separated_flags, str)
+    flag: enum.Flag = flag_type(0)
+    for string in comma_separated_flags.split(","):
+        if string:
+            try:
+                flag |= flag_type[string]
+            except KeyError:
+                pass
+    return flag
+
+
 @dataclasses.dataclass(frozen=True)
 class ProfilePitch(Profile, mode="pitch"):
     output_format: str
