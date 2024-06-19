@@ -19,7 +19,7 @@ def should_skip_coloring(token: AccDbParsedToken) -> bool:
     """
     Don't color special symbols and words without known pitch.
     """
-    return token.part_of_speech in SKIP_COLORING or not token.headword_accents
+    return token.part_of_speech in SKIP_COLORING or not token.has_pitch()
 
 
 def get_main_pitch_color(token: AccDbParsedToken) -> Optional[str]:
