@@ -18,6 +18,7 @@ from .ajt_common.addon_config import (
     set_config_update_action,
 )
 from .ajt_common.consts import ADDON_SERIES
+from .ajt_common.enum_select_combo import EnumSelectCombo
 from .ajt_common.grab_key import ShortCutGrabButton
 from .ajt_common.utils import ui_translate
 from .audio import aud_src_mgr, show_audio_init_result_tooltip
@@ -41,7 +42,7 @@ from .widgets.addon_opts import EditableSelector, relevant_field_names
 from .widgets.anki_style import fix_default_anki_style
 from .widgets.audio_sources import AudioSourcesTable
 from .widgets.audio_sources_stats import AudioStatsDialog
-from .widgets.enum_selector import EnumSelectCombo, FlagSelectCombo
+from .widgets.enum_selector import FlagSelectCombo
 from .widgets.pitch_override_widget import PitchOverrideWidget
 from .widgets.settings_form import (
     AudioSettingsForm,

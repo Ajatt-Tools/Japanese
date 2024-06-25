@@ -3,9 +3,10 @@
 
 from aqt.qt import *
 
+from ..ajt_common.enum_select_combo import EnumSelectCombo
 from ..ajt_common.grab_key import ShortCutGrabButton
 from ..widgets.addon_opts import WordsEdit
-from .enum_selector import EnumSelectCombo, FlagSelectCombo
+from .enum_selector import FlagSelectCombo
 
 
 def as_config_dict(widgets: dict[str, QWidget]) -> dict[str, Union[bool, str, int]]:
