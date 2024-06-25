@@ -11,5 +11,38 @@ SKIP_COLORING = frozenset(
         PartOfSpeech.symbol,
     )
 )
-
-NEVER_ATTACH = frozenset("ない,なぁ,とか,けど,だけ,だろ,でしょ,なる,は,が,の,しまう,おる".split(","))
+NEVER_ATTACH_POS = frozenset(
+    (
+        PartOfSpeech.adverb,
+        PartOfSpeech.noun,
+    )
+)
+NEVER_ATTACH_WORD = frozenset(
+    (
+        "すぐ",
+        "ちゃ",
+        "ね",
+        "なぁ",
+        "とか",
+        "けど",
+        "だけ",
+        "だろ",
+        "でしょ",
+        "なる",
+        "は",
+        "が",
+        "の",
+        "しまう",
+        "おる",
+        "ある",
+        "な",
+        "ん",
+        "じゃ",
+        "らしい",
+        "し",
+        "も",
+        "ほど",
+        "いける",
+    )
+)
+MAX_ATTACHED = 4

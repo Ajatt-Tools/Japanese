@@ -6,9 +6,9 @@ from typing import Union
 
 from ..helpers.tokens import Token
 from ..mecab_controller import is_kana_str
-from ..mecab_controller.basic_types import ANY_ATTACHING, Inflection, PartOfSpeech
+from ..mecab_controller.basic_types import ANY_ATTACHING, Inflection
 from ..pitch_accents.basic_types import AccDbParsedToken
-from .attach_rules import NEVER_ATTACH
+from .attach_rules import MAX_ATTACHED, NEVER_ATTACH_POS, NEVER_ATTACH_WORD
 
 AnyToken = Union[AccDbParsedToken, Token]
 
