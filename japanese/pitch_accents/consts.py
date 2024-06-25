@@ -10,5 +10,6 @@ FORMATTED_ACCENTS_TSV = os.path.join(RES_DIR_PATH, "pitch_accents_formatted.csv"
 FORMATTED_ACCENTS_PICKLE = os.path.join(RES_DIR_PATH, "pitch_accents_formatted.pickle")
 NO_ACCENT = "?"
 
+# Ensure everything is ok
 assert os.path.isdir(RES_DIR_PATH), "res folder must exist."
 assert os.path.isfile(FORMATTED_ACCENTS_TSV), "formatted pitch accents must be present."
