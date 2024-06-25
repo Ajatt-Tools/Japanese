@@ -32,14 +32,16 @@ def is_attaching(inflection: Inflection) -> bool:
 
 
 def should_attach_token(attach_to: AccDbParsedToken, token: AnyToken):
+    if len(attach_to.attached_tokens) >= MAX_ATTACHED:
+        return False
     if not is_attaching(attach_to.inflection_type):
         return False
     if not is_kana_str(token.word):
         # only kana can be attached to the previous word, e.g. 探し(+た)
         return False
-    if token.part_of_speech == PartOfSpeech.noun:
+    if token.part_of_speech in NEVER_ATTACH_POS:
         return False
-    if token.word in NEVER_ATTACH or token.headword in NEVER_ATTACH:
+    if token.word in NEVER_ATTACH_WORD or token.headword in NEVER_ATTACH_WORD:
         return False
     return True
 
