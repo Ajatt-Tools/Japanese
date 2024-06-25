@@ -1,7 +1,7 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from typing import Optional
 
 from aqt import mw
@@ -14,7 +14,7 @@ class WordsEdit(QTextEdit):
     _min_height = 32
     _font_size = 16
 
-    def __init__(self, initial_values: list[str]):
+    def __init__(self, initial_values: Sequence[str]):
         super().__init__()
         self.setAcceptRichText(False)
         self.set_values(initial_values)
@@ -27,7 +27,7 @@ class WordsEdit(QTextEdit):
         font.setPixelSize(self._font_size)
         self.setFont(font)
 
-    def set_values(self, values: list[str]):
+    def set_values(self, values: Sequence[str]):
         if values:
             self.setPlainText(",".join(dict.fromkeys(values)))
 
