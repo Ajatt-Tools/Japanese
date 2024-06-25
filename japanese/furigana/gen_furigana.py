@@ -244,7 +244,7 @@ class FuriganaGen:
         return [
             PitchAccentEntry.from_formatted(entry)
             for entry in {
-                entry.html_notation: entry
+                (pr(entry.katakana_reading), entry.pitch_number): entry
                 for entry in self.sorted_readings(entries, lambda entry: entry.katakana_reading)
             }.values()
         ]
