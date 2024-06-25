@@ -73,7 +73,7 @@ class FuriganaGen:
                 assert isinstance(token, Token), "tokenize() must only yield tokens."
                 # Skip tokens that can't be parsed (non-japanese text).
                 # Skip full-kana tokens (no furigana is needed).
-                substrings.append(token)
+                substrings.append_token(token)
             elif acc_db_result := tuple(self.try_lookup_full_text(token)):
                 # If full text search succeeded, continue.
                 substrings.extend(acc_db_result)
@@ -83,10 +83,10 @@ class FuriganaGen:
             elif out := self.mecab_single_word(token):
                 # If the user doesn't want to split morphemes, still try to find the reading using mecab
                 # but abort if mecab outputs more than one word.
-                substrings.append(self.append_accents(out))
+                substrings.append_token(self.append_accents(out))
             else:
                 # Add the string as is, without furigana.
-                substrings.append(token)
+                substrings.append_token(token)
         return "".join(
             self.format_parsed_tokens(
                 tokens=substrings,
