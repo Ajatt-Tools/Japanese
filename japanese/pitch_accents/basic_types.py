@@ -31,7 +31,7 @@ class PitchType(enum.Enum):
 class PitchColor(enum.Enum):
     heiban = "#3366CC"  # blue
     atamadaka = "red"
-    nakadaka = "#ff6207"  # orange
+    nakadaka = "#eb8500"  # orange
     odaka = "green"
     kifuku = "purple"
     unknown = "gray"
