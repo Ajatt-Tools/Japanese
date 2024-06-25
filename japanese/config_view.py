@@ -22,7 +22,7 @@ from .pitch_accents.styles import PitchPatternStyle
 RE_CFG_WORD_SEP = re.compile(r"[、, ]+", flags=RE_FLAGS)
 
 
-@functools.lru_cache(maxsize=10)
+@functools.lru_cache(maxsize=20)
 def split_cfg_words(config_value: str) -> Sequence[str]:
     """Splits string by comma. Cache identical values."""
     return cast(Sequence[str], frozenset(re.split(RE_CFG_WORD_SEP, config_value)))
