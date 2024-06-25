@@ -46,14 +46,6 @@ def as_self(val):
     return val
 
 
-def color_code_pitch(token: AccDbParsedToken, furigana_formatted: str, output_format: ColorCodePitchFormat) -> str:
-    with ColorCodeWrapper(token, output_format) as output:
-        output.write(furigana_formatted)
-        for attached in token.attached_tokens:
-            output.write(attached)
-        return output.getvalue()
-
-
 class FuriganaGen:
     _cfg: JapaneseConfig
     _fcfg: FuriganaConfigView
@@ -168,6 +160,15 @@ class FuriganaGen:
                 yield token
             else:
                 raise ValueError(f"Invalid type: {type(token)}")
+
+    def color_code_pitch(
+        self, token: AccDbParsedToken, furigana_formatted: str, output_format: ColorCodePitchFormat
+    ) -> str:
+        with ColorCodeWrapper(token, output_format, self._cfg) as output:
+            output.write(furigana_formatted)
+            for attached in token.attached_tokens:
+                output.write(attached)
+            return output.getvalue()
 
     def format_acc_db_result(self, out: AccDbParsedToken, full_hiragana: bool = False) -> str:
         """
