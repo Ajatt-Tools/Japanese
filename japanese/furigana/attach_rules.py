@@ -19,6 +19,8 @@ NEVER_ATTACH_POS = frozenset(
 )
 NEVER_ATTACH_WORD = frozenset(
     (
+        "ます",
+        "ない",
         "すぐ",
         "ちゃ",
         "ね",
@@ -43,6 +45,7 @@ NEVER_ATTACH_WORD = frozenset(
         "も",
         "ほど",
         "いける",
+        "たらしい",
     )
 )
 MAX_ATTACHED = 4
