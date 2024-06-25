@@ -12,10 +12,11 @@ from aqt.qt import *
 from aqt.utils import showInfo
 
 from .ajt_common.consts import ADDON_SERIES
+from .helpers import ADDON_NAME
 from .helpers.profiles import TaskCaller
 from .tasks import DoTasks
 
-ACTION_NAME = f"{ADDON_SERIES}: Bulk-generate"
+ACTION_NAME = f"{ADDON_NAME}: Bulk-generate"
 
 
 def update_notes_op(col: Collection, notes: Sequence[Note]) -> OpChanges:
