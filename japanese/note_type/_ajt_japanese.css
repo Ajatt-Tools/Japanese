@@ -1,0 +1,115 @@
+/*
+ * AJT Japanese CSS 24.6.25.7
+ * Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
+ * License: GNU AGPL, version 3 or later; https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
+.tooltip .tooltip-text {
+    /* temp fix for "Japanese sentences" note type */
+    display: none;
+}
+
+.ajt__word_info {
+    position: relative;
+    display: inline-block;
+}
+.ajt__word_info:hover {
+    background-color: rgba(111, 144, 167, 0.3);
+    cursor: pointer;
+}
+.ajt__word_info:where(:hover, :active, :focus) .ajt__info_popup {
+    display: block;
+}
+.ajt__info_popup {
+    --mxbh: 320px;
+    --tbh: 1.4rem;
+    --bt: 1px;
+
+    display: none; /* hidden by default */
+    z-index: 9999;
+    font-weight: normal;
+    background-color: rgb(245, 245, 245);
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin: auto;
+    padding: 0rem;
+    max-width: 80%;
+    min-width: 240px;
+    width: 100%;
+    max-height: var(--mxbh);
+    box-shadow: 2px 2px 8px rgba(0 0 0 / 25%);
+    border: var(--bt) solid #a5a5a5;
+    box-sizing: border-box;
+}
+.ajt__info_popup * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+.ajt__info_popup[ajt__visible="true"] {
+    display: block;
+}
+.ajt__frame_top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: rgb(197, 197, 197);
+    font-size: 1rem;
+    line-height: var(--tbh);
+    user-select: none;
+    height: var(--tbh);
+}
+.ajt__frame_top span {
+    text-align: center;
+    flex: 1;
+}
+.ajt__frame_top button {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0;
+}
+.ajt__frame_bottom {
+    overflow: auto;
+    display: grid;
+    place-items: center;
+    max-height: calc(var(--mxbh) - var(--tbh) - var(--bt) * 2);
+    font-size: 1.5rem;
+}
+.ajt__info_popup ul {
+    list-style-type: none;
+    padding: 0.5rem;
+}
+.ajt__info_popup li {
+    margin-bottom: 0.5rem;
+}
+
+/* Downstep line colors */
+
+.ajt__downstep_heiban {
+    --downstep-color: #3366cc;
+}
+.ajt__downstep_atamadaka {
+    --downstep-color: #ff0000;
+}
+.ajt__downstep_odaka {
+    --downstep-color: #008000;
+}
+.ajt__downstep_nakadaka {
+    --downstep-color: #eb8500;
+}
+
+/* Downstep lines. */
+
+.ajt__HL {
+    box-shadow: inset -2px 2px 0 0px var(--downstep-color, currentColor);
+}
+.ajt__L {
+    box-shadow: inset 0px -2px 0 0px var(--downstep-color, currentColor);
+}
+.ajt__LH {
+    box-shadow: inset -2px -2px 0 0 var(--downstep-color, currentColor);
+}
+.ajt__H {
+    box-shadow: inset 0px 2px 0 0px var(--downstep-color, currentColor);
+}
