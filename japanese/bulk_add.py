@@ -11,7 +11,6 @@ from aqt.operations import CollectionOp
 from aqt.qt import *
 from aqt.utils import showInfo
 
-from .ajt_common.consts import ADDON_SERIES
 from .helpers import ADDON_NAME
 from .helpers.profiles import TaskCaller
 from .tasks import DoTasks
@@ -20,7 +19,7 @@ ACTION_NAME = f"{ADDON_NAME}: Bulk-generate"
 
 
 def update_notes_op(col: Collection, notes: Sequence[Note]) -> OpChanges:
-    pos = col.add_custom_undo_entry(f"{ADDON_SERIES}: Add data to {len(notes)} notes.")
+    pos = col.add_custom_undo_entry(f"{ADDON_NAME}: Add data to {len(notes)} notes.")
     to_update = []
     for note in notes:
         changed = DoTasks(note=note, caller=TaskCaller.bulk_add).run()
