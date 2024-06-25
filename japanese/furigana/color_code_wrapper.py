@@ -3,6 +3,7 @@
 import io
 from typing import Optional
 
+from ..config_view import JapaneseConfig
 from ..helpers.profiles import ColorCodePitchFormat
 from ..pitch_accents.basic_types import AccDbParsedToken, PitchColor, PitchType
 from .attach_rules import SKIP_COLORING
@@ -40,9 +41,11 @@ class ColorCodeWrapper(io.StringIO):
     _token: AccDbParsedToken
     _output_format: ColorCodePitchFormat
     _coloring_enabled: bool = True
+    _cfg: JapaneseConfig
 
-    def __init__(self, token: AccDbParsedToken, output_format: ColorCodePitchFormat):
+    def __init__(self, token: AccDbParsedToken, output_format: ColorCodePitchFormat, cfg: JapaneseConfig):
         super().__init__()
+        self._cfg = cfg
         self._token = token
         self._output_format = output_format
         self._set_coloring()
@@ -54,11 +57,17 @@ class ColorCodeWrapper(io.StringIO):
         if self._output_format == ColorCodePitchFormat(0):
             # color code feature is disabled completely. skip.
             self._coloring_enabled = False
+            return
         elif should_skip_coloring(self._token):
             # don't color special symbols and words without known pitch.
             self._coloring_enabled = False
+            return
+        elif self._cfg.pitch_accent.is_blocklisted(self._token.headword):
+            self._coloring_enabled = False
+            return
         else:
             self._coloring_enabled = True
+            return
 
     def getvalue(self) -> str:
         if self._coloring_enabled:
