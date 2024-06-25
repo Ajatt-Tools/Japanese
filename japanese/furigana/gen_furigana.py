@@ -151,7 +151,7 @@ class FuriganaGen:
     ) -> Iterable[str]:
         for token in tokens:
             if isinstance(token, AccDbParsedToken):
-                yield color_code_pitch(
+                yield self.color_code_pitch(
                     token=token,
                     furigana_formatted=self.format_acc_db_result(token, full_hiragana=full_hiragana),
                     output_format=output_format,
