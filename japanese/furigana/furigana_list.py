@@ -52,7 +52,7 @@ class FuriganaList:
     def __init__(self) -> None:
         self._list = []
 
-    def append(self, token: AnyToken) -> None:
+    def append_token(self, token: AnyToken) -> None:
         try:
             attach_to = self.last_token_if_known_accent()
             if should_attach_token(attach_to, token):
@@ -64,7 +64,7 @@ class FuriganaList:
 
     def extend(self, tokens: Iterable[AnyToken]) -> None:
         for token in tokens:
-            self.append(token)
+            self.append_token(token)
 
     def last_token_if_known_accent(self) -> AccDbParsedToken:
         last = self.back()
