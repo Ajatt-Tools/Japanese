@@ -8,6 +8,7 @@ from typing import Optional
 from aqt.qt import *
 
 from ..ajt_common.addon_config import ConfigSubViewBase
+from ..ajt_common.enum_select_combo import EnumSelectCombo
 from ..ajt_common.grab_key import ShortCutGrabButton
 from ..ajt_common.utils import ui_translate
 from ..config_view import (
@@ -32,7 +33,6 @@ from .addon_opts import (
     StrokeDisarrayLineEdit,
     WordsEdit,
 )
-from .enum_selector import EnumSelectCombo
 from .widgets_to_config_dict import as_config_dict
 
 
