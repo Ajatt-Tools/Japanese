@@ -13,6 +13,7 @@ def start_addon():
         editor_toolbar,
         gui,
         lookup_dialog,
+        note_types,
         tasks,
         welcome_dialog,
     )
@@ -28,6 +29,7 @@ def start_addon():
     context_menu.init()
     editor_toolbar.init()
     welcome_dialog.init()
+    note_types.init()
 
 
 if mw and "pytest" not in sys.modules:
