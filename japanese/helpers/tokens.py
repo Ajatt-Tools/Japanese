@@ -9,13 +9,13 @@ HTML_AND_MEDIA_REGEX = re.compile(
     r"<[^<>]+>|\[sound:[^\[\]]+]",
     flags=RE_FLAGS,
 )
-NON_JP_REGEX = re.compile(
+RE_NON_JP = re.compile(
     # Reference: https://stackoverflow.com/questions/15033196/
     # Added arabic numbers.
     r"[^\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\uff66-\uff9f\u4e00-\u9fff\u3400-\u4dbf０-９0-9]+",
     flags=RE_FLAGS,
 )
-JP_SEP_REGEX = re.compile(
+RE_JP_SEP = re.compile(
     # Reference: https://wikiless.org/wiki/List_of_Japanese_typographic_symbols
     r"[\r\n\t仝　 ・、※【】「」〒◎×〃゜『』《》～〜~〽,.。〄〇〈〉〓〔〕〖〗〘〙〚〛〝〞〟〠〡〢〣〥〦〧〨〭〮〯〫〬〶〷〸〹〺〻〼〾〿！？…ヽヾゞ〱〲〳〵〴（）［］｛｝｟｠゠＝‥•◦﹅﹆＊♪♫♬♩ⓍⓁⓎ]+",
     flags=RE_FLAGS,
@@ -45,8 +45,8 @@ def split_separators(expr: str) -> list[str]:
     """Split text by common separators (like / or ・) into separate words that can be looked up."""
 
     # Replace all typical separators with a space
-    expr = re.sub(NON_JP_REGEX, " ", expr)  # Remove non-Japanese characters
-    expr = re.sub(JP_SEP_REGEX, " ", expr)  # Remove Japanese punctuation
+    expr = re.sub(RE_NON_JP, " ", expr)  # Remove non-Japanese characters
+    expr = re.sub(RE_JP_SEP, " ", expr)  # Remove Japanese punctuation
     return expr.split(" ")
 
 
