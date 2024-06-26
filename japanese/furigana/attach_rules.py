@@ -15,16 +15,22 @@ NEVER_ATTACH_POS = frozenset(
     (
         PartOfSpeech.adverb,
         PartOfSpeech.noun,
+        PartOfSpeech.adnominal_adjective,
     )
 )
 NEVER_ATTACH_WORD = frozenset(
     (
+        "から",
+        "かねる",
+        "あの",
         "ます",
         "ない",
         "すぐ",
         "ちゃ",
         "ね",
+        "か",
         "なぁ",
+        "なあ",
         "とか",
         "けど",
         "だけ",
