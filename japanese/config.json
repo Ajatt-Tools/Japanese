@@ -55,7 +55,7 @@
     "skip_numbers": true,
     "reading_separator": ", ",
     "word_separator": "; ",
-    "blocklisted_words": "そりゃ,あもう,さ,で,お,こと,へ,か,よ,ん,だ,び,の,や,ね,ば,て,と,た,が,に,な,は,も,ます,から,いる,たち,てる,う,ましょ,たい,する,です,ない",
+    "blocklisted_words": "せる,そりゃ,あもう,さ,で,お,こと,へ,か,よ,ん,だ,び,の,や,ね,ば,て,と,た,が,に,な,は,も,ます,から,いる,たち,てる,う,ましょ,たい,する,です,ない",
     "maximum_results": 3,
     "discard_mode": "discard_extra",
     "html_style": "u_biq"
