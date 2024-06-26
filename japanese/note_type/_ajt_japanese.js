@@ -78,7 +78,8 @@ function ajt__make_accents_list(ajt_span) {
     const accents = document.createElement("ul");
     for (const accent of ajt_span.getAttribute("pitch").split(" ")) {
         const [kana, pitch_type, pitch_num] = accent.split(/[-:]/g);
-        accents.innerHTML += `<li><span class="ajt__downstep_${pitch_type}">${ajt__make_pattern(kana, pitch_type, pitch_num)}</span></li>`;
+        const pattern = ajt__make_pattern(kana, pitch_type, pitch_num);
+        accents.insertAdjacentHTML("beforeend", `<li><span class="ajt__downstep_${pitch_type}">${pattern}</span></li>`);
     }
     return accents;
 }
