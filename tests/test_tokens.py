@@ -55,4 +55,17 @@ def test_tokenize() -> None:
         "Token(。)",
     ]
     assert _describe_result(tokenize(expr)) == expected
+
+
+def test_counter_tokenize() -> None:
+    expr = "こうして３日間が始まった"
+    expected = [
+        "ParseableToken(こうして)",
+        "ParseableToken(３日)",
+        "ParseableToken(間が始まった)",
+    ]
+    assert _describe_result(tokenize(expr)) == expected
+
+
+def test_empty_tokenize() -> None:
     assert list(tokenize("")) == list()
