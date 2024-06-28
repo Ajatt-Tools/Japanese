@@ -21,7 +21,7 @@ RE_JP_SEP = re.compile(
     flags=RE_FLAGS,
 )
 RE_COUNTERS = re.compile(
-    r"([0-9０-９一二三四五六七八九十]{1,4}(?:[つ月日人筋隻丁品番枚時回円万歳限]|万人))", flags=RE_FLAGS
+    r"([0-9０-９一二三四五六七八九十零]{1,4}(?:万人|ヶ月|[つ月日人筋隻丁品番枚時回円万歳限]))", flags=RE_FLAGS
 )
 
 
