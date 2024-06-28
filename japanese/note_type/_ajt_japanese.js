@@ -1,5 +1,5 @@
 /*
- * AJT Japanese JS 24.6.25.7
+ * AJT Japanese JS 24.6.26.1
  * Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
  * License: GNU AGPL, version 3 or later; https://www.gnu.org/licenses/agpl-3.0.html
  */
@@ -68,6 +68,16 @@ function ajt__reformat_multi_furigana() {
             if (readings.length > 1) {
                 ruby.innerHTML = ajt__format_new_ruby(kanji, readings.slice(0, max_inline));
             }
+            if (readings.length > max_inline) {
+                const sequence = readings
+                    .map((reading) => `<span class="ajt__tooltip-reading">${reading}</span>`)
+                    .join("");
+                const wrapper = document.createElement("span");
+                wrapper.classList.add("ajt__tooltip");
+                wrapper.insertAdjacentHTML("beforeend", `<span class="ajt__tooltip-text">${sequence}</span>`);
+                ruby.replaceWith(wrapper);
+                wrapper.appendChild(ruby);
+            }
         } catch (error) {
             console.error(error);
         }
@@ -101,7 +111,7 @@ function ajt__create_popups() {
         const frame_bottom = document.createElement("div");
 
         frame_top.classList.add("ajt__frame_top");
-        frame_top.innerHTML += `<span>Information</span>`;
+        frame_top.innerHTML = `<span>Information</span>`;
 
         frame_bottom.classList.add("ajt__frame_bottom");
         frame_bottom.appendChild(ajt__make_accents_list(span));

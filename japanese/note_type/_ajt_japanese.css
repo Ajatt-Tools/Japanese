@@ -1,13 +1,8 @@
 /*
- * AJT Japanese CSS 24.6.25.7
+ * AJT Japanese CSS 24.6.26.1
  * Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
  * License: GNU AGPL, version 3 or later; https://www.gnu.org/licenses/agpl-3.0.html
  */
-
-.tooltip .tooltip-text {
-    /* temp fix for "Japanese sentences" note type */
-    display: none;
-}
 
 .ajt__word_info {
     position: relative;
@@ -27,6 +22,7 @@
 
     display: none; /* hidden by default */
     z-index: 9999;
+    color: #2a1b0a;
     font-weight: normal;
     background-color: rgb(245, 245, 245);
     position: absolute;
@@ -112,4 +108,72 @@
 }
 .ajt__H {
     box-shadow: inset 0px 2px 0 0px var(--downstep-color, currentColor);
+}
+
+/* Tooltips (multiple readings) */
+
+.ajt__tooltip {
+    position: relative;
+    display: inline-block;
+}
+
+.ajt__tooltip::after {
+    /* dotted underline */
+    content: "";
+    display: block;
+    position: absolute;
+    bottom: 5px;
+    right: 0;
+    left: 0;
+    border-bottom: 2px dotted hsl(0 80% 40% / 20%);
+}
+
+.ajt__tooltip > .ajt__tooltip-text {
+    font-weight: 500;
+    font-size: 18px;
+    visibility: hidden;
+    width: 120px;
+    background-color: black;
+    color: #fff;
+    text-align: left;
+    border-radius: 6px;
+    padding: 0 2px;
+    position: absolute;
+    z-index: 999;
+    top: calc(100% + 6px);
+    left: 50%;
+    margin-left: -60px;
+    word-break: keep-all;
+}
+
+.ajt__tooltip .ajt__tooltip-text::after {
+    /* Triangle */
+    content: "";
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent transparent black transparent;
+}
+
+.ajt__tooltip:hover .ajt__tooltip-text {
+    visibility: visible;
+}
+
+.ajt__word_info .ajt__tooltip .ajt__tooltip-text {
+    /* fix for "Japanese sentences" note type */
+    display: none;
+}
+
+.ajt__tooltip > .tags {
+    position: absolute;
+    top: 0px;
+    right: -9px;
+}
+
+.ajt__tooltip-text > .ajt__tooltip-reading:not(:last-child)::after {
+    content: "; ";
+    color: #f6a192;
 }
