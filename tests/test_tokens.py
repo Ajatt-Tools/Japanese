@@ -15,6 +15,10 @@ def test_clean_furigana() -> None:
     )
 
 
+def _describe_result(tokens):
+    return list(f"{token.__class__.__name__}({token})" for token in tokens)
+
+
 def test_tokenize() -> None:
     expr = (
         '<div>Lorem ipsum dolor sit amet, [sound:はな.mp3]<img src="はな.jpg"> '
@@ -50,5 +54,5 @@ def test_tokenize() -> None:
         "ParseableToken(情報処理の技術は日々進化している)",
         "Token(。)",
     ]
-    assert list(f"{token.__class__.__name__}({token})" for token in tokenize(expr)) == expected
+    assert _describe_result(tokenize(expr)) == expected
     assert list(tokenize("")) == list()
