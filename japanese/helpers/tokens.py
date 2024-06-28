@@ -23,6 +23,14 @@ RE_JP_SEP = re.compile(
 RE_COUNTERS = re.compile(
     r"([0-9０-９一二三四五六七八九十零]{1,4}(?:万人|ヶ月|[つ月日人筋隻丁品番枚時回円万歳限]))", flags=RE_FLAGS
 )
+RE_NON_JP_PARSED = re.compile(
+    r"<no-jp>(?P<token>.*?)</no-jp>",
+    flags=RE_FLAGS,
+)
+RE_NON_JP_PART = re.compile(
+    r"(<no-jp>.*?</no-jp>)",
+    flags=RE_FLAGS,
+)
 
 
 class Token(str):
@@ -61,9 +69,8 @@ def mark_non_jp_token(m: re.Match) -> str:
 
 def parts(expr: str, pattern: re.Pattern) -> list[str]:
     return re.split(
-        r"(<no-jp>.*?</no-jp>)",
+        RE_NON_JP_PART,
         string=re.sub(pattern, mark_non_jp_token, expr),
-        flags=RE_FLAGS,
     )
 
 
@@ -80,7 +87,7 @@ def _tokenize(expr: str, *, split_regexes: Sequence[re.Pattern]) -> Iterable[Tok
     else:
         for part in parts(expr, split_regexes[0]):
             if part:
-                if m := re.fullmatch(r"<no-jp>(?P<token>.*?)</no-jp>", part, flags=RE_FLAGS):
+                if m := re.fullmatch(RE_NON_JP_PARSED, part):
                     yield Token(m.group("token"))
                 else:
                     yield from _tokenize(part, split_regexes=split_regexes[1:])
