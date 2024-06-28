@@ -101,5 +101,5 @@ def tokenize(expr: str) -> Iterable[Token]:
     """
     return _tokenize(
         expr=clean_furigana(expr),
-        split_regexes=(HTML_AND_MEDIA_REGEX, NON_JP_REGEX, JP_SEP_REGEX),
+        split_regexes=(HTML_AND_MEDIA_REGEX, RE_NON_JP, RE_JP_SEP),
     )
