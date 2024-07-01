@@ -34,6 +34,7 @@
     border-style: solid;
     border-color: transparent transparent var(--acc-color-1) transparent;
     visibility: hidden;
+    z-index: -9999;
 }
 .ajt__word_info:hover {
     /* Highlight word on hover */
@@ -48,7 +49,6 @@
     --border-size: 1px;
 
     display: block;
-    visibility: hidden;
     color: var(--acc-color-3);
     font-weight: normal;
     background-color: var(--acc-color-4);
@@ -64,6 +64,8 @@
     max-height: var(--max-popup-height);
     box-shadow: 2px 2px 8px rgba(0 0 0 / 25%);
     border: var(--border-size) solid var(--acc-color-1);
+    visibility: hidden;
+    z-index: -9999;
 }
 .ajt__word_info:where(:hover, :active, :focus)::after,
 .ajt__word_info:where(:hover, :active, :focus) .ajt__info_popup {
