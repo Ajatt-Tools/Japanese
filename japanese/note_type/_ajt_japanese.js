@@ -1,5 +1,5 @@
 /*
- * AJT Japanese JS 24.6.26.1
+ * AJT Japanese JS 24.7.1.0
  * Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
  * License: GNU AGPL, version 3 or later; https://www.gnu.org/licenses/agpl-3.0.html
  */
@@ -100,33 +100,55 @@ function ajt__popup_cleanup() {
     }
 }
 
+function ajt__adjust_popup_position(popup_div) {
+    const elem_rect = popup_div.getBoundingClientRect();
+    const right_corner_x = elem_rect.x + elem_rect.width;
+    const overflow_x = right_corner_x - window.innerWidth;
+    /* By default the left property is set to 50% */
+    if (elem_rect.x < 0) {
+        popup_div.style.left = `calc(50% + ${-elem_rect.x}px + 0.5rem)`;
+    } else if (overflow_x > 0) {
+        popup_div.style.left = `calc(50% - ${overflow_x}px - 0.5rem)`;
+    } else {
+        popup_div.style.left = void 0;
+    }
+}
+
+function ajt__make_popup_div(content) {
+    /* Popup Top frame */
+    const frame_top = document.createElement("div");
+    frame_top.classList.add("ajt__frame_top");
+    frame_top.innerHTML = `<span>Information</span>`;
+
+    /* Popup Content */
+    const frame_bottom = document.createElement("div");
+    frame_bottom.classList.add("ajt__frame_bottom");
+    frame_bottom.appendChild(content);
+
+    /* Make Popup */
+    const popup = document.createElement("div");
+    popup.classList.add("ajt__info_popup");
+    popup.appendChild(frame_top);
+    popup.appendChild(frame_bottom);
+    return popup;
+}
+
 function ajt__create_popups() {
     for (const [idx, span] of document.querySelectorAll(".ajt__word_info").entries()) {
         if (span.matches(".jpsentence .background *")) {
             /* fix for "Japanese sentences" note type */
             continue;
         }
-        const popup = document.createElement("div");
-        const frame_top = document.createElement("div");
-        const frame_bottom = document.createElement("div");
-
-        frame_top.classList.add("ajt__frame_top");
-        frame_top.innerHTML = `<span>Information</span>`;
-
-        frame_bottom.classList.add("ajt__frame_bottom");
-        frame_bottom.appendChild(ajt__make_accents_list(span));
-
-        popup.classList.add("ajt__info_popup");
+        const content_ul = ajt__make_accents_list(span);
+        const popup = ajt__make_popup_div(content_ul);
         popup.setAttribute("ajt__popup_idx", idx);
-        popup.appendChild(frame_top);
-        popup.appendChild(frame_bottom);
-
         span.setAttribute("ajt__popup_idx", idx);
         span.appendChild(popup);
+        ajt__adjust_popup_position(popup);
     }
 }
 
-/* setup */
+/* Setup */
 ajt__popup_cleanup();
 ajt__create_popups();
 ajt__reformat_multi_furigana();
