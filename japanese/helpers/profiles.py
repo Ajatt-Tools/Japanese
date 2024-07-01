@@ -147,7 +147,8 @@ class Profile(ProfileBase):
 
 def flag_as_comma_separated_list(flag: enum.Flag):
     assert isinstance(flag, enum.Enum)
-    return ",".join(str(item.name) for item in flag)
+    return ",".join(str(item.name) for item in type(flag) if item in flag)
+    # note: `item.name for item in flag` won't work on the official Anki build that is still on python 3.9
 
 
 def flag_from_comma_separated_list(flag_type: enum.EnumMeta, comma_separated_flags: str) -> enum.Flag:
