@@ -15,6 +15,7 @@ SEP_PITCH_GROUP = " "
 SEP_PITCH_TYPES = ","
 SEP_READING_PITCH = ":"
 SEP_PITCH_TYPE_NUM = "-"
+SMALL_KANA_CHARS = "ァィゥェォャュョぁぃぅぇぉゃゅょ"
 
 
 @enum.unique
