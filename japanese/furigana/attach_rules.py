@@ -20,6 +20,9 @@ NEVER_ATTACH_POS = frozenset(
 )
 NEVER_ATTACH_WORD = frozenset(
     (
+        "いく",
+        "くださる",
+        "くる",
         "から",
         "かねる",
         "あの",
