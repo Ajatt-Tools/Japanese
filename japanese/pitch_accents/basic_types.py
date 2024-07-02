@@ -80,7 +80,7 @@ class PitchParam(NamedTuple):
     @classmethod
     def from_symbol(cls, katakana_reading: str, pitch_num_as_str: str):
         return cls(
-            type=pitch_type_from_pitch_num(pitch_num_as_str, n_moras=len(kana_to_moras(katakana_reading))),
+            type=pitch_type_from_pitch_num(pitch_num_as_str, n_moras=count_moras(katakana_reading)),
             number=pitch_num_as_str,
         )
 
