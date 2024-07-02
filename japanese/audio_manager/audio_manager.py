@@ -1,6 +1,7 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 import abc
+from collections.abc import Iterable
 
 from ..config_view import JapaneseConfig
 from ..helpers.basic_types import AudioManagerHttpClientABC
@@ -39,6 +40,9 @@ class AudioSourceManagerFactory(AudioSourceManagerFactoryABC, abc.ABC):
     def _set_sources(self, sources: list[AudioSource]) -> None:
         self._audio_sources = [source.with_db(None) for source in sources]
 
+    def _iter_audio_sources(self, db: Sqlite3Buddy) -> Iterable[AudioSource]:
+        return (AudioSource.from_cfg(source, db) for source in self._config.iter_audio_sources())
+
     def _get_sources(self) -> InitResult:
         """
         This method is normally run in a different thread.
@@ -47,7 +51,7 @@ class AudioSourceManagerFactory(AudioSourceManagerFactoryABC, abc.ABC):
         sources, errors = [], []
         with sqlite3_buddy() as db:
             session = self.request_new_session(db)
-            for source in [AudioSource.from_cfg(source, db) for source in self._config.iter_audio_sources()]:
+            for source in self._iter_audio_sources(db):
                 if not source.enabled:
                     continue
                 try:
