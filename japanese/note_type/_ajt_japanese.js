@@ -39,12 +39,6 @@ function ajt__make_pattern(kana, pitch_type, pitch_num) {
     }
 }
 
-function ajt__hide_all() {
-    for (const other of document.querySelectorAll(".ajt__info_popup")) {
-        other.removeAttribute("ajt__visible");
-    }
-}
-
 function ajt__format_new_ruby(kanji, readings) {
     if (readings.length > 1) {
         return `<ruby>${ajt__format_new_ruby(kanji, readings.slice(0, -1))}</ruby><rt>${readings.slice(-1)}</rt>`;
