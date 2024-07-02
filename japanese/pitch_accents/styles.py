@@ -11,6 +11,7 @@ class PitchPatternStyle(enum.Enum):
     """
 
     u_biq = enum.auto()
+    u_biq_color_coded = enum.auto()
     javdejong = enum.auto()
     kanjium = enum.auto()
     none = enum.auto()
@@ -36,6 +37,8 @@ class XmlTags:
     devoiced_end = "</devoiced>"
 
 
+PITCH_COLOR_PLACEHOLDER = "[PITCH_COLOR]"
+
 STYLE_MAP = {
     PitchPatternStyle.javdejong: {
         # Style used in the original Japanese Pitch Accent Anki add-on.
@@ -59,19 +62,19 @@ STYLE_MAP = {
         XmlTags.devoiced_start: '<span style="color: royalblue;">',
         XmlTags.devoiced_end: "</span>",
     },
-    PitchPatternStyle.u_biq: {
+    PitchPatternStyle.u_biq_color_coded: {
         # Style used on the u-biq website, https://accent.u-biq.org/
         # low
-        XmlTags.low_start: '<span style="box-shadow: inset 0px -2px 0 0px #FF6633;">',
+        XmlTags.low_start: f'<span style="box-shadow: inset 0px -2px 0 0px {PITCH_COLOR_PLACEHOLDER};">',
         XmlTags.low_end: "</span>",
         # low, rise at the end
-        XmlTags.low_rise_start: '<span style="box-shadow: inset -2px -2px 0 0 #FF6633;">',
+        XmlTags.low_rise_start: f'<span style="box-shadow: inset -2px -2px 0 0 {PITCH_COLOR_PLACEHOLDER};">',
         XmlTags.low_rise_end: "</span>",
         # high
-        XmlTags.high_start: '<span style="box-shadow: inset 0px 2px 0 0px #FF6633;">',
+        XmlTags.high_start: f'<span style="box-shadow: inset 0px 2px 0 0px {PITCH_COLOR_PLACEHOLDER};">',
         XmlTags.high_end: "</span>",
         # high, drop at the end
-        XmlTags.high_drop_start: '<span style="box-shadow: inset -2px 2px 0 0px #FF6633;">',
+        XmlTags.high_drop_start: f'<span style="box-shadow: inset -2px 2px 0 0px {PITCH_COLOR_PLACEHOLDER};">',
         XmlTags.high_drop_end: "</span>",
         # nasal, e.g. カ゚
         XmlTags.nasal_start: '<span style="color: red;">',
@@ -123,4 +126,9 @@ STYLE_MAP = {
         XmlTags.devoiced_start: '<span style="color: royalblue;">',
         XmlTags.devoiced_end: "</span>",
     },
+}
+STYLE_MAP[PitchPatternStyle.u_biq] = {
+    # plain u-biq has a fixed color
+    k: v.replace(PITCH_COLOR_PLACEHOLDER, "#FF6633")
+    for k, v in STYLE_MAP[PitchPatternStyle.u_biq_color_coded].items()
 }

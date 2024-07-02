@@ -2,7 +2,7 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 from collections import OrderedDict
 from collections.abc import Sequence
-from typing import Optional, TypeVar
+from typing import Optional
 
 from aqt import gui_hooks
 
@@ -13,22 +13,39 @@ from .mecab_controller.kana_conv import to_hiragana
 from .mecab_controller.mecab_controller import MecabController
 from .pitch_accents.acc_dict_mgr import AccentDict, AccentDictManager, FormattedEntry
 from .pitch_accents.accent_lookup import AccentLookup
-from .pitch_accents.styles import STYLE_MAP
+from .pitch_accents.basic_types import (
+    PitchColor,
+    count_moras,
+    pitch_type_from_pitch_num,
+)
+from .pitch_accents.styles import PITCH_COLOR_PLACEHOLDER, STYLE_MAP
 from .pitch_accents.svg_graphs import SvgPitchGraphMaker
 
 # Lookup
 ##########################################################################
 
 
-def convert_to_inline_style(txt: str) -> str:
+def convert_to_inline_style(txt: str, pitch_color: str) -> str:
     """Map style classes to their user-configured inline versions."""
     for k, v in STYLE_MAP[cfg.pitch_accent.html_style].items():
         txt = txt.replace(k, v)
+    txt = txt.replace(PITCH_COLOR_PLACEHOLDER, pitch_color)
     return txt
 
 
-def update_html(html_notation: str) -> str:
-    html_notation = convert_to_inline_style(html_notation)
+def pitch_color_from_entry(entry: FormattedEntry) -> str:
+    pitch_type = pitch_type_from_pitch_num(entry.pitch_number, count_moras(entry.katakana_reading))
+    try:
+        return PitchColor[pitch_type.name].value
+    except KeyError:
+        return PitchColor.unknown.value
+
+
+def update_html(entry: FormattedEntry, with_number: bool = False) -> str:
+    html_notation = convert_to_inline_style(
+        f"{entry.html_notation} {entry.pitch_number_html}" if with_number else entry.html_notation,
+        pitch_color=pitch_color_from_entry(entry),
+    )
     if cfg.pitch_accent.output_hiragana:
         html_notation = to_hiragana(html_notation)
     return html_notation
@@ -36,11 +53,11 @@ def update_html(html_notation: str) -> str:
 
 def get_notation(entry: FormattedEntry, mode: PitchOutputFormat) -> str:
     if mode == PitchOutputFormat.html:
-        return update_html(entry.html_notation)
+        return update_html(entry)
     elif mode == PitchOutputFormat.number:
         return entry.pitch_number
     elif mode == PitchOutputFormat.html_and_number:
-        return update_html(f"{entry.html_notation} {entry.pitch_number_html}")
+        return update_html(entry, with_number=True)
     elif mode == PitchOutputFormat.svg:
         return svg_graph_maker.make_graph(entry)
     raise RuntimeError("Unreachable.")
