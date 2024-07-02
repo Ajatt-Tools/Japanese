@@ -50,6 +50,7 @@
 
     display: block;
     color: var(--acc-color-3);
+    cursor: auto;
     font-weight: normal;
     background-color: var(--acc-color-4);
     position: absolute;
