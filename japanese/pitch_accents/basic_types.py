@@ -63,6 +63,10 @@ def pitch_type_from_pitch_num(pitch_num_as_str: str, n_moras: int) -> PitchType:
     return PitchType.unknown
 
 
+def count_moras(katakana_reading: str) -> int:
+    return sum(1 for char in katakana_reading if char not in SMALL_KANA_CHARS)
+
+
 class PitchParam(NamedTuple):
     type: PitchType
     number: str
