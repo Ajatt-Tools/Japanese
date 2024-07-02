@@ -46,10 +46,9 @@ class AudioSource(AudioSourceConfig):
         # Otherwise, fall back to relative path.
         self.raise_if_not_ready()
         assert self.db
-        dir_path_abs = self.db.get_media_dir_abs(self.name)
-        if not dir_path_abs:
-            dir_path_abs = self.join(os.path.dirname(self.url), self.db.get_media_dir_rel(self.name))
-        return dir_path_abs
+        if dir_path_abs := self.db.get_media_dir_abs(self.name):
+            return dir_path_abs
+        return self.join(os.path.dirname(self.url), self.db.get_media_dir_rel(self.name))
 
     def join(self, *args) -> Union[str, bytes]:
         """Join multiple paths."""
