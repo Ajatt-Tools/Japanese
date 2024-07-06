@@ -16,10 +16,12 @@ NEVER_ATTACH_POS = frozenset(
         PartOfSpeech.adverb,
         PartOfSpeech.noun,
         PartOfSpeech.adnominal_adjective,
+        PartOfSpeech.interjection,
     )
 )
 NEVER_ATTACH_WORD = frozenset(
     (
+        "ごめん",
         "もらう",
         "いく",
         "くださる",
