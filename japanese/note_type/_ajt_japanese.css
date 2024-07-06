@@ -213,7 +213,14 @@
     }
 }
 
-.ajt__word_info .ajt__tooltip .ajt__tooltip-text {
-    /* fix for "Japanese sentences" note type */
-    display: none;
+/* Hide Tooltips if Popups are enabled. */
+.ajt__word_info {
+    .ajt__tooltip {
+        display: initial;
+    }
+    .ajt__tooltip .ajt__tooltip-text,
+    .ajt__tooltip::after {
+        display: none;
+        height: 0px;
+    }
 }
