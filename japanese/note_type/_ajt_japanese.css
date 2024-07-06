@@ -1,11 +1,17 @@
 /*
- * AJT Japanese CSS 24.7.1.0
+ * AJT Japanese CSS 24.7.3.0
  * Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
  * License: GNU AGPL, version 3 or later; https://www.gnu.org/licenses/agpl-3.0.html
  */
 
+/* Reset for AJT elements */
+
 [class^="ajt__"],
-[class^="ajt__"] * {
+[class^="ajt__"]::before,
+[class^="ajt__"]::after,
+[class^="ajt__"] *,
+[class^="ajt__"] *::before,
+[class^="ajt__"] *::after {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -21,26 +27,41 @@
     --acc-color-4: rgb(245, 245, 245);
     position: relative;
     display: inline-block;
+
+    &::after {
+        /* Triangle decoration */
+        content: "";
+        display: block;
+        position: absolute;
+        bottom: 0%;
+        left: 50%;
+        margin-left: -5px;
+        border-width: 5px;
+        border-style: solid;
+        border-color: transparent transparent var(--acc-color-1) transparent;
+    }
+
+    &:hover {
+        /* Highlight word on hover */
+        background-color: var(--acc-color-2);
+        cursor: pointer;
+    }
+
+    &::after,
+    & .ajt__info_popup {
+        /* Hide the popup by default */
+        visibility: hidden;
+        z-index: -9999;
+    }
+
+    &:hover::after,
+    &:hover .ajt__info_popup {
+        /* Show the popup on hover */
+        visibility: visible;
+        z-index: 9999;
+    }
 }
-.ajt__word_info::after {
-    /* Triangle decoration */
-    content: "";
-    display: block;
-    position: absolute;
-    bottom: 0%;
-    left: 50%;
-    margin-left: -5px;
-    border-width: 5px;
-    border-style: solid;
-    border-color: transparent transparent var(--acc-color-1) transparent;
-    visibility: hidden;
-    z-index: -9999;
-}
-.ajt__word_info:hover {
-    /* Highlight word on hover */
-    background-color: var(--acc-color-2);
-    cursor: pointer;
-}
+
 .ajt__info_popup {
     /* Popup (tooltip) that shows pitch accents. Visible on hover. */
     --max-popup-width: calc(100vw - 1rem);
@@ -65,49 +86,34 @@
     max-height: var(--max-popup-height);
     box-shadow: 2px 2px 8px rgba(0 0 0 / 25%);
     border: var(--border-size) solid var(--acc-color-1);
-    visibility: hidden;
-    z-index: -9999;
+
+    ul {
+        list-style-type: none;
+        padding: 0.5rem;
+    }
+    li {
+        margin-bottom: 0.5rem;
+    }
 }
-.ajt__word_info:where(:hover, :active, :focus)::after,
-.ajt__word_info:where(:hover, :active, :focus) .ajt__info_popup {
-    /* Show popup on hover */
-    visibility: visible;
-    z-index: 9999;
-}
-.ajt__frame_top {
+
+.ajt__frame_title {
     /* Title bar (says "Information") */
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    text-align: center;
     background-color: rgb(197, 197, 197);
     font-size: 1rem;
     user-select: none;
     height: var(--text-height);
     line-height: var(--text-height);
 }
-.ajt__frame_top span {
-    text-align: center;
-    flex: 1;
-}
-.ajt__frame_top button {
-    width: 2rem;
-    height: 2rem;
-    border-radius: 0;
-}
-.ajt__frame_bottom {
+
+.ajt__frame_content {
     /* Popup content (contains a list of pitch accents) */
     overflow: auto;
     display: grid;
     place-items: center;
     max-height: calc(var(--max-popup-height) - var(--text-height) - var(--border-size) * 2);
     font-size: 1.5rem;
-}
-.ajt__info_popup ul {
-    list-style-type: none;
-    padding: 0.5rem;
-}
-.ajt__info_popup li {
-    margin-bottom: 0.5rem;
+    line-height: 1.5;
 }
 
 /* Downstep line colors */
@@ -150,23 +156,33 @@
 
     position: relative;
     display: inline-block;
+
+    &::after {
+        /* dotted underline */
+        content: "";
+        display: block;
+        position: absolute;
+        bottom: 5px;
+        right: 0;
+        left: 0;
+        border-bottom: 2px dotted var(--acc-color-2);
+    }
+    .ajt__tooltip-text {
+        visibility: hidden;
+    }
+    &:hover .ajt__tooltip-text {
+        visibility: visible;
+    }
+    .tags {
+        position: absolute;
+        top: 0px;
+        right: -9px;
+    }
 }
 
-.ajt__tooltip::after {
-    /* dotted underline */
-    content: "";
-    display: block;
-    position: absolute;
-    bottom: 5px;
-    right: 0;
-    left: 0;
-    border-bottom: 2px dotted var(--acc-color-2);
-}
-
-.ajt__tooltip > .ajt__tooltip-text {
+.ajt__tooltip .ajt__tooltip-text {
     font-weight: 500;
     font-size: 18px;
-    visibility: hidden;
     width: 120px;
     background-color: var(--acc-color-1);
     color: var(--acc-color-3);
@@ -179,36 +195,25 @@
     left: 50%;
     margin-left: -60px;
     word-break: keep-all;
-}
 
-.ajt__tooltip .ajt__tooltip-text::after {
-    /* Triangle */
-    content: "";
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    margin-left: -5px;
-    border-width: 5px;
-    border-style: solid;
-    border-color: transparent transparent var(--acc-color-1) transparent;
-}
-
-.ajt__tooltip:hover .ajt__tooltip-text {
-    visibility: visible;
+    &::after {
+        /* Triangle */
+        content: "";
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        margin-left: -5px;
+        border-width: 5px;
+        border-style: solid;
+        border-color: transparent transparent var(--acc-color-1) transparent;
+    }
+    & .ajt__tooltip-reading:not(:last-child)::after {
+        content: "; ";
+        color: var(--acc-color-4);
+    }
 }
 
 .ajt__word_info .ajt__tooltip .ajt__tooltip-text {
     /* fix for "Japanese sentences" note type */
     display: none;
-}
-
-.ajt__tooltip > .tags {
-    position: absolute;
-    top: 0px;
-    right: -9px;
-}
-
-.ajt__tooltip-text > .ajt__tooltip-reading:not(:last-child)::after {
-    content: "; ";
-    color: var(--acc-color-4);
 }
