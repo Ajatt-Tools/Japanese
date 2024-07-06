@@ -1,5 +1,5 @@
 /*
- * AJT Japanese JS 24.7.1.0
+ * AJT Japanese JS 24.7.3.0
  * Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
  * License: GNU AGPL, version 3 or later; https://www.gnu.org/licenses/agpl-3.0.html
  */
@@ -132,12 +132,12 @@ function ajt__adjust_popup_position(popup_div) {
 function ajt__make_popup_div(content) {
     /* Popup Top frame */
     const frame_top = document.createElement("div");
-    frame_top.classList.add("ajt__frame_top");
-    frame_top.innerHTML = `<span>Information</span>`;
+    frame_top.classList.add("ajt__frame_title");
+    frame_top.innerText = "Information";
 
     /* Popup Content */
     const frame_bottom = document.createElement("div");
-    frame_bottom.classList.add("ajt__frame_bottom");
+    frame_bottom.classList.add("ajt__frame_content");
     frame_bottom.appendChild(content);
 
     /* Make Popup */
