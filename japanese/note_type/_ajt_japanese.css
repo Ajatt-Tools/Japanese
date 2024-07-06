@@ -195,6 +195,7 @@
     left: 50%;
     margin-left: -60px;
     word-break: keep-all;
+    font-weight: normal;
 
     &::after {
         /* Triangle */
