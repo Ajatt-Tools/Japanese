@@ -47,6 +47,14 @@ function ajt__format_new_ruby(kanji, readings) {
     }
 }
 
+function ajt__make_readings_info_tooltip(readings) {
+    const sequence = readings.map((reading) => `<span class="ajt__tooltip-reading">${reading}</span>`).join("");
+    const wrapper = document.createElement("span");
+    wrapper.classList.add("ajt__tooltip");
+    wrapper.insertAdjacentHTML("beforeend", `<span class="ajt__tooltip-text">${sequence}</span>`);
+    return wrapper;
+}
+
 function ajt__reformat_multi_furigana() {
     const separators = /[\s;,.、・。]+/iu;
     const max_inline = 2;
@@ -63,12 +71,7 @@ function ajt__reformat_multi_furigana() {
                 ruby.innerHTML = ajt__format_new_ruby(kanji, readings.slice(0, max_inline));
             }
             if (readings.length > max_inline) {
-                const sequence = readings
-                    .map((reading) => `<span class="ajt__tooltip-reading">${reading}</span>`)
-                    .join("");
-                const wrapper = document.createElement("span");
-                wrapper.classList.add("ajt__tooltip");
-                wrapper.insertAdjacentHTML("beforeend", `<span class="ajt__tooltip-text">${sequence}</span>`);
+                const wrapper = ajt__make_readings_info_tooltip(readings);
                 ruby.replaceWith(wrapper);
                 wrapper.appendChild(ruby);
             }
