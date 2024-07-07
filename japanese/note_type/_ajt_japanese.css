@@ -1,5 +1,5 @@
 /*
- * AJT Japanese CSS 24.7.6.0
+ * AJT Japanese CSS 24.7.6.1
  * Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
  * License: GNU AGPL, version 3 or later; https://www.gnu.org/licenses/agpl-3.0.html
  */
@@ -157,7 +157,7 @@
     position: relative;
     display: inline-block;
 
-    &::after {
+    &::before {
         /* dotted underline */
         content: "";
         display: block;
@@ -167,12 +167,33 @@
         left: 0;
         border-bottom: 2px dotted var(--acc-color-2);
     }
-    .ajt__tooltip-text {
+    &::after {
+        /* Triangle decoration */
+        content: "";
+        display: block;
+        position: absolute;
+        bottom: 0%;
+        left: 50%;
+        margin-left: -5px;
+        border-width: 5px;
+        border-style: solid;
+        border-color: transparent transparent var(--acc-color-1) transparent;
+    }
+
+    &::after,
+    & .ajt__tooltip-text {
+        /* Hide the Tooltip by default */
         visibility: hidden;
+        z-index: -9999;
     }
+
+    &:hover::after,
     &:hover .ajt__tooltip-text {
+        /* Show the Tooltip on hover */
         visibility: visible;
+        z-index: 9999;
     }
+
     .tags {
         position: absolute;
         top: 0px;
@@ -181,9 +202,11 @@
 }
 
 .ajt__tooltip .ajt__tooltip-text {
+    --width: 180px;
+
     font-weight: 500;
     font-size: 18px;
-    width: 120px;
+    width: var(--width);
     background-color: var(--acc-color-1);
     color: var(--acc-color-3);
     text-align: left;
@@ -191,23 +214,12 @@
     padding: 0 2px;
     position: absolute;
     z-index: 999;
-    top: calc(100% + 6px);
+    top: 100%;
     left: 50%;
-    margin-left: -60px;
+    transform: translateX(-50%);
     word-break: keep-all;
     font-weight: normal;
 
-    &::after {
-        /* Triangle */
-        content: "";
-        position: absolute;
-        bottom: 100%;
-        left: 50%;
-        margin-left: -5px;
-        border-width: 5px;
-        border-style: solid;
-        border-color: transparent transparent var(--acc-color-1) transparent;
-    }
     & .ajt__tooltip-reading:not(:last-child)::after {
         content: "; ";
         color: var(--acc-color-4);
@@ -220,6 +232,7 @@
         display: initial;
     }
     .ajt__tooltip .ajt__tooltip-text,
+    .ajt__tooltip::before,
     .ajt__tooltip::after {
         display: none;
         height: 0px;
