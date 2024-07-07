@@ -35,7 +35,7 @@ class PitchColor(enum.Enum):
     nakadaka = "#eb8500"  # orange
     odaka = "green"
     kifuku = "purple"
-    unknown = "gray"
+    unknown = "#5f5f5f"
 
 
 def pitch_type_from_pitch_num(pitch_num_as_str: str, n_moras: int) -> PitchType:
