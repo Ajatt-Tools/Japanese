@@ -1,5 +1,5 @@
 /*
- * AJT Japanese JS 24.7.6.0
+ * AJT Japanese JS 24.7.6.1
  * Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
  * License: GNU AGPL, version 3 or later; https://www.gnu.org/licenses/agpl-3.0.html
  */
@@ -60,6 +60,7 @@ function ajt__reformat_multi_furigana() {
     const max_inline = 2;
     document.querySelectorAll("ruby:not(ruby ruby)").forEach((ruby) => {
         try {
+            // <rb> contains the kanji word. <rt> contains the kana reading(s) (furigana).
             const kanji = (ruby.querySelector("rb") || ruby.firstChild).textContent.trim();
             const readings = ruby
                 .querySelector("rt")
@@ -74,6 +75,7 @@ function ajt__reformat_multi_furigana() {
                 const wrapper = ajt__make_readings_info_tooltip(readings);
                 ruby.replaceWith(wrapper);
                 wrapper.appendChild(ruby);
+                ajt__adjust_popup_position(wrapper.querySelector(".ajt__tooltip-text"));
             }
         } catch (error) {
             console.error(error);
