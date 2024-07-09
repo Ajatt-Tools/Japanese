@@ -78,12 +78,33 @@ function ajt__reformat_multi_furigana() {
     });
 }
 
+function ajt__zip(array1, array2) {
+    let zipped = [];
+    for (let i = 0; i < array1.length; i++) {
+        zipped.push([array1[i], array2[i]]);
+    }
+    return zipped;
+}
+
+function ajt__make_accent_list_item(kana_reading, pitch_accent) {
+    // If the word is a compound, pitch accents come separated by commas.
+    // The reading is also divided into sections with nakaten.
+    // Example input: キシ・カイセイ:nakadaka-2,heiban
+    const list_item = document.createElement("li");
+    for (const [reading_part, pitch_part] of ajt__zip(kana_reading.split("・"), pitch_accent.split(","))) {
+        // Pitch number is specified only for nakadaka words, after a dash.
+        const [pitch_type, pitch_num] = pitch_part.split("-");
+        const pattern = ajt__make_pattern(reading_part, pitch_type, pitch_num);
+        list_item.insertAdjacentHTML("beforeend", `<span class="ajt__downstep_${pitch_type}">${pattern}</span>`);
+    }
+    return list_item;
+}
+
 function ajt__make_accents_list(ajt_span) {
     const accents = document.createElement("ul");
-    for (const accent of ajt_span.getAttribute("pitch").split(" ")) {
-        const [kana, pitch_type, pitch_num] = accent.split(/[-:]/g);
-        const pattern = ajt__make_pattern(kana, pitch_type, pitch_num);
-        accents.insertAdjacentHTML("beforeend", `<li><span class="ajt__downstep_${pitch_type}">${pattern}</span></li>`);
+    // Example input: ワタクシ:heiban ワタシ:heiban アタシ:heiban
+    for (const accent_group of ajt_span.getAttribute("pitch").split(" ")) {
+        accents.appendChild(ajt__make_accent_list_item(...accent_group.split(":")));
     }
     return accents;
 }
