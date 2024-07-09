@@ -6,9 +6,12 @@ import enum
 from collections.abc import MutableSequence, Sequence
 from typing import NamedTuple
 
-from ..mecab_controller.basic_types import Inflection, MecabParsedToken, PartOfSpeech
-from ..mecab_controller.kana_conv import kana_to_moras
-from .common import FormattedEntry, split_pitch_numbers
+from ..mecab_controller.basic_types import MecabParsedToken
+from .common import (
+    FormattedEntry,
+    nakaten_separated_katakana_reading,
+    split_pitch_numbers,
+)
 from .consts import NO_ACCENT
 
 SEP_PITCH_GROUP = " "
@@ -87,6 +90,7 @@ class PitchParam(NamedTuple):
 
 class PitchAccentEntry(NamedTuple):
     katakana_reading: str
+    katakana_reading_sep: str
     pitches: list[PitchParam]
 
     def has_accent(self) -> bool:
@@ -94,7 +98,7 @@ class PitchAccentEntry(NamedTuple):
 
     def describe_pitches(self) -> str:
         return (
-            self.katakana_reading
+            self.katakana_reading_sep
             + SEP_READING_PITCH
             + SEP_PITCH_TYPES.join(dict.fromkeys(pitch.describe() for pitch in self.pitches))
         )
@@ -110,6 +114,7 @@ class PitchAccentEntry(NamedTuple):
         """
         return cls(
             katakana_reading=entry.katakana_reading,
+            katakana_reading_sep=nakaten_separated_katakana_reading(entry.html_notation),
             pitches=[
                 PitchParam.from_symbol(entry.katakana_reading, symbol)
                 for symbol in split_pitch_numbers(entry.pitch_number)

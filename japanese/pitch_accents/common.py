@@ -12,6 +12,7 @@ from .consts import NO_ACCENT, PITCH_DIR_PATH
 Stored = typing.TypeVar("Stored")
 
 RE_PITCH_NUM = re.compile(r"\d+|\?")
+RE_PITCH_TAG = re.compile(r"(<[^<>]+>)")
 
 
 class FormattedEntry(NamedTuple):
@@ -72,3 +73,18 @@ def split_pitch_numbers(s: str) -> list[str]:
 
 def repack_accent_dict(acc_dict: dict[str, OrderedSet[FormattedEntry]]) -> AccentDict:
     return AccentDict({headword: tuple(entries) for headword, entries in acc_dict.items()})
+
+
+def nakaten_separated_katakana_reading(html_notation: str) -> str:
+    """
+    In some (rare) cases (in the NHK accent dictionary),
+    a word consists of multiple words, and the parts are separated with a `・`.
+    E.g., 起死回生 = キシ・カイセイ(1+0) or キシ・カイセイ(2+0)
+    The boundaries are lost in the katakana reading, but are retained in the html notation.
+    The information is needed to correctly draw downstep graphs from JS code.
+    """
+    return re.sub(RE_PITCH_TAG, "", html_notation)
+
+
+def split_html_notation(entry: FormattedEntry) -> Iterable[str]:
+    return filter(bool, map(str.strip, re.split(RE_PITCH_TAG, entry.html_notation)))
