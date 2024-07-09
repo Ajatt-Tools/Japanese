@@ -4,21 +4,13 @@
 import dataclasses
 import enum
 import html
-import re
 import typing
-from collections.abc import Iterable
 from typing import Optional
 
 from ..mecab_controller import kana_to_moras
 from .basic_types import PitchType, pitch_type_from_pitch_num
-from .common import FormattedEntry
+from .common import FormattedEntry, split_html_notation
 from .styles import XmlTags
-
-RE_PITCH_TAG = re.compile(r"(<[^<>]+>)")
-
-
-def split_html_notation(entry: FormattedEntry) -> Iterable[str]:
-    return filter(bool, map(str.strip, re.split(RE_PITCH_TAG, entry.html_notation)))
 
 
 @enum.unique
