@@ -1,5 +1,5 @@
 /*
- * AJT Japanese JS 24.7.6.1
+ * AJT Japanese JS 24.7.10.1
  * Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
  * License: GNU AGPL, version 3 or later; https://www.gnu.org/licenses/agpl-3.0.html
  */
@@ -14,26 +14,30 @@ function ajt__make_pattern(kana, pitch_type, pitch_num) {
         case "atamadaka":
             return (
                 `<span class="ajt__HL">${moras[0]}</span>` +
-                `<span class="ajt__L">${moras.slice(1).join("")}</span> (1)`
+                `<span class="ajt__L">${moras.slice(1).join("")}</span>` +
+                `<span class="ajt__pitch_number_tag">1</span>`
             );
             break;
         case "heiban":
             return (
                 `<span class="ajt__LH">${moras[0]}</span>` +
-                `<span class="ajt__H">${moras.slice(1).join("")}</span> (0)`
+                `<span class="ajt__H">${moras.slice(1).join("")}</span>` +
+                `<span class="ajt__pitch_number_tag">0</span>`
             );
             break;
         case "odaka":
             return (
                 `<span class="ajt__LH">${moras[0]}</span>` +
-                `<span class="ajt__HL">${moras.slice(1).join("")}</span> (${moras.length})`
+                `<span class="ajt__HL">${moras.slice(1).join("")}</span>` +
+                `<span class="ajt__pitch_number_tag">${moras.length}</span>`
             );
             break;
         case "nakadaka":
             return (
                 `<span class="ajt__LH">${moras[0]}</span>` +
                 `<span class="ajt__HL">${moras.slice(1, Number(pitch_num)).join("")}</span>` +
-                `<span class="ajt__L">${moras.slice(Number(pitch_num)).join("")}</span> (${pitch_num})`
+                `<span class="ajt__L">${moras.slice(Number(pitch_num)).join("")}</span>` +
+                `<span class="ajt__pitch_number_tag">${pitch_num}</span>`
             );
             break;
     }

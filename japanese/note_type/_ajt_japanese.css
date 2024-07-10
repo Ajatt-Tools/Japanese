@@ -1,5 +1,5 @@
 /*
- * AJT Japanese CSS 24.7.6.1
+ * AJT Japanese CSS 24.7.10.1
  * Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
  * License: GNU AGPL, version 3 or later; https://www.gnu.org/licenses/agpl-3.0.html
  */
@@ -237,4 +237,26 @@
         display: none;
         height: 0px;
     }
+}
+
+/* Pitch accent tags */
+
+.ajt__pitch_number_tag {
+    padding: 1px 3px;
+    margin: 0 1px;
+
+    display: inline-block;
+    vertical-align: top;
+    text-transform: lowercase;
+    text-align: center;
+    background-color: var(--downstep-color, #333333);
+    color: var(--acc-color-4, #fffaf0);
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 3px;
+    font-size: 12px;
+    line-height: 14px;
+    user-select: none;
+    font-family: "Noto Sans", "Droid Sans", "DejaVu Sans", "Liberation Sans", Roboto, Cantarell, "Segoe UI", Arial,
+        Meiryo, Oxygen, Ubuntu, "Helvetica Neue", Helvetica, "Noto Color Emoji", "Noto Sans CJK JP", Sans, sans-serif;
 }
