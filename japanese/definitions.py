@@ -9,7 +9,7 @@ from aqt.editor import Editor
 from aqt.qt import *
 
 from .config_view import config_view as cfg
-from .helpers import ADDON_NAME
+from .helpers.consts import ADDON_NAME
 from .helpers.sakura_client import SakuraParisClient
 
 

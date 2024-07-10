@@ -16,7 +16,7 @@ from .ajt_common.consts import (
 )
 from .config_view import config_view as cfg
 from .gui import EXAMPLE_DECK_ANKIWEB_URL
-from .helpers import ADDON_NAME
+from .helpers.consts import ADDON_NAME
 from .helpers.webview_utils import anki_addon_web_relpath
 
 GUIDE_LINK = "https://tatsumoto.neocities.org/blog/table-of-contents.html"

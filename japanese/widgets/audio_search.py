@@ -15,7 +15,7 @@ from aqt.utils import restoreGeom, saveGeom, tooltip, tr
 from ..ajt_common.utils import ui_translate
 from ..audio_manager.abstract import AnkiAudioSourceManagerABC
 from ..audio_manager.basic_types import FileUrlData
-from ..helpers import ADDON_NAME
+from ..helpers.consts import ADDON_NAME
 from ..helpers.file_ops import open_file
 from ..helpers.misc import strip_html_and_media
 from .audio_sources import SourceEnableCheckbox

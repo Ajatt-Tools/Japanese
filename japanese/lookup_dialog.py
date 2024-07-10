@@ -14,7 +14,7 @@ from aqt.webview import AnkiWebView
 
 from .ajt_common.about_menu import menu_root_entry, tweak_window
 from .config_view import config_view as cfg
-from .helpers import ADDON_NAME
+from .helpers.consts import ADDON_NAME
 from .helpers.tokens import clean_furigana
 from .helpers.webview_utils import anki_addon_web_relpath
 from .pitch_accents.common import AccentDict, FormattedEntry

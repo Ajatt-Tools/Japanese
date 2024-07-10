@@ -11,7 +11,7 @@ from aqt.operations import CollectionOp
 from aqt.qt import *
 from aqt.utils import showInfo
 
-from .helpers import ADDON_NAME
+from .helpers.consts import ADDON_NAME
 from .helpers.profiles import TaskCaller
 from .tasks import DoTasks
 
