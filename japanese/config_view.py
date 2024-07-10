@@ -5,7 +5,7 @@ import enum
 import functools
 import re
 from collections.abc import Iterable, MutableMapping, MutableSequence, Sequence
-from typing import NamedTuple, cast, final
+from typing import NamedTuple, final
 
 from aqt import mw
 
@@ -18,13 +18,13 @@ from .helpers.tokens import RE_FLAGS
 from .mecab_controller.kana_conv import to_katakana
 from .pitch_accents.styles import PitchPatternStyle
 
-RE_CFG_WORD_SEP = re.compile(r"[、, ]+", flags=RE_FLAGS)
+RE_CFG_WORD_SEP = re.compile(r"[\n;、, ]+", flags=RE_FLAGS)
 
 
 @functools.lru_cache(maxsize=20)
 def split_cfg_words(config_value: str) -> Sequence[str]:
     """Splits string by comma. Cache identical values."""
-    return cast(Sequence[str], frozenset(re.split(RE_CFG_WORD_SEP, config_value)))
+    return dict.fromkeys(re.split(RE_CFG_WORD_SEP, config_value))
 
 
 class WordBlockListManager(ConfigSubViewBase):
