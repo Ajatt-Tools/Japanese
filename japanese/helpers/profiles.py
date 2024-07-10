@@ -5,6 +5,8 @@ import dataclasses
 import enum
 import typing
 
+from .consts import CFG_WORD_SEP
+
 
 @enum.unique
 class PitchOutputFormat(enum.Enum):
@@ -147,14 +149,14 @@ class Profile(ProfileBase):
 
 def flag_as_comma_separated_list(flag: enum.Flag):
     assert isinstance(flag, enum.Enum)
-    return ",".join(str(item.name) for item in type(flag) if item in flag)
+    return CFG_WORD_SEP.join(str(item.name) for item in type(flag) if item in flag)
     # note: `item.name for item in flag` won't work on the official Anki build that is still on python 3.9
 
 
 def flag_from_comma_separated_list(flag_type: enum.EnumMeta, comma_separated_flags: str) -> enum.Flag:
     assert isinstance(comma_separated_flags, str)
     flag: enum.Flag = flag_type(0)
-    for string in comma_separated_flags.split(","):
+    for string in comma_separated_flags.split(CFG_WORD_SEP):
         if string:
             try:
                 flag |= flag_type[string]

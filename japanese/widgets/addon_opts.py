@@ -7,6 +7,9 @@ from typing import Optional
 from aqt import mw
 from aqt.qt import *
 
+from ..config_view import split_cfg_words
+from ..helpers.consts import CFG_WORD_SEP
+
 NARROW_WIDGET_MAX_WIDTH = 96
 
 
@@ -29,10 +32,10 @@ class WordsEdit(QTextEdit):
 
     def set_values(self, values: Sequence[str]):
         if values:
-            self.setPlainText(",".join(dict.fromkeys(values)))
+            self.setPlainText(CFG_WORD_SEP.join(dict.fromkeys(values)))
 
     def as_text(self) -> str:
-        return ",".join(dict.fromkeys(filter(bool, self.toPlainText().replace(" ", "").split("\n"))))
+        return CFG_WORD_SEP.join(split_cfg_words(self.toPlainText().replace(" ", "").replace("\n", CFG_WORD_SEP)))
 
 
 class NarrowLineEdit(QLineEdit):

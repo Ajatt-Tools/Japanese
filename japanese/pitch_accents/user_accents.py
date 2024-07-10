@@ -3,11 +3,12 @@
 
 import collections
 import os
-from collections.abc import Iterable, MutableMapping
+from collections.abc import Iterable
 from typing import NamedTuple, Union
 
 from ..helpers.file_ops import touch, user_files_dir
 from ..mecab_controller.kana_conv import kana_to_moras, to_katakana
+from .basic_types import SEP_PITCH_TYPES
 from .common import AccentDict, FormattedEntry, OrderedSet, repack_accent_dict
 from .consts import NO_ACCENT
 from .format_accents import format_entry
@@ -16,7 +17,7 @@ USER_DATA_CSV_PATH = os.path.join(user_files_dir(), "user_data.tsv")
 
 
 def search_pitch_accent_numbers(accents: str) -> Iterable[Union[str, int]]:
-    return ((int(pos) if pos != NO_ACCENT else NO_ACCENT) for pos in accents.split(","))
+    return ((int(pos) if pos != NO_ACCENT else NO_ACCENT) for pos in accents.split(SEP_PITCH_TYPES))
 
 
 class TSVAccentEntry(NamedTuple):
