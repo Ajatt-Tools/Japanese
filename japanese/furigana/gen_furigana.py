@@ -5,8 +5,8 @@ from collections.abc import Iterable, Sequence
 from typing import Callable, Optional, TypeVar
 
 from ..config_view import FuriganaConfigView, JapaneseConfig, ReadingsDiscardMode
-from ..helpers import LONG_VOWEL_MARK
 from ..helpers.common_kana import adjust_to_inflection
+from ..helpers.consts import LONG_VOWEL_MARK
 from ..helpers.mingle_readings import mingle_readings
 from ..helpers.profiles import ColorCodePitchFormat
 from ..helpers.tokens import ParseableToken, Token, tokenize
