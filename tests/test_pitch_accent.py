@@ -24,7 +24,7 @@ def test_pitch_accent_entry():
         FormattedEntry(
             katakana_reading="たのしい",
             pitch_number="3",
-            html_notation="",
+            html_notation="たのしい",
         )
     )
 
@@ -43,7 +43,7 @@ def test_pitch_accent_entry():
         FormattedEntry(
             katakana_reading="なや",
             pitch_number="0,1",
-            html_notation="",
+            html_notation="なや",
         )
     )
 
@@ -67,6 +67,7 @@ def test_pitch_accent_entry():
             PitchAccentEntry(
                 katakana_reading="ソマツ",
                 pitches=[PitchParam(type=PitchType.atamadaka, number="1")],
+                katakana_reading_sep="ソマツ",
             )
         ],
     )
