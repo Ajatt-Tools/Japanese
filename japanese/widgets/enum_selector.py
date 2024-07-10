@@ -5,6 +5,7 @@ import enum
 
 from ..ajt_common.checkable_combobox import CheckableComboBox
 from ..ajt_common.utils import ui_translate
+from ..helpers.consts import CFG_WORD_SEP
 
 
 class FlagSelectCombo(CheckableComboBox):
@@ -24,4 +25,4 @@ class FlagSelectCombo(CheckableComboBox):
         """
         Used to serialize checked options to store them in json.
         """
-        return ",".join(flag_item.name for flag_item in self.checkedData())
+        return CFG_WORD_SEP.join(flag_item.name for flag_item in self.checkedData())
