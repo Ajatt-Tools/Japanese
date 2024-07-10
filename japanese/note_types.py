@@ -10,7 +10,7 @@ from aqt import gui_hooks, mw
 from aqt.operations import CollectionOp
 
 from .config_view import config_view as cfg
-from .helpers import ADDON_NAME
+from .helpers.consts import ADDON_NAME
 from .note_type.consts import AJT_JAPANESE_CSS_PATH, AJT_JAPANESE_JS_PATH
 
 RE_VERSION_STR = re.compile(r"AJT Japanese (?P<type>JS|CSS) (?P<version>\d+\.\d+\.\d+\.\d+)")
