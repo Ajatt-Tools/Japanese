@@ -1,5 +1,5 @@
 /*
- * AJT Japanese CSS 24.7.11.1
+ * AJT Japanese CSS 24.7.12.3
  * Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
  * License: GNU AGPL, version 3 or later; https://www.gnu.org/licenses/agpl-3.0.html
  */
@@ -86,14 +86,6 @@
     max-height: var(--max-popup-height);
     box-shadow: 2px 2px 8px rgba(0 0 0 / 25%);
     border: var(--border-size) solid var(--acc-color-1);
-
-    ul {
-        list-style-type: none;
-        padding: 0.5rem;
-    }
-    li {
-        margin-bottom: 0.5rem;
-    }
 }
 
 .ajt__frame_title {
@@ -114,6 +106,14 @@
     max-height: calc(var(--max-popup-height) - var(--text-height) - var(--border-size) * 2);
     font-size: 1.5rem;
     line-height: 1.5;
+    margin: 0;
+    padding: 0.3rem 0;
+}
+.ajt__frame_content ul {
+    list-style-type: none;
+}
+.ajt__frame_content li + li {
+    margin: 0.3rem 0 0;
 }
 
 /* Downstep line colors */
