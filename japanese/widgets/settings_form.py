@@ -10,7 +10,7 @@ from aqt.qt import *
 from ..ajt_common.addon_config import ConfigSubViewBase
 from ..ajt_common.enum_select_combo import EnumSelectCombo
 from ..ajt_common.grab_key import ShortCutGrabButton
-from ..ajt_common.utils import ui_translate
+from ..ajt_common.utils import ui_translate, q_emit
 from ..config_view import (
     AudioSettingsConfigView,
     ContextMenuConfigView,
@@ -20,7 +20,7 @@ from ..config_view import (
     ReadingsDiscardMode,
     SvgPitchGraphOptionsConfigView,
 )
-from ..helpers.misc import q_emit, split_list
+from ..helpers.misc import split_list
 from ..helpers.profiles import PitchOutputFormat
 from ..helpers.sakura_client import AddDefBehavior, DictName, SearchType
 from ..pitch_accents.styles import PitchPatternStyle
