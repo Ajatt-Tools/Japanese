@@ -8,7 +8,12 @@ from ..helpers.tokens import Token
 from ..mecab_controller import is_kana_str
 from ..mecab_controller.basic_types import ANY_ATTACHING, Inflection
 from ..pitch_accents.basic_types import AccDbParsedToken
-from .attach_rules import MAX_ATTACHED, NEVER_ATTACH_POS, NEVER_ATTACH_WORD
+from .attach_rules import (
+    MAX_ATTACHED,
+    NEVER_ATTACH_HEADWORD,
+    NEVER_ATTACH_POS,
+    NEVER_ATTACH_WORD,
+)
 
 AnyToken = Union[AccDbParsedToken, Token]
 
@@ -39,9 +44,11 @@ def should_attach_token(attach_to: AccDbParsedToken, token: AnyToken):
     if not is_kana_str(token.word):
         # only kana can be attached to the previous word, e.g. 探し(+た)
         return False
+    if token.word.endswith("っ"):
+        return True
     if token.part_of_speech in NEVER_ATTACH_POS:
         return False
-    if token.word in NEVER_ATTACH_WORD or token.headword in NEVER_ATTACH_WORD:
+    if token.word in NEVER_ATTACH_WORD or token.headword in NEVER_ATTACH_HEADWORD:
         return False
     return True
 
