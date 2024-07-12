@@ -11,40 +11,21 @@ from aqt.operations import CollectionOp
 
 from .config_view import config_view as cfg
 from .helpers.consts import ADDON_NAME
-from .note_type.consts import AJT_JAPANESE_CSS_PATH, AJT_JAPANESE_JS_PATH
-
-RE_VERSION_STR = re.compile(r"AJT Japanese (?P<type>JS|CSS) (?P<version>\d+\.\d+\.\d+\.\d+)")
-FileVersion = tuple[int, int, int, int]
-UNK_VERSION = 0, 0, 0, 0
-
-
-def parse_version_str(file_content: str):
-    m = re.search(RE_VERSION_STR, file_content)
-    if not m:
-        return UNK_VERSION
-    return tuple(int(value) for value in m.group("version").split("."))
+from .note_type.bundled_files import (
+    BUNDLED_CSS_FILE,
+    BUNDLED_JS_FILE,
+    BundledNoteTypeSupportFile,
+    get_file_version,
+)
 
 
-def get_file_version(file_path) -> FileVersion:
-    try:
-        with open(file_path, encoding="utf-8") as rf:
-            return parse_version_str(rf.read())
-    except FileNotFoundError:
-        pass
-    return UNK_VERSION
+def not_recent_version(file: BundledNoteTypeSupportFile) -> bool:
+    return get_file_version(file.file_path) > get_file_version(file.path_in_col())
 
 
-def not_recent_version(file_path: str) -> bool:
-    assert mw
-    path_in_col = os.path.join(mw.col.media.dir(), os.path.basename(file_path))
-    return get_file_version(file_path) > get_file_version(path_in_col)
-
-
-def save_to_col(file_path: str) -> None:
-    assert mw
-    path_in_col = os.path.join(mw.col.media.dir(), os.path.basename(file_path))
-    with open(path_in_col, "w", encoding="utf-8") as of, open(file_path, encoding="utf-8") as rf:
-        of.write(rf.read())
+def save_to_col(file: BundledNoteTypeSupportFile) -> None:
+    with open(file.file_path, encoding="utf-8") as in_f, open(file.path_in_col(), "w", encoding="utf-8") as out_f:
+        out_f.write(in_f.read())
 
 
 def is_debug_enabled() -> bool:
@@ -52,14 +33,10 @@ def is_debug_enabled() -> bool:
 
 
 def ensure_files_saved():
-    for file_path in (AJT_JAPANESE_JS_PATH, AJT_JAPANESE_CSS_PATH):
-        if not_recent_version(file_path) or is_debug_enabled():
-            print(f"AJT file needs updating: {os.path.basename(file_path)}")
-            save_to_col(file_path)
-
-
-AJT_CSS_IMPORT = f'@import url("{os.path.basename(AJT_JAPANESE_CSS_PATH)}");'
-AJT_JS_IMPORT = f'<script defer src="{os.path.basename(AJT_JAPANESE_JS_PATH)}"></script>'
+    for file in (BUNDLED_JS_FILE, BUNDLED_CSS_FILE):
+        if not_recent_version(file) or is_debug_enabled():
+            save_to_col(file)
+            print(f"Created new file: {file.name_in_col}")
 
 
 def collect_all_relevant_models() -> Sequence[NotetypeNameId]:
@@ -75,21 +52,47 @@ def collect_all_relevant_models() -> Sequence[NotetypeNameId]:
     ]
 
 
+RE_AJT_CSS_IMPORT = re.compile(r'@import url\("_ajt_japanese[^"]*\.css"\);')
+RE_AJT_JS_IMPORT = re.compile(r'<script defer src="_ajt_japanese[^"]*\.js"></script>')
+
+
+def ensure_css_imported(model_dict: dict[str, str]) -> bool:
+    updated_css = re.sub(RE_AJT_CSS_IMPORT, BUNDLED_CSS_FILE.import_str, model_dict["css"])
+    if updated_css != model_dict["css"]:
+        # The CSS was imported previously, but a new version has been released.
+        model_dict["css"] = updated_css
+        return True
+    if BUNDLED_CSS_FILE.import_str not in model_dict["css"]:
+        # The CSS was not imported before. Likely a fresh Note Type or Anki install.
+        model_dict["css"] = f'{BUNDLED_CSS_FILE.import_str}\n{model_dict["css"]}'
+        return True
+    return False
+
+
+def ensure_js_imported(template: dict[str, str], side: str):
+    updated_js = re.sub(RE_AJT_JS_IMPORT, BUNDLED_JS_FILE.import_str, template[side])
+    if updated_js != template[side]:
+        # The JS was imported previously, but a new version has been released.
+        template[side] = updated_js
+        return True
+    if BUNDLED_JS_FILE.import_str not in template[side]:
+        # The JS was not imported before. Likely a fresh Note Type or Anki install.
+        template[side] = f"{template[side]}\n{BUNDLED_JS_FILE.import_str}"
+        return True
+    return False
+
+
 def ensure_imports_added_for_model(col: anki.collection.Collection, model: NotetypeNameId) -> bool:
     model_dict = col.models.get(model.id)
     if not model_dict:
         return False
-    is_dirty = False
-    if AJT_CSS_IMPORT not in model_dict["css"]:
-        model_dict["css"] = f'{AJT_CSS_IMPORT}\n{model_dict["css"]}'
-        is_dirty = True
+    is_dirty = ensure_css_imported(model_dict)
     for template in model_dict["tmpls"]:
         for side in ("qfmt", "afmt"):
-            if AJT_JS_IMPORT not in template[side]:
-                template[side] = f"{template[side]}\n{AJT_JS_IMPORT}"
-                is_dirty = True
+            is_dirty = ensure_js_imported(template, side) or is_dirty
     if is_dirty:
         col.models.update_dict(model_dict)
+        print(f"Model {model.name} is dirty.")
     return is_dirty
 
 
@@ -104,12 +107,17 @@ def ensure_imports_added(col: anki.collection.Collection):
     return col.merge_undo_entries(pos) if is_dirty else anki.collection.OpChanges()
 
 
+def remove_old_versions():
+    pass
+
+
 def prepare_note_types():
     ensure_files_saved()
     CollectionOp(
         mw,
         lambda col: ensure_imports_added(col),
     ).success(lambda _: None).run_in_background()
+    remove_old_versions()
 
 
 def init():
