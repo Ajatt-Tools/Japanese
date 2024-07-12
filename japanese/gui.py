@@ -36,6 +36,7 @@ from .helpers.profiles import (
     ProfilePitch,
     TaskCaller,
 )
+from .note_types import ensure_imports_added
 from .pitch_accents.user_accents import UserAccentData
 from .reading import acc_dict
 from .widgets.addon_opts import EditableSelector, relevant_field_names
@@ -647,6 +648,8 @@ class SettingsDialog(QDialog, MgrPropMixIn):
         # Reload
         acc_dict.reload_from_disk()
         aud_src_mgr.init_sources(on_finish=show_audio_init_result_tooltip)
+        # if new profiles were added, add imports to the note types.
+        ensure_imports_added()
         return super().accept()
 
     def _add_advanced_button(self) -> None:

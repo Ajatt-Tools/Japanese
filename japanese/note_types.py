@@ -97,7 +97,7 @@ def ensure_imports_added_for_model(col: anki.collection.Collection, model: Notet
     return is_dirty
 
 
-def ensure_imports_added(col: anki.collection.Collection):
+def ensure_imports_added_op(col: anki.collection.Collection) -> anki.collection.OpChanges:
     assert mw
     models = collect_all_relevant_models()
     pos = col.add_custom_undo_entry(f"{ADDON_NAME}: Add imports to {len(models)} models.")
@@ -106,6 +106,11 @@ def ensure_imports_added(col: anki.collection.Collection):
         print(f"Relevant AJT note type: {model.name}")
         is_dirty = ensure_imports_added_for_model(col, model) or is_dirty
     return col.merge_undo_entries(pos) if is_dirty else anki.collection.OpChanges()
+
+
+def ensure_imports_added() -> None:
+    assert mw
+    CollectionOp(mw, lambda col: ensure_imports_added_op(col)).success(lambda _: None).run_in_background()
 
 
 def remove_old_versions() -> None:
@@ -117,12 +122,10 @@ def remove_old_versions() -> None:
         print(f"Removed old version: {old_file_name}")
 
 
-def prepare_note_types():
+def prepare_note_types() -> None:
+    assert mw
     ensure_files_saved()
-    CollectionOp(
-        mw,
-        lambda col: ensure_imports_added(col),
-    ).success(lambda _: None).run_in_background()
+    ensure_imports_added()
     remove_old_versions()
 
 
