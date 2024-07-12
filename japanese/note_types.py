@@ -1,5 +1,6 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
+import glob
 import os.path
 import re
 from collections.abc import Sequence
@@ -107,8 +108,13 @@ def ensure_imports_added(col: anki.collection.Collection):
     return col.merge_undo_entries(pos) if is_dirty else anki.collection.OpChanges()
 
 
-def remove_old_versions():
-    pass
+def remove_old_versions() -> None:
+    assert mw
+    all_ajt_file_names = frozenset(glob.glob("_ajt_japanese*.*", root_dir=mw.col.media.dir()))
+    current_ajt_file_names = frozenset((BUNDLED_JS_FILE.name_in_col, BUNDLED_CSS_FILE.name_in_col))
+    for old_file_name in all_ajt_file_names - current_ajt_file_names:
+        os.unlink(os.path.join(mw.col.media.dir(), old_file_name))
+        print(f"Removed old version: {old_file_name}")
 
 
 def prepare_note_types():
