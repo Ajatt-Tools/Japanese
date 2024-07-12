@@ -10,7 +10,7 @@ from aqt.qt import *
 from ..ajt_common.addon_config import ConfigSubViewBase
 from ..ajt_common.enum_select_combo import EnumSelectCombo
 from ..ajt_common.grab_key import ShortCutGrabButton
-from ..ajt_common.utils import ui_translate, q_emit
+from ..ajt_common.utils import q_emit, ui_translate
 from ..config_view import (
     AudioSettingsConfigView,
     ContextMenuConfigView,
