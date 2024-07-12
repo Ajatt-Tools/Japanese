@@ -83,7 +83,7 @@ def nakaten_separated_katakana_reading(html_notation: str) -> str:
     The boundaries are lost in the katakana reading, but are retained in the html notation.
     The information is needed to correctly draw downstep graphs from JS code.
     """
-    return re.sub(RE_PITCH_TAG, "", html_notation)
+    return re.sub(RE_PITCH_TAG, "", html_notation).replace("°", "゚")
 
 
 def split_html_notation(entry: FormattedEntry) -> Iterable[str]:
