@@ -16,9 +16,12 @@ def test_expected_file_names() -> None:
 def test_css_imports() -> None:
     model_dict = {"css": "/* NO CSS */"}
     assert ensure_css_imported(model_dict) is True
+    assert model_dict["css"] == BUNDLED_CSS_FILE.import_str + "\n/* NO CSS */"
 
     model_dict = {"css": f'@import url("_ajt_japanese.css");\n/* Other CSS */'}
     assert ensure_css_imported(model_dict) is True
+    assert model_dict["css"] == BUNDLED_CSS_FILE.import_str + "\n/* Other CSS */"
 
     model_dict = {"css": f"{BUNDLED_CSS_FILE.import_str}\n/* Other CSS */"}
     assert ensure_css_imported(model_dict) is False
+    assert model_dict["css"] == BUNDLED_CSS_FILE.import_str + "\n/* Other CSS */"

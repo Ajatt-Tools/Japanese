@@ -17,7 +17,7 @@ from .note_type.bundled_files import (
     BundledNoteTypeSupportFile,
     get_file_version,
 )
-from .note_type.imports import ensure_js_imported, ensure_css_imported
+from .note_type.imports import ensure_css_imported, ensure_js_imported
 
 
 def not_recent_version(file: BundledNoteTypeSupportFile) -> bool:

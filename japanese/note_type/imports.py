@@ -7,6 +7,9 @@ from .bundled_files import BUNDLED_CSS_FILE, BUNDLED_JS_FILE
 RE_AJT_CSS_IMPORT = re.compile(r'@import url\("_ajt_japanese[^"]*\.css"\);')
 RE_AJT_JS_IMPORT = re.compile(r'<script defer src="_ajt_japanese[^"]*\.js"></script>')
 
+assert re.fullmatch(RE_AJT_CSS_IMPORT, BUNDLED_CSS_FILE.import_str)
+assert re.fullmatch(RE_AJT_JS_IMPORT, BUNDLED_JS_FILE.import_str)
+
 
 def ensure_css_imported(model_dict: dict[str, str]) -> bool:
     """
