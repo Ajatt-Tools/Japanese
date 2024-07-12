@@ -1,11 +1,11 @@
 /*
- * AJT Japanese JS 24.7.10.1
+ * AJT Japanese JS 24.7.12.1
  * Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
  * License: GNU AGPL, version 3 or later; https://www.gnu.org/licenses/agpl-3.0.html
  */
 
 function ajt__kana_to_moras(text) {
-    return text.match(/.゚?[ァィゥェォャュョぁぃぅぇぉゃゅょ]?/gu);
+    return text.match(/.[°゚]?[ァィゥェォャュョぁぃぅぇぉゃゅょ]?/gu);
 }
 
 function ajt__make_pattern(kana, pitch_type, pitch_num) {
