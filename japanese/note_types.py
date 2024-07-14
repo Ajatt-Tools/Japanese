@@ -93,6 +93,8 @@ def remove_old_versions() -> None:
 
 
 def prepare_note_types() -> None:
+    if not cfg.insert_scripts_into_templates:
+        return
     assert mw
     ensure_files_saved()
     ensure_imports_added()
