@@ -366,6 +366,10 @@ class JapaneseConfig(AddonConfigManager):
         return int(self["cache_lookups"])
 
     @property
+    def insert_scripts_into_templates(self) -> bool:
+        return bool(self["insert_scripts_into_templates"])
+
+    @property
     def furigana(self) -> FuriganaConfigView:
         return self._furigana
 
