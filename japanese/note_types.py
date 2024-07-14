@@ -25,8 +25,8 @@ def not_recent_version(file: BundledNoteTypeSupportFile) -> bool:
 
 
 def save_to_col(file: BundledNoteTypeSupportFile) -> None:
-    with open(file.file_path, encoding="utf-8") as in_f, open(file.path_in_col(), "w", encoding="utf-8") as out_f:
-        out_f.write(in_f.read())
+    with open(file.path_in_col(), "w", encoding="utf-8") as of:
+        of.write(file.text_content)
 
 
 def is_debug_enabled() -> bool:
