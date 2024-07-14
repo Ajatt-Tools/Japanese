@@ -83,11 +83,17 @@ def ensure_imports_added() -> None:
     CollectionOp(mw, lambda col: ensure_imports_added_op(col)).success(lambda _: None).run_in_background()
 
 
+def find_ajt_script_names_in_collection():
+    return frozenset(glob.glob("_ajt_japanese*.*", root_dir=mw.col.media.dir()))
+
+
+def get_bundled_ajt_script_names():
+    return frozenset((BUNDLED_JS_FILE.name_in_col, BUNDLED_CSS_FILE.name_in_col))
+
+
 def remove_old_versions() -> None:
     assert mw
-    all_ajt_file_names = frozenset(glob.glob("_ajt_japanese*.*", root_dir=mw.col.media.dir()))
-    current_ajt_file_names = frozenset((BUNDLED_JS_FILE.name_in_col, BUNDLED_CSS_FILE.name_in_col))
-    for old_file_name in all_ajt_file_names - current_ajt_file_names:
+    for old_file_name in find_ajt_script_names_in_collection() - get_bundled_ajt_script_names():
         os.unlink(os.path.join(mw.col.media.dir(), old_file_name))
         print(f"Removed old version: {old_file_name}")
 
