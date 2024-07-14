@@ -5,13 +5,21 @@ import io
 import re
 from typing import Optional
 
-from .bundled_files import BUNDLED_CSS_FILE, BUNDLED_JS_FILE
+from .bundled_files import (
+    BUNDLED_CSS_FILE,
+    BUNDLED_JS_FILE,
+    UNK_VERSION,
+    FileVersionTuple,
+    VersionedFile,
+    version_str_to_tuple,
+)
 
 RE_AJT_CSS_IMPORT = re.compile(r'@import url\("_ajt_japanese[^"]*\.css"\);')
 RE_AJT_JS_LEGACY_IMPORT = re.compile(r'<script [^<>]*src="_ajt_japanese[^"]*\.js"></script>\n?')
+RE_AJT_JS_VERSION_COMMENT = re.compile(r"/\* AJT Japanese JS (?P<version>\d+\.\d+\.\d+\.\d+) \*/\n?")
 
 
-def find_ajt_japanese_js_import(template_text: str) -> Optional[str]:
+def find_ajt_japanese_js_import(template_text: str) -> Optional[VersionedFile]:
     buffer = io.StringIO()
 
     class Status(enum.Enum):
@@ -20,16 +28,19 @@ def find_ajt_japanese_js_import(template_text: str) -> Optional[str]:
         identified_ajt_script = 2
 
     status = Status.none
+    version: FileVersionTuple = UNK_VERSION
+
     for line in template_text.splitlines(keepends=True):
         if line == "<script>\n":
             status = Status.found_script
-        elif line.startswith("/* AJT Japanese JS ") and line.endswith(" */\n") and status == Status.found_script:
+        elif (m := re.fullmatch(RE_AJT_JS_VERSION_COMMENT, line)) and status == Status.found_script:
             status = Status.identified_ajt_script
+            version = version_str_to_tuple(m.group("version"))
             buffer.write("<script>\n")
             buffer.write(line)
         elif line.strip() == "</script>" and status == Status.identified_ajt_script:
             buffer.write(line)
-            return buffer.getvalue()
+            return VersionedFile(version, buffer.getvalue())
         elif status == Status.identified_ajt_script:
             buffer.write(line)
     return None
@@ -60,7 +71,7 @@ def ensure_js_in_card_side(html_template: str) -> str:
     html_template = re.sub(RE_AJT_JS_LEGACY_IMPORT, "", html_template)
     if existing_import := find_ajt_japanese_js_import(html_template):
         # The JS was imported previously, but a new version has been released.
-        html_template = html_template.replace(existing_import.strip(), BUNDLED_JS_FILE.import_str.strip())
+        html_template = html_template.replace(existing_import.text_content.strip(), BUNDLED_JS_FILE.import_str.strip())
     if BUNDLED_JS_FILE.import_str not in html_template:
         # The JS was not imported before. Likely a fresh Note Type or Anki install.
         html_template = f"{html_template.strip()}\n{BUNDLED_JS_FILE.import_str}"
@@ -79,5 +90,8 @@ def ensure_js_imported(template: dict[str, str], side: str) -> bool:
     return False
 
 
-assert find_ajt_japanese_js_import(BUNDLED_JS_FILE.import_str) == BUNDLED_JS_FILE.import_str
+assert find_ajt_japanese_js_import(BUNDLED_JS_FILE.import_str) == VersionedFile(
+    BUNDLED_JS_FILE.version,
+    BUNDLED_JS_FILE.import_str,
+)
 assert re.fullmatch(RE_AJT_CSS_IMPORT, BUNDLED_CSS_FILE.import_str)
