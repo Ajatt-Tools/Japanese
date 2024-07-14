@@ -1,4 +1,6 @@
-<img style="float: right; width: 128px;" src="https://avatars.githubusercontent.com/u/69172625?s=200&v=4">
+<div style="text-align: center;">
+<img style="max-width: 128px; max-height: 128px;" src="https://avatars.githubusercontent.com/u/69172625?s=200&v=4">
+</div>
 
 ## AJT Japanese &mdash; edit config
 
