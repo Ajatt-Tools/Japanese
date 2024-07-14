@@ -7,8 +7,8 @@ import typing
 from .consts import AJT_JAPANESE_CSS_PATH, AJT_JAPANESE_JS_PATH
 
 RE_VERSION_STR = re.compile(r"AJT Japanese (?P<type>JS|CSS) (?P<version>\d+\.\d+\.\d+\.\d+)\n")
-FileVersion = tuple[int, int, int, int]
-UNK_VERSION: FileVersion = 0, 0, 0, 0
+FileVersionTuple = tuple[int, int, int, int]
+UNK_VERSION: FileVersionTuple = 0, 0, 0, 0
 
 
 def parse_version_str(file_content: str):
@@ -18,7 +18,7 @@ def parse_version_str(file_content: str):
     return tuple(int(value) for value in m.group("version").split("."))
 
 
-def get_file_version(file_path) -> FileVersion:
+def get_file_version(file_path) -> FileVersionTuple:
     try:
         with open(file_path, encoding="utf-8") as rf:
             return parse_version_str(rf.read())
@@ -37,7 +37,7 @@ def import_str_from_name(name_in_col: str, ftype: str) -> str:
 
 class BundledNoteTypeSupportFile(typing.NamedTuple):
     file_path: str
-    version: FileVersion
+    version: FileVersionTuple
     name_in_col: str
     import_str: str
 
