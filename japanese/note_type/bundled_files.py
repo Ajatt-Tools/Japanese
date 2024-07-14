@@ -39,11 +39,15 @@ def inline_bundled_js(vf: VersionedFile) -> str:
     return wrap_bundled_js(js_text.strip(), vf.version_as_str())
 
 
+def version_str_to_tuple(version_str: str):
+    return tuple(int(value) for value in version_str.split("."))
+
+
 def parse_version_str(file_content: str):
     m = re.search(RE_VERSION_STR, file_content)
     if not m:
         return UNK_VERSION
-    return tuple(int(value) for value in m.group("version").split("."))
+    return version_str_to_tuple(m.group("version"))
 
 
 def get_file_version(file_path: str) -> VersionedFile:
