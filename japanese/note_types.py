@@ -41,6 +41,10 @@ def ensure_files_saved():
 
 
 def collect_all_relevant_models() -> Sequence[NotetypeNameId]:
+    """
+    Find all note types (models) that require additional JS+CSS imports
+    to enable the display of pitch accent information on mouse hover.
+    """
     assert mw
     return [
         model
