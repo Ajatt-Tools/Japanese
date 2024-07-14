@@ -11,6 +11,14 @@ FileVersionTuple = tuple[int, int, int, int]
 UNK_VERSION: FileVersionTuple = 0, 0, 0, 0
 
 
+class VersionedFile(typing.NamedTuple):
+    version: FileVersionTuple
+    text_content: str = ""
+
+    def version_as_str(self) -> str:
+        return '.'.join(str(num) for num in self.version)
+
+
 def parse_version_str(file_content: str):
     m = re.search(RE_VERSION_STR, file_content)
     if not m:
@@ -18,13 +26,15 @@ def parse_version_str(file_content: str):
     return tuple(int(value) for value in m.group("version").split("."))
 
 
-def get_file_version(file_path) -> FileVersionTuple:
+def get_file_version(file_path: str) -> VersionedFile:
     try:
         with open(file_path, encoding="utf-8") as rf:
-            return parse_version_str(rf.read())
+            text_content = rf.read()
+        return VersionedFile(version=parse_version_str(text_content), text_content=text_content)
     except FileNotFoundError:
         pass
-    return UNK_VERSION
+    return VersionedFile(UNK_VERSION)
+
 
 
 def import_str_from_name(name_in_col: str, ftype: str) -> str:
@@ -49,12 +59,12 @@ class BundledNoteTypeSupportFile(typing.NamedTuple):
 
     @classmethod
     def new(cls, bundled_file_path: str, ftype: str):
-        version = get_file_version(bundled_file_path)
+        vf = get_file_version(bundled_file_path)
         name, ext = os.path.splitext(os.path.basename(bundled_file_path))
-        name_in_col = f"{name}_{'.'.join(str(num) for num in version)}{ext}"
+        name_in_col = f"{name}_{vf.version_as_str()}{ext}"
         return cls(
             file_path=bundled_file_path,
-            version=version,
+            version=vf.version,
             name_in_col=name_in_col,
             import_str=import_str_from_name(name_in_col, ftype=ftype),
         )

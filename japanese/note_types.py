@@ -21,7 +21,7 @@ from .note_type.imports import ensure_css_imported, ensure_js_imported
 
 
 def not_recent_version(file: BundledNoteTypeSupportFile) -> bool:
-    return get_file_version(file.file_path) > get_file_version(file.path_in_col())
+    return file.version > get_file_version(file.path_in_col()).version
 
 
 def save_to_col(file: BundledNoteTypeSupportFile) -> None:
