@@ -31,18 +31,22 @@ def ensure_css_imported(model_dict: dict[str, str]) -> bool:
     return False
 
 
+def ensure_js_in_card_side(html_template: str) -> str:
+    # The JS was imported previously, but a new version has been released.
+    html_template = re.sub(RE_AJT_JS_IMPORT, "", html_template)
+    if BUNDLED_JS_FILE.import_str not in html_template:
+        # The JS was not imported before. Likely a fresh Note Type or Anki install.
+        html_template = f"{html_template.strip()}\n{BUNDLED_JS_FILE.import_str}"
+    return html_template
+
+
 def ensure_js_imported(template: dict[str, str], side: str) -> bool:
     """
     Takes a card template (from a note type) and ensures that it imports the bundled JS file.
     Returns True if the template has been modified and Anki needs to save the changes.
     """
-    updated_js = re.sub(RE_AJT_JS_IMPORT, BUNDLED_JS_FILE.import_str, template[side])
-    if updated_js != template[side]:
-        # The JS was imported previously, but a new version has been released.
-        template[side] = updated_js
-        return True
-    if BUNDLED_JS_FILE.import_str not in template[side]:
-        # The JS was not imported before. Likely a fresh Note Type or Anki install.
-        template[side] = f"{template[side]}\n{BUNDLED_JS_FILE.import_str}"
+    if (template_text := ensure_js_in_card_side(template[side])) != template[side]:
+        # Template was modified
+        template[side] = template_text
         return True
     return False
