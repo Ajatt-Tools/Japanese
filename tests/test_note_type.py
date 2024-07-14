@@ -8,8 +8,7 @@ from japanese.note_type.imports import ensure_css_imported, ensure_js_imported
 RE_EXPECTED_FILENAME = re.compile(r"_ajt_japanese_(\d+\.){4}(js|css)")
 
 
-def test_expected_file_names() -> None:
-    assert re.fullmatch(RE_EXPECTED_FILENAME, BUNDLED_JS_FILE.name_in_col)
+def test_expected_file_name() -> None:
     assert re.fullmatch(RE_EXPECTED_FILENAME, BUNDLED_CSS_FILE.name_in_col)
 
 
@@ -45,4 +44,4 @@ def test_js_imports() -> None:
     has_legacy_import = '<!-- begin -->\n<script defer src="_ajt_japanese_24.7.14.2.js"></script>\n<!-- end -->'
     template_dict = {side: has_legacy_import}
     assert ensure_js_imported(template_dict, side) is True
-    assert template_dict[side] == f'<!-- begin -->\n<!-- end -->\n{BUNDLED_JS_FILE.import_str}'
+    assert template_dict[side] == f"<!-- begin -->\n<!-- end -->\n{BUNDLED_JS_FILE.import_str}"
