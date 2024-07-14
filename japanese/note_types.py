@@ -71,9 +71,8 @@ def ensure_imports_added_for_model(col: anki.collection.Collection, model: Notet
     return is_dirty
 
 
-def ensure_imports_added_op(col: anki.collection.Collection) -> anki.collection.OpChanges:
+def ensure_imports_added_op(col: anki.collection.Collection, models: Sequence[NotetypeNameId]) -> anki.collection.OpChanges:
     assert mw
-    models = collect_all_relevant_models()
     pos = col.add_custom_undo_entry(f"{ADDON_NAME}: Add imports to {len(models)} models.")
     is_dirty = False
     for model in models:
@@ -82,9 +81,9 @@ def ensure_imports_added_op(col: anki.collection.Collection) -> anki.collection.
     return col.merge_undo_entries(pos) if is_dirty else anki.collection.OpChanges()
 
 
-def ensure_imports_added() -> None:
+def ensure_imports_added(models: Sequence[NotetypeNameId]) -> None:
     assert mw
-    CollectionOp(mw, lambda col: ensure_imports_added_op(col)).success(lambda _: None).run_in_background()
+    CollectionOp(mw, lambda col: ensure_imports_added_op(col, models)).success(lambda _: None).run_in_background()
 
 
 def find_ajt_script_names_in_collection():
@@ -95,7 +94,7 @@ def get_bundled_ajt_script_names():
     return frozenset((BUNDLED_JS_FILE.name_in_col, BUNDLED_CSS_FILE.name_in_col))
 
 
-def remove_old_versions() -> None:
+def remove_old_file_versions() -> None:
     assert mw
     for old_file_name in find_ajt_script_names_in_collection() - get_bundled_ajt_script_names():
         os.unlink(os.path.join(mw.col.media.dir(), old_file_name))
@@ -104,11 +103,13 @@ def remove_old_versions() -> None:
 
 def prepare_note_types() -> None:
     if not cfg.insert_scripts_into_templates:
+        # Global switch (in Advanced settings, not shown in the GUI settings.)
         return
-    assert mw
-    ensure_files_saved()
-    ensure_imports_added()
-    remove_old_versions()
+    if models := collect_all_relevant_models():
+        # Add scripts to templates only if the user has profiles (tasks) where furigana needs to be generated.
+        ensure_files_saved()
+        ensure_imports_added(models)
+        remove_old_file_versions()
 
 
 def init():
