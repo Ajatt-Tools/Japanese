@@ -11,20 +11,21 @@ from aqt.operations import CollectionOp
 
 from .config_view import config_view as cfg
 from .helpers.consts import ADDON_NAME
+from .helpers.profiles import ProfileFurigana
 from .note_type.bundled_files import (
     BUNDLED_CSS_FILE,
     BUNDLED_JS_FILE,
-    BundledNoteTypeSupportFile,
+    BundledCSSFile,
     get_file_version,
 )
 from .note_type.imports import ensure_css_imported, ensure_js_imported
 
 
-def not_recent_version(file: BundledNoteTypeSupportFile) -> bool:
+def not_recent_version(file: BundledCSSFile) -> bool:
     return file.version > get_file_version(file.path_in_col()).version
 
 
-def save_to_col(file: BundledNoteTypeSupportFile) -> None:
+def save_to_col(file: BundledCSSFile) -> None:
     with open(file.path_in_col(), "w", encoding="utf-8") as of:
         of.write(file.text_content)
 
@@ -33,11 +34,13 @@ def is_debug_enabled() -> bool:
     return "QTWEBENGINE_REMOTE_DEBUGGING" in os.environ
 
 
-def ensure_files_saved():
-    for file in (BUNDLED_JS_FILE, BUNDLED_CSS_FILE):
-        if not_recent_version(file) or is_debug_enabled():
-            save_to_col(file)
-            print(f"Created new file: {file.name_in_col}")
+def ensure_bundled_css_file_saved() -> None:
+    """
+    Save the AJT Japanese CSS file to the 'collection.media' folder.
+    """
+    if not_recent_version(BUNDLED_CSS_FILE) or is_debug_enabled():
+        save_to_col(BUNDLED_CSS_FILE)
+        print(f"Created new file: {BUNDLED_CSS_FILE.name_in_col}")
 
 
 def collect_all_relevant_models() -> Sequence[NotetypeNameId]:
@@ -71,7 +74,9 @@ def ensure_imports_added_for_model(col: anki.collection.Collection, model: Notet
     return is_dirty
 
 
-def ensure_imports_added_op(col: anki.collection.Collection, models: Sequence[NotetypeNameId]) -> anki.collection.OpChanges:
+def ensure_imports_added_op(
+    col: anki.collection.Collection, models: Sequence[NotetypeNameId]
+) -> anki.collection.OpChanges:
     assert mw
     pos = col.add_custom_undo_entry(f"{ADDON_NAME}: Add imports to {len(models)} models.")
     is_dirty = False
@@ -96,7 +101,7 @@ def get_bundled_ajt_script_names():
 
 def remove_old_file_versions() -> None:
     assert mw
-    for old_file_name in find_ajt_script_names_in_collection() - get_bundled_ajt_script_names():
+    for old_file_name in find_ajt_script_names_in_collection() - {BUNDLED_CSS_FILE.name_in_col}:
         os.unlink(os.path.join(mw.col.media.dir(), old_file_name))
         print(f"Removed old version: {old_file_name}")
 
@@ -107,7 +112,7 @@ def prepare_note_types() -> None:
         return
     if models := collect_all_relevant_models():
         # Add scripts to templates only if the user has profiles (tasks) where furigana needs to be generated.
-        ensure_files_saved()
+        ensure_bundled_css_file_saved()
         ensure_imports_added(models)
         remove_old_file_versions()
 
