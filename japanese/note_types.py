@@ -52,7 +52,7 @@ def collect_all_relevant_models() -> Sequence[NotetypeNameId]:
         if any(
             profile.note_type.lower() in model.name.lower()
             for profile in cfg.iter_profiles()
-            if profile.mode == "furigana"
+            if isinstance(profile, ProfileFurigana)
         )
     ]
 
