@@ -50,6 +50,7 @@ class BundledNoteTypeSupportFile(typing.NamedTuple):
     version: FileVersionTuple
     name_in_col: str
     import_str: str
+    text_content: str
 
     def path_in_col(self) -> str:
         from aqt import mw
@@ -67,6 +68,7 @@ class BundledNoteTypeSupportFile(typing.NamedTuple):
             version=vf.version,
             name_in_col=name_in_col,
             import_str=import_str_from_name(name_in_col, ftype=ftype),
+            text_content=vf.text_content,
         )
 
 
