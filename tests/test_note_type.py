@@ -45,3 +45,8 @@ def test_js_imports() -> None:
     template_dict = {side: has_legacy_import}
     assert ensure_js_imported(template_dict, side) is True
     assert template_dict[side] == f"<!-- begin -->\n<!-- end -->\n{BUNDLED_JS_FILE.import_str}"
+
+    newer_template = "<script>\n/* AJT Japanese JS 999.12.12.12 */\n//some new code\n</script>\n<!--whatever-->"
+    template_dict = {side: newer_template}
+    assert ensure_js_imported(template_dict, side) is False
+    assert template_dict[side] == newer_template
