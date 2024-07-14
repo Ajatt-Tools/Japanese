@@ -11,19 +11,22 @@ assert re.fullmatch(RE_AJT_CSS_IMPORT, BUNDLED_CSS_FILE.import_str)
 assert re.fullmatch(RE_AJT_JS_IMPORT, BUNDLED_JS_FILE.import_str)
 
 
+def ensure_css_in_card(css_styling: str) -> str:
+    # The CSS was imported previously, but a new version has been released.
+    css_styling = re.sub(RE_AJT_CSS_IMPORT, BUNDLED_CSS_FILE.import_str, css_styling)
+    if BUNDLED_CSS_FILE.import_str not in css_styling:
+        # The CSS was not imported before. Likely a fresh Note Type or Anki install.
+        css_styling = f'{BUNDLED_CSS_FILE.import_str}\n{css_styling}'
+    return css_styling
+
+
 def ensure_css_imported(model_dict: dict[str, str]) -> bool:
     """
     Takes a model (note type) and ensures that it imports the bundled CSS file.
     Returns True if the model has been modified and Anki needs to save the changes.
     """
-    updated_css = re.sub(RE_AJT_CSS_IMPORT, BUNDLED_CSS_FILE.import_str, model_dict["css"])
-    if updated_css != model_dict["css"]:
-        # The CSS was imported previously, but a new version has been released.
+    if (updated_css := ensure_css_in_card(model_dict["css"])) != model_dict["css"]:
         model_dict["css"] = updated_css
-        return True
-    if BUNDLED_CSS_FILE.import_str not in model_dict["css"]:
-        # The CSS was not imported before. Likely a fresh Note Type or Anki install.
-        model_dict["css"] = f'{BUNDLED_CSS_FILE.import_str}\n{model_dict["css"]}'
         return True
     return False
 
