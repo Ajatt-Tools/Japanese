@@ -2,6 +2,7 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 import glob
 import os.path
+import pathlib
 from collections.abc import Sequence
 
 import anki.collection
@@ -92,7 +93,8 @@ def ensure_imports_added(models: Sequence[NotetypeNameId]) -> None:
 
 
 def find_ajt_script_names_in_collection():
-    return frozenset(glob.glob("_ajt_japanese*.*", root_dir=mw.col.media.dir()))
+    # Note: the official binary bundle is stuck on python 3.9; glob() does not support the root_dir parameter.
+    return frozenset(entry.name for entry in pathlib.Path(mw.col.media.dir()).glob("_ajt_japanese*.*"))
 
 
 def get_bundled_ajt_script_names():
