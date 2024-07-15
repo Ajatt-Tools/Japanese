@@ -11,6 +11,7 @@ from japanese.note_type.bundled_files import (
     UNK_VERSION,
     FileVersionTuple,
 )
+from japanese.note_type.files_in_col_media import FileInCollection
 from japanese.note_type.imports import (
     ensure_css_imported,
     ensure_js_imported,
@@ -25,7 +26,7 @@ def test_expected_file_name() -> None:
 
 
 @pytest.mark.parametrize(
-    "test_input,expected",
+    "test_input, expected",
     [
         (
             # Import is missing.
@@ -140,3 +141,38 @@ def test_js_imports(template_html: str, is_modified: bool, modified_html: Option
     template_dict = {side: template_html}
     assert ensure_js_imported(template_dict, side) is is_modified
     assert template_dict[side] == (modified_html or template_html)
+
+
+@pytest.mark.parametrize(
+    "file_name, expected_ver",
+    [
+        (
+            # no version
+            "_ajt_japanese.css",
+            UNK_VERSION,
+        ),
+        (
+            # js files are not stored in collection (anymore)
+            "_ajt_japanese.js",
+            UNK_VERSION,
+        ),
+        (
+            # has version
+            "_ajt_japanese_1.1.1.1.css",
+            (1, 1, 1, 1),
+        ),
+        (
+            # js files are not stored in collection (anymore)
+            "_ajt_japanese_1.1.1.1.js",
+            UNK_VERSION,
+        ),
+        (
+            # js files are not stored in collection (anymore)
+            "_ajt_japanese_99.99.99.99.css",
+            (99, 99, 99, 99),
+        ),
+    ],
+)
+def test_file_in_collection(file_name: str, expected_ver: FileVersionTuple) -> None:
+    # all files start with '_ajt_japanese'
+    assert FileInCollection.new(file_name).version == expected_ver
