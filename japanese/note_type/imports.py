@@ -14,7 +14,7 @@ from .bundled_files import (
     version_str_to_tuple,
 )
 
-RE_AJT_CSS_IMPORT = re.compile(r'@import url\("_ajt_japanese[^"]*\.css"\);')
+RE_AJT_CSS_IMPORT = re.compile(r'@import url\("_ajt_japanese(?:_(?P<version>\d+\.\d+\.\d+\.\d+))?\.css"\);')
 RE_AJT_JS_LEGACY_IMPORT = re.compile(r'<script [^<>]*src="_ajt_japanese[^"]*\.js"></script>\n?')
 RE_AJT_JS_VERSION_COMMENT = re.compile(r"/\* AJT Japanese JS (?P<version>\d+\.\d+\.\d+\.\d+) \*/\n?")
 
@@ -46,9 +46,25 @@ def find_ajt_japanese_js_import(template_text: str) -> Optional[VersionedFile]:
     return None
 
 
+def find_existing_css_version(css_styling: str) -> Optional[FileVersionTuple]:
+    existing_import = re.search(RE_AJT_CSS_IMPORT, css_styling)
+    if not existing_import:
+        return None
+    existing_version = existing_import.group("version")
+    if not existing_version:
+        return UNK_VERSION
+    return version_str_to_tuple(existing_import.group("version"))
+
+
 def ensure_css_in_card(css_styling: str) -> str:
+    existing_version = find_existing_css_version(css_styling)
+    if existing_version is not None and existing_version >= BUNDLED_CSS_FILE.version:
+        # The import is added and the version is up-to-date (or newer).
+        return css_styling
+
     # The CSS was imported previously, but a new version has been released.
     css_styling = re.sub(RE_AJT_CSS_IMPORT, BUNDLED_CSS_FILE.import_str, css_styling)
+
     if BUNDLED_CSS_FILE.import_str not in css_styling:
         # The CSS was not imported before. Likely a fresh Note Type or Anki install.
         css_styling = f"{BUNDLED_CSS_FILE.import_str}\n{css_styling}"
