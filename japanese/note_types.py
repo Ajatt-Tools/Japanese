@@ -1,8 +1,6 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
-import glob
 import os.path
-import pathlib
 from collections.abc import Sequence
 
 import anki.collection
@@ -13,11 +11,10 @@ from aqt.operations import CollectionOp
 from .config_view import config_view as cfg
 from .helpers.consts import ADDON_NAME
 from .helpers.profiles import ProfileFurigana
-from .note_type.bundled_files import (
-    BUNDLED_CSS_FILE,
-    BUNDLED_JS_FILE,
-    BundledCSSFile,
-    get_file_version,
+from .note_type.bundled_files import BUNDLED_CSS_FILE, BundledCSSFile, get_file_version
+from .note_type.files_in_col_media import (
+    FileInCollection,
+    find_ajt_scripts_in_collection,
 )
 from .note_type.imports import ensure_css_imported, ensure_js_imported
 
@@ -92,20 +89,13 @@ def ensure_imports_added(models: Sequence[NotetypeNameId]) -> None:
     CollectionOp(mw, lambda col: ensure_imports_added_op(col, models)).success(lambda _: None).run_in_background()
 
 
-def find_ajt_script_names_in_collection():
-    # Note: the official binary bundle is stuck on python 3.9; glob() does not support the root_dir parameter.
-    return frozenset(entry.name for entry in pathlib.Path(mw.col.media.dir()).glob("_ajt_japanese*.*"))
-
-
-def get_bundled_ajt_script_names():
-    return frozenset((BUNDLED_JS_FILE.name_in_col, BUNDLED_CSS_FILE.name_in_col))
-
-
 def remove_old_file_versions() -> None:
     assert mw
-    for old_file_name in find_ajt_script_names_in_collection() - {BUNDLED_CSS_FILE.name_in_col}:
-        os.unlink(os.path.join(mw.col.media.dir(), old_file_name))
-        print(f"Removed old version: {old_file_name}")
+    saved_files: frozenset[FileInCollection] = find_ajt_scripts_in_collection() - {BUNDLED_CSS_FILE.name_in_col}
+    for file in saved_files:
+        if file.version < BUNDLED_CSS_FILE.version:
+            os.unlink(os.path.join(mw.col.media.dir(), file.name))
+            print(f"Removed old version: {file.name}")
 
 
 def prepare_note_types() -> None:
