@@ -28,18 +28,22 @@ def test_expected_file_name() -> None:
     "test_input,expected",
     [
         (
+            # Import is missing.
             """@import url("_file.css");\nbody { color: pink; }""",
             None,
         ),
         (
+            # Legacy import found.
             """@import url("_file.css");\n@import url("_ajt_japanese.css");\nbody { color: pink; }""",
             UNK_VERSION,
         ),
         (
+            # Version specified
             """@import url("_file.css");\n@import url("_ajt_japanese_1.1.1.1.css");\nbody { color: pink; }""",
             (1, 1, 1, 1),
         ),
         (
+            # Version specified
             """@import url("_file.css");\n@import url("_ajt_japanese_12.12.12.12.css");\nbody { color: pink; }""",
             (12, 12, 12, 12),
         ),
@@ -49,61 +53,90 @@ def test_find_existing_css_version(test_input: str, expected: Optional[FileVersi
     assert find_existing_css_version(test_input) == expected
 
 
-def test_css_imports() -> None:
-    # Import is missing.
-    model_dict = {"css": "/* NO CSS */"}
-    assert ensure_css_imported(model_dict) is True
-    assert model_dict["css"] == BUNDLED_CSS_FILE.import_str + "\n/* NO CSS */"
+@pytest.mark.parametrize(
+    "css_styling, is_modified, modified_css",
+    [
+        (
+            # Import is missing.
+            """/* NO CSS */""",
+            True,
+            f"{BUNDLED_CSS_FILE.import_str}\n/* NO CSS */",
+        ),
+        (
+            # Legacy import found.
+            """@import url("_ajt_japanese.css");\n/* Other CSS */""",
+            True,
+            f"{BUNDLED_CSS_FILE.import_str}\n/* Other CSS */",
+        ),
+        (
+            # Older version
+            """/* Other CSS */\n@import url("_ajt_japanese_1.1.1.1.css");\n/* Other CSS */""",
+            True,
+            f"/* Other CSS */\n{BUNDLED_CSS_FILE.import_str}\n/* Other CSS */",
+        ),
+        (
+            # Current version
+            f"{BUNDLED_CSS_FILE.import_str}\n/* Other CSS */\n/* Other CSS */\n",
+            False,
+            None,
+        ),
+        (
+            # Newer version
+            """/* Other CSS */\n@import url("_ajt_japanese_999.1.1.1.css");\n/* Other CSS */""",
+            False,
+            None,
+        ),
+    ],
+)
+def test_css_imports(css_styling: str, is_modified: bool, modified_css: Optional[str]) -> None:
+    model_dict = {"css": css_styling}
+    assert ensure_css_imported(model_dict) is is_modified
+    assert model_dict["css"] == (modified_css or css_styling)
 
-    # Legacy import found.
-    model_dict = {"css": f'@import url("_ajt_japanese.css");\n/* Other CSS */'}
-    assert ensure_css_imported(model_dict) is True
-    assert model_dict["css"] == BUNDLED_CSS_FILE.import_str + "\n/* Other CSS */"
 
-    # Older version
-    model_dict = {"css": f'/* Other CSS */\n@import url("_ajt_japanese_1.1.1.1.css");\n/* Other CSS */'}
-    assert ensure_css_imported(model_dict) is True
-    assert model_dict["css"] == f"/* Other CSS */\n{BUNDLED_CSS_FILE.import_str}\n/* Other CSS */"
-
-    # Current version
-    model_dict = {"css": f"{BUNDLED_CSS_FILE.import_str}\n/* Other CSS */"}
-    assert ensure_css_imported(model_dict) is False
-    assert model_dict["css"] == BUNDLED_CSS_FILE.import_str + "\n/* Other CSS */"
-
-    # Newer version
-    has_newer_import = f'/* Other CSS */\n@import url("_ajt_japanese_999.1.1.1.css");\n/* Other CSS */'
-    model_dict = {"css": has_newer_import}
-    assert ensure_css_imported(model_dict) is False
-    assert model_dict["css"] == has_newer_import
-
-
-def test_js_imports() -> None:
+@pytest.mark.parametrize(
+    "template_html, is_modified, modified_html",
+    [
+        (
+            # Import is missing.
+            """<!-- empty template -->""",
+            True,
+            f"<!-- empty template -->\n{BUNDLED_JS_FILE.import_str}",
+        ),
+        (
+            # Legacy import found.
+            """<!-- begin -->\n<script defer src="_ajt_japanese_24.7.14.2.js"></script>\n<!-- end -->""",
+            True,
+            f"<!-- begin -->\n<!-- end -->\n{BUNDLED_JS_FILE.import_str}",
+        ),
+        (
+            # Legacy import found.
+            """<!-- begin -->\n<script src="_ajt_japanese.js"></script>\n<!-- end -->""",
+            True,
+            f"<!-- begin -->\n<!-- end -->\n{BUNDLED_JS_FILE.import_str}",
+        ),
+        (
+            # Older version
+            "<script>\n/* AJT Japanese JS 24.7.14.0 */\n//some old code\n</script>\n<!--whatever-->",
+            True,
+            f"{BUNDLED_JS_FILE.import_str}\n<!--whatever-->",
+        ),
+        (
+            # Current version
+            f"<!-- template text -->\n{BUNDLED_JS_FILE.import_str}\n<!-- template text -->",
+            False,
+            None,
+        ),
+        (
+            # Newer version
+            "<script>\n/* AJT Japanese JS 999.1.1.1 */\n//some new code\n</script>\n<!--whatever-->",
+            False,
+            None,
+        ),
+    ],
+)
+def test_js_imports(template_html: str, is_modified: bool, modified_html: Optional[str]) -> None:
     side = "qfmt"
-
-    # Import is missing.
-    template_dict = {side: "<!-- empty template -->"}
-    assert ensure_js_imported(template_dict, side) is True
-    assert template_dict[side] == "<!-- empty template -->\n" + BUNDLED_JS_FILE.import_str
-
-    # Legacy import found.
-    has_legacy_import = '<!-- begin -->\n<script defer src="_ajt_japanese_24.7.14.2.js"></script>\n<!-- end -->'
-    template_dict = {side: has_legacy_import}
-    assert ensure_js_imported(template_dict, side) is True
-    assert template_dict[side] == f"<!-- begin -->\n<!-- end -->\n{BUNDLED_JS_FILE.import_str}"
-
-    # Older version
-    template_dict = {side: "<script>\n/* AJT Japanese JS 24.7.14.0 */\n//some old code\n</script>\n<!--whatever-->"}
-    assert ensure_js_imported(template_dict, side) is True
-    assert template_dict[side] == BUNDLED_JS_FILE.import_str + "\n<!--whatever-->"
-
-    # Current version
-    up_to_date_template = f"<!-- template text -->\n{BUNDLED_JS_FILE.import_str}\n<!-- template text -->"
-    template_dict = {side: up_to_date_template}
-    assert ensure_js_imported(template_dict, side) is False
-    assert template_dict[side] == up_to_date_template
-
-    # Newer version
-    newer_template = "<script>\n/* AJT Japanese JS 999.1.1.1 */\n//some new code\n</script>\n<!--whatever-->"
-    template_dict = {side: newer_template}
-    assert ensure_js_imported(template_dict, side) is False
-    assert template_dict[side] == newer_template
+    template_dict = {side: template_html}
+    assert ensure_js_imported(template_dict, side) is is_modified
+    assert template_dict[side] == (modified_html or template_html)
