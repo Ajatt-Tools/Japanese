@@ -167,7 +167,7 @@ def test_js_imports(template_html: str, is_modified: bool, modified_html: Option
             UNK_VERSION,
         ),
         (
-            # js files are not stored in collection (anymore)
+            # has version
             "_ajt_japanese_99.99.99.99.css",
             (99, 99, 99, 99),
         ),
