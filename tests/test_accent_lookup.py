@@ -1,5 +1,6 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
+from collections.abc import Sequence
 
 import pytest
 
@@ -50,7 +51,7 @@ def test_accent_lookup(lookup: AccentLookup, test_input, expected) -> None:
     "word,order",
     [("経緯", ("ケイイ", "イキサツ")), ("国境", ("コッキョウ", "クニザカイ")), ("私", ("わたし", "あたし"))],
 )
-def test_acc_dict(acc_dict_mgr: AccentDictManager, word, order) -> None:
+def test_acc_dict(acc_dict_mgr: AccentDictManager, word: str, order: Sequence[str]) -> None:
     entries = acc_dict_mgr.lookup(word)
     assert entries
     reading_to_idx = {entry.katakana_reading: idx for idx, entry in enumerate(entries)}
