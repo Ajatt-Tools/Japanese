@@ -13,9 +13,13 @@ from .pitch_override_table import PitchOverrideTable
 
 class PitchOverrideWidget(QWidget):
     _filename_filter = "TSV Files (*.tsv *.csv);; All Files (*.*)"
+    _file_path: str
+    _table: PitchOverrideTable
+    _import_button: QPushButton
+    _export_button: QPushButton
 
-    def __init__(self, parent, file_path: str, *args, **kwargs):
-        super().__init__(parent, *args, **kwargs)
+    def __init__(self, parent, file_path: str) -> None:
+        super().__init__(parent)
         self._file_path = file_path
         self._table = PitchOverrideTable.from_tsv(self._file_path)
         self._import_button = QPushButton("Import TSV")
