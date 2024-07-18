@@ -381,6 +381,9 @@ class Sqlite3Buddy:
         cur.close()
 
     def clear_pitch_accents_table(self) -> None:
+        """
+        Remove all pitch accent entries.
+        """
         cur = self.con.cursor()
         query = """ DELETE FROM pitch_accents_formatted; """
         cur.execute(query)
