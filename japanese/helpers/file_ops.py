@@ -27,7 +27,7 @@ def resolve_relative_path(*paths) -> str:
     raise RuntimeError(f"couldn't find addon module")
 
 
-def touch(path):
+def touch(path) -> None:
     with open(path, "a"):
         os.utime(path, None)
 
