@@ -2,6 +2,7 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 import abc
 from collections.abc import Iterable
+from typing import Optional
 
 from ..config_view import JapaneseConfig
 from ..helpers.basic_types import AudioManagerHttpClientABC
@@ -17,6 +18,7 @@ class AudioSourceManagerFactory(AudioSourceManagerFactoryABC, abc.ABC):
     _config: JapaneseConfig
     _http_client: AudioManagerHttpClientABC
     _audio_sources: list[AudioSource]
+    _db_path: Optional[str] = None
 
     def __new__(cls, *args, **kwargs):
         try:
@@ -25,8 +27,9 @@ class AudioSourceManagerFactory(AudioSourceManagerFactoryABC, abc.ABC):
             obj = cls._instance = super().__new__(cls)
         return obj
 
-    def __init__(self, config: JapaneseConfig) -> None:
+    def __init__(self, config: JapaneseConfig, db_path: Optional[str] = None) -> None:
         self._config = config
+        self._db_path = db_path or self._db_path
         self._http_client = AudioManagerHttpClient(self._config.audio_settings)
         self._audio_sources = []
 
@@ -49,7 +52,7 @@ class AudioSourceManagerFactory(AudioSourceManagerFactoryABC, abc.ABC):
         A separate db connection is used.
         """
         sources, errors = [], []
-        with Sqlite3Buddy() as db:
+        with Sqlite3Buddy(self._db_path) as db:
             session = self.request_new_session(db)
             for source in self._iter_audio_sources(db):
                 if not source.enabled:

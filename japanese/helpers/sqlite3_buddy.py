@@ -43,7 +43,6 @@ class Sqlite3Buddy:
 
     def __init__(self, db_path: Optional[str] = None) -> None:
         self._db_path = db_path or self._db_path
-        print(self._db_path)
         self._con = None
 
     def can_execute(self) -> bool:

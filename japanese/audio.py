@@ -274,6 +274,10 @@ def report_audio_init_errors(result: InitResult) -> None:
 class AnkiAudioSourceManagerFactory(AudioSourceManagerFactory):
     _config: JapaneseConfig
 
+    def __init__(self, config: JapaneseConfig):
+        super().__init__(config)
+        assert self._db_path is None
+
     def request_new_session(self, db: Sqlite3Buddy) -> AnkiAudioSourceManager:
         """
         If tasks are being done in a different thread, prepare a new db connection
