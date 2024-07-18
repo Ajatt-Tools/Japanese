@@ -21,8 +21,8 @@ class ExpandingTableWidget(QTableWidget):
     _columns: Collection[str] = None
     _sep_regex: re.Pattern = None
 
-    def __init__(self, *args) -> None:
-        super().__init__(*args)
+    def __init__(self, parent=None) -> None:
+        super().__init__(parent)
         self.setColumnCount(len(self._columns))
         self.setHorizontalHeaderLabels(self._columns)
         self.addDeleteSelectedRowsContextAction()
