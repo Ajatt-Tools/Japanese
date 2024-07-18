@@ -18,7 +18,7 @@ from .config_view import ToolbarButtonConfig
 from .config_view import config_view as cfg
 from .definitions import sakura_client
 from .helpers.profiles import TaskCaller
-from .helpers.sqlite3_buddy import sqlite3_buddy
+from .helpers.sqlite3_buddy import Sqlite3Buddy
 from .helpers.tokens import clean_furigana
 from .reading import fgen
 from .tasks import DoTasks
@@ -104,7 +104,7 @@ def search_audio(editor: Editor) -> None:
 
     assert editor.note is not None
 
-    with sqlite3_buddy() as db:
+    with Sqlite3Buddy() as db:
         session = aud_src_mgr.request_new_session(db)
         dialog = AnkiAudioSearchDialog(session)
         fix_default_anki_style(dialog.table)

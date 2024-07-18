@@ -19,7 +19,6 @@ from .audio import AnkiAudioSourceManager, FileSaveResults, format_audio_tags
 from .audio_manager.basic_types import FileUrlData
 from .config_view import config_view as cfg
 from .helpers.profiles import (
-    ColorCodePitchFormat,
     PitchOutputFormat,
     Profile,
     ProfileAudio,
@@ -27,7 +26,7 @@ from .helpers.profiles import (
     ProfilePitch,
     TaskCaller,
 )
-from .helpers.sqlite3_buddy import sqlite3_buddy
+from .helpers.sqlite3_buddy import Sqlite3Buddy
 from .reading import fgen, format_pronunciations, lookup
 
 
@@ -163,7 +162,7 @@ class DoTasks:
     def run(self, changed: bool = False) -> bool:
         from .audio import aud_src_mgr
 
-        with sqlite3_buddy() as db:
+        with Sqlite3Buddy() as db:
             session = aud_src_mgr.request_new_session(db)
             for task in self._tasks:
                 if task.should_answer_to(self._caller) and task.applies_to_note(self._note):

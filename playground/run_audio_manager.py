@@ -3,7 +3,7 @@
 
 from japanese.audio_manager.audio_manager import AudioSourceManagerFactory
 from japanese.audio_manager.source_manager import AudioSourceManager, TotalAudioStats
-from japanese.helpers.sqlite3_buddy import Sqlite3Buddy, sqlite3_buddy
+from japanese.helpers.sqlite3_buddy import Sqlite3Buddy
 from tests.no_anki_config import NoAnkiConfigView
 
 
@@ -32,7 +32,7 @@ def main() -> None:
     session: AudioSourceManager
     stats: TotalAudioStats
 
-    with sqlite3_buddy() as db:
+    with Sqlite3Buddy() as db:
         session = factory.request_new_session(db)
         stats = session.total_stats()
         print(f"{stats.unique_files=}")
