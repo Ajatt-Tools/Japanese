@@ -33,10 +33,6 @@ class AudioSourceManagerFactory(AudioSourceManagerFactoryABC, abc.ABC):
         self._http_client = AudioManagerHttpClient(self._config.audio_settings)
         self._audio_sources = []
 
-    def purge_everything(self) -> None:
-        self._audio_sources = []
-        Sqlite3Buddy.remove_database_file()
-
     def init_sources(self) -> None:
         self._set_sources(self._get_sources().sources)
 
@@ -67,3 +63,12 @@ class AudioSourceManagerFactory(AudioSourceManagerFactoryABC, abc.ABC):
                     sources.append(source)
                     print(f"Initialized audio source: {source.name}")
             return InitResult(sources, errors)
+
+    def _purge_sources(self) -> None:
+        """
+        This method is normally run in a different thread.
+        A separate db connection is used.
+        """
+        with Sqlite3Buddy(self._db_path) as db:
+            session = self.request_new_session(db)
+            session.clear_audio_tables()
