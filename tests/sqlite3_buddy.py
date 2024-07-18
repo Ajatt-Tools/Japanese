@@ -9,10 +9,15 @@ from japanese.pitch_accents.acc_dict_mgr_2 import AccDictToSqliteWriter
 
 
 @pytest.fixture()
-def tmp_sqlite3_buddy(tmpdir_factory):
+def tmp_sqlite3_db_path(tmpdir_factory):
     db_path = tmpdir_factory.mktemp("data").join("db.sqlite")
-    yield Sqlite3Buddy(db_path=db_path)
+    yield db_path
     rm_file(db_path)
+
+
+@pytest.fixture()
+def tmp_sqlite3_buddy(tmp_sqlite3_db_path):
+    yield Sqlite3Buddy(db_path=tmp_sqlite3_db_path)
 
 
 @pytest.fixture()
