@@ -33,7 +33,10 @@ def build_or_clause(repeated_field_name: str, count: int) -> str:
 
 
 class Sqlite3Buddy:
-    """Db holds three tables: ('meta', 'headwords', 'files')"""
+    """
+    Tables for audio:  ('meta', 'headwords', 'files')
+    Table for pitch accents: 'pitch_accents_formatted'
+    """
 
     _db_path: str = os.path.join(user_files_dir(), CURRENT_DB.name)
     _con: Optional[sqlite3.Connection]
