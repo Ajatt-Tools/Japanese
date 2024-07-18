@@ -77,9 +77,9 @@ def formatted_from_tsv_row(row_dict: UserAccDictRawTSVEntry) -> typing.Sequence[
     )
 
 
-def iter_user_formatted_rows() -> typing.Iterable[AccDictRawTSVEntry]:
+def iter_user_formatted_rows(tsv_file_path: str) -> typing.Iterable[AccDictRawTSVEntry]:
     formatted: FormattedEntry
-    for row_dict in read_user_tsv_entries(USER_DATA_CSV_PATH):
+    for row_dict in read_user_tsv_entries(tsv_file_path):
         for formatted in formatted_from_tsv_row(row_dict):
             yield AccDictRawTSVEntry(
                 headword=row_dict["headword"],
