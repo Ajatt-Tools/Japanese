@@ -12,37 +12,16 @@ from aqt.operations import QueryOp
 
 from ..mecab_controller.kana_conv import to_katakana
 from .common import (
+    AccDictRawTSVEntry,
     AccentDict,
     FormattedEntry,
     OrderedSet,
+    get_tsv_reader,
     repack_accent_dict,
     should_regenerate,
 )
 from .consts import FORMATTED_ACCENTS_PICKLE, FORMATTED_ACCENTS_TSV, RES_DIR_PATH
-from .user_accents import UserAccentData
-
-
-class AccDictRawTSVEntry(typing.TypedDict):
-    """Entry as it appears in the pitch accents file."""
-
-    headword: str
-    katakana_reading: str
-    html_notation: str
-    pitch_number: str  # can't be converted to int. might contain separators and special symbols.
-    frequency: str  # must be converted to int. larger number => more occurrences.
-
-
-def get_tsv_reader(f: typing.Iterable[str]) -> csv.DictReader:
-    """
-    Prepare a reader to load the accent dictionary.
-    Keys are already included in the csv file.
-    """
-    return csv.DictReader(
-        f,
-        dialect="excel-tab",
-        delimiter="\t",
-        quoting=csv.QUOTE_NONE,
-    )
+from .user_accents import create_user_formatted_accents
 
 
 def read_formatted_accents() -> AccentDict:
@@ -93,7 +72,7 @@ def accents_dict_init() -> AccentDict:
             return accents_dict_init()
 
     # Finally, patch with user-defined entries.
-    acc_dict.update(UserAccentData().create_formatted())
+    acc_dict.update(create_user_formatted_accents())
     return acc_dict
 
 

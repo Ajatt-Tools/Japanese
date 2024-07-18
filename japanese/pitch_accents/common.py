@@ -17,6 +17,21 @@ RE_PITCH_NUM = re.compile(r"\d+|\?")
 RE_PITCH_TAG = re.compile(r"(<[^<>]+>)")
 
 
+class AccDictRawTSVEntry(typing.TypedDict):
+    """Entry as it appears in the pitch accents file."""
+
+    headword: str
+    katakana_reading: str
+    html_notation: str
+    pitch_number: str  # can't be converted to int. might contain separators and special symbols.
+    frequency: str  # must be converted to int. larger number => more occurrences.
+
+
+class AccDictProvider(enum.Enum):
+    bundled = "bundled"
+    user = "user"
+
+
 class FormattedEntry(NamedTuple):
     katakana_reading: str
     html_notation: str
@@ -90,3 +105,16 @@ def nakaten_separated_katakana_reading(html_notation: str) -> str:
 
 def split_html_notation(entry: FormattedEntry) -> Iterable[str]:
     return filter(bool, map(str.strip, re.split(RE_PITCH_TAG, entry.html_notation)))
+
+
+def get_tsv_reader(f: typing.Iterable[str]) -> csv.DictReader:
+    """
+    Prepare a reader to load the accent dictionary.
+    Keys are already included in the csv file.
+    """
+    return csv.DictReader(
+        f,
+        dialect="excel-tab",
+        delimiter="\t",
+        quoting=csv.QUOTE_NONE,
+    )
