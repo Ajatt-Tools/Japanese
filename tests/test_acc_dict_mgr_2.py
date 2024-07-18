@@ -18,7 +18,7 @@ def test_table_ensure(tmp_sqlite3_buddy, tmp_acc_db_writer) -> None:
 
 
 def test_table_recreate(
-        tmp_sqlite3_buddy: Sqlite3Buddy, tmp_acc_db_writer: Callable[[Sqlite3Buddy], AccDictToSqliteWriter]
+    tmp_sqlite3_buddy: Sqlite3Buddy, tmp_acc_db_writer: Callable[[Sqlite3Buddy], AccDictToSqliteWriter]
 ) -> None:
     with tmp_sqlite3_buddy as db:
         writer = tmp_acc_db_writer(db)

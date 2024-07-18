@@ -5,7 +5,7 @@ from aqt.qt import *
 
 from japanese.audio_manager.basic_types import AudioSourceConfig
 from japanese.widgets.audio_sources import AudioSourcesTable
-from tests.run_audio_manager import init_testing_audio_manager
+from playground.run_audio_manager import init_testing_audio_manager
 
 
 class App(QDialog):
