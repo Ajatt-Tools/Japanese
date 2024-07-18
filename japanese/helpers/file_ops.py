@@ -32,6 +32,13 @@ def touch(path) -> None:
         os.utime(path, None)
 
 
+def rm_file(path) -> None:
+    try:
+        os.unlink(path)
+    except FileNotFoundError:
+        pass
+
+
 def find_file_in_parents(file_name: str) -> str:
     """Used when testing/debugging."""
     for parent_dir in walk_parents(__file__):
