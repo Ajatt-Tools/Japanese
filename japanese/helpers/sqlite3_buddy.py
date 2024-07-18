@@ -65,11 +65,6 @@ class Sqlite3Buddy:
         assert self._con
         return self._con
 
-    @classmethod
-    def remove_database_file(cls):
-        with contextlib.suppress(FileNotFoundError):
-            os.remove(cls._db_path)
-
     def get_media_dir_abs(self, source_name: str) -> Optional[str]:
         cur = self.con.cursor()
         query = """ SELECT media_dir_abs FROM meta WHERE source_name = ? LIMIT 1; """
@@ -396,6 +391,16 @@ class Sqlite3Buddy:
         cur = self.con.cursor()
         query = """ DROP TABLE pitch_accents_formatted; """
         cur.execute(query)
+        self.con.commit()
+        cur.close()
+
+    def clear_all_audio_data(self) -> None:
+        """
+        Remove all info about audio sources from the database.
+        """
+        cur = self.con.cursor()
+        queries = """ DELETE FROM meta ; DELETE FROM headwords ; DELETE FROM files ; """
+        cur.executescript(queries)
         self.con.commit()
         cur.close()
 

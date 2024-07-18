@@ -492,8 +492,7 @@ class AudioSourcesEditTable(QWidget):
         saveGeom(d, d.name)
 
     def _on_purge_db_clicked(self) -> None:
-        aud_src_mgr.purge_everything()
-        self._populate()
+        aud_src_mgr.purge_everything(on_finish=self._populate)
 
     def _on_apply_clicked(self) -> None:
         self._apply_button.setEnabled(False)

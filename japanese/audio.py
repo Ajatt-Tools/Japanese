@@ -290,6 +290,23 @@ class AnkiAudioSourceManagerFactory(AudioSourceManagerFactory):
             audio_sources=self._audio_sources,
         )
 
+    def purge_everything(
+        self,
+        *,
+        on_finish: Callable[[], Any],
+    ) -> None:
+        assert mw
+
+        def on_finish_wrapper():
+            self._set_sources([])
+            on_finish()
+
+        QueryOp(
+            parent=mw,
+            op=lambda collection: self._purge_sources(),
+            success=lambda result: on_finish_wrapper(),
+        ).run_in_background()
+
     def init_sources(
         self,
         *,

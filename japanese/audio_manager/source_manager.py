@@ -212,3 +212,6 @@ class AudioSourceManager:
 
     def remove_data(self, source_name: str) -> None:
         self._db.remove_data(source_name)
+
+    def clear_audio_tables(self) -> None:
+        self._db.clear_all_audio_data()
