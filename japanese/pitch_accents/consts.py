@@ -8,6 +8,7 @@ PITCH_DIR_PATH = os.path.dirname(os.path.normpath(__file__))
 RES_DIR_PATH = os.path.join(PITCH_DIR_PATH, "res")
 FORMATTED_ACCENTS_TSV = os.path.join(RES_DIR_PATH, "pitch_accents_formatted.csv")
 FORMATTED_ACCENTS_PICKLE = os.path.join(RES_DIR_PATH, "pitch_accents_formatted.pickle")
+FORMATTED_ACCENTS_UPDATED = os.path.join(RES_DIR_PATH, "pitch_accents_formatted.updated")
 NO_ACCENT = "?"
 
 # Ensure everything is ok
