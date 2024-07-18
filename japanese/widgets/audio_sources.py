@@ -12,7 +12,7 @@ from ..ajt_common.utils import clamp
 from ..audio_manager.abstract import AudioSourceManagerFactoryABC
 from ..audio_manager.basic_types import AudioSourceConfig
 from ..audio_manager.source_manager import normalize_filename
-from ..helpers.sqlite3_buddy import sqlite3_buddy
+from ..helpers.sqlite3_buddy import Sqlite3Buddy
 from .table import CellContent, ExpandingTableWidget, TableRow
 
 
@@ -75,7 +75,7 @@ class AudioSourcesTable(ExpandingTableWidget):
         removed: list[AudioSourceConfig] = []
         gui_selected_sources = frozenset((selected.name, selected.url) for selected in self.iterateSelectedConfigs())
 
-        with sqlite3_buddy() as db:
+        with Sqlite3Buddy() as db:
             session = self._audio_mgr.request_new_session(db)
             for cached in session.audio_sources:
                 if (cached.name, cached.url) in gui_selected_sources:

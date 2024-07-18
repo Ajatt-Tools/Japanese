@@ -7,9 +7,9 @@ from typing import NamedTuple
 from aqt.qt import *
 from aqt.utils import showInfo
 
-from .table import ExpandingTableWidget
 from ..ajt_common.utils import ui_translate
 from ..pitch_accents.consts import NO_ACCENT
+from .table import ExpandingTableWidget
 
 
 def is_comma_separated_list_of_numbers(text: str):

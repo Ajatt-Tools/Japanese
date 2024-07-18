@@ -6,7 +6,7 @@ from collections.abc import Iterable
 from ..config_view import JapaneseConfig
 from ..helpers.basic_types import AudioManagerHttpClientABC
 from ..helpers.http_client import AudioManagerHttpClient
-from ..helpers.sqlite3_buddy import Sqlite3Buddy, sqlite3_buddy
+from ..helpers.sqlite3_buddy import Sqlite3Buddy
 from .abstract import AudioSourceManagerFactoryABC
 from .audio_source import AudioSource
 from .basic_types import AudioManagerException
@@ -49,7 +49,7 @@ class AudioSourceManagerFactory(AudioSourceManagerFactoryABC, abc.ABC):
         A separate db connection is used.
         """
         sources, errors = [], []
-        with sqlite3_buddy() as db:
+        with Sqlite3Buddy() as db:
             session = self.request_new_session(db)
             for source in self._iter_audio_sources(db):
                 if not source.enabled:
