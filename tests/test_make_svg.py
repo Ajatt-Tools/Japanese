@@ -9,7 +9,6 @@ from japanese.pitch_accents.common import FormattedEntry
 from japanese.pitch_accents.svg_graphs import SvgPitchGraphMaker
 from tests.no_anki_config import NoAnkiConfigView
 
-DATA_DIR = pathlib.Path(__file__).parent / "data"
 TEST_ENTRIES = (
     FormattedEntry(
         "ジンロウ",

@@ -7,6 +7,7 @@ import pytest
 
 from japanese.config_view import JapaneseConfig
 from japanese.helpers.file_ops import find_config_json
+from tests import DATA_DIR
 
 
 class NoAnkiConfigView(JapaneseConfig):
@@ -21,4 +22,13 @@ class NoAnkiConfigView(JapaneseConfig):
 
 @pytest.fixture(scope="session")
 def no_anki_config() -> NoAnkiConfigView:
-    return NoAnkiConfigView()
+    config = NoAnkiConfigView()
+    # substitute audio sources
+    config["audio_sources"] = [
+        {
+            "enabled": True,
+            "name": "TAAS-TEST",
+            "url": str(DATA_DIR / "taas_index.json"),
+        },
+    ]
+    return config
