@@ -76,6 +76,8 @@ def entry_to_moras(entry: FormattedEntry) -> MoraSequence:
             current_flags |= MoraFlag.devoiced
         elif token == XmlTags.devoiced_end:
             current_flags &= ~MoraFlag.devoiced
+        elif token in (XmlTags.handakuten_start, XmlTags.handakuten_end):
+            pass
         elif token in (SpecialSymbols.nasal_dakuten_esc, SpecialSymbols.nasal_dakuten):
             assert MoraFlag.nasal in current_flags, "nasal handakuten only appears inside nasal tags."
             assert len(moras) > 0, "nasal handakuten must be attached to an existing mora."
