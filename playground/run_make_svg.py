@@ -3,8 +3,9 @@
 
 from japanese.config_view import SvgPitchGraphOptionsConfigView
 from japanese.pitch_accents.svg_graphs import SvgPitchGraphMaker
+from tests import DATA_DIR
 from tests.no_anki_config import NoAnkiConfigView
-from tests.test_make_svg import DATA_DIR, TEST_ENTRIES
+from tests.test_make_svg import TEST_ENTRIES
 
 
 def main() -> None:
