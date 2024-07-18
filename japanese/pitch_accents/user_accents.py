@@ -2,78 +2,97 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import collections
+import csv
 import os
+import typing
 from collections.abc import Iterable
-from typing import NamedTuple, Union
 
-from ..helpers.file_ops import touch, user_files_dir
+from ..helpers.file_ops import user_files_dir
 from ..mecab_controller.kana_conv import kana_to_moras, to_katakana
 from .basic_types import SEP_PITCH_TYPES
-from .common import AccentDict, FormattedEntry, OrderedSet, repack_accent_dict
+from .common import (
+    AccDictRawTSVEntry,
+    AccentDict,
+    FormattedEntry,
+    OrderedSet,
+    repack_accent_dict,
+)
 from .consts import NO_ACCENT
 from .format_accents import format_entry
 
 USER_DATA_CSV_PATH = os.path.join(user_files_dir(), "user_data.tsv")
 
 
-def search_pitch_accent_numbers(accents: str) -> Iterable[Union[str, int]]:
-    return ((int(pos) if pos != NO_ACCENT else NO_ACCENT) for pos in accents.split(SEP_PITCH_TYPES))
-
-
-class TSVAccentEntry(NamedTuple):
-    """Represents a parsed entry in the user TSV file."""
+class UserAccDictRawTSVEntry(typing.TypedDict):
+    """Entry as it appears in the user's pitch accents file."""
 
     headword: str
-    moras: tuple[str, ...]
-    accents: tuple[Union[str, int], ...]
     katakana_reading: str
-
-    def has_accent(self):
-        return self.accents != NO_ACCENT
-
-    @classmethod
-    def from_csv_line(cls, line: str):
-        headword, reading, accents = line.split("\t")
-        reading = to_katakana(reading or headword)
-        return cls(
-            headword=headword,
-            moras=tuple(kana_to_moras(reading)),
-            accents=tuple(dict.fromkeys(search_pitch_accent_numbers(accents))),
-            katakana_reading=reading,
-        )
+    pitch_numbers: str
 
 
-def create_formatted(entry: TSVAccentEntry) -> OrderedSet[FormattedEntry]:
-    return OrderedSet.fromkeys(
-        FormattedEntry(
-            katakana_reading=entry.katakana_reading,
-            html_notation=format_entry(entry.moras, pitch_num),
-            pitch_number=str(pitch_num),
-        )
-        for pitch_num in entry.accents
+def get_user_tsv_reader(f: typing.Iterable[str]) -> csv.DictReader:
+    """
+    Prepare a reader to load the accent dictionary.
+    Keys are described in the typed dict.
+    """
+    return csv.DictReader(
+        f,
+        dialect="excel-tab",
+        delimiter="\t",
+        quoting=csv.QUOTE_NONE,
+        fieldnames=UserAccDictRawTSVEntry.__annotations__,
     )
 
 
-class UserAccentData:
-    source_csv_path: str = USER_DATA_CSV_PATH  # accessed by the settings dialog
+def read_user_tsv_entries(tsv_file_path: str) -> Iterable[UserAccDictRawTSVEntry]:
+    row_dict: UserAccDictRawTSVEntry
+    try:
+        with open(tsv_file_path, newline="", encoding="utf-8") as f:
+            for row_dict in get_user_tsv_reader(f):
+                row_dict["headword"] = to_katakana(row_dict["headword"])
+                row_dict["katakana_reading"] = to_katakana(row_dict["katakana_reading"] or row_dict["headword"])
+                yield row_dict
+    except FileNotFoundError:
+        pass
 
-    def __init__(self):
-        self._self_check()
 
-    def _self_check(self):
-        if not os.path.isfile(self.source_csv_path):
-            touch(self.source_csv_path)
-            print(f"Created file: {self.source_csv_path}")
+def parse_pitch_number(pos: str) -> typing.Union[str, int]:
+    return int(pos) if pos != NO_ACCENT else NO_ACCENT
 
-    def _read_entries(self) -> Iterable[TSVAccentEntry]:
-        with open(self.source_csv_path, newline="", encoding="utf-8") as f:
-            for line in f:
-                if line := line.strip():
-                    yield TSVAccentEntry.from_csv_line(line)
 
-    def create_formatted(self) -> AccentDict:
-        """Build the derived pitch accents file from the original pitch accents file and save it as *.csv"""
-        temp_dict: dict[str, OrderedSet[FormattedEntry]] = collections.defaultdict(OrderedSet)
-        for entry in self._read_entries():
-            temp_dict[to_katakana(entry.headword)].update(create_formatted(entry))
-        return repack_accent_dict(temp_dict)
+def split_pitch_numbers(pitch_nums_as_str: str) -> Iterable[typing.Union[str, int]]:
+    return dict.fromkeys(parse_pitch_number(pos) for pos in pitch_nums_as_str.split(SEP_PITCH_TYPES))
+
+
+def formatted_from_tsv_row(row_dict: UserAccDictRawTSVEntry) -> typing.Sequence[FormattedEntry]:
+    row_dict["katakana_reading"] = to_katakana(row_dict["katakana_reading"])
+    return dict.fromkeys(
+        FormattedEntry(
+            katakana_reading=row_dict["katakana_reading"],
+            html_notation=format_entry(kana_to_moras(row_dict["katakana_reading"]), pitch_num),
+            pitch_number=str(pitch_num),
+        )
+        for pitch_num in split_pitch_numbers(row_dict["pitch_numbers"])
+    )
+
+
+def iter_user_formatted_rows() -> typing.Iterable[AccDictRawTSVEntry]:
+    formatted: FormattedEntry
+    for row_dict in read_user_tsv_entries(USER_DATA_CSV_PATH):
+        for formatted in formatted_from_tsv_row(row_dict):
+            yield AccDictRawTSVEntry(
+                headword=row_dict["headword"],
+                katakana_reading=formatted.katakana_reading,
+                html_notation=formatted.html_notation,
+                pitch_number=formatted.pitch_number,
+                frequency="0",
+            )
+
+
+def create_user_formatted_accents() -> AccentDict:
+    """Build the derived pitch accents file from the original pitch accents file and save it as *.csv"""
+    temp_dict: dict[str, OrderedSet[FormattedEntry]] = collections.defaultdict(OrderedSet)
+    for row_dict in read_user_tsv_entries(USER_DATA_CSV_PATH):
+        temp_dict[row_dict["headword"]].update(formatted_from_tsv_row(row_dict))
+    return repack_accent_dict(temp_dict)
