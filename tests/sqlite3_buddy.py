@@ -4,23 +4,17 @@
 import pytest
 
 from japanese.helpers.file_ops import rm_file
-from japanese.helpers.sqlite3_buddy import Sqlite3Buddy
 from japanese.pitch_accents.acc_dict_mgr_2 import AccDictToSqliteWriter
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def tmp_sqlite3_db_path(tmpdir_factory):
     db_path = tmpdir_factory.mktemp("data").join("db.sqlite")
     yield db_path
     rm_file(db_path)
 
 
-@pytest.fixture()
-def tmp_sqlite3_buddy(tmp_sqlite3_db_path):
-    yield Sqlite3Buddy(db_path=tmp_sqlite3_db_path)
-
-
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def tmp_acc_db_writer(tmpdir_factory):
     upd_file = tmpdir_factory.mktemp("data").join("db.updated")
     user_accents_file = tmpdir_factory.mktemp("data").join("user_accents_empty.tsv")
