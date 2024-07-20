@@ -1,6 +1,7 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
-from typing import Callable
+
+import pytest
 
 from japanese.helpers.sqlite3_buddy import Sqlite3Buddy
 from japanese.pitch_accents.acc_dict_mgr_2 import (
@@ -8,35 +9,50 @@ from japanese.pitch_accents.acc_dict_mgr_2 import (
     AccDictToSqliteWriter,
 )
 from japanese.pitch_accents.common import FormattedEntry
-from tests.sqlite3_buddy import tmp_acc_db_writer, tmp_sqlite3_db_path
+from tests.sqlite3_buddy import tmp_sqlite3_db_path, tmp_upd_file, tmp_user_accents_file
 
+class TestAccDictManager:
+    @pytest.fixture(scope="class")
+    def faux_writer(self, tmp_sqlite3_db_path, tmp_upd_file, tmp_user_accents_file):
+        with Sqlite3Buddy(tmp_sqlite3_db_path) as db:
+            writer = AccDictToSqliteWriter(db, tmp_upd_file, tmp_user_accents_file)
+            yield writer
 
-def test_table_recreate(
-    tmp_sqlite3_db_path, tmp_acc_db_writer: Callable[[Sqlite3Buddy], AccDictToSqliteWriter]
-) -> None:
-    with Sqlite3Buddy(tmp_sqlite3_db_path) as db:
-        writer = tmp_acc_db_writer(db)
-        assert writer.table_filled() is False
-        assert writer.table_up_to_date() is False
-        writer.recreate_table()
-        assert writer.table_filled() is False
-        assert writer.table_up_to_date() is False
+    @pytest.fixture(scope="class")
+    def faux_reader(self, tmp_sqlite3_db_path):
+        with Sqlite3Buddy(tmp_sqlite3_db_path) as db:
+            reader = AccDictToSqliteReader(db)
+            yield reader
 
+    def test_empty(self, faux_writer) -> None:
+        w = faux_writer
+        assert w.table_filled() is False
+        assert w.table_up_to_date() is False
 
-def test_table_ensure(tmp_sqlite3_db_path, tmp_acc_db_writer) -> None:
-    with Sqlite3Buddy(tmp_sqlite3_db_path) as db:
-        writer = tmp_acc_db_writer(db)
-        assert writer.table_filled() is False
-        assert writer.table_up_to_date() is False
-        writer.ensure_sqlite_populated()
-        assert writer.table_filled() is True
-        assert writer.table_up_to_date() is True
+    def test_table_recreate(self, faux_writer) -> None:
+        w = faux_writer
+        assert w.table_filled() is False
+        assert w.table_up_to_date() is False
+        w.recreate_table()
+        assert w.table_filled() is False
+        assert w.table_up_to_date() is False
 
+    def test_table_ensure(self, faux_writer) -> None:
+        w = faux_writer
+        assert w.table_filled() is False
+        assert w.table_up_to_date() is False
+        w.ensure_sqlite_populated()
+        assert w.table_filled() is True
+        assert w.table_up_to_date() is True
 
-def test_pitch_lookup(tmp_sqlite3_db_path):
-    with Sqlite3Buddy(tmp_sqlite3_db_path) as db:
-        reader = AccDictToSqliteReader(db)
-        result = reader.look_up_expr("僕")
+    def test_table_filled(self, faux_writer) -> None:
+        w = faux_writer
+        assert w.table_filled() is True
+        assert w.table_up_to_date() is True
+
+    def test_pitch_lookup(self, faux_reader):
+        r = faux_reader
+        result = r.look_up("僕")
         assert list(result) == [
             FormattedEntry(
                 katakana_reading="ボク", html_notation="<low_rise>ボ</low_rise><high>ク</high>", pitch_number="0"
@@ -58,3 +74,11 @@ def test_pitch_lookup(tmp_sqlite3_db_path):
                 pitch_number="0",
             ),
         ]
+
+    def test_table_clear(self, faux_writer) -> None:
+        w = faux_writer
+        assert w.table_filled() is True
+        assert w.table_up_to_date() is True
+        w.clear_table()
+        assert w.table_filled() is False
+        assert w.table_up_to_date() is False

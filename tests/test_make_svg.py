@@ -1,12 +1,12 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
-import pathlib
 
 import pytest
 
 from japanese.config_view import SvgPitchGraphOptionsConfigView
 from japanese.pitch_accents.common import FormattedEntry
 from japanese.pitch_accents.svg_graphs import SvgPitchGraphMaker
+from tests import DATA_DIR
 from tests.no_anki_config import NoAnkiConfigView
 
 TEST_ENTRIES = (
