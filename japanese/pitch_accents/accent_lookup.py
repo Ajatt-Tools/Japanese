@@ -10,7 +10,7 @@ from ..helpers.mingle_readings import split_possible_furigana
 from ..helpers.tokens import split_separators
 from ..mecab_controller import MecabController
 from ..mecab_controller.unify_readings import literal_pronunciation as pr
-from .acc_dict_mgr import AccentDictManager
+from .acc_dict_mgr_2 import AccentDictManager2
 from .common import AccentDict
 
 
@@ -26,10 +26,10 @@ def html_to_text_line(text: str) -> str:
 
 class AccentLookup:
     cfg: JapaneseConfig
-    acc_dict: AccentDictManager
+    acc_dict: AccentDictManager2
     mecab: MecabController
 
-    def __init__(self, acc_dict: AccentDictManager, cfg: JapaneseConfig, mecab: MecabController) -> None:
+    def __init__(self, acc_dict: AccentDictManager2, cfg: JapaneseConfig, mecab: MecabController) -> None:
         self.acc_dict = acc_dict
         self.cfg = cfg
         self.mecab = mecab

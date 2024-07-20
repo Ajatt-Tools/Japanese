@@ -3,7 +3,7 @@
 
 import collections
 import csv
-import os
+import pathlib
 import typing
 from collections.abc import Iterable
 
@@ -20,7 +20,7 @@ from .common import (
 from .consts import NO_ACCENT
 from .format_accents import format_entry
 
-USER_DATA_CSV_PATH = os.path.join(user_files_dir(), "user_data.tsv")
+USER_DATA_CSV_PATH = pathlib.Path(user_files_dir()) / "user_data.tsv"
 
 
 class UserAccDictRawTSVEntry(typing.TypedDict):
@@ -45,7 +45,7 @@ def get_user_tsv_reader(f: typing.Iterable[str]) -> csv.DictReader:
     )
 
 
-def read_user_tsv_entries(tsv_file_path: str) -> Iterable[UserAccDictRawTSVEntry]:
+def read_user_tsv_entries(tsv_file_path: pathlib.Path) -> Iterable[UserAccDictRawTSVEntry]:
     row_dict: UserAccDictRawTSVEntry
     try:
         with open(tsv_file_path, newline="", encoding="utf-8") as f:
@@ -77,7 +77,7 @@ def formatted_from_tsv_row(row_dict: UserAccDictRawTSVEntry) -> typing.Sequence[
     )
 
 
-def iter_user_formatted_rows(tsv_file_path: str) -> typing.Iterable[AccDictRawTSVEntry]:
+def iter_user_formatted_rows(tsv_file_path: pathlib.Path) -> typing.Iterable[AccDictRawTSVEntry]:
     formatted: FormattedEntry
     for row_dict in read_user_tsv_entries(tsv_file_path):
         for formatted in formatted_from_tsv_row(row_dict):

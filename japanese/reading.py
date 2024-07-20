@@ -11,13 +11,14 @@ from .furigana.gen_furigana import FuriganaGen, discard_extra_readings
 from .helpers.profiles import PitchOutputFormat
 from .mecab_controller.kana_conv import to_hiragana
 from .mecab_controller.mecab_controller import MecabController
-from .pitch_accents.acc_dict_mgr import AccentDict, AccentDictManager, FormattedEntry
+from .pitch_accents.acc_dict_mgr_2 import AccentDictManager2
 from .pitch_accents.accent_lookup import AccentLookup
 from .pitch_accents.basic_types import (
     PitchColor,
     count_moras,
     pitch_type_from_pitch_num,
 )
+from .pitch_accents.common import AccentDict, FormattedEntry
 from .pitch_accents.styles import PITCH_COLOR_PLACEHOLDER, STYLE_MAP
 from .pitch_accents.svg_graphs import SvgPitchGraphMaker
 
@@ -109,7 +110,7 @@ def format_pronunciations(
 
 mecab = MecabController(verbose=True, cache_max_size=cfg.cache_lookups)
 svg_graph_maker = SvgPitchGraphMaker(options=cfg.svg_graphs)
-acc_dict = AccentDictManager()
+acc_dict = AccentDictManager2()
 lookup = AccentLookup(acc_dict, cfg, mecab)
-gui_hooks.main_window_did_init.append(acc_dict.reload_from_disk)
+gui_hooks.main_window_did_init.append(acc_dict.ensure_dict_ready)
 fgen = FuriganaGen(cfg, mecab, lookup)

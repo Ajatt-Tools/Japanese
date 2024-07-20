@@ -645,7 +645,7 @@ class SettingsDialog(QDialog, MgrPropMixIn):
         cfg.write_config()
         self._accents_override.save_to_disk()
         # Reload
-        acc_dict.reload_from_disk()
+        acc_dict.reload_user_accents_from_disk()
         aud_src_mgr.init_sources(on_finish=show_audio_init_result_tooltip)
         # if new profiles were added, add imports to the note types.
         prepare_note_types()

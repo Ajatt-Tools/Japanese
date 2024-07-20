@@ -1,7 +1,7 @@
 # Copyright: Ren Tatsumoto <tatsu at autistici.org> and contributors
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
-import os
+import pathlib
 import sqlite3
 import typing
 from collections.abc import Iterable, Sequence
@@ -54,10 +54,10 @@ class Sqlite3Buddy:
     Table for pitch accents: 'pitch_accents_formatted'
     """
 
-    _db_path: str = os.path.join(user_files_dir(), CURRENT_DB.name)
+    _db_path: pathlib.Path = pathlib.Path(user_files_dir()) / CURRENT_DB.name
     _con: Optional[sqlite3.Connection]
 
-    def __init__(self, db_path: Optional[str] = None) -> None:
+    def __init__(self, db_path: Optional[pathlib.Path] = None) -> None:
         self._db_path = db_path or self._db_path
         self._con = None
 
@@ -405,6 +405,15 @@ class Sqlite3Buddy:
         with cursor_buddy(self.con) as cur:
             query = """ DELETE FROM pitch_accents_formatted; """
             cur.execute(query)
+            self.con.commit()
+
+    def clear_pitch_accents(self, provider_name: str) -> None:
+        with cursor_buddy(self.con) as cur:
+            query = """
+            DELETE FROM pitch_accents_formatted
+            WHERE source = ? ;
+            """
+            cur.execute(query, (provider_name,))
             self.con.commit()
 
     def delete_pitch_accents_table(self) -> None:

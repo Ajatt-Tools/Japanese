@@ -2,15 +2,16 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import os
+import pathlib
+from typing import Final
 
 # Paths to the pitch accent files and this particular file
-PITCH_DIR_PATH = os.path.dirname(os.path.normpath(__file__))
-RES_DIR_PATH = os.path.join(PITCH_DIR_PATH, "res")
-FORMATTED_ACCENTS_TSV = os.path.join(RES_DIR_PATH, "pitch_accents_formatted.csv")
-FORMATTED_ACCENTS_PICKLE = os.path.join(RES_DIR_PATH, "pitch_accents_formatted.pickle")
-FORMATTED_ACCENTS_UPDATED = os.path.join(RES_DIR_PATH, "pitch_accents_formatted.updated")
-NO_ACCENT = "?"
+PITCH_DIR_PATH: Final[pathlib.Path] = pathlib.Path(__file__).parent
+RES_DIR_PATH: Final[pathlib.Path] = PITCH_DIR_PATH / "res"
+FORMATTED_ACCENTS_TSV: Final[pathlib.Path] = RES_DIR_PATH / "pitch_accents_formatted.csv"
+FORMATTED_ACCENTS_UPDATED: Final[pathlib.Path] = RES_DIR_PATH / "pitch_accents_formatted.updated"
+NO_ACCENT: Final[str] = "?"
 
 # Ensure everything is ok
-assert os.path.isdir(RES_DIR_PATH), "res folder must exist."
-assert os.path.isfile(FORMATTED_ACCENTS_TSV), "formatted pitch accents must be present."
+assert RES_DIR_PATH.is_dir(), "res folder must exist."
+assert FORMATTED_ACCENTS_TSV.is_file(), "formatted pitch accents must be present."

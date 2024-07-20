@@ -1,6 +1,7 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 import abc
+import pathlib
 from collections.abc import Iterable
 from typing import Optional
 
@@ -18,7 +19,7 @@ class AudioSourceManagerFactory(AudioSourceManagerFactoryABC, abc.ABC):
     _config: JapaneseConfig
     _http_client: AudioManagerHttpClientABC
     _audio_sources: list[AudioSource]
-    _db_path: Optional[str] = None
+    _db_path: Optional[pathlib.Path] = None
 
     def __new__(cls, *args, **kwargs):
         try:
@@ -27,7 +28,7 @@ class AudioSourceManagerFactory(AudioSourceManagerFactoryABC, abc.ABC):
             obj = cls._instance = super().__new__(cls)
         return obj
 
-    def __init__(self, config: JapaneseConfig, db_path: Optional[str] = None) -> None:
+    def __init__(self, config: JapaneseConfig, db_path: Optional[pathlib.Path] = None) -> None:
         self._config = config
         self._db_path = db_path or self._db_path
         self._http_client = AudioManagerHttpClient(self._config.audio_settings)
