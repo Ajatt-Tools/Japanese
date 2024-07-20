@@ -7,7 +7,6 @@ import pathlib
 import typing
 from collections.abc import Iterable
 
-from ..helpers.file_ops import user_files_dir
 from ..mecab_controller.kana_conv import kana_to_moras, to_katakana
 from .basic_types import SEP_PITCH_TYPES
 from .common import (
@@ -17,10 +16,8 @@ from .common import (
     OrderedSet,
     repack_accent_dict,
 )
-from .consts import NO_ACCENT
+from .consts import NO_ACCENT, USER_DATA_CSV_PATH
 from .format_accents import format_entry
-
-USER_DATA_CSV_PATH = pathlib.Path(user_files_dir()) / "user_data.tsv"
 
 
 class UserAccDictRawTSVEntry(typing.TypedDict):
