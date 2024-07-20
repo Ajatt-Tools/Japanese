@@ -397,26 +397,26 @@ class Sqlite3Buddy:
 
     def search_pitch_accents(self, word: Optional[str], prefer_provider_name: str) -> list[tuple[str, str, str]]:
         with cursor_buddy(self.con) as cur:
+            # The user overrides the default (bundled) rows with their own data.
+            # Return relevant rows from the user's data if they can be found.
+            # Otherwise, return all results for the target word.
             query = """
-            SELECT katakana_reading, html_notation, pitch_number FROM (
-                WITH user_results AS (
-                    SELECT DISTINCT katakana_reading, html_notation, pitch_number, frequency
-                    FROM pitch_accents_formatted
-                    WHERE ( headword = ? OR katakana_reading = ? ) AND source = ?
-                ),
-                all_results AS (
-                    SELECT DISTINCT katakana_reading, html_notation, pitch_number, frequency
-                    FROM pitch_accents_formatted
+            SELECT DISTINCT katakana_reading, html_notation, pitch_number FROM (
+                WITH all_results AS (
+                    SELECT * FROM pitch_accents_formatted
                     WHERE ( headword = ? OR katakana_reading = ? )
+                ),
+                preferred_results AS (
+                    SELECT * FROM all_results
+                    WHERE source = ?
                 )
-                SELECT * FROM user_results
+                SELECT * FROM preferred_results
                 UNION ALL
-                SELECT * FROM all_results
-                WHERE NOT EXISTS (SELECT 1 FROM user_results)
-                ORDER BY frequency DESC, pitch_number ASC, katakana_reading ASC
-            );
+                SELECT * FROM all_results WHERE NOT EXISTS (SELECT 1 FROM preferred_results)
+            )
+            ORDER BY frequency DESC, pitch_number ASC, katakana_reading ASC ;
             """
-            result = cur.execute(query, (word, word, prefer_provider_name, word, word)).fetchall()
+            result = cur.execute(query, (word, word, prefer_provider_name)).fetchall()
             # example row
             # [
             # ('僕', 'ボク', '<low_rise>ボ</low_rise><high>ク</high>', '0', 42378, 'bundled'),
