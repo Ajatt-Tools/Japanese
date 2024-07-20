@@ -1,7 +1,6 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
-import collections
 import os
 import pathlib
 import typing
@@ -12,39 +11,14 @@ from aqt.operations import QueryOp
 from ..helpers.file_ops import rm_file, touch
 from ..helpers.sqlite3_buddy import Sqlite3Buddy
 from ..mecab_controller.kana_conv import to_katakana
-from .common import (
-    AccDictProvider,
-    AccDictRawTSVEntry,
-    AccentDict,
-    FormattedEntry,
-    OrderedSet,
-    get_tsv_reader,
-    repack_accent_dict,
+from .common import AccDictProvider, AccDictRawTSVEntry, FormattedEntry, get_tsv_reader
+from .consts import (
+    FORMATTED_ACCENTS_TSV,
+    FORMATTED_ACCENTS_UPDATED,
+    RES_DIR_PATH,
+    USER_DATA_CSV_PATH,
 )
-from .consts import FORMATTED_ACCENTS_TSV, FORMATTED_ACCENTS_UPDATED, RES_DIR_PATH
-from .user_accents import USER_DATA_CSV_PATH, iter_user_formatted_rows
-
-
-def read_formatted_accents() -> AccentDict:
-    """
-    Read the formatted pitch accents file to memory.
-    Place items in a list to retain the provided order of readings.
-
-    Example entry as it appears in the formatted file:
-    新年会 シンネンカイ <low_rise>シ</low_rise><high_drop>ンネ</high_drop><low>ンカイ</low> 3
-    """
-    acc_dict: dict[str, OrderedSet[FormattedEntry]] = collections.defaultdict(OrderedSet)
-    row: AccDictRawTSVEntry
-    with open(FORMATTED_ACCENTS_TSV, newline="", encoding="utf-8") as f:
-        for row in get_tsv_reader(f):
-            entry = FormattedEntry(
-                katakana_reading=row["katakana_reading"],
-                html_notation=row["html_notation"],
-                pitch_number=row["pitch_number"],
-            )
-            for key in (row["headword"], row["katakana_reading"]):
-                acc_dict[to_katakana(key)].add(entry)
-    return repack_accent_dict(acc_dict)
+from .user_accents import iter_user_formatted_rows
 
 
 class AccDictToSqliteWriter:
