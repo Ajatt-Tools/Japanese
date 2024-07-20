@@ -349,12 +349,26 @@ class Sqlite3Buddy:
                     frequency INTEGER not null,
                     source TEXT not null
                 );
-            """
+                """
             )
             cur.execute(
                 """
-                CREATE INDEX IF NOT EXISTS index_names ON pitch_accents_formatted(headword, katakana_reading, source);
-            """
+                CREATE INDEX IF NOT EXISTS index_pitch_accents_headword
+                ON pitch_accents_formatted(headword);
+                """
+            )
+            cur.execute(
+                """
+                CREATE INDEX IF NOT EXISTS index_pitch_accents_reading
+                ON pitch_accents_formatted(katakana_reading);
+                """
+            )
+            cur.execute(
+                # Filtering by source is used when retrieving results and when reloading the user's override table.
+                """
+                CREATE INDEX IF NOT EXISTS index_pitch_accents_source
+                ON pitch_accents_formatted(source);
+                """
             )
             self.con.commit()
 
