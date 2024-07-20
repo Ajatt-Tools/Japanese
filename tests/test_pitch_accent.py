@@ -19,7 +19,7 @@ from japanese.pitch_accents.consts import PITCH_DIR_PATH
 from japanese.pitch_accents.format_accents import format_entry
 
 
-def test_pitch_accent_entry():
+def test_pitch_accent_entry() -> None:
     entry = PitchAccentEntry.from_formatted(
         FormattedEntry(
             katakana_reading="たのしい",
@@ -74,13 +74,16 @@ def test_pitch_accent_entry():
     assert token.describe_pitches() == "ソマツ:atamadaka"
 
 
-def test_files_in_dir():
+def test_files_in_dir() -> None:
     assert any(os.path.basename(file) == "__init__.py" for file in files_in_dir(PITCH_DIR_PATH))
+
+
+def test_split_pitch_numbers() -> None:
     assert split_pitch_numbers("?-1-2") == ["?", "1", "2"]
     assert split_pitch_numbers("1") == ["1"]
 
 
-def test_format_entry():
+def test_format_entry() -> None:
     assert format_entry(list("あいうえお"), 2) == "<low_rise>あ</low_rise><high_drop>い</high_drop><low>うえお</low>"
     assert format_entry(list("あいうえお"), 0) == "<low_rise>あ</low_rise><high>いうえお</high>"
     assert format_entry(list("あいうえお"), 1) == "<high_drop>あ</high_drop><low>いうえお</low>"

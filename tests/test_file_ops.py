@@ -3,7 +3,13 @@
 
 import pathlib
 
-from japanese.helpers.file_ops import find_config_json, user_files_dir, walk_parents, touch, rm_file
+from japanese.helpers.file_ops import (
+    find_config_json,
+    rm_file,
+    touch,
+    user_files_dir,
+    walk_parents,
+)
 
 
 def test_config_json() -> None:
