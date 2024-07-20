@@ -381,15 +381,28 @@ class Sqlite3Buddy:
             )
             self.con.commit()
 
-    def search_pitch_accents(self, word: Optional[str]) -> list[tuple[str, str, str]]:
+    def search_pitch_accents(self, word: Optional[str], prefer_provider_name: str) -> list[tuple[str, str, str]]:
         with cursor_buddy(self.con) as cur:
             query = """
-            SELECT DISTINCT katakana_reading, html_notation, pitch_number
-            FROM pitch_accents_formatted
-            WHERE headword = ? OR katakana_reading = ?
-            ORDER BY frequency DESC, pitch_number ASC, katakana_reading ASC
+            SELECT katakana_reading, html_notation, pitch_number FROM (
+                WITH user_results AS (
+                    SELECT DISTINCT katakana_reading, html_notation, pitch_number, frequency
+                    FROM pitch_accents_formatted
+                    WHERE ( headword = ? OR katakana_reading = ? ) AND source = ?
+                ),
+                all_results AS (
+                    SELECT DISTINCT katakana_reading, html_notation, pitch_number, frequency
+                    FROM pitch_accents_formatted
+                    WHERE ( headword = ? OR katakana_reading = ? )
+                )
+                SELECT * FROM user_results
+                UNION ALL
+                SELECT * FROM all_results
+                WHERE NOT EXISTS (SELECT 1 FROM user_results)
+                ORDER BY frequency DESC, pitch_number ASC, katakana_reading ASC
+            );
             """
-            result = cur.execute(query, (word, word)).fetchall()
+            result = cur.execute(query, (word, word, prefer_provider_name, word, word)).fetchall()
             # example row
             # [
             # ('僕', 'ボク', '<low_rise>ボ</low_rise><high>ク</high>', '0', 42378, 'bundled'),
