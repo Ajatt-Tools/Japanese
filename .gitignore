@@ -10,7 +10,8 @@ __pycache__
 meta.json
 manifest.json
 *.ankiaddon
-*/user_files/user_data*
+*/user_files/*.tsv
+*/user_files/*.updated
 *TODO*
 __about__.py
 dist
