@@ -64,6 +64,7 @@ NEVER_ATTACH_WORD = frozenset(
 )
 NEVER_ATTACH_HEADWORD = frozenset(
     (
+        "しまう",
         "いれ",
         "ば",
         "おく",
