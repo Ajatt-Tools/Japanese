@@ -11,6 +11,7 @@ from japanese.pitch_accents.acc_dict_mgr_2 import (
 from japanese.pitch_accents.common import FormattedEntry
 from tests.sqlite3_buddy import tmp_sqlite3_db_path, tmp_upd_file, tmp_user_accents_file
 
+
 class TestAccDictManager:
     @pytest.fixture(scope="class")
     def faux_writer(self, tmp_sqlite3_db_path, tmp_upd_file, tmp_user_accents_file):

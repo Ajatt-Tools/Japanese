@@ -4,6 +4,7 @@ import collections
 import csv
 import enum
 import os
+import pathlib
 import re
 import typing
 from collections.abc import Iterable, Sequence
@@ -27,7 +28,7 @@ class AccDictRawTSVEntry(typing.TypedDict):
     frequency: str  # must be converted to int. larger number => more occurrences.
 
 
-class AccDictProvider(enum.Enum):
+class AccDictProvider:
     bundled = "bundled"
     user = "user"
 
@@ -58,30 +59,15 @@ def is_dunder(name: str) -> bool:
     return name.startswith("__") and name.endswith("__")
 
 
-def files_in_dir(dir_path: str) -> Iterable[str]:
+def files_in_dir(dir_path: pathlib.Path) -> Iterable[str]:
+    if not dir_path.is_dir():
+        raise ValueError(f"not a directory: {dir_path}")
     return (
         os.path.normpath(os.path.join(root, file))
         for root, dirs, files in os.walk(dir_path)
         if is_dunder(os.path.basename(root)) is False
         for file in files
     )
-
-
-def is_old(pickle_file_path: str) -> bool:
-    """
-    Return True if the file pointed by file_path is older than the other files.
-    """
-    return any(
-        os.path.getmtime(cmp_file_path) > os.path.getmtime(pickle_file_path)
-        for cmp_file_path in files_in_dir(PITCH_DIR_PATH)
-    )
-
-
-def should_regenerate(pickle_file_path: str) -> bool:
-    """
-    Return True if the pickle file pointed by file_path needs to be regenerated.
-    """
-    return not os.path.isfile(pickle_file_path) or os.path.getsize(pickle_file_path) < 1 or is_old(pickle_file_path)
 
 
 def split_pitch_numbers(s: str) -> list[str]:
