@@ -19,14 +19,6 @@ def walk_parents(current_dir: str) -> Iterable[str]:
         current_dir = parent_dir
 
 
-def resolve_relative_path(*paths) -> str:
-    """Return path to file inside the add-on's dir."""
-    for parent_dir in walk_parents(__file__):
-        if os.path.basename(parent_dir) == THIS_ADDON_MODULE:
-            return os.path.join(parent_dir, *paths)
-    raise RuntimeError(f"couldn't find addon module")
-
-
 def touch(path) -> None:
     with open(path, "a"):
         os.utime(path, None)
