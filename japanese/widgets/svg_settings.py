@@ -21,8 +21,8 @@ SHOW_ENTRIES = (
         "3",
     ),
     FormattedEntry(
-        "ジンセイ",
-        "<high_drop>ジ</high_drop><low>ンセイ</low>",
+        "シュクジョ",
+        "<high_drop><devoiced>シ</devoiced>ュ</high_drop><low>クジョ</low>",
         "1",
     ),
 )
