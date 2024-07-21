@@ -21,6 +21,7 @@ NEVER_ATTACH_POS = frozenset(
 )
 NEVER_ATTACH_WORD = frozenset(
     (
+        "やっ",
         "です",
         "いれ",
         "ば",
@@ -64,6 +65,7 @@ NEVER_ATTACH_WORD = frozenset(
 )
 NEVER_ATTACH_HEADWORD = frozenset(
     (
+        "やる",
         "しまう",
         "いれ",
         "ば",
