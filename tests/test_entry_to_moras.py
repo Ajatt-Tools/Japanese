@@ -5,6 +5,7 @@ from collections.abc import Sequence
 
 import pytest
 
+from japanese.pitch_accents.basic_types import PitchType
 from japanese.pitch_accents.common import FormattedEntry, split_html_notation
 from japanese.pitch_accents.entry_to_moras import (
     MoraFlag,
@@ -15,9 +16,15 @@ from japanese.pitch_accents.entry_to_moras import (
     mora_flags2class_name,
 )
 
+CIRCLE = "°"
+
 
 def filter_by_level(moras, level: PitchLevel) -> Sequence[str]:
     return list(map(lambda mora: mora.txt, filter(lambda mora: mora.level == level and not mora.is_trailing(), moras)))
+
+
+def mora_char_to_str(char: typing.Union[Quark, str]) -> str:
+    return char if isinstance(char, str) else CIRCLE
 
 
 @pytest.mark.parametrize(
@@ -69,7 +76,7 @@ def test_split_html_notation(html_notation: str, expected: list[str]) -> None:
     [
         (
             "<low_rise>ア</low_rise><high>ク<nasal>キ<handakuten>&#176;</handakuten></nasal>ャク</high>",
-            ["ア", "ク", "キ°ャ", "ク"],
+            ["ア", "ク", f"キ{CIRCLE}ャ", "ク"],
         ),
         (
             "<low_rise>ト</low_rise><high_drop><devoiced>シ</devoiced>ュタ</high_drop><low>イソー</low>",
@@ -78,92 +85,116 @@ def test_split_html_notation(html_notation: str, expected: list[str]) -> None:
     ],
 )
 def test_html_notation_to_moras(html_notation: str, expected: list[str]) -> None:
-    def to_str(char: typing.Union[Quark, str]) -> str:
-        return char if isinstance(char, str) else "°"
-
     moras = html_notation_to_moras(html_notation)
-    as_list_str = ["".join(to_str(char) for char in mora.txt) for mora in moras]
+    as_list_str = ["".join(mora_char_to_str(char) for char in mora.txt) for mora in moras]
     assert as_list_str == expected
 
 
-def test_entry_to_moras() -> None:
-    e = FormattedEntry(
-        "ジンチク",
-        "<low_rise>ジ</low_rise><high>ン<devoiced>チ</devoiced>ク</high>",
-        "0",
-    )
-    moras = entry_to_moras(e).moras
-    assert filter_by_level(moras, PitchLevel.high) == list("ンチク")
-    assert filter_by_level(moras, PitchLevel.low) == list("ジ")
-    assert moras[2].flags == MoraFlag.devoiced
+@pytest.mark.parametrize(
+    "entry, expected_hl, pitch_type, devoiced_pos, nasal_pos",
+    [
+        (
+            FormattedEntry(
+                "ジンチク",
+                "<low_rise>ジ</low_rise><high>ン<devoiced>チ</devoiced>ク</high>",
+                "0",
+            ),
+            ["ジ:L", "ン:H", "チ:H", "ク:H", ":H"],
+            PitchType.heiban,
+            [2],
+            [],
+        ),
+        (
+            FormattedEntry(
+                "ジンチク",
+                "<high_drop>ジ</high_drop><low>ン<devoiced>チ</devoiced>ク</low>",
+                "1",
+            ),
+            ["ジ:H", "ン:L", "チ:L", "ク:L"],
+            PitchType.atamadaka,
+            [2],
+            [],
+        ),
+        (
+            FormattedEntry(
+                "ジンセイテツガク",
+                "<low_rise>ジ</low_rise><high_drop>ンセイテツ</high_drop><low><nasal>カ<handakuten>&#176;</handakuten></nasal>ク</low>",
+                "6",
+            ),
+            ["ジ:L", "ン:H", "セ:H", "イ:H", "テ:H", "ツ:H", f"カ{CIRCLE}:L", "ク:L"],
+            PitchType.nakadaka,
+            [],
+            [6],
+        ),
+        (
+            FormattedEntry(
+                "ジンセイテツガク",
+                "<low_rise>ジ</low_rise><high_drop>ンセイテ</high_drop><low>ツ<nasal>カ<handakuten>&#176;</handakuten></nasal>ク</low>",
+                "5",
+            ),
+            ["ジ:L", "ン:H", "セ:H", "イ:H", "テ:H", "ツ:L", f"カ{CIRCLE}:L", "ク:L"],
+            PitchType.nakadaka,
+            [],
+            [6],
+        ),
+        (
+            FormattedEntry(
+                "イモウト",
+                "<low_rise>イ</low_rise><high_drop>モート</high_drop>",
+                "4",
+            ),
+            ["イ:L", "モ:H", "ー:H", "ト:H"],
+            PitchType.odaka,
+            [],
+            [],
+        ),
+        (
+            FormattedEntry(
+                "ニジュウヨジカン",
+                "<high_drop>ニ</high_drop><low>ジュー</low>・<low_rise>ヨ</low_rise><high_drop>ジ</high_drop><low>カン</low>",
+                "1+2",
+            ),
+            ["ニ:H", "ジュ:L", "ー:L", "ヨ:L", "ジ:H", "カ:L", "ン:L"],
+            PitchType.unknown,
+            [],
+            [],
+        ),
+        (
+            FormattedEntry(
+                "ニ",
+                "<low_rise>ニ</low_rise>",
+                "0",
+            ),
+            ["ニ:L", ":H"],
+            PitchType.heiban,
+            [],
+            [],
+        ),
+        (
+            FormattedEntry(
+                "ヨ",
+                "<high_drop>ヨ</high_drop>",
+                "1",
+            ),
+            ["ヨ:H", ":L"],
+            PitchType.atamadaka,
+            [],
+            [],
+        ),
+    ],
+)
+def test_entry_to_moras(
+    entry: FormattedEntry, expected_hl: list[str], pitch_type: PitchType, devoiced_pos: list[int], nasal_pos: list[int]
+) -> None:
+    def mora_text_to_str(mora_txt: list[typing.Union[str, Quark]]) -> str:
+        return "".join(mora_char_to_str(char) for char in mora_txt)
 
-    e = FormattedEntry(
-        "ジンチク",
-        "<high_drop>ジ</high_drop><low>ン<devoiced>チ</devoiced>ク</low>",
-        "1",
-    )
-    moras = entry_to_moras(e).moras
-    assert filter_by_level(moras, PitchLevel.high) == list("ジ")
-    assert filter_by_level(moras, PitchLevel.low) == list("ンチク")
-    assert moras[2].flags == MoraFlag.devoiced
-
-    e = FormattedEntry(
-        "ジンセイテツガク",
-        "<low_rise>ジ</low_rise><high_drop>ンセイテツ</high_drop><low>カ<nasal>&#176;</nasal>ク</low>",
-        "6",
-    )
-    moras = entry_to_moras(e).moras
-    assert filter_by_level(moras, PitchLevel.high) == list("ンセイテツ")
-    assert filter_by_level(moras, PitchLevel.low) == list("ジカク")
-    assert moras[6].quark
-    assert moras[6].quark.flags == MoraFlag.nasal
-
-    e = FormattedEntry(
-        "ジンセイテツガク",
-        "<low_rise>ジ</low_rise><high_drop>ンセイテ</high_drop><low>ツカ<nasal>&#176;</nasal>ク</low>",
-        "5",
-    )
-    moras = entry_to_moras(e).moras
-    assert filter_by_level(moras, PitchLevel.high) == list("ンセイテ")
-    assert filter_by_level(moras, PitchLevel.low) == list("ジツカク")
-    assert moras[6].quark
-    assert moras[6].quark.flags == MoraFlag.nasal
-
-    e = FormattedEntry(
-        "イモウト",
-        "<low_rise>イ</low_rise><high_drop>モート</high_drop>",
-        "4",
-    )
-    moras = entry_to_moras(e).moras
-    assert filter_by_level(moras, PitchLevel.high) == list("モート")
-    assert filter_by_level(moras, PitchLevel.low) == list("イ")
-
-    e = FormattedEntry(
-        "ニジュウヨジカン",
-        "<high_drop>ニ</high_drop><low>ジュー</low>・<low_rise>ヨ</low_rise><high_drop>ジ</high_drop><low>カン</low>",
-        "1+2",
-    )
-    moras = entry_to_moras(e).moras
-    assert filter_by_level(moras, PitchLevel.high) == list("ニジ")
-    assert filter_by_level(moras, PitchLevel.low) == ["ジュ", "ー", "ヨ", "カ", "ン"]
-
-    e = FormattedEntry(
-        "ニ",
-        "<low_rise>ニ</low_rise>",
-        "0",
-    )
-    moras = entry_to_moras(e).moras
-    assert filter_by_level(moras, PitchLevel.high) == list("")
-    assert filter_by_level(moras, PitchLevel.low) == list("ニ")
-
-    e = FormattedEntry(
-        "ヨ",
-        "<high_drop>ヨ</high_drop>",
-        "1",
-    )
-    moras = entry_to_moras(e).moras
-    assert filter_by_level(moras, PitchLevel.high) == list("ヨ")
-    assert filter_by_level(moras, PitchLevel.low) == list("")
+    moras = entry_to_moras(entry)
+    as_list_str = [f"{mora_text_to_str(mora.txt)}:{mora.level.name[0].upper()}" for mora in moras.moras]
+    assert as_list_str == expected_hl
+    assert moras.pitch_type == pitch_type
+    assert all(MoraFlag.devoiced in moras.moras[pos].flags for pos in devoiced_pos)
+    assert all(MoraFlag.nasal in moras.moras[pos].flags for pos in nasal_pos)
 
 
 def test_mora_flags2class_name() -> None:
