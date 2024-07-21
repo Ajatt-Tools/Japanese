@@ -5,11 +5,11 @@ import dataclasses
 import enum
 import html
 import typing
-from typing import Optional
 
 from ..mecab_controller import kana_to_moras
 from .basic_types import PitchType, pitch_type_from_pitch_num
 from .common import FormattedEntry, split_html_notation
+from .consts import SMALL_KANA_CHARS
 from .styles import XmlTags
 
 
@@ -55,9 +55,6 @@ class MoraSequence(typing.NamedTuple):
     moras: list[Mora]
     pitch_type: PitchType
     entry: FormattedEntry
-
-
-SMALL_KANA_CHARS: typing.Final[str] = "ァィゥェォャュョぁぃぅぇぉゃゅょ"
 
 
 def html_notation_to_moras(html_notation: str) -> list[Mora]:
