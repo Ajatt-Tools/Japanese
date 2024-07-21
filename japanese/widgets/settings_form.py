@@ -333,7 +333,14 @@ class SvgSettingsForm(MultiColumnSettingsForm):
         assert self._config
         spinbox: SvgOptSpinbox
         # skipped options have different defaults and will be handled separately
-        skip_keys = ("text_dx", "tspan_dx", "x_step", "devoiced_circle_dy", "devoiced_rectangle_padding")
+        skip_keys = (
+            "text_dx",
+            "tspan_dx",
+            "x_step",
+            "devoiced_circle_dy",
+            "devoiced_rectangle_padding",
+            "letter_spacing",
+        )
         for key, value in self._config.items():
             if key in skip_keys:
                 continue
@@ -351,8 +358,8 @@ class SvgSettingsForm(MultiColumnSettingsForm):
 
         # dy/dx are allowed to be negative.
         self._widgets.text_dx = PxNarrowSpinBox(initial_value=self._config.text_dx, allowed_range=(-999, 999))
-        self._widgets.devoiced_circle_dy = PxNarrowSpinBox(
-            initial_value=self._config.devoiced_circle_dy, allowed_range=(-999, 999)
+        self._widgets.letter_spacing = PxDoubleNarrowSpinBox(
+            initial_value=self._config.letter_spacing, allowed_range=(-999, 999)
         )
         self._widgets.tspan_dx = PxNarrowSpinBox(initial_value=self._config.tspan_dx, allowed_range=(-999, 999))
 
@@ -360,6 +367,12 @@ class SvgSettingsForm(MultiColumnSettingsForm):
         self._widgets.x_step = PxNarrowSpinBox(initial_value=self._config.x_step, allowed_range=(1, 999))
 
         self._widgets.__dict__.update(self._create_spinboxes())
+        self._widgets.devoiced_circle_dy = PxNarrowSpinBox(
+            initial_value=self._config.devoiced_circle_dy, allowed_range=(-999, 999)
+        )
+        self._widgets.devoiced_rectangle_padding = PxDoubleNarrowSpinBox(
+            initial_value=self._config.devoiced_rectangle_padding, allowed_range=(-999, 999)
+        )
         self._widgets.devoiced_stroke_dasharray = StrokeDisarrayLineEdit(self._config.devoiced_stroke_dasharray)
         self._connect_widgets()
 
