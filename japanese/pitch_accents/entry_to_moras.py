@@ -63,7 +63,7 @@ def entry_to_moras(entry: FormattedEntry) -> MoraSequence:
     current_level: PitchLevel = PitchLevel.low
     current_flags = MoraFlag(0)
 
-    for token in split_html_notation(entry):
+    for token in split_html_notation(html_notation):
         if token in (XmlTags.low_rise_start, XmlTags.low_start, XmlTags.high_drop_end, XmlTags.high_end):
             current_level = PitchLevel.low
         elif token in (XmlTags.high_start, XmlTags.high_drop_start, XmlTags.low_rise_end, XmlTags.low_end):
