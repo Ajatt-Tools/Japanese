@@ -34,10 +34,9 @@ class Quark:
 
 @dataclasses.dataclass
 class Mora:
-    txt: str
+    txt: list[typing.Union[Quark, str]]
     level: PitchLevel
     flags: MoraFlag
-    quark: Optional[Quark] = None
 
     def is_trailing(self) -> bool:
         if MoraFlag.trailing in self.flags:
@@ -58,7 +57,10 @@ class MoraSequence(typing.NamedTuple):
     entry: FormattedEntry
 
 
-def entry_to_moras(entry: FormattedEntry) -> MoraSequence:
+SMALL_KANA_CHARS: typing.Final[str] = "ァィゥェォャュョぁぃぅぇぉゃゅょ"
+
+
+def html_notation_to_moras(html_notation: str) -> list[Mora]:
     moras: list[Mora] = []
     current_level: PitchLevel = PitchLevel.low
     current_flags = MoraFlag(0)
@@ -81,16 +83,26 @@ def entry_to_moras(entry: FormattedEntry) -> MoraSequence:
         elif token in (SpecialSymbols.nasal_dakuten_esc, SpecialSymbols.nasal_dakuten):
             assert MoraFlag.nasal in current_flags, "nasal handakuten only appears inside nasal tags."
             assert len(moras) > 0, "nasal handakuten must be attached to an existing mora."
-            moras[-1].quark = Quark(token, flags=current_flags)
+            moras[-1].txt.append(Quark(token, flags=current_flags))
         elif token == SpecialSymbols.nakaten:
             # Skip nakaten because it's not a mora.
             # In NHK-1998, nakaten is used to separate parts of words
             # that consist of multiple sub-words, e.g. 二十四時間.
             pass
         else:
-            assert token.isalpha(), f"can't proceed: {entry}"
-            moras.extend(Mora(mora, current_level, flags=current_flags) for mora in kana_to_moras(token))
+            assert token and token.isalpha(), f"can't handle token '{token}' in '{html_notation}'"
+            moras_txt = kana_to_moras(token)
+            if moras_txt[0] in SMALL_KANA_CHARS:
+                assert moras, "A word can't start with a small kana"
+                assert len(moras[-1].txt) == 1 or len(moras[-1].txt) == 2 and isinstance(moras[-1].txt[-1], Quark)
+                moras[-1].txt += moras_txt[0]
+                moras_txt = moras_txt[1:]
+            moras.extend(Mora(list(mora), current_level, flags=current_flags) for mora in moras_txt)
+    return moras
 
+
+def entry_to_moras(entry: FormattedEntry) -> MoraSequence:
+    moras = html_notation_to_moras(entry.html_notation)
     pitch_type = pitch_type_from_pitch_num(entry.pitch_number, len(moras))
     if pitch_type == PitchType.heiban or len(moras) == 1:
         assert pitch_type in (PitchType.heiban, PitchType.atamadaka)

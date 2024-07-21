@@ -1,5 +1,6 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
+import typing
 from collections.abc import Sequence
 
 import pytest
@@ -8,7 +9,9 @@ from japanese.pitch_accents.common import FormattedEntry, split_html_notation
 from japanese.pitch_accents.entry_to_moras import (
     MoraFlag,
     PitchLevel,
+    Quark,
     entry_to_moras,
+    html_notation_to_moras,
     mora_flags2class_name,
 )
 
@@ -59,6 +62,29 @@ def filter_by_level(moras, level: PitchLevel) -> Sequence[str]:
 )
 def test_split_html_notation(html_notation: str, expected: list[str]) -> None:
     assert list(split_html_notation(html_notation)) == expected
+
+
+@pytest.mark.parametrize(
+    "html_notation, expected",
+    [
+        (
+            "<low_rise>ア</low_rise><high>ク<nasal>キ<handakuten>&#176;</handakuten></nasal>ャク</high>",
+            ["ア", "ク", "キ°ャ", "ク"],
+        ),
+        (
+            "<low_rise>ト</low_rise><high_drop><devoiced>シ</devoiced>ュタ</high_drop><low>イソー</low>",
+            ["ト", "シュ", "タ", "イ", "ソ", "ー"],
+        ),
+    ],
+)
+def test_html_notation_to_moras(html_notation: str, expected: list[str]) -> None:
+    def to_str(char: typing.Union[Quark, str]) -> str:
+        return char if isinstance(char, str) else "°"
+
+    moras = html_notation_to_moras(html_notation)
+    as_list_str = ["".join(to_str(char) for char in mora.txt) for mora in moras]
+    assert as_list_str == expected
+
 
 def test_entry_to_moras() -> None:
     e = FormattedEntry(
