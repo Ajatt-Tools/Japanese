@@ -89,8 +89,8 @@ def nakaten_separated_katakana_reading(html_notation: str) -> str:
     return re.sub(RE_PITCH_TAG, "", html_notation).replace("°", "゚")
 
 
-def split_html_notation(entry: FormattedEntry) -> Iterable[str]:
-    return filter(bool, map(str.strip, re.split(RE_PITCH_TAG, entry.html_notation)))
+def split_html_notation(html_notation: str) -> Iterable[str]:
+    return filter(bool, map(str.strip, re.split(RE_PITCH_TAG, html_notation)))
 
 
 def get_tsv_reader(f: typing.Iterable[str]) -> csv.DictReader:

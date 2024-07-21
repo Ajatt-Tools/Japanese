@@ -2,7 +2,9 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 from collections.abc import Sequence
 
-from japanese.pitch_accents.common import FormattedEntry
+import pytest
+
+from japanese.pitch_accents.common import FormattedEntry, split_html_notation
 from japanese.pitch_accents.entry_to_moras import (
     MoraFlag,
     PitchLevel,
@@ -14,6 +16,49 @@ from japanese.pitch_accents.entry_to_moras import (
 def filter_by_level(moras, level: PitchLevel) -> Sequence[str]:
     return list(map(lambda mora: mora.txt, filter(lambda mora: mora.level == level and not mora.is_trailing(), moras)))
 
+
+@pytest.mark.parametrize(
+    "html_notation, expected",
+    [
+        (
+            "<low_rise>ア</low_rise><high>ク<nasal>キ<handakuten>&#176;</handakuten></nasal>ャク</high>",
+            [
+                "<low_rise>",
+                "ア",
+                "</low_rise>",
+                "<high>",
+                "ク",
+                "<nasal>",
+                "キ",
+                "<handakuten>",
+                "&#176;",
+                "</handakuten>",
+                "</nasal>",
+                "ャク",
+                "</high>",
+            ],
+        ),
+        (
+            "<low_rise>ト</low_rise><high_drop><devoiced>シ</devoiced>ュタ</high_drop><low>イソー</low>",
+            [
+                "<low_rise>",
+                "ト",
+                "</low_rise>",
+                "<high_drop>",
+                "<devoiced>",
+                "シ",
+                "</devoiced>",
+                "ュタ",
+                "</high_drop>",
+                "<low>",
+                "イソー",
+                "</low>",
+            ],
+        ),
+    ],
+)
+def test_split_html_notation(html_notation: str, expected: list[str]) -> None:
+    assert list(split_html_notation(html_notation)) == expected
 
 def test_entry_to_moras() -> None:
     e = FormattedEntry(
