@@ -312,6 +312,10 @@ class SvgPitchGraphOptionsConfigView(ConfigSubViewBase):
         return self["font_size"]
 
     @property
+    def letter_spacing(self) -> float:
+        return self["letter_spacing"]
+
+    @property
     def devoiced_circle_width(self) -> float:
         return self["devoiced_circle_width"]
 

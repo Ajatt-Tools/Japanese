@@ -175,6 +175,7 @@
     "stroke_width": 2.5,
     "circle_radius": 5.25,
     "font_size": 24.0,
+    "letter_spacing": -4.0,
     "devoiced_circle_width": 1.5,
     "devoiced_circle_radius": 17.0,
     "devoiced_circle_dy": 3,
