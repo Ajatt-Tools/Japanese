@@ -7,7 +7,7 @@ import pytest
 from japanese.mecab_controller import MecabController, to_katakana
 from japanese.pitch_accents.acc_dict_mgr_2 import AccentDictManager2
 from japanese.pitch_accents.accent_lookup import AccentLookup
-from tests.no_anki_config import NoAnkiConfigView
+from tests.no_anki_config import NoAnkiConfigView, no_anki_config
 from tests.sqlite3_buddy import tmp_sqlite3_db_path, tmp_upd_file, tmp_user_accents_file
 
 try:
@@ -31,8 +31,8 @@ class TestAccDictLookup:
         return acc_dict
 
     @pytest.fixture(scope="class")
-    def lookup(self, acc_dict_mgr: AccentDictManager2) -> AccentLookup:
-        cfg = NoAnkiConfigView()
+    def lookup(self, no_anki_config: NoAnkiConfigView, acc_dict_mgr: AccentDictManager2) -> AccentLookup:
+        cfg = no_anki_config
         mecab = MecabController(verbose=False, cache_max_size=cfg.cache_lookups)
         lookup = AccentLookup(acc_dict_mgr, cfg, mecab)
         return lookup
