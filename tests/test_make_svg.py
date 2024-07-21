@@ -7,7 +7,7 @@ from japanese.config_view import SvgPitchGraphOptionsConfigView
 from japanese.pitch_accents.common import FormattedEntry
 from japanese.pitch_accents.svg_graphs import SvgPitchGraphMaker
 from tests import DATA_DIR
-from tests.no_anki_config import NoAnkiConfigView
+from tests.no_anki_config import NoAnkiConfigView, no_anki_config
 
 TEST_ENTRIES = (
     FormattedEntry(
@@ -52,9 +52,8 @@ TEST_ENTRIES = (
     "formatted_entry, svg_file_name",
     [(entry, f"test_{idx}.svg") for idx, entry in enumerate(TEST_ENTRIES)],
 )
-def test_make_svg(formatted_entry: FormattedEntry, svg_file_name: str) -> None:
-    config = NoAnkiConfigView()
-    svg_config = SvgPitchGraphOptionsConfigView(config)
+def test_make_svg(no_anki_config: NoAnkiConfigView, formatted_entry: FormattedEntry, svg_file_name: str) -> None:
+    svg_config = SvgPitchGraphOptionsConfigView(no_anki_config)
     maker = SvgPitchGraphMaker(options=svg_config)
 
     with open(DATA_DIR / svg_file_name, encoding="utf-8") as f:
