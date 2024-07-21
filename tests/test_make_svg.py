@@ -50,6 +50,11 @@ TEST_ENTRIES = (
         "<high_drop><devoiced>シ</devoiced>ュ</high_drop><low>クジョ</low>",
         "1",
     ),
+    FormattedEntry(
+        "アクギャク",
+        "<low_rise>ア</low_rise><high>ク<nasal>キ<handakuten>&#176;</handakuten></nasal>ャク</high>",
+        "0",
+    ),
 )
 
 
