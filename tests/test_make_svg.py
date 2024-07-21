@@ -45,6 +45,11 @@ TEST_ENTRIES = (
         "<low_rise>オ</low_rise><high_drop>トート</high_drop>",
         "4",
     ),
+    FormattedEntry(
+        "シュクジョ",
+        "<high_drop><devoiced>シ</devoiced>ュ</high_drop><low>クジョ</low>",
+        "1",
+    ),
 )
 
 
