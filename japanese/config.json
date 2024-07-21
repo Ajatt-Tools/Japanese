@@ -169,7 +169,7 @@
     "size_unit": 25,
     "x_step": 50,
     "text_dx": -12,
-    "tspan_dx": -3,
+    "tspan_dx": -1,
     "graph_height": 40,
     "graph_visible_height": 100,
     "stroke_width": 2.5,
@@ -179,7 +179,7 @@
     "devoiced_circle_width": 1.5,
     "devoiced_circle_radius": 17.0,
     "devoiced_circle_dy": 3,
-    "devoiced_rectangle_padding": 5.0,
+    "devoiced_rectangle_padding": 2.0,
     "devoiced_stroke_dasharray": "2 3"
   }
 }
