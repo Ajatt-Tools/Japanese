@@ -14,6 +14,7 @@ from .entry_to_moras import (
     Mora,
     MoraFlag,
     PitchLevel,
+    Quark,
     entry_to_moras,
     mora_flags2class_name,
 )
@@ -195,21 +196,26 @@ class SvgPitchGraphMaker:
                 f'stroke-dasharray="{self._opts.devoiced_stroke_dasharray}" />'
             )
 
+    def quark_to_tspan(self, quark: Quark) -> str:
+        assert isinstance(quark, Quark)
+        return (
+            f'<tspan{append_class_name(quark.flags)} fill="{SvgColor.nasal.value}" '
+            f'dx="{self._opts.tspan_dx:.0f}">{quark.txt}</tspan>'
+        )
+
+    def assemble_txt_content(self, mora_txt: list[typing.Union[Quark, str]]) -> str:
+        return "".join(txt if isinstance(txt, str) else self.quark_to_tspan(txt) for txt in mora_txt)
+
     def make_text(self, mora: Mora, pos: Point, dx: int) -> str:
         """
         Create a text element with the mora inside.
         """
         assert not mora.is_trailing()
-        tspan_dx = self._opts.tspan_dx
-        quark = (
-            f'<tspan{append_class_name(mora.quark.flags)} fill="{SvgColor.nasal.value}" '
-            f'dx="{tspan_dx:.0f}">{mora.quark.txt}</tspan>'
-            if mora.quark
-            else ""
-        )
         return (
-            f'<text{append_class_name(mora.flags)} fill="black" font-size="{self._opts.font_size:.1f}px" '
-            f'x="{pos.x:.0f}" y="{pos.y:.0f}" dx="{dx:.0f}">{mora.txt}{quark}</text>'
+            f'<text{append_class_name(mora.flags)} fill="black" '
+            f'font-size="{self._opts.font_size:.1f}px" '
+            f'letter-spacing="{self._opts.letter_spacing:.1f}px" '
+            f'x="{pos.x:.0f}" y="{pos.y:.0f}" dx="{dx:.0f}">{self.assemble_txt_content(mora.txt)}</text>'
         )
 
     def calc_svg_width(self, moras: list[Mora]) -> int:
@@ -220,6 +226,9 @@ class SvgPitchGraphMaker:
             f'<svg class="ajt__pitch_svg" style="font-family: {self._opts.graph_font}" viewBox="0 0 {width} {height}" '
             f'height="{visible_height}px" xmlns="http://www.w3.org/2000/svg">{contents}</svg>'
         )
+
+    def calc_text_dx(self, mora: Mora) -> int:
+        return int(self._opts.text_dx) * sum(1 for char in mora.txt if isinstance(char, str))
 
     def make_graph(self, entry: FormattedEntry) -> str:
         opts = self._opts
@@ -244,9 +253,7 @@ class SvgPitchGraphMaker:
                 text_moras.append(self.make_devoiced_circle(mora, pos.replace(y=height_kana)))
 
             if not mora.is_trailing():
-                text_moras.append(
-                    self.make_text(mora, pos.replace(y=height_kana), dx=int(opts.text_dx) * len(mora.txt))
-                )
+                text_moras.append(self.make_text(mora, pos.replace(y=height_kana), dx=self.calc_text_dx(mora)))
 
             pos = pos.shift_by(x=opts.x_step)
 
