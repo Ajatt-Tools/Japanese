@@ -104,7 +104,7 @@ def entry_to_moras(entry: FormattedEntry) -> MoraSequence:
     if pitch_type == PitchType.heiban or len(moras) == 1:
         assert pitch_type in (PitchType.heiban, PitchType.atamadaka)
         level = PitchLevel.high if pitch_type == PitchType.heiban else PitchLevel.low
-        moras.append(Mora(txt="", level=level, flags=MoraFlag.trailing))
+        moras.append(Mora(txt=[], level=level, flags=MoraFlag.trailing))
 
     return MoraSequence(moras=moras, pitch_type=pitch_type, entry=entry)
 
