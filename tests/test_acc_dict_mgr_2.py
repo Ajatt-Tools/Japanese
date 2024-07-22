@@ -27,31 +27,31 @@ class TestAccDictManager:
 
     def test_empty(self, faux_writer) -> None:
         w = faux_writer
-        assert w.table_filled() is False
-        assert w.table_up_to_date() is False
+        assert w.is_table_filled() is False
+        assert w.is_table_up_to_date() is False
 
     def test_table_recreate(self, faux_writer) -> None:
         w = faux_writer
-        assert w.table_filled() is False
-        assert w.table_up_to_date() is False
+        assert w.is_table_filled() is False
+        assert w.is_table_up_to_date() is False
         w.recreate_table()
-        assert w.table_filled() is False
-        assert w.table_up_to_date() is False
+        assert w.is_table_filled() is False
+        assert w.is_table_up_to_date() is False
 
     def test_table_ensure(self, faux_writer) -> None:
         w = faux_writer
-        assert w.table_filled() is False
-        assert w.table_up_to_date() is False
+        assert w.is_table_filled() is False
+        assert w.is_table_up_to_date() is False
         w.ensure_sqlite_populated()
-        assert w.table_filled() is True
-        assert w.table_up_to_date() is True
+        assert w.is_table_filled() is True
+        assert w.is_table_up_to_date() is True
 
     def test_table_filled(self, faux_writer) -> None:
         w = faux_writer
-        assert w.table_filled() is True
-        assert w.table_up_to_date() is True
+        assert w.is_table_filled() is True
+        assert w.is_table_up_to_date() is True
 
-    def test_pitch_lookup(self, faux_reader):
+    def test_pitch_lookup(self, faux_reader) -> None:
         r = faux_reader
         result = r.look_up("僕")
         assert list(result) == [
@@ -78,8 +78,8 @@ class TestAccDictManager:
 
     def test_table_clear(self, faux_writer) -> None:
         w = faux_writer
-        assert w.table_filled() is True
-        assert w.table_up_to_date() is True
+        assert w.is_table_filled() is True
+        assert w.is_table_up_to_date() is True
         w.clear_table()
-        assert w.table_filled() is False
-        assert w.table_up_to_date() is False
+        assert w.is_table_filled() is False
+        assert w.is_table_up_to_date() is False
