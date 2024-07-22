@@ -114,22 +114,22 @@ class AddAudio(DoTask, task_type=ProfileAudio):
         """
         if not self._caller.cfg.audio_download_report:
             return
-        txt = io.StringIO()
+        buffer = io.StringIO()
         if r.successes:
-            txt.write(f"<b>Added {len(r.successes)} files to the collection.</b><ol>")
-            txt.write("".join(f"<li>{file.desired_filename}</li>" for file in r.successes))
-            txt.write("</ol>")
+            buffer.write(f"<b>Added {len(r.successes)} files to the collection.</b><ol>")
+            buffer.write("".join(f"<li>{file.desired_filename}</li>" for file in r.successes))
+            buffer.write("</ol>")
         if r.fails:
-            txt.write(f"<b>Failed {len(r.fails)} files.</b><ol>")
-            txt.write(
+            buffer.write(f"<b>Failed {len(r.fails)} files.</b><ol>")
+            buffer.write(
                 "".join(
                     f"<li>{fail.file.desired_filename}: {fail.describe_short()}</li>"
                     for fail in r.fails
                     if isinstance(fail.file, FileUrlData)
                 )
             )
-            txt.write("</ol>")
-        if txt := txt.getvalue():
+            buffer.write("</ol>")
+        if txt := buffer.getvalue():
             return tooltip(txt, period=7000, y_offset=80 + 18 * (len(r.successes) + len(r.fails)))
 
 
