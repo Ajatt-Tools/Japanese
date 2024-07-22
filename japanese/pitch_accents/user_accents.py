@@ -85,11 +85,3 @@ def iter_user_formatted_rows(tsv_file_path: pathlib.Path) -> typing.Iterable[Acc
                 pitch_number=formatted.pitch_number,
                 frequency="0",
             )
-
-
-def create_user_formatted_accents() -> AccentDict:
-    """Build the derived pitch accents file from the original pitch accents file and save it as *.csv"""
-    temp_dict: dict[str, OrderedSet[FormattedEntry]] = collections.defaultdict(OrderedSet)
-    for row_dict in read_user_tsv_entries(USER_DATA_CSV_PATH):
-        temp_dict[row_dict["headword"]].update(formatted_from_tsv_row(row_dict))
-    return repack_accent_dict(temp_dict)
