@@ -76,6 +76,32 @@ class TestAccDictManager:
             ),
         ]
 
+    def test_pitch_lookup_overridden_by_user(self, faux_reader) -> None:
+        """
+        There's some fake pitch data in the test user's file.
+        It should properly override the bundled data.
+        """
+        r = faux_reader
+        result = r.look_up("言葉")
+        assert list(result) == [
+            FormattedEntry(
+                katakana_reading="ソウシツ",
+                html_notation="<low_rise>ソ</low_rise><high>ウシツ</high>",
+                pitch_number="0",
+            ),
+            FormattedEntry(
+                katakana_reading="ソゴ", html_notation="<low_rise>ソ</low_rise><high>ゴ</high>", pitch_number="0"
+            ),
+        ]
+        result = r.look_up("×××")
+        assert list(result) == [
+            FormattedEntry(
+                katakana_reading="デタラメ",
+                html_notation="<low_rise>デ</low_rise><high>タラメ</high>",
+                pitch_number="0",
+            ),
+        ]
+
     def test_table_clear(self, faux_writer) -> None:
         w = faux_writer
         assert w.is_table_filled() is True
