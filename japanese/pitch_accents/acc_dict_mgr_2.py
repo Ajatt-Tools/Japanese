@@ -45,7 +45,7 @@ class SqliteAccDictWriter:
     def is_upd_file_newer(self) -> bool:
         return os.path.getmtime(self._upd_file) > os.path.getmtime(self._bundled_tsv_file)
 
-    def table_filled(self) -> bool:
+    def is_table_filled(self) -> bool:
         return self._db.get_pitch_accents_headword_count() > 0
 
     def write_rows(self, rows: typing.Iterable[AccDictRawTSVEntry]) -> None:
@@ -81,7 +81,7 @@ class SqliteAccDictWriter:
         print("Marked pitch accent data as up to date.")
 
     def is_db_ready(self) -> bool:
-        return self.table_filled() and self.table_up_to_date()
+        return self.is_table_filled() and self.is_table_up_to_date()
 
     def ensure_sqlite_populated(self) -> None:
         if self.is_db_ready():
@@ -114,11 +114,16 @@ class SqliteAccDictReader:
     def look_up(self, expr: str) -> typing.Sequence[FormattedEntry]:
         return [
             FormattedEntry(*row)
-            for row in self._db.search_pitch_accents(expr, prefer_provider_name=AccDictProvider.user)
+            for row in self._db.search_pitch_accents(to_katakana(expr), prefer_provider_name=AccDictProvider.user)
         ]
 
 
 class AccentDictManager2:
+    """
+    This class takes care of accent dictionary maintenance.
+    It ensures that pitch accents are correctly stored and modified in the sqlite3 database.
+    """
+
     _db_path: typing.Optional[pathlib.Path] = None
     _upd_file: typing.Optional[pathlib.Path] = None
     _user_accents_file: typing.Optional[pathlib.Path] = None
@@ -150,29 +155,52 @@ class AccentDictManager2:
             writer = self.mk_writer(db)
             return writer.is_db_ready()
 
-    def _ensure_sqlite_populated(self) -> None:
+    def _ensure_sqlite_populated_op(self) -> None:
         with Sqlite3Buddy(self._db_path) as db:
             writer = self.mk_writer(db)
             writer.ensure_sqlite_populated()
 
     def ensure_dict_ready(self) -> None:
-        """Ensures that the sqlite3 table is filled with pitch accent data."""
+        """
+        Ensures that the sqlite3 table is filled with pitch accent data.
+        """
         assert mw
 
         QueryOp(
             parent=mw,
-            op=lambda collection: self._ensure_sqlite_populated(),
+            op=lambda collection: self._ensure_sqlite_populated_op(),
             success=lambda _: None,
         ).without_collection().with_progress(
             "Reloading pitch accent dictionary...",
         ).run_in_background()
 
-    def ensure_dict_ready_on_main(self):
+    def ensure_dict_ready_on_main(self) -> None:
+        """
+        Used in tests.
+        """
         assert not mw
-        self._ensure_sqlite_populated()
+        self._ensure_sqlite_populated_op()
 
-    def reload_user_accents_from_disk(self) -> None:
+    def _reload_user_accents_from_disk_op(self) -> None:
+        """
+        Clear all user-defined pitch accent data, then read the rows from the updated CSV file.
+        """
         with Sqlite3Buddy(self._db_path) as db:
             writer = self.mk_writer(db)
             writer.clear_user_data()
             writer.fill_user_data()
+
+    def reload_user_accents_from_disk(self) -> None:
+        """
+        If the user has edited the override table,
+        the table needs to be re-read into the database.
+        """
+        assert mw
+
+        QueryOp(
+            parent=mw,
+            op=lambda collection: self._reload_user_accents_from_disk_op(),
+            success=lambda _: None,
+        ).without_collection().with_progress(
+            "Reloading pitch accent dictionary...",
+        ).run_in_background()
