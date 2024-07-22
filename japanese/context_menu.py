@@ -16,7 +16,7 @@ from .helpers.goldendict_lookups import GD_PROGRAM_NAME, lookup_goldendict
 from .helpers.half_kata import to_half_width_katakana
 from .mecab_controller.kana_conv import to_hiragana, to_katakana
 from .mecab_controller.unify_readings import literal_pronunciation
-from .reading import fgen
+from .reading import generate_furigana
 
 
 class ContextMenuAction(abc.ABC):
@@ -79,7 +79,7 @@ class ContextMenuAction(abc.ABC):
 class GenerateFurigana(ContextMenuAction):
     key = "generate_furigana"
     label = "Furigana for selection"
-    action = staticmethod(fgen.generate_furigana)
+    action = staticmethod(generate_furigana)
 
 
 class ToKatakana(ContextMenuAction):

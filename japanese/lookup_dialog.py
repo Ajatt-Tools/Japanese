@@ -15,6 +15,7 @@ from aqt.webview import AnkiWebView
 from .ajt_common.about_menu import menu_root_entry, tweak_window
 from .config_view import config_view as cfg
 from .helpers.consts import ADDON_NAME
+from .helpers.sqlite3_buddy import Sqlite3Buddy
 from .helpers.tokens import clean_furigana
 from .helpers.webview_utils import anki_addon_web_relpath
 from .pitch_accents.common import AccentDict, FormattedEntry
@@ -79,7 +80,8 @@ class ViewPitchAccentsDialog(QDialog):
         tooltip("couldn't get clipboard.", parent=self)
 
     def lookup_pronunciations(self, search: str):
-        self._pronunciations = lookup.get_pronunciations(search)
+        with Sqlite3Buddy() as db:
+            self._pronunciations = lookup.with_new_buddy(db).get_pronunciations(search)
         return self
 
     def _format_html_result(self) -> str:
