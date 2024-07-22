@@ -5,8 +5,8 @@ import pytest
 
 from japanese.helpers.sqlite3_buddy import Sqlite3Buddy
 from japanese.pitch_accents.acc_dict_mgr_2 import (
-    AccDictToSqliteReader,
-    AccDictToSqliteWriter,
+    SqliteAccDictReader,
+    SqliteAccDictWriter,
 )
 from japanese.pitch_accents.common import FormattedEntry
 from tests.sqlite3_buddy import tmp_sqlite3_db_path, tmp_upd_file, tmp_user_accents_file
@@ -16,13 +16,13 @@ class TestAccDictManager:
     @pytest.fixture(scope="class")
     def faux_writer(self, tmp_sqlite3_db_path, tmp_upd_file, tmp_user_accents_file):
         with Sqlite3Buddy(tmp_sqlite3_db_path) as db:
-            writer = AccDictToSqliteWriter(db, tmp_upd_file, tmp_user_accents_file)
+            writer = SqliteAccDictWriter(db, tmp_upd_file, tmp_user_accents_file)
             yield writer
 
     @pytest.fixture(scope="class")
     def faux_reader(self, tmp_sqlite3_db_path):
         with Sqlite3Buddy(tmp_sqlite3_db_path) as db:
-            reader = AccDictToSqliteReader(db)
+            reader = SqliteAccDictReader(db)
             yield reader
 
     def test_empty(self, faux_writer) -> None:
