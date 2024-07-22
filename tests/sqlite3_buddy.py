@@ -4,7 +4,7 @@
 import pytest
 
 from japanese.helpers.file_ops import rm_file
-from japanese.pitch_accents.acc_dict_mgr_2 import AccDictToSqliteWriter
+from tests import DATA_DIR
 
 
 @pytest.fixture(scope="class")
@@ -23,6 +23,5 @@ def tmp_upd_file(tmp_path_factory):
 
 @pytest.fixture(scope="class")
 def tmp_user_accents_file(tmp_path_factory):
-    user_accents_file = tmp_path_factory.mktemp("data") / "user_accents_empty.tsv"
+    user_accents_file = DATA_DIR / "test_user_accents.tsv"
     yield user_accents_file
-    rm_file(user_accents_file)
