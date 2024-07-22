@@ -9,6 +9,7 @@ from ..helpers.common_kana import adjust_to_inflection
 from ..helpers.consts import LONG_VOWEL_MARK
 from ..helpers.mingle_readings import mingle_readings
 from ..helpers.profiles import ColorCodePitchFormat
+from ..helpers.sqlite3_buddy import Sqlite3Buddy
 from ..helpers.tokens import ParseableToken, Token, tokenize
 from ..mecab_controller import MecabController, format_output, is_kana_str, to_hiragana
 from ..mecab_controller.basic_types import Inflection, MecabParsedToken, PartOfSpeech
@@ -57,6 +58,13 @@ class FuriganaGen:
         self._fcfg = cfg.furigana
         self._mecab = mecab
         self._lookup = lookup
+
+    def with_new_buddy(self, db: Sqlite3Buddy):
+        return type(self)(
+            cfg=self._cfg,
+            mecab=self._mecab,
+            lookup=self._lookup.with_new_buddy(db),
+        )
 
     def generate_furigana(
         self,
