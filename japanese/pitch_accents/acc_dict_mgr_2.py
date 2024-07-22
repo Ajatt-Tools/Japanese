@@ -39,10 +39,11 @@ class SqliteAccDictWriter:
         if not os.path.isdir(RES_DIR_PATH):
             raise OSError("Pitch accents folder is missing!")
 
-    def table_up_to_date(self) -> bool:
-        return os.path.isfile(self._upd_file) and os.path.getmtime(self._upd_file) > os.path.getmtime(
-            self._bundled_tsv_file
-        )
+    def is_table_up_to_date(self) -> bool:
+        return self._upd_file.is_file() and self.is_upd_file_newer()
+
+    def is_upd_file_newer(self) -> bool:
+        return os.path.getmtime(self._upd_file) > os.path.getmtime(self._bundled_tsv_file)
 
     def table_filled(self) -> bool:
         return self._db.get_pitch_accents_headword_count() > 0
