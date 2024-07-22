@@ -21,7 +21,7 @@ from .consts import (
 from .user_accents import iter_user_formatted_rows
 
 
-class AccDictToSqliteWriter:
+class SqliteAccDictWriter:
     _db: Sqlite3Buddy
     _upd_file: pathlib.Path = FORMATTED_ACCENTS_UPDATED
     _bundled_tsv_file: pathlib.Path = FORMATTED_ACCENTS_TSV
@@ -104,7 +104,7 @@ def iter_formatted_rows(tsv_file_path: pathlib.Path) -> typing.Iterable[AccDictR
         yield from get_tsv_reader(f)
 
 
-class AccDictToSqliteReader:
+class SqliteAccDictReader:
     _db: Sqlite3Buddy
 
     def __init__(self, db: Sqlite3Buddy) -> None:
@@ -133,7 +133,7 @@ class AccentDictManager2:
         self._user_accents_file = user_accents_path or self._user_accents_file
 
     def mk_writer(self, db: Sqlite3Buddy):
-        return AccDictToSqliteWriter(db, upd_file=self._upd_file, user_accents_file=self._user_accents_file)
+        return SqliteAccDictWriter(db, upd_file=self._upd_file, user_accents_file=self._user_accents_file)
 
     def lookup(self, expr: str) -> typing.Optional[typing.Sequence[FormattedEntry]]:
         """
@@ -141,8 +141,8 @@ class AccentDictManager2:
         Return None if there's no pitch accent for expr.
         """
         with Sqlite3Buddy(self._db_path) as db:
-            reader = AccDictToSqliteReader(db)
-            return reader.look_up(to_katakana(expr)) or None
+            reader = SqliteAccDictReader(db)
+            return reader.look_up(to_katakana(expr))
 
     def is_ready(self) -> bool:
         with Sqlite3Buddy(self._db_path) as db:
