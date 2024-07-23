@@ -1,7 +1,6 @@
 # Copyright: Ren Tatsumoto <tatsu at autistici.org>
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
-import collections
 import csv
 import pathlib
 import typing
@@ -9,15 +8,11 @@ from collections.abc import Iterable
 
 from ..mecab_controller.kana_conv import kana_to_moras, to_katakana
 from .basic_types import SEP_PITCH_TYPES
-from .common import (
-    AccDictRawTSVEntry,
-    AccentDict,
-    FormattedEntry,
-    OrderedSet,
-    repack_accent_dict,
-)
-from .consts import NO_ACCENT, USER_DATA_CSV_PATH
+from .common import AccDictRawTSVEntry, FormattedEntry
+from .consts import NO_ACCENT
 from .format_accents import format_entry
+
+TSV_DELIMITER = "\t"
 
 
 class UserAccDictRawTSVEntry(typing.TypedDict):
@@ -25,10 +20,12 @@ class UserAccDictRawTSVEntry(typing.TypedDict):
 
     headword: str
     katakana_reading: str
-    pitch_numbers: str
+    pitch_numbers: str  # pitch numbers are split by commas
 
 
-def get_user_tsv_reader(f: typing.Iterable[str]) -> csv.DictReader:
+def get_user_tsv_reader(
+    f: typing.Iterable[str], field_names: typing.Sequence[str] = tuple(UserAccDictRawTSVEntry.__annotations__)
+) -> csv.DictReader:
     """
     Prepare a reader to load the accent dictionary.
     Keys are described in the typed dict.
@@ -36,9 +33,9 @@ def get_user_tsv_reader(f: typing.Iterable[str]) -> csv.DictReader:
     return csv.DictReader(
         f,
         dialect="excel-tab",
-        delimiter="\t",
+        delimiter=TSV_DELIMITER,
         quoting=csv.QUOTE_NONE,
-        fieldnames=UserAccDictRawTSVEntry.__annotations__,
+        fieldnames=field_names,
     )
 
 
