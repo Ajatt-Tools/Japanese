@@ -1,6 +1,6 @@
 # Copyright: Ren Tatsumoto <tatsu at autistici.org> and contributors
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
-
+import pathlib
 from typing import cast
 
 from aqt.qt import *
@@ -13,20 +13,21 @@ from .pitch_override_table import PitchOverrideTable
 
 class PitchOverrideWidget(QWidget):
     _filename_filter = "TSV Files (*.tsv *.csv);; All Files (*.*)"
-    _file_path: str
+    _file_path: pathlib.Path
     _table: PitchOverrideTable
     _import_button: QPushButton
     _export_button: QPushButton
 
-    def __init__(self, parent, file_path: str) -> None:
+    def __init__(self, parent, file_path: pathlib.Path) -> None:
         super().__init__(parent)
         self._file_path = file_path
-        self._table = PitchOverrideTable.from_tsv(self._file_path)
+        self._table = PitchOverrideTable()
         self._import_button = QPushButton("Import TSV")
         self._export_button = QPushButton("Export TSV")
         self.init_UI()
         self.connect_buttons()
         fix_default_anki_style(self._table)
+        self._table.update_from_tsv(self._file_path)
 
     def init_UI(self):
         self.setLayout(layout := QGridLayout())
@@ -64,5 +65,5 @@ class PitchOverrideWidget(QWidget):
         qconnect(self._import_button.clicked, read_tsv_file)
         qconnect(self._export_button.clicked, write_tsv_file)
 
-    def save_to_disk(self):
+    def save_to_disk(self) -> None:
         self._table.dump(self._file_path)
