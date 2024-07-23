@@ -39,6 +39,22 @@ def get_user_tsv_reader(
     )
 
 
+def get_tsv_writer(
+    of, field_names: typing.Sequence[str] = tuple(UserAccDictRawTSVEntry.__annotations__)
+) -> csv.DictWriter:
+    """
+    Make a tsv writer that will be used to save the user's override table to disk.
+    """
+    return csv.DictWriter(
+        of,
+        dialect="excel-tab",
+        delimiter=TSV_DELIMITER,
+        lineterminator="\n",
+        quoting=csv.QUOTE_NONE,
+        fieldnames=field_names,
+    )
+
+
 def read_user_tsv_entries(tsv_file_path: pathlib.Path) -> Iterable[UserAccDictRawTSVEntry]:
     row_dict: UserAccDictRawTSVEntry
     try:
