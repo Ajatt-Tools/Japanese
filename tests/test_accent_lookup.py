@@ -4,6 +4,7 @@ from collections.abc import Sequence
 
 import pytest
 
+from japanese.helpers.sqlite3_buddy import Sqlite3Buddy
 from japanese.mecab_controller import MecabController, to_katakana
 from japanese.pitch_accents.acc_dict_mgr_2 import AccentDictManager2
 from japanese.pitch_accents.accent_lookup import AccentLookup
@@ -34,15 +35,16 @@ class TestAccDictLookup:
     def lookup(self, no_anki_config: NoAnkiConfigView, acc_dict_mgr: AccentDictManager2) -> AccentLookup:
         cfg = no_anki_config
         mecab = MecabController(verbose=False, cache_max_size=cfg.cache_lookups)
-        lookup = AccentLookup(acc_dict_mgr, cfg, mecab)
+        lookup = AccentLookup(cfg, mecab)
         return lookup
 
     @pytest.mark.parametrize(
         "test_input, expected",
         [("聞かせて戻って", ("聞く", "戻る")), ("経緯と国境", ("経緯", "国境"))],
     )
-    def test_accent_lookup(self, lookup: AccentLookup, test_input, expected) -> None:
-        result = lookup.get_pronunciations(test_input)
+    def test_accent_lookup(self, tmp_sqlite3_db_path, lookup: AccentLookup, test_input, expected) -> None:
+        with Sqlite3Buddy(tmp_sqlite3_db_path) as db:
+            result = lookup.with_new_buddy(db).get_pronunciations(test_input)
         for item in expected:
             assert item in result
 
@@ -51,6 +53,9 @@ class TestAccDictLookup:
         [("経緯", ("ケイイ", "イキサツ")), ("国境", ("コッキョウ", "クニザカイ")), ("私", ("わたし", "あたし"))],
     )
     def test_acc_dict(self, acc_dict_mgr: AccentDictManager2, word: str, order: Sequence[str]) -> None:
+        """
+        More frequent readings should come first.
+        """
         assert acc_dict_mgr.is_ready()
         entries = acc_dict_mgr.lookup(word)
         assert entries
@@ -60,5 +65,5 @@ class TestAccDictLookup:
 
     def test_missing_key(self, acc_dict_mgr: AccentDictManager2) -> None:
         assert acc_dict_mgr.is_ready()
-        assert acc_dict_mgr.lookup("missing") is None
-        assert acc_dict_mgr.lookup("") is None
+        assert not acc_dict_mgr.lookup("missing")
+        assert not acc_dict_mgr.lookup("")
