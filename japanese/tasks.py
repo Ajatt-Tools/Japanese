@@ -75,8 +75,14 @@ class DoTask:
 
 
 class AddFurigana(DoTask, task_type=ProfileFurigana):
+    _fgen: FuriganaGen
+
+    def __init__(self, task: Profile, caller: TaskCaller, db: Sqlite3Buddy) -> None:
+        super().__init__(task, caller, db)
+        self._fgen = fgen.with_new_buddy(db)
+
     def _generate_text(self, src_text: str) -> str:
-        return fgen.generate_furigana(
+        return self._fgen.generate_furigana(
             src_text,
             split_morphemes=self._task.split_morphemes,
             output_format=self._task.color_code_pitch,
@@ -84,9 +90,15 @@ class AddFurigana(DoTask, task_type=ProfileFurigana):
 
 
 class AddPitch(DoTask, task_type=ProfilePitch):
+    _lookup: AccentLookup
+
+    def __init__(self, task: Profile, caller: TaskCaller, db: Sqlite3Buddy) -> None:
+        super().__init__(task, caller, db)
+        self._lookup = lookup.with_new_buddy(db)
+
     def _generate_text(self, src_text: str) -> str:
         return format_pronunciations(
-            pronunciations=lookup.get_pronunciations(src_text, use_mecab=self._task.split_morphemes),
+            pronunciations=self._lookup.get_pronunciations(src_text, use_mecab=self._task.split_morphemes),
             output_format=PitchOutputFormat[self._task.output_format],
             sep_single=cfg.pitch_accent.reading_separator,
             sep_multi=cfg.pitch_accent.word_separator,
