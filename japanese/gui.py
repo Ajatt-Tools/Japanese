@@ -17,7 +17,6 @@ from .ajt_common.addon_config import (
     set_config_action,
     set_config_update_action,
 )
-from .ajt_common.consts import ADDON_SERIES
 from .ajt_common.enum_select_combo import EnumSelectCombo
 from .ajt_common.grab_key import ShortCutGrabButton
 from .ajt_common.utils import ui_translate
@@ -25,7 +24,7 @@ from .audio import aud_src_mgr, show_audio_init_result_tooltip
 from .audio_manager.basic_types import AudioSourceConfig
 from .audio_manager.source_manager import InitResult, TotalAudioStats
 from .config_view import config_view as cfg
-from .helpers.consts import THIS_ADDON_MODULE
+from .helpers.consts import ADDON_NAME, THIS_ADDON_MODULE
 from .helpers.misc import split_list
 from .helpers.profiles import (
     ColorCodePitchFormat,
@@ -602,7 +601,7 @@ class SettingsDialog(QDialog, MgrPropMixIn):
 
     def _setup_ui(self) -> None:
         cast(QDialog, self).setWindowModality(Qt.WindowModality.ApplicationModal)
-        cast(QDialog, self).setWindowTitle(f"{ADDON_SERIES} {self.name}")
+        cast(QDialog, self).setWindowTitle(f"{ADDON_NAME} - Options")
         self.setMinimumSize(800, 600)
         tweak_window(self)
         self.setLayout(self.make_layout())
