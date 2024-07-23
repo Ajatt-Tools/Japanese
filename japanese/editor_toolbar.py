@@ -127,7 +127,11 @@ def search_audio(editor: Editor) -> None:
         cfg.write_config()
         # process results
         results = dialog.files_to_add()
-        editor.note[dialog.destination_field_name] += format_audio_tags(results)
+        editor.note[dialog.destination_field_name] = (
+            editor.note[dialog.destination_field_name]
+            + (cfg.audio_settings.tag_separator if editor.note[dialog.destination_field_name] else "")
+            + format_audio_tags(results)
+        )
         session.download_and_save_tags(results)
 
 
