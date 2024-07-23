@@ -10,6 +10,11 @@ from japanese.pitch_accents.user_accents import (
     formatted_from_tsv_row,
     get_user_tsv_reader,
 )
+from japanese.widgets.pitch_override_table import (
+    PitchAccentTableRow,
+    read_user_tsv_file,
+)
+from tests.sqlite3_buddy import tmp_user_accents_file
 
 
 def test_user_tsv_entry() -> None:
@@ -25,7 +30,7 @@ def fake_tsv():
 
 
 def test_user_tsv_reader(fake_tsv) -> None:
-    for row, expected in zip(get_user_tsv_reader(fake_tsv), fake_tsv):
+    for row, expected in zip(get_user_tsv_reader(fake_tsv), fake_tsv, strict=True):
         assert tuple(row.keys()) == tuple(UserAccDictRawTSVEntry.__annotations__)
         assert list(row.values()) == expected.split("\t")
 
@@ -61,5 +66,34 @@ def test_user_tsv_reader(fake_tsv) -> None:
     ],
 )
 def test_formatted_from_tsv_row(test_input: UserAccDictRawTSVEntry, expected_out: Sequence[FormattedEntry]) -> None:
-    for formatted, expected in zip(formatted_from_tsv_row(test_input), expected_out):
+    for formatted, expected in zip(formatted_from_tsv_row(test_input), expected_out, strict=True):
         assert formatted == expected
+
+
+def test_read_user_tsv_file(fake_tsv) -> None:
+    for row, expected in zip(read_user_tsv_file(fake_tsv), fake_tsv, strict=True):
+        assert expected.split("\t") == list(row)
+
+
+@pytest.fixture(scope="session")
+def bad_fake_tsv():
+    return [
+        "A,B,C",
+        "X,Y,Z",
+    ]
+
+
+def test_read_bad_user_tsv_file(bad_fake_tsv) -> None:
+    for row, expected in zip(read_user_tsv_file(bad_fake_tsv), bad_fake_tsv, strict=True):
+        assert [expected, None, None] == list(row)
+
+
+def test_read_user_tsv_file_from_disk(tmp_user_accents_file) -> None:
+    expected_rows = [
+        PitchAccentTableRow("言葉", "ソウシツ", "0"),
+        PitchAccentTableRow("言葉", "ソゴ", "0"),
+        PitchAccentTableRow("×××", "デタラメ", "0"),
+    ]
+    with open(tmp_user_accents_file, newline="", encoding="utf-8") as f:
+        for row, expected in zip(read_user_tsv_file(f), expected_rows, strict=True):
+            assert row == expected
