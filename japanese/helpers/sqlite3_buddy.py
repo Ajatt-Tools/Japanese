@@ -474,4 +474,3 @@ class Sqlite3Buddy:
         Use when working in a different thread since the same connection can't be reused in another thread.
         """
         self.end_session()
-        del self
