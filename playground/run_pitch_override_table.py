@@ -5,6 +5,7 @@
 from aqt.qt import *
 
 from japanese.widgets.pitch_override_table import PitchOverrideTable
+from tests import DATA_DIR
 
 
 class App(QWidget):
@@ -26,6 +27,7 @@ class App(QWidget):
         self.table.addRow(["隅に置けない", "すみにおけない", "1"])
         self.table.addRow(["尾骶骨", "びていこつ", "2"])
         self.table.addRow(["管水母", "くだくらげ", "3"])
+        self.table.update_from_tsv(DATA_DIR / "test_user_accents.tsv", reset_table=False)
 
 
 def main():
