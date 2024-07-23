@@ -375,10 +375,10 @@ class Sqlite3Buddy:
     def insert_pitch_accent_data(self, rows: typing.Iterable[AccDictRawTSVEntry], provider_name: str) -> None:
         with cursor_buddy(self.con) as cur:
             query = """
-                INSERT INTO pitch_accents_formatted
-                (headword, katakana_reading, html_notation, pitch_number, frequency, source)
-                VALUES(?, ?, ?, ?, ?, ?);
-                """
+            INSERT INTO pitch_accents_formatted
+            (headword, katakana_reading, html_notation, pitch_number, frequency, source)
+            VALUES(?, ?, ?, ?, ?, ?);
+            """
             cur.executemany(
                 query,
                 (
