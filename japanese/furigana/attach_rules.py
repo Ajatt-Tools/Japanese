@@ -1,9 +1,10 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
+from typing import Final
 
 from ..mecab_controller.basic_types import PartOfSpeech
 
-SKIP_COLORING = frozenset(
+SKIP_COLORING: Final[frozenset[PartOfSpeech]] = frozenset(
     (
         PartOfSpeech.other,
         PartOfSpeech.filler,
@@ -11,7 +12,7 @@ SKIP_COLORING = frozenset(
         PartOfSpeech.symbol,
     )
 )
-NEVER_ATTACH_POS = frozenset(
+NEVER_ATTACH_POS: Final[frozenset[PartOfSpeech]] = frozenset(
     (
         PartOfSpeech.adverb,
         PartOfSpeech.noun,
@@ -19,8 +20,10 @@ NEVER_ATTACH_POS = frozenset(
         PartOfSpeech.interjection,
     )
 )
-NEVER_ATTACH_WORD = frozenset(
+NEVER_ATTACH_WORD: Final[frozenset[str]] = frozenset(
     (
+        "だ",
+        "って",
         "やっ",
         "です",
         "いれ",
@@ -63,7 +66,7 @@ NEVER_ATTACH_WORD = frozenset(
         "たらしい",
     )
 )
-NEVER_ATTACH_HEADWORD = frozenset(
+NEVER_ATTACH_HEADWORD: Final[frozenset[str]] = frozenset(
     (
         "やる",
         "しまう",
