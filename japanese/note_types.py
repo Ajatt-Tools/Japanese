@@ -2,6 +2,7 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 import os.path
 from collections.abc import Sequence
+from typing import Any, Optional
 
 import anki.collection
 from anki.models import NotetypeNameId
@@ -17,6 +18,7 @@ from .note_type.files_in_col_media import (
     find_ajt_scripts_in_collection,
 )
 from .note_type.imports import ensure_css_imported, ensure_js_imported
+from .tasks import note_type_matches
 
 
 def not_recent_version(file: BundledCSSFile) -> bool:
@@ -41,21 +43,30 @@ def ensure_bundled_css_file_saved() -> None:
         print(f"Created new file: {BUNDLED_CSS_FILE.name_in_col}")
 
 
+def field_names_from_model_dict(model_dict: dict[str, Any]) -> frozenset[str]:
+    """
+    Return all field names in the provided note type, e.g. ["VocabKanji", "SentKanji", "VocabDef"].
+    """
+    return frozenset(field["name"] for field in model_dict["flds"])
+
+
+def is_relevant_model(model_dict: Optional[dict[str, Any]]) -> bool:
+    assert model_dict, "model dict must not be None"
+    all_field_names = field_names_from_model_dict(model_dict)
+    return any(
+        note_type_matches(model_dict, profile) and profile.source in all_field_names
+        for profile in cfg.iter_profiles()
+        if isinstance(profile, ProfileFurigana)
+    )
+
+
 def collect_all_relevant_models() -> Sequence[NotetypeNameId]:
     """
     Find all note types (models) that require additional JS+CSS imports
     to enable the display of pitch accent information on mouse hover.
     """
     assert mw
-    return [
-        model
-        for model in mw.col.models.all_names_and_ids()
-        if any(
-            profile.note_type.lower() in model.name.lower()
-            for profile in cfg.iter_profiles()
-            if isinstance(profile, ProfileFurigana)
-        )
-    ]
+    return [model for model in mw.col.models.all_names_and_ids() if is_relevant_model(mw.col.models.get(model.id))]
 
 
 def ensure_imports_added_for_model(col: anki.collection.Collection, model: NotetypeNameId) -> bool:
