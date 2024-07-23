@@ -5,6 +5,7 @@ import dataclasses
 import io
 import re
 from collections.abc import Iterable
+from typing import Optional
 
 from aqt.qt import *
 
@@ -119,8 +120,8 @@ class AudioSourcesTable(ExpandingTableWidget):
         # so the user has to uncheck it to trigger an automatic row deletion.
         return isinstance(cell, QCheckBox) and cell.isChecked() or super().isCellFilled(cell)
 
-    def addSource(self, source: AudioSourceConfig, index: int = None) -> None:
-        self.addRow((checkbox := SourceEnableCheckbox(), source.name, source.url), index=index)
+    def addSource(self, source: AudioSourceConfig, index: Optional[int] = None) -> None:
+        self.addRow((checkbox := SourceEnableCheckbox(), source.name, source.url), row_idx=index)
         # The checkbox widget has to notify the table widget when its state changes.
         # Otherwise, the table will not automatically add/remove rows.
         qconnect(checkbox.stateChanged, lambda checked: self.onCellChanged(self.currentRow()))
