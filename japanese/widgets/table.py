@@ -2,7 +2,7 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import re
-from collections.abc import Collection, Iterable
+from collections.abc import Collection, Iterable, Sequence
 from typing import NewType, Optional
 
 from aqt.qt import *
@@ -14,7 +14,7 @@ def is_ctrl_v_pressed(event: QKeyEvent) -> bool:
 
 UNUSED = -1
 CellContent = NewType("CellContent", Union[QTableWidgetItem, QWidget])
-TableRow = NewType("TableRow", Collection[CellContent])
+TableRow = NewType("TableRow", Sequence[CellContent])
 
 
 class ExpandingTableWidget(QTableWidget):
@@ -103,11 +103,11 @@ class ExpandingTableWidget(QTableWidget):
         elif is_empty_not_last_row(row_cells):
             self.removeRow(row_n)
 
-    def addRow(self, cells: Iterable[Union[str, QWidget]], index: int = None) -> None:
-        if index is None:
+    def addRow(self, cells: Iterable[Union[str, QWidget]], row_idx: Optional[int] = None) -> None:
+        if row_idx is None:
             # Insert before the last row, since the last row is always an empty row for new data.
-            index = self.rowCount() - 1
-        self.insertRow(row_n := max(0, index))
+            row_idx = self.rowCount() - 1
+        self.insertRow(row_n := max(0, row_idx))
         for col_n, cell_content in enumerate(cells):
             self.insertCellContent(row_n, col_n, cell_content)
 
@@ -123,7 +123,7 @@ class ExpandingTableWidget(QTableWidget):
             raise ValueError("Invalid parameter passed.")
 
     def addEmptyLastRow(self) -> None:
-        return self.addRow(cells=("" for _column in self._columns), index=self.rowCount())
+        return self.addRow(cells=("" for _column in self._columns), row_idx=self.rowCount())
 
     def getCellContent(self, row_n: int, col_n: int) -> Optional[CellContent]:
         """
