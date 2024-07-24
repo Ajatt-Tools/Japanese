@@ -25,7 +25,7 @@ jobs:
 
       - name: "Create zip"
         run: |
-          ./package.sh --target github
+          ./scripts/package.sh --target github
 
       - name: "Create release"
         uses: softprops/action-gh-release@v2
