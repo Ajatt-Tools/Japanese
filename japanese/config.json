@@ -1,5 +1,5 @@
 {
-  "cache_lookups": 1024,
+  "cache_lookups": 8192,
   "last_file_save_location": "",
   "show_welcome_guide": true,
   "insert_scripts_into_templates": true,
