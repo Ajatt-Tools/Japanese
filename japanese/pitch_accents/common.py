@@ -74,10 +74,6 @@ def split_pitch_numbers(s: str) -> list[str]:
     return re.findall(RE_PITCH_NUM, s)
 
 
-def repack_accent_dict(acc_dict: dict[str, OrderedSet[FormattedEntry]]) -> AccentDict:
-    return AccentDict({headword: tuple(entries) for headword, entries in acc_dict.items()})
-
-
 def nakaten_separated_katakana_reading(html_notation: str) -> str:
     """
     In some (rare) cases (in the NHK accent dictionary),
