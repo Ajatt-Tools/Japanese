@@ -10,6 +10,7 @@ from ..helpers.mingle_readings import split_possible_furigana
 from ..helpers.sqlite3_buddy import Sqlite3Buddy
 from ..helpers.tokens import split_separators
 from ..mecab_controller import MecabController
+from ..mecab_controller.lru_cache import LRUCache
 from ..mecab_controller.unify_readings import literal_pronunciation as pr
 from .acc_dict_mgr_2 import SqliteAccDictReader
 from .common import AccentDict
@@ -29,12 +30,13 @@ class AccentLookup:
     _cfg: JapaneseConfig
     _mecab: MecabController
     _db: Optional[Sqlite3Buddy]
-    _cache: dict[tuple[str, bool, bool, bool], AccentDict] = {}
+    _cache: LRUCache[tuple[str, bool, bool, bool], AccentDict] = LRUCache()
 
     def __init__(self, cfg: JapaneseConfig, mecab: MecabController, db: Optional[Sqlite3Buddy] = None) -> None:
         self._db = db
         self._cfg = cfg
         self._mecab = mecab
+        self._cache.set_capacity(cfg.cache_lookups)
 
     @property
     def db(self) -> Sqlite3Buddy:
@@ -120,20 +122,20 @@ class AccentLookup:
         ret: AccentDict
         ret = AccentDict(OrderedDict())
         # Sanitize is always set to False because the part must be already sanitized.
-        ret.update(self._get_pronunciations(expr_part, sanitize=False, recurse=False))
+        ret.update(self.get_pronunciations(expr_part, sanitize=False, recurse=False))
 
         # Only if lookups were not successful, we try splitting with Mecab
         if not ret and use_mecab is True:
             for out in self._mecab.translate(expr_part):
                 # Avoid infinite recursion by saying that we should not try
                 # Mecab again if we do not find any matches for this sub-expression.
-                ret.update(self._get_pronunciations(out.headword, sanitize=False, recurse=False))
+                ret.update(self.get_pronunciations(out.headword, sanitize=False, recurse=False))
 
                 # If everything failed, try katakana lookups.
                 # Katakana lookups are possible because of the additional key in the pitch accents dictionary.
                 # If the word was in conjugated form, this lookup will also fail.
                 if out.headword not in ret and out.katakana_reading and self._cfg.pitch_accent.kana_lookups is True:
-                    ret.update(self._get_pronunciations(out.katakana_reading, sanitize=False, recurse=False))
+                    ret.update(self.get_pronunciations(out.katakana_reading, sanitize=False, recurse=False))
         return ret
 
     def single_word_reading(self, word: str) -> str:
