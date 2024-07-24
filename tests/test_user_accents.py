@@ -29,8 +29,16 @@ def fake_tsv():
     ]
 
 
+def szip(*args):
+    try:
+        return zip(*args, strict=True)
+    except TypeError:
+        # old python version
+        return zip(*args)
+
+
 def test_user_tsv_reader(fake_tsv) -> None:
-    for row, expected in zip(get_user_tsv_reader(fake_tsv), fake_tsv, strict=True):
+    for row, expected in szip(get_user_tsv_reader(fake_tsv), fake_tsv):
         assert tuple(row.keys()) == tuple(UserAccDictRawTSVEntry.__annotations__)
         assert list(row.values()) == expected.split("\t")
 
@@ -66,12 +74,12 @@ def test_user_tsv_reader(fake_tsv) -> None:
     ],
 )
 def test_formatted_from_tsv_row(test_input: UserAccDictRawTSVEntry, expected_out: Sequence[FormattedEntry]) -> None:
-    for formatted, expected in zip(formatted_from_tsv_row(test_input), expected_out, strict=True):
+    for formatted, expected in szip(formatted_from_tsv_row(test_input), expected_out):
         assert formatted == expected
 
 
 def test_read_user_tsv_file(fake_tsv) -> None:
-    for row, expected in zip(read_user_tsv_file(fake_tsv), fake_tsv, strict=True):
+    for row, expected in szip(read_user_tsv_file(fake_tsv), fake_tsv):
         assert expected.split("\t") == list(row)
 
 
@@ -84,7 +92,7 @@ def bad_fake_tsv():
 
 
 def test_read_bad_user_tsv_file(bad_fake_tsv) -> None:
-    for row, expected in zip(read_user_tsv_file(bad_fake_tsv), bad_fake_tsv, strict=True):
+    for row, expected in szip(read_user_tsv_file(bad_fake_tsv), bad_fake_tsv):
         assert [expected, None, None] == list(row)
 
 
@@ -95,5 +103,5 @@ def test_read_user_tsv_file_from_disk(tmp_user_accents_file) -> None:
         PitchAccentTableRow("×××", "デタラメ", "0"),
     ]
     with open(tmp_user_accents_file, newline="", encoding="utf-8") as f:
-        for row, expected in zip(read_user_tsv_file(f), expected_rows, strict=True):
+        for row, expected in szip(read_user_tsv_file(f), expected_rows):
             assert row == expected
