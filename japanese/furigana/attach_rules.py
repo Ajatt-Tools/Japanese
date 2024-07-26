@@ -64,6 +64,7 @@ NEVER_ATTACH_WORD: Final[frozenset[str]] = frozenset(
         "いける",
         "たらしい",
         "ん",
+        "に",
     )
 )
 NEVER_ATTACH_HEADWORD: Final[frozenset[str]] = frozenset(
@@ -108,6 +109,7 @@ NEVER_ATTACH_HEADWORD: Final[frozenset[str]] = frozenset(
         "いける",
         "たらしい",
         "ぎす",
+        "すぎる",
     )
 )
 MAX_ATTACHED = 4
