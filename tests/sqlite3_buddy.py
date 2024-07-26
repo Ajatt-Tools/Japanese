@@ -4,6 +4,7 @@
 import pytest
 
 from japanese.helpers.file_ops import rm_file
+from japanese.helpers.sqlite3_buddy import Sqlite3Buddy
 from tests import DATA_DIR
 
 
@@ -12,6 +13,12 @@ def tmp_sqlite3_db_path(tmp_path_factory):
     db_path = tmp_path_factory.mktemp("data") / "db.sqlite"
     yield db_path
     rm_file(db_path)
+
+
+@pytest.fixture(scope="class")
+def tmp_db_connection(tmp_sqlite3_db_path, tmp_upd_file, tmp_user_accents_file):
+    with Sqlite3Buddy(tmp_sqlite3_db_path) as db:
+        yield db
 
 
 @pytest.fixture(scope="class")

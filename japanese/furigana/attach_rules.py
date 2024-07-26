@@ -113,6 +113,7 @@ NEVER_ATTACH_HEADWORD: Final[frozenset[str]] = frozenset(
         "くれる",
         "もらう",
         "あげる",
+        "できる",
     )
 )
 MAX_ATTACHED = 4
