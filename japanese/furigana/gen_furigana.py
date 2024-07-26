@@ -53,11 +53,11 @@ class FuriganaGen:
     _mecab: MecabController
     _lookup: AccentLookup
 
-    def __init__(self, cfg: JapaneseConfig, mecab: MecabController, lookup: AccentLookup) -> None:
+    def __init__(self, cfg: JapaneseConfig, lookup: AccentLookup, mecab: Optional[MecabController] = None) -> None:
         self._cfg = cfg
         self._fcfg = cfg.furigana
-        self._mecab = mecab
         self._lookup = lookup
+        self._mecab = mecab or self._lookup.mecab
 
     def with_new_buddy(self, db: Sqlite3Buddy):
         return type(self)(

@@ -39,6 +39,10 @@ class AccentLookup:
         self._cache.set_capacity(cfg.cache_lookups)
 
     @property
+    def mecab(self) -> MecabController:
+        return self._mecab
+
+    @property
     def db(self) -> Sqlite3Buddy:
         if self._db:
             return self._db
