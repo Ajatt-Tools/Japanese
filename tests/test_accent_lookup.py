@@ -14,7 +14,12 @@ from japanese.mecab_controller import MecabController, to_katakana
 from japanese.pitch_accents.acc_dict_mgr_2 import AccentDictManager2
 from japanese.pitch_accents.accent_lookup import AccentLookup
 from tests.no_anki_config import NoAnkiConfigView, no_anki_config
-from tests.sqlite3_buddy import tmp_sqlite3_db_path, tmp_upd_file, tmp_user_accents_file
+from tests.sqlite3_buddy import (
+    tmp_db_connection,
+    tmp_sqlite3_db_path,
+    tmp_upd_file,
+    tmp_user_accents_file,
+)
 
 try:
     from itertools import pairwise
@@ -83,10 +88,9 @@ class TestAccDictLookup:
         [("聞かせて戻って", ("聞く", "戻る")), ("経緯と国境", ("経緯", "国境"))],
     )
     def test_accent_lookup(
-        self, tmp_sqlite3_db_path: pathlib.Path, lookup: AccentLookup, test_input: str, expected: Sequence[str]
+        self, tmp_db_connection: Sqlite3Buddy, lookup: AccentLookup, test_input: str, expected: Sequence[str]
     ) -> None:
-        with Sqlite3Buddy(tmp_sqlite3_db_path) as db:
-            result = lookup.with_new_buddy(db).get_pronunciations(test_input)
+        result = lookup.with_new_buddy(tmp_db_connection).get_pronunciations(test_input)
         for item in expected:
             assert item in result
 
@@ -112,14 +116,14 @@ class TestAccDictLookup:
             ("ボーイフレンドを見つけたらしい", ["ボーイフレンド", "を", "見つけた", "らしい"]),
             ("死なないでくれ", ["死なないで", "くれ"]),
             ("僕はそれに立ち会ったにすぎません", ["僕", "は", "それ", "に", "立ち会った", "に", "すぎません"]),
+            ("推奨できません", ["推奨", "できません"]),
         ],
     )
     def test_attach_rules(
-        self, tmp_sqlite3_db_path: pathlib.Path, fgen: FuriganaGen, sentence: str, expected: Sequence[str]
+        self, tmp_db_connection: Sqlite3Buddy, fgen: FuriganaGen, sentence: str, expected: Sequence[str]
     ) -> None:
-        with Sqlite3Buddy(tmp_sqlite3_db_path) as db:
-            text = fgen.with_new_buddy(db).generate_furigana(
-                sentence,
-                output_format=ColorCodePitchFormat.attributes,
-            )
-            assert furigana_to_word_seq(text) == expected
+        text = fgen.with_new_buddy(tmp_db_connection).generate_furigana(
+            sentence,
+            output_format=ColorCodePitchFormat.attributes,
+        )
+        assert furigana_to_word_seq(text) == expected

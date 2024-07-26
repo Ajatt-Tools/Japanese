@@ -1,5 +1,6 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
+import pathlib
 
 import pytest
 
@@ -9,21 +10,26 @@ from japanese.pitch_accents.acc_dict_mgr_2 import (
     SqliteAccDictWriter,
 )
 from japanese.pitch_accents.common import FormattedEntry
-from tests.sqlite3_buddy import tmp_sqlite3_db_path, tmp_upd_file, tmp_user_accents_file
+from tests.sqlite3_buddy import (
+    tmp_db_connection,
+    tmp_sqlite3_db_path,
+    tmp_upd_file,
+    tmp_user_accents_file,
+)
 
 
 class TestAccDictManager:
     @pytest.fixture(scope="class")
-    def faux_writer(self, tmp_sqlite3_db_path, tmp_upd_file, tmp_user_accents_file):
-        with Sqlite3Buddy(tmp_sqlite3_db_path) as db:
-            writer = SqliteAccDictWriter(db, tmp_upd_file, tmp_user_accents_file)
-            yield writer
+    def faux_writer(
+        self, tmp_db_connection: Sqlite3Buddy, tmp_upd_file: pathlib.Path, tmp_user_accents_file: pathlib.Path
+    ):
+        writer = SqliteAccDictWriter(tmp_db_connection, tmp_upd_file, tmp_user_accents_file)
+        yield writer
 
     @pytest.fixture(scope="class")
-    def faux_reader(self, tmp_sqlite3_db_path):
-        with Sqlite3Buddy(tmp_sqlite3_db_path) as db:
-            reader = SqliteAccDictReader(db)
-            yield reader
+    def faux_reader(self, tmp_db_connection):
+        reader = SqliteAccDictReader(tmp_db_connection)
+        yield reader
 
     def test_empty(self, faux_writer) -> None:
         w = faux_writer
