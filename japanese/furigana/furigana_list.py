@@ -13,6 +13,7 @@ from .attach_rules import (
     NEVER_ATTACH_HEADWORD,
     NEVER_ATTACH_POS,
     NEVER_ATTACH_WORD,
+    TAPED_PAIRS,
 )
 
 AnyToken = Union[AccDbParsedToken, Token]
@@ -22,7 +23,7 @@ class TokenAccessError(Exception):
     pass
 
 
-def is_attaching(inflection: Inflection) -> bool:
+def is_attaching_inflection(inflection: Inflection) -> bool:
     if inflection == inflection.unknown:
         return False
     return (
@@ -36,15 +37,19 @@ def is_attaching(inflection: Inflection) -> bool:
     )
 
 
+def is_taped_pair(attached_tokens: MutableSequence[str], token: AnyToken):
+    return attached_tokens and (attached_tokens[-1], token.word) in TAPED_PAIRS
+
+
 def should_attach_token(attach_to: AccDbParsedToken, token: AnyToken):
     if len(attach_to.attached_tokens) >= MAX_ATTACHED:
         return False
-    if not is_attaching(attach_to.inflection_type):
+    if not is_attaching_inflection(attach_to.inflection_type):
         return False
     if not is_kana_str(token.word):
         # only kana can be attached to the previous word, e.g. 探し(+た)
         return False
-    if token.word.endswith("っ"):
+    if is_taped_pair(attach_to.attached_tokens, token):
         return True
     if token.part_of_speech in NEVER_ATTACH_POS:
         return False

@@ -56,7 +56,6 @@ NEVER_ATTACH_WORD: Final[frozenset[str]] = frozenset(
         "おる",
         "ある",
         "な",
-        "ん",
         "じゃ",
         "らしい",
         "し",
@@ -64,6 +63,7 @@ NEVER_ATTACH_WORD: Final[frozenset[str]] = frozenset(
         "ほど",
         "いける",
         "たらしい",
+        "ん",
     )
 )
 NEVER_ATTACH_HEADWORD: Final[frozenset[str]] = frozenset(
@@ -100,7 +100,6 @@ NEVER_ATTACH_HEADWORD: Final[frozenset[str]] = frozenset(
         "おる",
         "ある",
         "な",
-        "ん",
         "じゃ",
         "らしい",
         "し",
@@ -108,6 +107,12 @@ NEVER_ATTACH_HEADWORD: Final[frozenset[str]] = frozenset(
         "ほど",
         "いける",
         "たらしい",
+        "ぎす",
     )
 )
 MAX_ATTACHED = 4
+TAPED_PAIRS: Final[frozenset[tuple[str, str]]] = frozenset(
+    (
+        ("ませ", "ん"),
+    )
+)
