@@ -48,6 +48,16 @@ class Sqlite3BuddyError(RuntimeError):
     pass
 
 
+class InvalidSourceIndex(Sqlite3BuddyError):
+    pass
+
+
+def raise_if_invalid_json(data: SourceIndex):
+    for field_name in SourceIndex.__annotations__:
+        if field_name not in data:
+            raise InvalidSourceIndex(f"audio source file is missing a required key: '{field_name}'")
+
+
 class Sqlite3Buddy:
     """
     Tables for audio:  ('meta', 'headwords', 'files')
@@ -121,6 +131,7 @@ class Sqlite3Buddy:
             return all(result is not None for result in results)
 
     def insert_data(self, source_name: str, data: SourceIndex):
+        raise_if_invalid_json(data)
         with cursor_buddy(self.con) as cur:
             query = """
             INSERT INTO meta
