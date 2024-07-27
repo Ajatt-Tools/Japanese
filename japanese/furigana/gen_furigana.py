@@ -1,7 +1,7 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 import dataclasses
-from collections.abc import Iterable, Sequence
+from collections.abc import Hashable, Iterable, Sequence
 from typing import Callable, Optional, TypeVar
 
 from ..config_view import FuriganaConfigView, JapaneseConfig, ReadingsDiscardMode
@@ -116,7 +116,7 @@ class FuriganaGen:
         furigana_readings = [
             format_output(
                 word,
-                reading=(reading if self._fcfg.prefer_literal_pronunciation is False else unify_repr(reading)),
+                reading=(unify_repr(reading) if self._fcfg.prefer_literal_pronunciation else reading),
             )
             for reading in hiragana_readings
             if reading
@@ -232,19 +232,24 @@ class FuriganaGen:
             headword_accents=self.unique_headword_accents(self.iter_accents(token.headword)),
         )
 
-    def sorted_readings(self, readings: Iterable[T], access_reading: Callable[[T], str] = as_self) -> Sequence[T]:
+    def _is_reading_preferable(self, reading: str) -> bool:
+        return (LONG_VOWEL_MARK in reading) is self._fcfg.prefer_literal_pronunciation
+
+    def _to_unique_readings(
+        self,
+        entries: Iterable[T],
+        *,
+        access_key: Callable[[T], Hashable] = as_self,
+        access_reading: Callable[[T], str] = as_self,
+    ) -> Iterable[T]:
         """
-        Sort readings according to the user's preferences.
-        The long vowel symbol is used to identify readings that resemble literal pronunciation.
+        Return a list of readings without repetitions.
         """
-        return sorted(
-            readings,
-            # represented by key as 0000...1111.
-            # if literal pronunciation is enabled,
-            # literal pronunciations are pushed to the end of the list.
-            key=(lambda reading: LONG_VOWEL_MARK in access_reading(reading)),
-            reverse=(not self._fcfg.prefer_literal_pronunciation),
-        )
+        key_to_entry = {}
+        for entry in entries:
+            if (access_key(entry) not in key_to_entry) or self._is_reading_preferable(access_reading(entry)):
+                key_to_entry[access_key(entry)] = entry
+        return key_to_entry.values()
 
     def unique_headword_accents(self, entries: Iterable[FormattedEntry]) -> Sequence[PitchAccentEntry]:
         """
@@ -252,17 +257,18 @@ class FuriganaGen:
         """
         return [
             PitchAccentEntry.from_formatted(entry)
-            for entry in {
-                (pr(entry.katakana_reading), entry.pitch_number): entry
-                for entry in self.sorted_readings(entries, lambda entry: entry.katakana_reading)
-            }.values()
+            for entry in self._to_unique_readings(
+                entries,
+                access_key=lambda entry: (pr(entry.katakana_reading), entry.pitch_number),
+                access_reading=lambda entry: entry.katakana_reading,
+            )
         ]
 
     def unique_readings(self, readings: Iterable[str]) -> Sequence[str]:
         """
         Return a list of readings without repetitions.
         """
-        return list({pr(reading): reading for reading in self.sorted_readings(readings)}.values())
+        return [*self._to_unique_readings(readings, access_key=lambda reading: pr(reading))]
 
     def iter_accents(self, word: str) -> Iterable[FormattedEntry]:
         if word in (accents := self._lookup.get_pronunciations(word, recurse=False)):
