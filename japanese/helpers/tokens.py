@@ -31,6 +31,10 @@ RE_NON_JP_PART = re.compile(
     r"(<no-jp>.*?</no-jp>)",
     flags=RE_FLAGS,
 )
+RE_ANKI_FURIGANA = re.compile(
+    r" *([^ \[\]]+)\[[^\[\]]+]",
+    flags=RE_FLAGS,
+)
 
 
 class Token(str):
@@ -60,7 +64,7 @@ def split_separators(expr: str) -> list[str]:
 
 def clean_furigana(expr: str) -> str:
     """Remove text in [] used to represent furigana."""
-    return re.sub(r" *([^ \[\]]+)\[[^\[\]]+]", r"\g<1>", expr, flags=RE_FLAGS)
+    return re.sub(RE_ANKI_FURIGANA, r"\g<1>", expr)
 
 
 def mark_non_jp_token(m: re.Match) -> str:
