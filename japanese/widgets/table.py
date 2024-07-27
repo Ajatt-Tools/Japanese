@@ -3,7 +3,7 @@
 
 import re
 from collections.abc import Collection, Iterable, Sequence
-from typing import NewType, Optional
+from typing import Optional
 
 from aqt.qt import *
 
@@ -13,8 +13,8 @@ def is_ctrl_v_pressed(event: QKeyEvent) -> bool:
 
 
 UNUSED = -1
-CellContent = NewType("CellContent", Union[QTableWidgetItem, QWidget])
-TableRow = NewType("TableRow", Sequence[CellContent])
+CellContent = Union[QTableWidgetItem, QWidget]
+TableRow = Sequence[CellContent]
 
 
 class ExpandingTableWidget(QTableWidget):
@@ -134,6 +134,7 @@ class ExpandingTableWidget(QTableWidget):
             return item
         if (widget := self.cellWidget(row_n, col_n)) is not None:
             return widget
+        return None
 
     def getRowCellContents(self, row_n: int) -> TableRow:
         return tuple(self.getCellContent(row_n, col_n) for col_n in range(self.columnCount()))
