@@ -134,7 +134,10 @@ class TestAccDictLookup:
         "readings, unique",
         [
             (["ジュウガツ", "ジュウガツ", "ジューガツ", "ジューガツ"], ["ジュウガツ"]),
-            (["リュウセンガタ", "リューセンケイ", "リューセンガタ", "リュウセンケイ"], ["リュウセンガタ", "リュウセンケイ"]),
+            (
+                ["リュウセンガタ", "リューセンケイ", "リューセンガタ", "リュウセンケイ"],
+                ["リュウセンガタ", "リュウセンケイ"],
+            ),
         ],
     )
     def test_unique_readings(self, fgen: FuriganaGen, readings: list[str], unique: list[str]) -> None:
