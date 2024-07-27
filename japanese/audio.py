@@ -12,7 +12,7 @@ import anki.collection
 from anki.utils import html_to_text_line
 from aqt import gui_hooks, mw
 from aqt.operations import QueryOp
-from aqt.utils import showWarning, tooltip
+from aqt.utils import show_warning, tooltip
 
 from .audio_manager.abstract import AnkiAudioSourceManagerABC
 from .audio_manager.audio_manager import AudioSourceManagerFactory
@@ -268,7 +268,9 @@ def show_audio_init_result_tooltip(result: InitResult) -> None:
 
 def report_audio_init_errors(result: InitResult) -> None:
     if result.errors:
-        showWarning("\n".join(f"Couldn't download audio source: {error.explanation}." for error in result.errors))
+        show_warning(
+            "\n".join(f"Couldn't load audio source {error.file.url}: {error.explanation}." for error in result.errors)
+        )
 
 
 class AnkiAudioSourceManagerFactory(AudioSourceManagerFactory):
