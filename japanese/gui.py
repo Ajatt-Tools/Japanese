@@ -1,6 +1,6 @@
 # Copyright: (C) 2022 Ren Tatsumoto <tatsu at autistici.org>
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/copyleft/gpl.html
-
+import os.path
 from collections.abc import Iterable
 from types import SimpleNamespace
 from typing import Optional, TypedDict, cast
@@ -9,7 +9,7 @@ from aqt import mw
 from aqt.addons import AddonsDialog, ConfigEditor
 from aqt.operations import QueryOp
 from aqt.qt import *
-from aqt.utils import openLink, restoreGeom, saveGeom
+from aqt.utils import openLink, restoreGeom, saveGeom, tooltip
 
 from .ajt_common.about_menu import menu_root_entry, tweak_window
 from .ajt_common.addon_config import (
@@ -428,6 +428,7 @@ class AudioSourcesEditTable(QWidget):
     """
 
     _audio_stats: Optional[TotalAudioStats]
+    _filename_filter: str = "JSON Files (*.json);; All Files (*.*)"
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
@@ -437,6 +438,7 @@ class AudioSourcesEditTable(QWidget):
         self._apply_button = QPushButton("Apply")
         self._stats_button = QPushButton("Statistics")
         self._purge_button = QPushButton("Purge database")
+        self._choose_file_button = QPushButton("Choose file")
         self.setLayout(self._make_layout())
         self._populate()
         self._connect_widgets()
@@ -456,6 +458,7 @@ class AudioSourcesEditTable(QWidget):
         layout.addWidget(self._apply_button)
         layout.addWidget(self._bottom_label)
         layout.addStretch(1)
+        layout.addWidget(self._choose_file_button)
         layout.addWidget(self._stats_button)
         layout.addWidget(self._purge_button)
         return layout
@@ -464,8 +467,10 @@ class AudioSourcesEditTable(QWidget):
         qconnect(self._purge_button.clicked, self._on_purge_db_clicked)
         qconnect(self._stats_button.clicked, self._on_show_statistics_clicked)
         qconnect(self._apply_button.clicked, self._on_apply_clicked)
+        qconnect(self._choose_file_button.clicked, self._on_choose_file_clicked)
 
     def _populate(self) -> None:
+        assert mw
         QueryOp(
             parent=mw,
             op=lambda collection: aud_src_mgr.get_statistics(),
@@ -503,6 +508,18 @@ class AudioSourcesEditTable(QWidget):
         self._apply_button.setEnabled(True)
         if result.did_run:
             self._populate()
+
+    def _on_choose_file_clicked(self) -> None:
+        name, mime = QFileDialog.getOpenFileName(
+            parent=cast(QWidget, self),
+            caption="Load audio source from JSON File",
+            directory=cfg["last_file_save_location"],
+            filter=self._filename_filter,
+        )
+        if not name:
+            return tooltip("Aborted.", parent=self)
+        self._audio_sources_table.addSource(AudioSourceConfig(True, os.path.splitext(os.path.basename(name))[0], name))
+        cfg["last_file_save_location"] = name  # may or may not be lost
 
     def iterateConfigs(self) -> Iterable[AudioSourceConfig]:
         return self._audio_sources_table.iterateConfigs()
