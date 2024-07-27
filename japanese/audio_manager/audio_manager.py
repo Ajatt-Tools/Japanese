@@ -8,7 +8,7 @@ from typing import Optional
 from ..config_view import JapaneseConfig
 from ..helpers.basic_types import AudioManagerHttpClientABC
 from ..helpers.http_client import AudioManagerHttpClient
-from ..helpers.sqlite3_buddy import Sqlite3Buddy
+from ..helpers.sqlite3_buddy import InvalidSourceIndex, Sqlite3Buddy
 from .abstract import AudioSourceManagerFactoryABC
 from .audio_source import AudioSource
 from .basic_types import AudioManagerException
@@ -60,6 +60,9 @@ class AudioSourceManagerFactory(AudioSourceManagerFactoryABC, abc.ABC):
                     print(f"Ignoring audio source {source.name}: {ex.describe_short()}.")
                     errors.append(ex)
                     continue
+                except InvalidSourceIndex as ex:
+                    print(ex)
+                    errors.append(AudioManagerException(source, str(ex)))
                 else:
                     sources.append(source)
                     print(f"Initialized audio source: {source.name}")
