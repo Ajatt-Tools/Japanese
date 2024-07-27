@@ -542,13 +542,13 @@ class SettingsDialog(QDialog, MgrPropMixIn):
 
         # Pitch tab
         self._pitch_profiles_edit = PitchProfilesEdit()
-        self._pitch_settings = PitchSettingsForm(cfg.pitch_accent)
+        self._pitch_settings = GroupBoxWrapper(PitchSettingsForm(cfg.pitch_accent))
         self._svg_settings = SvgSettingsWidget(cfg.svg_graphs)
 
         # Audio tab
         self._audio_profiles_edit = AudioProfilesEdit()
         self._audio_sources_edit = AudioSourcesEditTable()
-        self._audio_settings = AudioSettingsForm(cfg.audio_settings)
+        self._audio_settings = GroupBoxWrapper(AudioSettingsForm(cfg.audio_settings))
 
         # Menus tab
         self._toolbar_settings = ToolbarSettingsForm()
@@ -590,19 +590,21 @@ class SettingsDialog(QDialog, MgrPropMixIn):
         tab = QWidget()
         tab.setLayout(layout := QVBoxLayout())
         layout.addWidget(self._pitch_profiles_edit)
-        layout.addWidget(pitch_opts_inner_tabs := QTabWidget())
-        pitch_opts_inner_tabs.addTab(self._pitch_settings, "Pitch settings")
-        pitch_opts_inner_tabs.addTab(self._svg_settings, "SVG graphs")
+        layout.addWidget(self._pitch_settings)
         self._tabs.addTab(tab, "Pitch accent")
+
+        # SVG settings
+        self._tabs.addTab(self._svg_settings, "SVG graphs")
 
         # Audio
         tab = QWidget()
         tab.setLayout(layout := QVBoxLayout())
         layout.addWidget(self._audio_profiles_edit)
-        layout.addWidget(audio_inner_tabs := QTabWidget())
-        audio_inner_tabs.addTab(self._audio_sources_edit, "Audio sources")
-        audio_inner_tabs.addTab(self._audio_settings, "Audio settings")
+        layout.addWidget(self._audio_settings)
         self._tabs.addTab(tab, "Audio")
+
+        # Audio sources
+        self._tabs.addTab(self._audio_sources_edit, "Audio sources")
 
         # Accent DB override
         self._tabs.addTab(self._accents_override, "Overrides")
