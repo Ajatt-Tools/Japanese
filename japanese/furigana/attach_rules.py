@@ -12,7 +12,7 @@ SKIP_COLORING: Final[frozenset[PartOfSpeech]] = frozenset(
         PartOfSpeech.symbol,
     )
 )
-NEVER_ATTACH_POS: Final[frozenset[PartOfSpeech]] = frozenset(
+DETACH_POS: Final[frozenset[PartOfSpeech]] = frozenset(
     (
         PartOfSpeech.adverb,
         PartOfSpeech.noun,
@@ -20,7 +20,7 @@ NEVER_ATTACH_POS: Final[frozenset[PartOfSpeech]] = frozenset(
         PartOfSpeech.interjection,
     )
 )
-NEVER_ATTACH_WORD: Final[frozenset[str]] = frozenset(
+DETACH_WORDS: Final[frozenset[str]] = frozenset(
     (
         "だ",
         "って",
@@ -65,9 +65,10 @@ NEVER_ATTACH_WORD: Final[frozenset[str]] = frozenset(
         "たらしい",
         "ん",
         "に",
+        "ら",
     )
 )
-NEVER_ATTACH_HEADWORD: Final[frozenset[str]] = frozenset(
+DETACH_HEADWORDS: Final[frozenset[str]] = frozenset(
     (
         "やる",
         "しまう",
