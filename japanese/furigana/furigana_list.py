@@ -9,10 +9,10 @@ from ..mecab_controller import is_kana_str
 from ..mecab_controller.basic_types import ANY_ATTACHING, Inflection
 from ..pitch_accents.basic_types import AccDbParsedToken
 from .attach_rules import (
+    DETACH_HEADWORDS,
+    DETACH_POS,
+    DETACH_WORDS,
     MAX_ATTACHED,
-    NEVER_ATTACH_HEADWORD,
-    NEVER_ATTACH_POS,
-    NEVER_ATTACH_WORD,
     TAPED_PAIRS,
 )
 
@@ -51,9 +51,9 @@ def should_attach_token(attach_to: AccDbParsedToken, token: AnyToken):
         return False
     if is_taped_pair(attach_to.attached_tokens, token):
         return True
-    if token.part_of_speech in NEVER_ATTACH_POS:
+    if token.part_of_speech in DETACH_POS:
         return False
-    if token.word in NEVER_ATTACH_WORD or token.headword in NEVER_ATTACH_HEADWORD:
+    if token.word in DETACH_WORDS or token.headword in DETACH_HEADWORDS:
         return False
     return True
 
