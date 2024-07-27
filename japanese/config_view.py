@@ -83,7 +83,7 @@ class FuriganaConfigView(PitchAndFuriganaCommon):
         return split_cfg_words(self["mecab_only"])
 
     def can_lookup_in_db(self, word: str) -> bool:
-        return self.maximum_results > 1 and word not in self.mecab_only
+        return self.maximum_results > 1 and (word not in self.mecab_only)
 
 
 @final
@@ -269,7 +269,7 @@ class SvgPitchGraphOptionsConfigView(ConfigSubViewBase):
 
     @property
     def include_text(self) -> bool:
-        return self["include_text"]
+        return self["include_text"] is True
 
     @property
     def graph_horizontal_padding(self) -> int:
@@ -399,7 +399,7 @@ class JapaneseConfig(AddonConfigManager):
 
     @property
     def show_welcome_guide(self) -> bool:
-        return self["show_welcome_guide"]
+        return self["show_welcome_guide"] is True
 
     @show_welcome_guide.setter
     def show_welcome_guide(self, value: bool) -> None:
