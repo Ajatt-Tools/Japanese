@@ -42,6 +42,7 @@ class ExpandingTableWidget(QTableWidget):
 
     def setStretchAllColumns(self) -> None:
         header = self.horizontalHeader()
+        assert header
         for column_number in range(len(self._columns)):
             header.setSectionResizeMode(column_number, QHeaderView.ResizeMode.Stretch)
 
