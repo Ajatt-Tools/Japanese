@@ -129,3 +129,13 @@ class TestAccDictLookup:
             output_format=ColorCodePitchFormat.attributes,
         )
         assert furigana_to_word_seq(text) == expected
+
+    @pytest.mark.parametrize(
+        "readings, unique",
+        [
+            (["ジュウガツ", "ジュウガツ", "ジューガツ", "ジューガツ"], ["ジュウガツ"]),
+            (["リュウセンガタ", "リューセンケイ", "リューセンガタ", "リュウセンケイ"], ["リュウセンガタ", "リュウセンケイ"]),
+        ],
+    )
+    def test_unique_readings(self, fgen: FuriganaGen, readings: list[str], unique: list[str]) -> None:
+        assert fgen.unique_readings(readings) == unique
