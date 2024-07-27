@@ -18,8 +18,8 @@ TableRow = NewType("TableRow", Sequence[CellContent])
 
 
 class ExpandingTableWidget(QTableWidget):
-    _columns: Collection[str] = None
-    _sep_regex: re.Pattern = None
+    _columns: Collection[str]
+    _sep_regex: re.Pattern
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
