@@ -85,6 +85,9 @@ class ExpandingTableWidget(QTableWidget):
         """
         return bool(cell.text())
 
+    def is_last_row(self, row_n: int) -> bool:
+        return row_n == self.rowCount() - 1
+
     def onCellChanged(self, row_n: int, _col_n: int = UNUSED) -> None:
         """
         If the last row is full, add a new row.
@@ -92,10 +95,10 @@ class ExpandingTableWidget(QTableWidget):
         """
 
         def is_full_last_row(row: TableRow) -> bool:
-            return all(self.isCellFilled(item) for item in row) and row_n == self.rowCount() - 1
+            return all(self.isCellFilled(item) for item in row) and self.is_last_row(row_n)
 
         def is_empty_not_last_row(row: TableRow) -> bool:
-            return all(not self.isCellFilled(item) for item in row) and self.rowCount() > row_n + 1
+            return all(not self.isCellFilled(item) for item in row) and not self.is_last_row(row_n)
 
         if not all(row_cells := self.getRowCellContents(row_n)):
             return
