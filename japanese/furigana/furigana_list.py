@@ -4,16 +4,18 @@
 from collections.abc import Iterable, MutableSequence
 from typing import Union
 
+from ..helpers.inflections import longest_kana_suffix
 from ..helpers.tokens import Token
 from ..mecab_controller import is_kana_str
 from ..mecab_controller.basic_types import ANY_ATTACHING, Inflection
 from ..pitch_accents.basic_types import AccDbParsedToken
 from .attach_rules import (
     DETACH_HEADWORDS,
+    DETACH_PAIRS,
     DETACH_POS,
     DETACH_WORDS,
     MAX_ATTACHED,
-    TAPED_PAIRS,
+    TAPE_PAIRS,
 )
 
 AnyToken = Union[AccDbParsedToken, Token]
@@ -37,8 +39,16 @@ def is_attaching_inflection(inflection: Inflection) -> bool:
     )
 
 
-def is_taped_pair(attached_tokens: MutableSequence[str], token: AnyToken):
-    return attached_tokens and (attached_tokens[-1], token.word) in TAPED_PAIRS
+def prev_token(attach_to: AccDbParsedToken) -> str:
+    return attach_to.attached_tokens[-1] if attach_to.attached_tokens else longest_kana_suffix(attach_to.word)
+
+
+def is_taped_pair(attach_to: AccDbParsedToken, token: AnyToken):
+    return (prev_token(attach_to), token.word) in TAPE_PAIRS
+
+
+def is_detached_pair(attach_to: AccDbParsedToken, token: AnyToken):
+    return (prev_token(attach_to), token.word) in DETACH_PAIRS
 
 
 def should_attach_token(attach_to: AccDbParsedToken, token: AnyToken):
@@ -49,8 +59,10 @@ def should_attach_token(attach_to: AccDbParsedToken, token: AnyToken):
     if not is_kana_str(token.word):
         # only kana can be attached to the previous word, e.g. 探し(+た)
         return False
-    if is_taped_pair(attach_to.attached_tokens, token):
+    if is_taped_pair(attach_to, token):
         return True
+    if is_detached_pair(attach_to, token):
+        return False
     if token.part_of_speech in DETACH_POS:
         return False
     if token.word in DETACH_WORDS or token.headword in DETACH_HEADWORDS:

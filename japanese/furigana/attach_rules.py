@@ -4,6 +4,7 @@ from typing import Final
 
 from ..mecab_controller.basic_types import PartOfSpeech
 
+MAX_ATTACHED = 4
 SKIP_COLORING: Final[frozenset[PartOfSpeech]] = frozenset(
     (
         PartOfSpeech.other,
@@ -27,7 +28,6 @@ DETACH_WORDS: Final[frozenset[str]] = frozenset(
         "やっ",
         "です",
         "いれ",
-        "ば",
         "おく",
         "させる",
         "ごめん",
@@ -63,9 +63,10 @@ DETACH_WORDS: Final[frozenset[str]] = frozenset(
         "ほど",
         "いける",
         "たらしい",
-        "ん",
         "に",
         "ら",
+        "ぞ",
+        "だって",
     )
 )
 DETACH_HEADWORDS: Final[frozenset[str]] = frozenset(
@@ -73,7 +74,6 @@ DETACH_HEADWORDS: Final[frozenset[str]] = frozenset(
         "やる",
         "しまう",
         "いれ",
-        "ば",
         "おく",
         "させる",
         "ごめん",
@@ -115,7 +115,22 @@ DETACH_HEADWORDS: Final[frozenset[str]] = frozenset(
         "もらう",
         "あげる",
         "できる",
+        "みる",
+        "べし",
     )
 )
-MAX_ATTACHED = 4
-TAPED_PAIRS: Final[frozenset[tuple[str, str]]] = frozenset((("ませ", "ん"),))
+TAPE_PAIRS: Final[frozenset[tuple[str, str]]] = frozenset(
+    (
+        ("ませ", "ん"),
+        ("でき", "ん"),
+    )
+)
+DETACH_PAIRS: Final[frozenset[tuple[str, str]]] = frozenset(
+    (
+        ("く", "ない"),
+        ("しく", "ない"),
+        ("く", "なかっ"),
+        ("しく", "なかっ"),
+        ("て", "い"),
+    )
+)
