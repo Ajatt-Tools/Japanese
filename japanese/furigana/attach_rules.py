@@ -67,6 +67,7 @@ DETACH_WORDS: Final[frozenset[str]] = frozenset(
         "ら",
         "ぞ",
         "だって",
+        "よう",
     )
 )
 DETACH_HEADWORDS: Final[frozenset[str]] = frozenset(
@@ -74,7 +75,6 @@ DETACH_HEADWORDS: Final[frozenset[str]] = frozenset(
         "やる",
         "しまう",
         "いれ",
-        "おく",
         "させる",
         "ごめん",
         "もらう",
@@ -117,6 +117,9 @@ DETACH_HEADWORDS: Final[frozenset[str]] = frozenset(
         "できる",
         "みる",
         "べし",
+        "おける",
+        "おく",
+        "まくる",
     )
 )
 TAPE_PAIRS: Final[frozenset[tuple[str, str]]] = frozenset(
