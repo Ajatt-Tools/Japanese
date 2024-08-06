@@ -66,7 +66,7 @@
     "prefer_literal_pronunciation": false,
     "reading_separator": ",",
     "blocklisted_words": "人",
-    "mecab_only": "母,先生,弟,空,猫,お前,女性,体,男,首,女,彼,顔,お,木,頭,僕,行く,私",
+    "mecab_only": "母,先生,弟,空,猫,お前,女性,体,男,首,女,彼,顔,お,木,頭,僕,行く,私,放る",
     "maximum_results": 3,
     "discard_mode": "discard_extra"
   },
