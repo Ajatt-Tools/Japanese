@@ -71,7 +71,6 @@ DETACH_WORDS: Final[frozenset[str]] = frozenset(
         "として",
         "よ",
         "を",
-        "ば",
     )
 )
 DETACH_HEADWORDS: Final[frozenset[str]] = frozenset(
