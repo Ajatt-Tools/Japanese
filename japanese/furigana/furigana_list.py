@@ -6,8 +6,8 @@ from typing import Union
 
 from ..helpers.inflections import longest_kana_suffix
 from ..helpers.tokens import Token
-from ..mecab_controller import is_kana_str
 from ..mecab_controller.basic_types import ANY_ATTACHING, Inflection
+from ..mecab_controller.kana_conv import is_hiragana_str
 from ..pitch_accents.basic_types import AccDbParsedToken
 from .attach_rules import (
     DETACH_HEADWORDS,
@@ -56,7 +56,7 @@ def should_attach_token(attach_to: AccDbParsedToken, token: AnyToken):
         return False
     if not is_attaching_inflection(attach_to.inflection_type):
         return False
-    if not is_kana_str(token.word):
+    if not is_hiragana_str(token.word):
         # only kana can be attached to the previous word, e.g. 探し(+た)
         return False
     if is_taped_pair(attach_to, token):
