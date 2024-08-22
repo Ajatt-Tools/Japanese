@@ -9,7 +9,7 @@ from typing import Optional
 
 from aqt.qt import *
 
-from ..ajt_common.utils import clamp
+from ..ajt_common.utils import clamp, ui_translate
 from ..audio_manager.abstract import AudioSourceManagerFactoryABC
 from ..audio_manager.basic_types import AudioSourceConfig
 from ..audio_manager.source_manager import normalize_filename
@@ -47,7 +47,7 @@ def tooltip_cache_remove_complete(removed: list[AudioSourceConfig]) -> None:
 
 
 class AudioSourcesTable(ExpandingTableWidget):
-    _columns = tuple(field.name.capitalize() for field in dataclasses.fields(AudioSourceConfig))
+    _columns = tuple(ui_translate(field.name) for field in dataclasses.fields(AudioSourceConfig))
     # Slightly tightened the separator regex compared to the pitch override widget
     # since names and file paths can contain a wide range of characters.
     _sep_regex: re.Pattern = re.compile(r"[\r\t\n；;。、・]+", flags=re.IGNORECASE | re.MULTILINE)
