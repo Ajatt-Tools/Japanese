@@ -126,6 +126,7 @@ class TestAccDictLookup:
             ("〇はできん", ["〇は", "できん"]),
             ("〇はできんぞ", ["〇は", "できん", "ぞ"]),
             ("掠れば", ["掠れば"]),
+            ("楽しませてくれればいい", ["楽しませて", "くれれば", "いい"]),
             ("放っておけない", ["放って", "おけない"]),
             ("塗り込まれているようです", ["塗り", "込まれている", "よう", "です"]),
         ],
@@ -138,6 +139,21 @@ class TestAccDictLookup:
             output_format=ColorCodePitchFormat.attributes,
         )
         assert furigana_to_word_seq(text) == expected
+
+    @pytest.mark.parametrize(
+        "sentence, expected",
+        [
+            ("一人暮らし", "一人暮[ひとりぐ]らし"),
+        ],
+    )
+    def test_furigana(
+            self, tmp_db_connection: Sqlite3Buddy, fgen: FuriganaGen, sentence: str, expected: str
+    ) -> None:
+        text = fgen.with_new_buddy(tmp_db_connection).generate_furigana(
+            sentence,
+            output_format=ColorCodePitchFormat(0),
+        )
+        assert text == expected
 
     @pytest.mark.parametrize(
         "readings, unique",
