@@ -1,5 +1,5 @@
 /*
- * AJT Japanese JS 24.7.15.2
+ * AJT Japanese JS 24.8.16.1
  * Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
  * License: GNU AGPL, version 3 or later; https://www.gnu.org/licenses/agpl-3.0.html
  */
@@ -93,7 +93,8 @@ function ajt__reformat_multi_furigana() {
 
 function ajt__zip(array1, array2) {
     let zipped = [];
-    for (let i = 0; i < array1.length; i++) {
+    const size = Math.min(array1.length, array2.length);
+    for (let i = 0; i < size; i++) {
         zipped.push([array1[i], array2[i]]);
     }
     return zipped;
