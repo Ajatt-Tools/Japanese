@@ -21,7 +21,9 @@ RE_JP_SEP = re.compile(
     flags=RE_FLAGS,
 )
 RE_COUNTERS = re.compile(
-    r"([0-9０-９一二三四五六七八九十零]{1,4}(?:万人|ヶ月|[つ月日人筋隻丁品番枚時回円万歳限]))", flags=RE_FLAGS
+    # Extra: jp numbers 一二三四五六七八九十零
+    r"([0-9０-９]+(?:万人|ヶ月|[つ月日人筋隻丁品番枚時回円万歳限]))",
+    flags=RE_FLAGS,
 )
 RE_NON_JP_PARSED = re.compile(
     r"<no-jp>(?P<token>.*?)</no-jp>",
@@ -71,7 +73,7 @@ def mark_non_jp_token(m: re.Match) -> str:
     return "<no-jp>" + m.group() + "</no-jp>"
 
 
-def parts(expr: str, pattern: re.Pattern) -> list[str]:
+def split_with_regex(expr: str, pattern: re.Pattern) -> list[str]:
     return re.split(
         RE_NON_JP_PART,
         string=re.sub(pattern, mark_non_jp_token, expr),
@@ -85,16 +87,23 @@ def split_counters(text: str) -> Iterable[ParseableToken]:
             yield ParseableToken(part)
 
 
-def _tokenize(expr: str, *, split_regexes: Sequence[re.Pattern]) -> Iterable[Token]:
-    if not split_regexes:
-        yield from split_counters(expr.replace(" ", ""))
+SPLIT_REGEXES = (HTML_AND_MEDIA_REGEX, RE_NON_JP, RE_JP_SEP)
+
+
+def split_with_next_regex(expr: str, regex_idx: int) -> Iterable[Token]:
+    for part in split_with_regex(expr, SPLIT_REGEXES[regex_idx]):
+        if part:
+            if m := re.fullmatch(RE_NON_JP_PARSED, part):
+                yield Token(m.group("token"))
+            else:
+                yield from _tokenize(part, regex_idx=regex_idx + 1)
+
+
+def _tokenize(expr: str, *, regex_idx: int = 0) -> Iterable[Token]:
+    if regex_idx < len(SPLIT_REGEXES):
+        yield from split_with_next_regex(expr, regex_idx)
     else:
-        for part in parts(expr, split_regexes[0]):
-            if part:
-                if m := re.fullmatch(RE_NON_JP_PARSED, part):
-                    yield Token(m.group("token"))
-                else:
-                    yield from _tokenize(part, split_regexes=split_regexes[1:])
+        yield from split_counters(expr.replace(" ", ""))
 
 
 def tokenize(expr: str) -> Iterable[Token]:
@@ -103,7 +112,4 @@ def tokenize(expr: str) -> Iterable[Token]:
     Each token can be either parseable with mecab or not.
     Furigana is removed from parseable tokens, if present.
     """
-    return _tokenize(
-        expr=clean_furigana(expr),
-        split_regexes=(HTML_AND_MEDIA_REGEX, RE_NON_JP, RE_JP_SEP),
-    )
+    return _tokenize(expr=clean_furigana(expr))
