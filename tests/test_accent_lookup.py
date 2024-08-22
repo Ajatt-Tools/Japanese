@@ -146,9 +146,7 @@ class TestAccDictLookup:
             ("一人暮らし", "一人暮[ひとりぐ]らし"),
         ],
     )
-    def test_furigana(
-            self, tmp_db_connection: Sqlite3Buddy, fgen: FuriganaGen, sentence: str, expected: str
-    ) -> None:
+    def test_furigana(self, tmp_db_connection: Sqlite3Buddy, fgen: FuriganaGen, sentence: str, expected: str) -> None:
         text = fgen.with_new_buddy(tmp_db_connection).generate_furigana(
             sentence,
             output_format=ColorCodePitchFormat(0),
