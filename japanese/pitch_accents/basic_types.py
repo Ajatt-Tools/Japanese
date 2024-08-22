@@ -100,7 +100,7 @@ class PitchAccentEntry(NamedTuple):
         return (
             self.katakana_reading_sep
             + SEP_READING_PITCH
-            + SEP_PITCH_TYPES.join(dict.fromkeys(pitch.describe() for pitch in self.pitches))
+            + SEP_PITCH_TYPES.join(pitch.describe() for pitch in self.pitches)
         )
 
     @classmethod
