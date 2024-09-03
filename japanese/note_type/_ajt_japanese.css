@@ -1,5 +1,5 @@
 /*
- * AJT Japanese CSS 24.7.14.1
+ * AJT Japanese CSS 24.9.3.1
  * Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
  * License: GNU AGPL, version 3 or later; https://www.gnu.org/licenses/agpl-3.0.html
  */
@@ -64,6 +64,7 @@
 
 .ajt__info_popup {
     /* Popup (tooltip) that shows pitch accents. Visible on hover. */
+    --min-popup-width: 240px;
     --max-popup-width: calc(100vw - 1rem);
     --max-popup-height: 320px;
     --text-height: 1.4rem;
@@ -80,9 +81,9 @@
     transform: translateX(-50%);
     margin: auto;
     padding: 0rem;
+    width: max-content;
     max-width: max(80%, var(--max-popup-width));
-    min-width: min(var(--max-popup-width), 240px);
-    width: 100%;
+    min-width: min(var(--max-popup-width), var(--min-popup-width));
     max-height: var(--max-popup-height);
     box-shadow: 2px 2px 8px rgba(0 0 0 / 25%);
     border: var(--border-size) solid var(--acc-color-1);
