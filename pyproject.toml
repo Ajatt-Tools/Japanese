@@ -41,8 +41,8 @@ dependencies = [
   "pytest",
   "aqt[qt6]",
 ]
-[[tool.hatch.envs.dev.matrix]]
-python = ['3.9',]
+python = "3.9"
+
 [tool.hatch.envs.dev.scripts]
 # run as `hatch run dev:scriptname`
 check = "mypy --install-types --non-interactive {args:japanese tests}"
