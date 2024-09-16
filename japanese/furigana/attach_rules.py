@@ -23,6 +23,7 @@ DETACH_POS: Final[frozenset[PartOfSpeech]] = frozenset(
 )
 DETACH_WORDS: Final[frozenset[str]] = frozenset(
     (
+        "ほしい",
         "だ",
         "って",
         "やっ",
