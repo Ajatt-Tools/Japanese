@@ -1,5 +1,5 @@
 /*
- * AJT Japanese CSS 24.9.3.1
+ * AJT Japanese CSS 24.9.20.3
  * Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
  * License: GNU AGPL, version 3 or later; https://www.gnu.org/licenses/agpl-3.0.html
  */
@@ -76,9 +76,9 @@
     font-weight: normal;
     background-color: var(--acc-color-4);
     position: absolute;
+    /* By default, the popup sticks to the right to prevent overflow. */
     top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
+    right: 0%;
     margin: auto;
     padding: 0rem;
     width: max-content;
@@ -87,6 +87,13 @@
     max-height: var(--max-popup-height);
     box-shadow: 2px 2px 8px rgba(0 0 0 / 25%);
     border: var(--border-size) solid var(--acc-color-1);
+}
+.ajt__info_popup.ajt__left-corner {
+    transform: translateX(var(--shift-x, 125px));
+}
+.ajt__info_popup.ajt__in-middle {
+    right: 50%;
+    transform: translateX(50%);
 }
 
 .ajt__frame_title {

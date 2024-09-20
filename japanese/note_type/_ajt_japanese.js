@@ -1,5 +1,5 @@
 /*
- * AJT Japanese JS 24.8.16.1
+ * AJT Japanese JS 24.9.20.3
  * Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
  * License: GNU AGPL, version 3 or later; https://www.gnu.org/licenses/agpl-3.0.html
  */
@@ -162,6 +162,42 @@ function ajt__make_popup_div(content) {
     return popup;
 }
 
+function ajt__find_word_info_popup(word_span) {
+    return word_span.querySelector(".ajt__info_popup");
+}
+
+function ajt__find_popup_x_corners(popup_div) {
+    const elem_rect = popup_div.getBoundingClientRect();
+    const right_corner_x = elem_rect.x + elem_rect.width;
+    return {
+        x_start: elem_rect.x,
+        x_end: right_corner_x,
+        shifted_x_start: elem_rect.x + elem_rect.width / 2,
+        shifted_x_end: right_corner_x + elem_rect.width / 2,
+    };
+}
+
+function ajt__word_info_on_mouse_enter(word_span) {
+    const popup_div = ajt__find_word_info_popup(word_span);
+    if (popup_div) {
+        ajt__word_info_on_mouse_leave(word_span);
+        const x_pos = ajt__find_popup_x_corners(popup_div);
+        if (x_pos.x_start < 0) {
+            popup_div.classList.add("ajt__left-corner");
+            popup_div.style.setProperty("--shift-x", `${Math.ceil(-x_pos.x_start)}px`);
+        } else if (x_pos.shifted_x_end < window.innerWidth) {
+            popup_div.classList.add("ajt__in-middle");
+        }
+    }
+}
+
+function ajt__word_info_on_mouse_leave(word_span) {
+    const popup_div = ajt__find_word_info_popup(word_span);
+    if (popup_div) {
+        popup_div.classList.remove("ajt__left-corner", "ajt__in-middle");
+    }
+}
+
 function ajt__create_popups() {
     for (const [idx, span] of document.querySelectorAll(".ajt__word_info").entries()) {
         if (span.matches(".jpsentence .background *")) {
@@ -173,7 +209,10 @@ function ajt__create_popups() {
         popup.setAttribute("ajt__popup_idx", idx);
         span.setAttribute("ajt__popup_idx", idx);
         span.appendChild(popup);
-        ajt__adjust_popup_position(popup);
+
+        /* React to mouse enter and leave */
+        span.addEventListener("mouseenter", (event) => ajt__word_info_on_mouse_enter(event.currentTarget));
+        span.addEventListener("mouseleave", (event) => ajt__word_info_on_mouse_leave(event.currentTarget));
     }
 }
 
