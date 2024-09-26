@@ -5,7 +5,7 @@ from aqt import mw
 
 def anki_addon_set_web_exports() -> None:
     assert mw, "Anki must be initialized."
-    mw.addonManager.setWebExports(__name__, r"(img|web)/.*\.(js|css|html|png|svg)")
+    mw.addonManager.setWebExports(__name__, r"(img|web)/.*\.(js|css|html|png|svg)$")
 
 
 def anki_addon_web_relpath() -> str:
