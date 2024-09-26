@@ -208,7 +208,9 @@ class PitchSettingsForm(MultiColumnSettingsForm):
         self._widgets.kana_lookups.setToolTip(
             "Attempt to look up a word using its kana reading\n" "if there's no entry for its kanji form."
         )
-        self._widgets.skip_numbers.setToolTip("Don't add pitch accents to numbers.")
+        self._widgets.skip_numbers.setToolTip(
+            "Don't add pitch accents to numbers.\n" "If enabled, numbers won't be color-coded in furigana as well."
+        )
         self._widgets.reading_separator.setToolTip("String used to separate multiple accents of a word.")
         self._widgets.word_separator.setToolTip("String used to separate multiple words.")
         self._widgets.blocklisted_words.setToolTip("A comma-separated list of words that won't be looked up.")
