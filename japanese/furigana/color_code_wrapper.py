@@ -12,6 +12,8 @@ from .attach_rules import SKIP_COLORING
 def should_skip_coloring(token: AccDbParsedToken) -> bool:
     """
     Don't color special symbols and words without known pitch.
+    Note: particles don't have their own pitch accent.
+    The pitch of a particle is determined by the accent type of the word it follows.
     """
     return token.part_of_speech in SKIP_COLORING or not token.has_pitch()
 
