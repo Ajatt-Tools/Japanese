@@ -6,7 +6,7 @@ import sys
 from aqt import mw
 
 
-def start_addon():
+def start_addon() -> None:
     from . import (
         bulk_add,
         context_menu,
