@@ -87,12 +87,6 @@ function ajt__make_accents_list(ajt_span) {
     return accents;
 }
 
-function ajt__popup_cleanup() {
-    for (const popup_elem of document.querySelectorAll(".ajt__info_popup")) {
-        popup_elem.remove();
-    }
-}
-
 function ajt__make_popup_div(content) {
     /* Popup Top frame */
     const frame_top = document.createElement("div");
@@ -204,7 +198,11 @@ function ajt__reformat_multi_furigana() {
 function ajt__create_popups() {
     for (const [idx, span] of document.querySelectorAll(".ajt__word_info").entries()) {
         if (span.matches(".jpsentence .background *")) {
-            /* fix for "Japanese sentences" note type */
+            // Fix for "Japanese sentences" note type.
+            continue;
+        }
+        if (ajt__find_word_info_popup(span)) {
+            // The popup exists. This tag has been handled already.
             continue;
         }
         try {
@@ -222,7 +220,6 @@ function ajt__create_popups() {
 
 /* Setup */
 function ajt__main() {
-    ajt__popup_cleanup();
     ajt__create_popups();
     ajt__reformat_multi_furigana();
 }
