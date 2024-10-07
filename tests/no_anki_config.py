@@ -2,11 +2,11 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import json
+import pathlib
 
 import pytest
 
 from japanese.config_view import JapaneseConfig
-from japanese.helpers.file_ops import find_config_json
 from tests import DATA_DIR
 
 
@@ -15,8 +15,10 @@ class NoAnkiConfigView(JapaneseConfig):
     Loads the default config without starting Anki.
     """
 
+    config_json_path = pathlib.Path(__file__).parent.parent / "japanese" / "config.json"
+
     def _set_underlying_dicts(self) -> None:
-        with open(find_config_json()) as f:
+        with open(self.config_json_path) as f:
             self._default_config = self._config = json.load(f)
 
 
