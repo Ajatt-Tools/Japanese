@@ -1,5 +1,5 @@
 /*
- * AJT Japanese CSS 24.9.20.3
+ * AJT Japanese CSS 24.10.7.2
  * Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
  * License: GNU AGPL, version 3 or later; https://www.gnu.org/licenses/agpl-3.0.html
  */
@@ -21,10 +21,15 @@
 
 .ajt__word_info {
     /* Popup container. Has attributes that describe the word's pitch accent. */
-    --acc-color-1: rgb(165, 165, 165);
-    --acc-color-2: rgba(111, 144, 167, 0.3);
-    --acc-color-3: rgb(42, 27, 10);
-    --acc-color-4: rgb(245, 245, 245);
+    --acc-color-1: hsl(0, 0%, 65%);
+    --acc-color-2: hsl(205 24% 55% / 30%);
+    --acc-color-3: hsl(32, 62%, 10%);
+    --acc-color-4: hsl(0, 0%, 96%);
+    --acc-color-5: hsl(0, 0%, 0%);
+    --acc-color-6: hsl(0 80% 40% / 20%);
+    --acc-color-7: hsl(0, 0%, 100%);
+    --acc-color-8: hsl(7, 74%, 23%);
+
     position: relative;
     display: inline-block;
 
@@ -60,6 +65,19 @@
         visibility: visible;
         z-index: 9999;
     }
+}
+
+.ajt__word_info:not([style]) {
+    /* Use a dotted underline to mark popup wrappers without style. */
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    text-decoration-color: var(--acc-color-6);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
+}
+
+.ajt__readings_list li::marker {
+    color: var(--acc-color-8, red);
 }
 
 .ajt__info_popup {
@@ -152,99 +170,6 @@
 }
 .ajt__H {
     box-shadow: inset 0px 2px 0 0px var(--downstep-color, currentColor);
-}
-
-/* Tooltips (multiple readings) */
-
-.ajt__tooltip {
-    --acc-color-1: rgb(0, 0, 0);
-    --acc-color-2: hsl(0 80% 40% / 20%);
-    --acc-color-3: #fff;
-    --acc-color-4: #f6a192;
-
-    position: relative;
-    display: inline-block;
-
-    &::before {
-        /* dotted underline */
-        content: "";
-        display: block;
-        position: absolute;
-        bottom: 5px;
-        right: 0;
-        left: 0;
-        border-bottom: 2px dotted var(--acc-color-2);
-    }
-    &::after {
-        /* Triangle decoration */
-        content: "";
-        display: block;
-        position: absolute;
-        bottom: 0%;
-        left: 50%;
-        margin-left: -5px;
-        border-width: 5px;
-        border-style: solid;
-        border-color: transparent transparent var(--acc-color-1) transparent;
-    }
-
-    &::after,
-    & .ajt__tooltip-text {
-        /* Hide the Tooltip by default */
-        visibility: hidden;
-        z-index: -9999;
-    }
-
-    &:hover::after,
-    &:hover .ajt__tooltip-text {
-        /* Show the Tooltip on hover */
-        visibility: visible;
-        z-index: 9999;
-    }
-
-    .tags {
-        position: absolute;
-        top: 0px;
-        right: -9px;
-    }
-}
-
-.ajt__tooltip .ajt__tooltip-text {
-    --width: 180px;
-
-    font-weight: 500;
-    font-size: 18px;
-    width: var(--width);
-    background-color: var(--acc-color-1);
-    color: var(--acc-color-3);
-    text-align: left;
-    border-radius: 6px;
-    padding: 0 2px;
-    position: absolute;
-    z-index: 999;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    word-break: keep-all;
-    font-weight: normal;
-
-    & .ajt__tooltip-reading:not(:last-child)::after {
-        content: "; ";
-        color: var(--acc-color-4);
-    }
-}
-
-/* Hide Tooltips if Popups are enabled. */
-.ajt__word_info {
-    .ajt__tooltip {
-        display: initial;
-    }
-    .ajt__tooltip .ajt__tooltip-text,
-    .ajt__tooltip::before,
-    .ajt__tooltip::after {
-        display: none;
-        height: 0px;
-    }
 }
 
 /* Pitch accent tags */

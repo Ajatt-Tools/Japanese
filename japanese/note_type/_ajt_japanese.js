@@ -1,5 +1,5 @@
 /*
- * AJT Japanese JS 24.9.20.3
+ * AJT Japanese JS 24.10.7.2
  * Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
  * License: GNU AGPL, version 3 or later; https://www.gnu.org/licenses/agpl-3.0.html
  */
@@ -51,44 +51,8 @@ function ajt__format_new_ruby(kanji, readings) {
     if (readings.length > 1) {
         return `<ruby>${ajt__format_new_ruby(kanji, readings.slice(0, -1))}</ruby><rt>${readings.slice(-1)}</rt>`;
     } else {
-        return `<rb>${kanji}</rb><rt>${readings.join("")}</rt>`;
+        return `${kanji}<rt>${readings.join("")}</rt>`;
     }
-}
-
-function ajt__make_readings_info_tooltip(readings) {
-    const sequence = readings.map((reading) => `<span class="ajt__tooltip-reading">${reading}</span>`).join("");
-    const wrapper = document.createElement("span");
-    wrapper.classList.add("ajt__tooltip");
-    wrapper.insertAdjacentHTML("beforeend", `<span class="ajt__tooltip-text">${sequence}</span>`);
-    return wrapper;
-}
-
-function ajt__reformat_multi_furigana() {
-    const separators = /[\s;,.、・。]+/iu;
-    const max_inline = 2;
-    document.querySelectorAll("ruby:not(ruby ruby)").forEach((ruby) => {
-        try {
-            // <rb> contains the kanji word. <rt> contains the kana reading(s) (furigana).
-            const kanji = (ruby.querySelector("rb") || ruby.firstChild).textContent.trim();
-            const readings = ruby
-                .querySelector("rt")
-                .textContent.split(separators)
-                .map((str) => str.trim())
-                .filter((str) => str.length);
-
-            if (readings.length > 1) {
-                ruby.innerHTML = ajt__format_new_ruby(kanji, readings.slice(0, max_inline));
-            }
-            if (readings.length > max_inline) {
-                const wrapper = ajt__make_readings_info_tooltip(readings);
-                ruby.replaceWith(wrapper);
-                wrapper.appendChild(ruby);
-                ajt__adjust_popup_position(wrapper.querySelector(".ajt__tooltip-text"));
-            }
-        } catch (error) {
-            console.error(error);
-        }
-    });
 }
 
 function ajt__zip(array1, array2) {
@@ -126,20 +90,6 @@ function ajt__make_accents_list(ajt_span) {
 function ajt__popup_cleanup() {
     for (const popup_elem of document.querySelectorAll(".ajt__info_popup")) {
         popup_elem.remove();
-    }
-}
-
-function ajt__adjust_popup_position(popup_div) {
-    const elem_rect = popup_div.getBoundingClientRect();
-    const right_corner_x = elem_rect.x + elem_rect.width;
-    const overflow_x = right_corner_x - window.innerWidth;
-    /* By default the left property is set to 50% */
-    if (elem_rect.x < 0) {
-        popup_div.style.left = `calc(50% + ${-elem_rect.x}px + 0.5rem)`;
-    } else if (overflow_x > 0) {
-        popup_div.style.left = `calc(50% - ${overflow_x}px - 0.5rem)`;
-    } else {
-        popup_div.style.left = void 0;
     }
 }
 
@@ -198,21 +148,75 @@ function ajt__word_info_on_mouse_leave(word_span) {
     }
 }
 
+function ajt__adjust_popup_position_on_mouse_enter(word_info_span) {
+    /* React to mouse enter and leave */
+    word_info_span.addEventListener("mouseenter", (event) => ajt__word_info_on_mouse_enter(event.currentTarget));
+    word_info_span.addEventListener("mouseleave", (event) => ajt__word_info_on_mouse_leave(event.currentTarget));
+}
+
+function ajt__format_readings_as_list(readings) {
+    const readings_items = readings.map((reading) => `<li>${reading}</li>`).join("");
+    const list_elem = document.createElement("ol");
+    list_elem.classList.add("ajt__readings_list");
+    list_elem.insertAdjacentHTML("beforeend", readings_items);
+    return list_elem;
+}
+
+function ajt__find_kanji_readings(ruby_tag) {
+    // <rb> contains the kanji word (on some platforms). <rt> contains the kana reading(s) (furigana).
+    const separators = /[\s;,.、・。]+/iu;
+    const kanji = (ruby_tag.querySelector("rb") || ruby_tag.firstChild).textContent.trim();
+    const readings = ruby_tag
+        .querySelector("rt")
+        .textContent.split(separators)
+        .map((str) => str.trim())
+        .filter((str) => str.length);
+    return { kanji: kanji, readings: readings };
+}
+
+function ajt__reformat_multi_furigana() {
+    const max_inline = 2;
+    document.querySelectorAll("ruby:not(ruby ruby)").forEach((ruby) => {
+        try {
+            const { kanji, readings } = ajt__find_kanji_readings(ruby);
+            if (readings.length > 1) {
+                // Stack the first few readings on top of each other to save horizontal space.
+                ruby.innerHTML = ajt__format_new_ruby(kanji, readings.slice(0, max_inline));
+            }
+            if (readings.length > max_inline && !ruby.matches(".ajt__word_info ruby")) {
+                // If the word has a lot of readings, show them on mouseover.
+                // Don't add popups to color-coded blocks of text. They already have their own popups.
+                const content_ul = ajt__format_readings_as_list(readings);
+                const popup = ajt__make_popup_div(content_ul);
+                const wrapper = document.createElement("span");
+                ruby.replaceWith(wrapper);
+                wrapper.appendChild(ruby);
+                wrapper.appendChild(popup);
+                wrapper.classList.add("ajt__word_info");
+                ajt__adjust_popup_position_on_mouse_enter(wrapper);
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    });
+}
+
 function ajt__create_popups() {
     for (const [idx, span] of document.querySelectorAll(".ajt__word_info").entries()) {
         if (span.matches(".jpsentence .background *")) {
             /* fix for "Japanese sentences" note type */
             continue;
         }
-        const content_ul = ajt__make_accents_list(span);
-        const popup = ajt__make_popup_div(content_ul);
-        popup.setAttribute("ajt__popup_idx", idx);
-        span.setAttribute("ajt__popup_idx", idx);
-        span.appendChild(popup);
-
-        /* React to mouse enter and leave */
-        span.addEventListener("mouseenter", (event) => ajt__word_info_on_mouse_enter(event.currentTarget));
-        span.addEventListener("mouseleave", (event) => ajt__word_info_on_mouse_leave(event.currentTarget));
+        try {
+            const content_ul = ajt__make_accents_list(span);
+            const popup = ajt__make_popup_div(content_ul);
+            popup.setAttribute("ajt__popup_idx", idx);
+            span.setAttribute("ajt__popup_idx", idx);
+            span.appendChild(popup);
+            ajt__adjust_popup_position_on_mouse_enter(span);
+        } catch (error) {
+            console.error(error);
+        }
     }
 }
 
