@@ -19,7 +19,8 @@
 
 /* Pitch accent information popups */
 
-.ajt__word_info {
+.ajt__word_info,
+.ajt__furigana_list {
     /* Popup container. Has attributes that describe the word's pitch accent. */
     --acc-color-1: hsl(0, 0%, 65%);
     --acc-color-2: hsl(205 24% 55% / 30%);
@@ -67,8 +68,8 @@
     }
 }
 
-.ajt__word_info:not([style]) {
-    /* Use a dotted underline to mark popup wrappers without style. */
+.ajt__furigana_list {
+    /* Use a dotted underline to mark popup wrappers with furigana lists. */
     text-decoration: underline;
     text-decoration-style: dotted;
     text-decoration-color: var(--acc-color-6);
@@ -125,7 +126,7 @@
 }
 
 .ajt__frame_content {
-    /* Popup content (contains a list of pitch accents) */
+    /* Popup content (contains a list of pitch accents or a list of readings) */
     overflow: auto;
     display: grid;
     place-items: center;

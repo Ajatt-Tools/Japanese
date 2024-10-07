@@ -170,7 +170,8 @@ function ajt__find_kanji_readings(ruby_tag) {
 
 function ajt__reformat_multi_furigana() {
     const max_inline = 2;
-    document.querySelectorAll("ruby:not(ruby ruby)").forEach((ruby) => {
+    document.querySelectorAll("ruby:not(ruby ruby):not(.ajt__furigana_list ruby)").forEach((ruby) => {
+        // Skip elements that already have stacked furigana.
         try {
             const { kanji, readings } = ajt__find_kanji_readings(ruby);
             if (readings.length > 1) {
@@ -186,7 +187,7 @@ function ajt__reformat_multi_furigana() {
                 ruby.replaceWith(wrapper);
                 wrapper.appendChild(ruby);
                 wrapper.appendChild(popup);
-                wrapper.classList.add("ajt__word_info");
+                wrapper.classList.add("ajt__furigana_list");
                 ajt__adjust_popup_position_on_mouse_enter(wrapper);
             }
         } catch (error) {
