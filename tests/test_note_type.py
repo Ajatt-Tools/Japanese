@@ -90,7 +90,7 @@ def test_find_existing_css_version(test_input: str, expected: Optional[FileVersi
     ],
 )
 def test_css_imports(css_styling: str, is_modified: bool, modified_css: Optional[str]) -> None:
-    model_dict = {"css": css_styling}
+    model_dict = {"css": css_styling, "name": "pytest"}
     assert ensure_css_imported(model_dict) is is_modified
     assert model_dict["css"] == (modified_css or css_styling)
 
@@ -138,7 +138,7 @@ def test_css_imports(css_styling: str, is_modified: bool, modified_css: Optional
 )
 def test_js_imports(template_html: str, is_modified: bool, modified_html: Optional[str]) -> None:
     side = "qfmt"
-    template_dict = {side: template_html}
+    template_dict = {side: template_html, "name": "pytest"}
     assert ensure_js_imported(template_dict, side) is is_modified
     assert template_dict[side] == (modified_html or template_html)
 
