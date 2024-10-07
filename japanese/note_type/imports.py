@@ -78,6 +78,7 @@ def ensure_css_imported(model_dict: dict[str, str]) -> bool:
     """
     if (updated_css := ensure_css_in_card(model_dict["css"])) != model_dict["css"]:
         model_dict["css"] = updated_css
+        print(f"Model '{model_dict['name']}': new CSS has been linked.")
         return True
     return False
 
@@ -106,6 +107,7 @@ def ensure_js_imported(template: dict[str, str], side: str) -> bool:
     if (template_text := ensure_js_in_card_side(template[side])) != template[side]:
         # Template was modified
         template[side] = template_text
+        print(f"Template '{template['name']}': new JS has been linked.")
         return True
     return False
 
