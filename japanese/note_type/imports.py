@@ -16,7 +16,7 @@ from .bundled_files import (
 
 RE_AJT_CSS_IMPORT = re.compile(r'@import url\("_ajt_japanese(?:_(?P<version>\d+\.\d+\.\d+\.\d+))?\.css"\);')
 RE_AJT_JS_LEGACY_IMPORT = re.compile(r'<script [^<>]*src="_ajt_japanese[^"]*\.js"></script>\n?')
-RE_AJT_JS_VERSION_COMMENT = re.compile(r"/\* AJT Japanese JS (?P<version>\d+\.\d+\.\d+\.\d+) \*/\n?")
+RE_AJT_JS_VERSION_COMMENT = re.compile(r"\s*/\* AJT Japanese JS (?P<version>\d+\.\d+\.\d+\.\d+) \*/\n?")
 
 
 def find_ajt_japanese_js_import(template_text: str) -> Optional[VersionedFile]:
