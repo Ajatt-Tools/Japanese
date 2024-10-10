@@ -134,6 +134,7 @@ DETACH_HEADWORDS: Final[frozenset[str]] = frozenset(
         "まで",
         "ふためく",
         "はおる",
+        "つつ",
     )
 )
 TAPE_PAIRS: Final[frozenset[tuple[str, str]]] = frozenset(
