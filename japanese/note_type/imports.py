@@ -43,6 +43,8 @@ def find_ajt_japanese_js_import(template_text: str) -> Optional[VersionedFile]:
             return VersionedFile(version, buffer.getvalue())
         elif status == Status.identified_ajt_script:
             buffer.write(line)
+        else:
+            status = Status.none
     return None
 
 
