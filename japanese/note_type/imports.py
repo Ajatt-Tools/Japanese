@@ -31,7 +31,7 @@ def find_ajt_japanese_js_import(template_text: str) -> Optional[VersionedFile]:
     version: FileVersionTuple = UNK_VERSION
 
     for line in template_text.splitlines(keepends=True):
-        if line == "<script>\n":
+        if line.strip() == "<script>":
             status = Status.found_script
         elif (m := re.fullmatch(RE_AJT_JS_VERSION_COMMENT, line)) and status == Status.found_script:
             status = Status.identified_ajt_script
