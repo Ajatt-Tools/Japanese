@@ -115,7 +115,6 @@ def mingle_readings(words_furigana: list[str], *, sep: str = ", ") -> str:
     readings = ["辛[から]い", "辛[つら]い",]
     output = " 辛[から, つら]い"
     """
-
     assert len(words_furigana) > 1
 
     packs = []
