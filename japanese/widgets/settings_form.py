@@ -16,6 +16,7 @@ from ..config_view import (
     ContextMenuConfigView,
     DefinitionsConfigView,
     FuriganaConfigView,
+    LookupDialogPitchOutputFormat,
     PitchConfigView,
     ReadingsDiscardMode,
     SvgPitchGraphOptionsConfigView,
@@ -195,9 +196,7 @@ class PitchSettingsForm(MultiColumnSettingsForm):
         self._widgets.reading_separator = NarrowLineEdit(self._config.reading_separator)
         self._widgets.word_separator = NarrowLineEdit(self._config.word_separator)
         self._widgets.lookup_shortcut = ShortCutGrabButton(initial_value=self._config.lookup_shortcut)
-        self._widgets.lookup_pitch_format = EnumSelectCombo(
-            enum_type=PitchOutputFormat, initial_value=self._config.lookup_pitch_format
-        )
+        self._widgets.lookup_pitch_format = EnumSelectCombo(initial_value=self._config.lookup_pitch_format)
         self._widgets.blocklisted_words = WordsEdit(initial_values=self._config.blocklisted_words)
 
     def _add_tooltips(self) -> None:

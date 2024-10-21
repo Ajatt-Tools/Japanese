@@ -12,7 +12,7 @@ from aqt import mw
 from .ajt_common.addon_config import AddonConfigManager, ConfigSubViewBase
 from .audio_manager.abstract import AudioSettingsConfigViewABC
 from .audio_manager.basic_types import AudioSourceConfig
-from .helpers.profiles import PitchOutputFormat, Profile
+from .helpers.profiles import Profile
 from .helpers.sakura_client import AddDefBehavior, DictName, SearchType
 from .helpers.tokens import RE_FLAGS
 from .mecab_controller.kana_conv import to_katakana
@@ -86,6 +86,12 @@ class FuriganaConfigView(PitchAndFuriganaCommon):
         return self.maximum_results > 1 and (word not in self.mecab_only)
 
 
+@enum.unique
+class LookupDialogPitchOutputFormat(enum.Enum):
+    html = enum.auto()
+    svg = enum.auto()
+
+
 @final
 class PitchConfigView(PitchAndFuriganaCommon):
     _view_key: str = "pitch_accent"
@@ -111,8 +117,11 @@ class PitchConfigView(PitchAndFuriganaCommon):
         return HTMLPitchPatternStyle[self["html_style"]]
 
     @property
-    def lookup_pitch_format(self) -> PitchOutputFormat:
-        return PitchOutputFormat[self["lookup_pitch_format"]]
+    def lookup_pitch_format(self) -> LookupDialogPitchOutputFormat:
+        try:
+            return LookupDialogPitchOutputFormat[self["lookup_pitch_format"]]
+        except KeyError:
+            return LookupDialogPitchOutputFormat.html
 
 
 @final
