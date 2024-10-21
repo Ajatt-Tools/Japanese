@@ -50,6 +50,11 @@ AccentDict = NewType("AccentDict", dict[str, Sequence[FormattedEntry]])
 
 
 class OrderedSet(collections.OrderedDict, typing.Sequence[Stored]):
+    def __init__(self, iterable: typing.Optional[Iterable[Stored]] = None) -> None:
+        super().__init__()
+        if iterable is not None:
+            self.update(self.fromkeys(iterable))
+
     def add(self, value: Stored):
         self[value] = None
 
