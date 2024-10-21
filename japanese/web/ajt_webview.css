@@ -34,28 +34,28 @@ a {
 
 .keyword {
     color: #582020;
+    background-color: rgba(87, 43, 43, 0.1);
 }
 
 .keyword,
-.pitch_accents {
-    margin-top: 0px;
-    margin-bottom: 0px;
-    background-color: rgba(87, 43, 43, 0.1);
-    padding: 0.2rem;
+.pitch_accents li {
+    padding: 0.4rem 0.2rem;
 }
 
-.keyword:nth-of-type(2n),
-.pitch_accents:nth-of-type(2n) {
+.pitch_accents {
     background-color: rgba(144, 148, 113, 0.1);
 }
 
-ol,
-ul {
-    padding-left: 1.5em;
+.pitch_accents li {
+    list-style: none;
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: flex-start;
+    column-gap: 0.4rem;
 }
 
-li + li {
-    margin-top: 0.4rem;
+.pitch_accents li:nth-of-type(2n) {
+    background-color: rgba(165, 134, 126, 0.1);
 }
 
 .pitch_number {
