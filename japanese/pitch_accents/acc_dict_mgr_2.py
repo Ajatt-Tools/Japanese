@@ -1,6 +1,6 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
-
+import collections
 import os
 import pathlib
 import typing
@@ -11,7 +11,14 @@ from aqt.operations import QueryOp
 from ..helpers.file_ops import rm_file, touch
 from ..helpers.sqlite3_buddy import Sqlite3Buddy
 from ..mecab_controller.kana_conv import to_katakana
-from .common import AccDictProvider, AccDictRawTSVEntry, FormattedEntry, get_tsv_reader
+from ..mecab_controller.unify_readings import literal_pronunciation as pr
+from .common import (
+    AccDictProvider,
+    AccDictRawTSVEntry,
+    AccentDict,
+    FormattedEntry,
+    get_tsv_reader,
+)
 from .consts import (
     FORMATTED_ACCENTS_TSV,
     FORMATTED_ACCENTS_UPDATED,
@@ -105,6 +112,24 @@ def iter_formatted_rows(tsv_file_path: pathlib.Path) -> typing.Iterable[AccDictR
         yield from get_tsv_reader(f)
 
 
+def filter_entries(entries: typing.Sequence[FormattedEntry], kana_reading: str) -> typing.Iterable[FormattedEntry]:
+    return (
+        entry
+        for entry in entries
+        # if there's furigana, and it doesn't match the entry, skip.
+        if not kana_reading or pr(entry.katakana_reading) == pr(kana_reading)
+    )
+
+
+def extend_acc_dict(
+    ret: AccentDict,
+    headword: str,
+    entries: typing.Sequence[FormattedEntry],
+    expr_reading: str,
+) -> None:
+    ret.setdefault(headword, []).extend(filter_entries(entries, expr_reading))
+
+
 class SqliteAccDictReader:
     _db: Sqlite3Buddy
 
@@ -116,6 +141,10 @@ class SqliteAccDictReader:
             FormattedEntry(*row)
             for row in self._db.search_pitch_accents(to_katakana(expr), prefer_provider_name=AccDictProvider.user)
         ]
+
+    def look_up_and_extend(self, acc_dict: AccentDict, expr: str, expr_reading: str = "") -> None:
+        if entries := self.look_up(expr):
+            extend_acc_dict(acc_dict, expr, entries, expr_reading)
 
 
 class AccentDictManager2:

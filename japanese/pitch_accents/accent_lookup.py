@@ -14,7 +14,7 @@ from ..mecab_controller import MecabController
 from ..mecab_controller.lru_cache import LRUCache
 from ..mecab_controller.unify_readings import literal_pronunciation as pr
 from .acc_dict_mgr_2 import SqliteAccDictReader
-from .common import AccentDict
+from .common import AccentDict, FormattedEntry, OrderedSet
 
 
 def html_to_text_line(text: str) -> str:
@@ -101,21 +101,15 @@ class AccentLookup:
         reader = SqliteAccDictReader(self.db)
 
         # Look up the main expression.
-        if lookup_main := reader.look_up(expr):
-            ret.setdefault(expr, []).extend(
-                entry
-                for entry in lookup_main
-                # if there's furigana, and it doesn't match the entry, skip.
-                if not expr_reading or pr(entry.katakana_reading) == pr(expr_reading)
-            )
+        reader.look_up_and_extend(ret, expr, expr_reading)
 
         # If there's furigana, e.g. when using the VocabFurigana field as the source,
         # or if the kana reading of the full expression can be sourced from mecab,
         # and the user wants to perform kana lookups, then try the reading.
         if not ret and self._cfg.pitch_accent.kana_lookups:
             expr_reading = expr_reading or self.single_word_reading(expr)
-            if expr_reading and (lookup_reading := reader.look_up(expr_reading)):
-                ret.setdefault(expr, []).extend(lookup_reading)
+            if expr_reading:
+                reader.look_up_and_extend(ret, expr_reading)
 
         # Try to split the expression in various ways (punctuation, whitespace, etc.),
         # and check if any of those brings results.
