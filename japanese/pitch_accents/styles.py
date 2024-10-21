@@ -91,7 +91,8 @@ STYLE_MAP[HTMLPitchPatternStyle.u_biq_color_coded] = {
 # u-biq: style used on the u-biq website, https://accent.u-biq.org/
 # This version has orange lines (like the original).
 STYLE_MAP[HTMLPitchPatternStyle.u_biq] = {
-    k: v.replace(PITCH_COLOR_PLACEHOLDER, "#FF6633") for k, v in STYLE_MAP[HTMLPitchPatternStyle.u_biq_color_coded].items()
+    k: v.replace(PITCH_COLOR_PLACEHOLDER, "#FF6633")
+    for k, v in STYLE_MAP[HTMLPitchPatternStyle.u_biq_color_coded].items()
 }
 
 # kanjium: style which is part of the kanjium project https://github.com/mifunetoshiro/kanjium

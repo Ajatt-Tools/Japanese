@@ -13,19 +13,37 @@ from aqt.utils import restoreGeom, saveGeom, tooltip
 from aqt.webview import AnkiWebView
 
 from .ajt_common.about_menu import menu_root_entry, tweak_window
+from .config_view import LookupDialogPitchOutputFormat
 from .config_view import config_view as cfg
 from .helpers.consts import ADDON_NAME
 from .helpers.sqlite3_buddy import Sqlite3Buddy
 from .helpers.tokens import clean_furigana
 from .helpers.webview_utils import anki_addon_web_relpath
-from .pitch_accents.common import AccentDict, FormattedEntry
-from .reading import format_pronunciations, get_notation, lookup
+from .pitch_accents.common import AccentDict, FormattedEntry, OrderedSet
+from .pitch_accents.styles import HTMLPitchPatternStyle
+from .reading import format_pronunciations, lookup, svg_graph_maker, update_html
 
 ACTION_NAME = "Pitch Accent lookup"
 
 
-def entries_to_html(entries: Sequence[FormattedEntry]) -> Sequence[str]:
-    return tuple(dict.fromkeys(get_notation(entry, mode=cfg.pitch_accent.lookup_pitch_format) for entry in entries))
+def html_style() -> HTMLPitchPatternStyle:
+    style = cfg.pitch_accent.html_style
+    if style is HTMLPitchPatternStyle.none:
+        # 'none' can't be selected here because it is intended for anki card customization.
+        return HTMLPitchPatternStyle.u_biq_color_coded
+    return style
+
+
+def get_notation(entry: FormattedEntry, mode: LookupDialogPitchOutputFormat) -> str:
+    if mode == LookupDialogPitchOutputFormat.html:
+        return f'<span class="pitch_html">{update_html(entry, pitch_accent_style=html_style())}</span> {entry.pitch_number_html}'
+    elif mode == LookupDialogPitchOutputFormat.svg:
+        return f"{svg_graph_maker.make_graph(entry)} {entry.pitch_number_html}"
+    raise RuntimeError("Unreachable.")
+
+
+def entries_to_html(entries: Sequence[FormattedEntry]) -> OrderedSet[str]:
+    return OrderedSet(get_notation(entry, mode=cfg.pitch_accent.lookup_pitch_format) for entry in entries)
 
 
 class ViewPitchAccentsDialog(QDialog):

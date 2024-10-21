@@ -20,7 +20,11 @@ from .pitch_accents.basic_types import (
     pitch_type_from_pitch_num,
 )
 from .pitch_accents.common import AccentDict, FormattedEntry
-from .pitch_accents.styles import PITCH_COLOR_PLACEHOLDER, STYLE_MAP, HTMLPitchPatternStyle
+from .pitch_accents.styles import (
+    PITCH_COLOR_PLACEHOLDER,
+    STYLE_MAP,
+    HTMLPitchPatternStyle,
+)
 from .pitch_accents.svg_graphs import SvgPitchGraphMaker
 
 # Lookup
@@ -43,11 +47,11 @@ def pitch_color_from_entry(entry: FormattedEntry) -> str:
         return PitchColor.unknown.value
 
 
-def update_html(entry: FormattedEntry, with_number: bool = False) -> str:
+def update_html(entry: FormattedEntry, pitch_accent_style: HTMLPitchPatternStyle) -> str:
     html_notation = convert_to_inline_style(
-        f"{entry.html_notation} {entry.pitch_number_html}" if with_number else entry.html_notation,
+        entry.html_notation,
         pitch_color=pitch_color_from_entry(entry),
-        pitch_accent_style=cfg.pitch_accent.html_style,
+        pitch_accent_style=pitch_accent_style,
     )
     if cfg.pitch_accent.output_hiragana:
         html_notation = to_hiragana(html_notation)
@@ -56,11 +60,11 @@ def update_html(entry: FormattedEntry, with_number: bool = False) -> str:
 
 def get_notation(entry: FormattedEntry, mode: PitchOutputFormat) -> str:
     if mode == PitchOutputFormat.html:
-        return update_html(entry)
+        return update_html(entry, pitch_accent_style=cfg.pitch_accent.html_style)
     elif mode == PitchOutputFormat.number:
         return entry.pitch_number
     elif mode == PitchOutputFormat.html_and_number:
-        return update_html(entry, with_number=True)
+        return f"{update_html(entry, pitch_accent_style=cfg.pitch_accent.html_style)} {entry.pitch_number_html}"
     elif mode == PitchOutputFormat.svg:
         return svg_graph_maker.make_graph(entry)
     raise RuntimeError("Unreachable.")
