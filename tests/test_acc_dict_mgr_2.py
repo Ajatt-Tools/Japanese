@@ -26,12 +26,12 @@ class TestAccDictManager:
         reader = SqliteAccDictReader(tmp_db_connection)
         yield reader
 
-    def test_empty(self, faux_writer) -> None:
+    def test_empty(self, faux_writer: SqliteAccDictWriter) -> None:
         w = faux_writer
         assert w.is_table_filled() is False
         assert w.is_table_up_to_date() is False
 
-    def test_table_recreate(self, faux_writer) -> None:
+    def test_table_recreate(self, faux_writer: SqliteAccDictWriter) -> None:
         w = faux_writer
         assert w.is_table_filled() is False
         assert w.is_table_up_to_date() is False
@@ -39,7 +39,7 @@ class TestAccDictManager:
         assert w.is_table_filled() is False
         assert w.is_table_up_to_date() is False
 
-    def test_table_ensure(self, faux_writer) -> None:
+    def test_table_ensure(self, faux_writer: SqliteAccDictWriter) -> None:
         w = faux_writer
         assert w.is_table_filled() is False
         assert w.is_table_up_to_date() is False
@@ -47,12 +47,12 @@ class TestAccDictManager:
         assert w.is_table_filled() is True
         assert w.is_table_up_to_date() is True
 
-    def test_table_filled(self, faux_writer) -> None:
+    def test_table_filled(self, faux_writer: SqliteAccDictWriter) -> None:
         w = faux_writer
         assert w.is_table_filled() is True
         assert w.is_table_up_to_date() is True
 
-    def test_pitch_lookup(self, faux_reader) -> None:
+    def test_pitch_lookup(self, faux_reader: SqliteAccDictReader) -> None:
         r = faux_reader
         result = r.look_up("僕")
         assert list(result) == [
@@ -103,7 +103,7 @@ class TestAccDictManager:
             ),
         ]
 
-    def test_table_clear(self, faux_writer) -> None:
+    def test_table_clear(self, faux_writer: SqliteAccDictWriter) -> None:
         w = faux_writer
         assert w.is_table_filled() is True
         assert w.is_table_up_to_date() is True
