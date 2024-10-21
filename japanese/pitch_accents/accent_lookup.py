@@ -85,8 +85,7 @@ class AccentLookup:
         to a list of html-styled pronunciations.
         """
 
-        ret: AccentDict
-        ret = AccentDict(OrderedDict())
+        ret: AccentDict = OrderedDict()
 
         # Sanitize input
         if sanitize:
@@ -131,8 +130,7 @@ class AccentLookup:
         The part must be already sanitized.
         (If enabled and) if the part is not present in the accent dictionary, Mecab is used to split it further.
         """
-        ret: AccentDict
-        ret = AccentDict(OrderedDict())
+        ret: AccentDict = OrderedDict()
         # Sanitize is always set to False because the part must be already sanitized.
         ret.update(self.get_pronunciations(expr_part, sanitize=False, recurse=False))
 

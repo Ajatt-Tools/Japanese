@@ -46,8 +46,7 @@ class FormattedEntry(NamedTuple):
         return f'<span class="pitch_number">{self.pitch_number}</span>'
 
 
-AccentDict = NewType("AccentDict", dict[str, Sequence[FormattedEntry]])
-
+AccentDict = dict[str, list[FormattedEntry]]
 
 class OrderedSet(collections.OrderedDict, typing.Sequence[Stored]):
     def __init__(self, iterable: typing.Optional[Iterable[Stored]] = None) -> None:
