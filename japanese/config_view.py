@@ -414,6 +414,13 @@ class JapaneseConfig(AddonConfigManager):
     def show_welcome_guide(self, value: bool) -> None:
         self["show_welcome_guide"] = value
 
+    def del_deprecated_keys(self) -> None:
+        assert self.is_default is False
+        for key in tuple(self.config.keys()):
+            if key not in self.default_config:
+                del self.config[key]
+                print(f"removed deprecated config key: {key}")
+
 
 if mw:
     config_view = JapaneseConfig()

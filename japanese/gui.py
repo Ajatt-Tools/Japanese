@@ -660,6 +660,7 @@ class SettingsDialog(QDialog, MgrPropMixIn):
         cfg["audio_sources"] = [source.as_config_dict() for source in self._audio_sources_edit.iterateConfigs()]
         cfg["audio_settings"].update(self._audio_settings.as_dict())
         # Write the new data to disk
+        cfg.del_deprecated_keys()
         cfg.write_config()
         self._accents_override.save_to_disk()
         # Reload
