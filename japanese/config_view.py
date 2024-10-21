@@ -88,8 +88,8 @@ class FuriganaConfigView(PitchAndFuriganaCommon):
 
 @enum.unique
 class LookupDialogPitchOutputFormat(enum.Enum):
-    html = enum.auto()
     svg = enum.auto()
+    html = enum.auto()
 
 
 @final
@@ -121,7 +121,7 @@ class PitchConfigView(PitchAndFuriganaCommon):
         try:
             return LookupDialogPitchOutputFormat[self["lookup_pitch_format"]]
         except KeyError:
-            return LookupDialogPitchOutputFormat.html
+            return LookupDialogPitchOutputFormat.svg
 
 
 @final
