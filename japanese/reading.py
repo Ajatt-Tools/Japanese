@@ -20,14 +20,14 @@ from .pitch_accents.basic_types import (
     pitch_type_from_pitch_num,
 )
 from .pitch_accents.common import AccentDict, FormattedEntry
-from .pitch_accents.styles import PITCH_COLOR_PLACEHOLDER, STYLE_MAP, PitchPatternStyle
+from .pitch_accents.styles import PITCH_COLOR_PLACEHOLDER, STYLE_MAP, HTMLPitchPatternStyle
 from .pitch_accents.svg_graphs import SvgPitchGraphMaker
 
 # Lookup
 ##########################################################################
 
 
-def convert_to_inline_style(txt: str, pitch_color: str, pitch_accent_style: PitchPatternStyle) -> str:
+def convert_to_inline_style(txt: str, pitch_color: str, pitch_accent_style: HTMLPitchPatternStyle) -> str:
     """Map style classes to their user-configured inline versions."""
     for k, v in STYLE_MAP[pitch_accent_style].items():
         txt = txt.replace(k, v)

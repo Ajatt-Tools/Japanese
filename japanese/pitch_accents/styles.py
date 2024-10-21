@@ -5,7 +5,7 @@ import enum
 
 
 @enum.unique
-class PitchPatternStyle(enum.Enum):
+class HTMLPitchPatternStyle(enum.Enum):
     """
     Styles for HTML pitch patterns.
     """
@@ -42,11 +42,11 @@ class XmlTags:
 
 
 PITCH_COLOR_PLACEHOLDER = "[PITCH_COLOR]"
-STYLE_MAP: dict[PitchPatternStyle, dict[str, str]] = dict()
+STYLE_MAP: dict[HTMLPitchPatternStyle, dict[str, str]] = dict()
 
 # javdejong: style used in the original Japanese Pitch Accent Anki add-on.
 # Low accents aren't marked, high accents are marked with an overline.
-STYLE_MAP[PitchPatternStyle.javdejong] = {
+STYLE_MAP[HTMLPitchPatternStyle.javdejong] = {
     # low
     XmlTags.low_start: "",
     XmlTags.low_end: "",
@@ -72,8 +72,8 @@ STYLE_MAP[PitchPatternStyle.javdejong] = {
 
 # u-biq: style used on the u-biq website, https://accent.u-biq.org/
 # This version has color-coded lines.
-STYLE_MAP[PitchPatternStyle.u_biq_color_coded] = {
-    **STYLE_MAP[PitchPatternStyle.javdejong],
+STYLE_MAP[HTMLPitchPatternStyle.u_biq_color_coded] = {
+    **STYLE_MAP[HTMLPitchPatternStyle.javdejong],
     # low
     XmlTags.low_start: f'<span style="box-shadow: inset 0px -2px 0 0px {PITCH_COLOR_PLACEHOLDER};">',
     XmlTags.low_end: "</span>",
@@ -90,13 +90,13 @@ STYLE_MAP[PitchPatternStyle.u_biq_color_coded] = {
 
 # u-biq: style used on the u-biq website, https://accent.u-biq.org/
 # This version has orange lines (like the original).
-STYLE_MAP[PitchPatternStyle.u_biq] = {
-    k: v.replace(PITCH_COLOR_PLACEHOLDER, "#FF6633") for k, v in STYLE_MAP[PitchPatternStyle.u_biq_color_coded].items()
+STYLE_MAP[HTMLPitchPatternStyle.u_biq] = {
+    k: v.replace(PITCH_COLOR_PLACEHOLDER, "#FF6633") for k, v in STYLE_MAP[HTMLPitchPatternStyle.u_biq_color_coded].items()
 }
 
 # kanjium: style which is part of the kanjium project https://github.com/mifunetoshiro/kanjium
-STYLE_MAP[PitchPatternStyle.kanjium] = {
-    **STYLE_MAP[PitchPatternStyle.javdejong],
+STYLE_MAP[HTMLPitchPatternStyle.kanjium] = {
+    **STYLE_MAP[HTMLPitchPatternStyle.javdejong],
     # low
     XmlTags.low_start: "",
     XmlTags.low_end: "",
@@ -113,7 +113,7 @@ STYLE_MAP[PitchPatternStyle.kanjium] = {
 
 # none: use class names.
 # The user can configure their own styles in the Styling section of the card template.
-STYLE_MAP[PitchPatternStyle.none] = {
+STYLE_MAP[HTMLPitchPatternStyle.none] = {
     # low
     XmlTags.low_start: '<span class="low">',
     XmlTags.low_end: "</span>",

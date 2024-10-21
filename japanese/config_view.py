@@ -16,7 +16,7 @@ from .helpers.profiles import PitchOutputFormat, Profile
 from .helpers.sakura_client import AddDefBehavior, DictName, SearchType
 from .helpers.tokens import RE_FLAGS
 from .mecab_controller.kana_conv import to_katakana
-from .pitch_accents.styles import PitchPatternStyle
+from .pitch_accents.styles import HTMLPitchPatternStyle
 
 RE_CFG_WORD_SEP = re.compile(r"[\n;、, ]+", flags=RE_FLAGS)
 
@@ -107,8 +107,8 @@ class PitchConfigView(PitchAndFuriganaCommon):
         return self["word_separator"]
 
     @property
-    def html_style(self) -> PitchPatternStyle:
-        return PitchPatternStyle[self["html_style"]]
+    def html_style(self) -> HTMLPitchPatternStyle:
+        return HTMLPitchPatternStyle[self["html_style"]]
 
     @property
     def lookup_pitch_format(self) -> PitchOutputFormat:

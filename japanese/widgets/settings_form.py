@@ -23,7 +23,7 @@ from ..config_view import (
 from ..helpers.misc import split_list
 from ..helpers.profiles import PitchOutputFormat
 from ..helpers.sakura_client import AddDefBehavior, DictName, SearchType
-from ..pitch_accents.styles import PitchPatternStyle
+from ..pitch_accents.styles import HTMLPitchPatternStyle
 from .addon_opts import (
     FieldNameSelector,
     NarrowLineEdit,
@@ -189,7 +189,7 @@ class PitchSettingsForm(MultiColumnSettingsForm):
             initial_value=self._config.discard_mode,
         )
         self._widgets.html_style = EnumSelectCombo(
-            enum_type=PitchPatternStyle,
+            enum_type=HTMLPitchPatternStyle,
             initial_value=self._config.html_style,
         )
         self._widgets.reading_separator = NarrowLineEdit(self._config.reading_separator)
