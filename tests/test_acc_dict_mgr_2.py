@@ -77,7 +77,7 @@ class TestAccDictManager:
             ),
         ]
 
-    def test_pitch_lookup_overridden_by_user(self, faux_reader) -> None:
+    def test_pitch_lookup_overridden_by_user(self, faux_reader: SqliteAccDictReader) -> None:
         """
         There's some fake pitch data in the test user's file.
         It should properly override the bundled data.
