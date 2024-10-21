@@ -5,8 +5,8 @@ import pytest
 from japanese.audio_manager.audio_manager import AudioSourceManagerFactory
 from japanese.audio_manager.source_manager import AudioSourceManager, TotalAudioStats
 from japanese.helpers.sqlite3_buddy import Sqlite3Buddy
+from tests.conftest import tmp_sqlite3_db_path
 from tests.no_anki_config import no_anki_config
-from tests.sqlite3_buddy import tmp_sqlite3_db_path
 
 
 class NoAnkiAudioSourceManagerFactory(AudioSourceManagerFactory):

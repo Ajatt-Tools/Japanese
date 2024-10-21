@@ -14,7 +14,7 @@ from japanese.widgets.pitch_override_table import (
     PitchAccentTableRow,
     read_user_tsv_file,
 )
-from tests.sqlite3_buddy import tmp_user_accents_file
+from tests.conftest import tmp_user_accents_file
 
 
 def test_user_tsv_entry() -> None:

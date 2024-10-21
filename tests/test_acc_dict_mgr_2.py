@@ -10,12 +10,7 @@ from japanese.pitch_accents.acc_dict_mgr_2 import (
     SqliteAccDictWriter,
 )
 from japanese.pitch_accents.common import FormattedEntry
-from tests.sqlite3_buddy import (
-    tmp_db_connection,
-    tmp_sqlite3_db_path,
-    tmp_upd_file,
-    tmp_user_accents_file,
-)
+from tests.conftest import tmp_db_connection, tmp_upd_file, tmp_user_accents_file
 
 
 class TestAccDictManager:

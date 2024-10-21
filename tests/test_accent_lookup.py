@@ -13,13 +13,13 @@ from japanese.helpers.tokens import HTML_AND_MEDIA_REGEX, clean_furigana
 from japanese.mecab_controller import MecabController, to_katakana
 from japanese.pitch_accents.acc_dict_mgr_2 import AccentDictManager2
 from japanese.pitch_accents.accent_lookup import AccentLookup
-from tests.no_anki_config import NoAnkiConfigView, no_anki_config
-from tests.sqlite3_buddy import (
+from tests.conftest import (
     tmp_db_connection,
     tmp_sqlite3_db_path,
     tmp_upd_file,
     tmp_user_accents_file,
 )
+from tests.no_anki_config import NoAnkiConfigView, no_anki_config
 
 try:
     from itertools import pairwise
