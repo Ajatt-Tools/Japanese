@@ -93,10 +93,10 @@ class ViewPitchAccentsDialog(QDialog):
         for word, entries in self._pronunciations.items():
             html.write(f'<div class="keyword">{word}</div>')
             html.write('<div class="pitch_accents">')
-            html.write("<ol>")
+            html.write("<ul>")
             for entry in entries_to_html(entries):
                 html.write(f"<li>{entry}</li>")
-            html.write("</ol>")
+            html.write("</ul>")
             html.write(f"</div>")
         html.write("</main>")
         return html.getvalue()
