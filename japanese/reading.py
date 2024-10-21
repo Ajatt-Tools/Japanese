@@ -20,16 +20,16 @@ from .pitch_accents.basic_types import (
     pitch_type_from_pitch_num,
 )
 from .pitch_accents.common import AccentDict, FormattedEntry
-from .pitch_accents.styles import PITCH_COLOR_PLACEHOLDER, STYLE_MAP
+from .pitch_accents.styles import PITCH_COLOR_PLACEHOLDER, STYLE_MAP, PitchPatternStyle
 from .pitch_accents.svg_graphs import SvgPitchGraphMaker
 
 # Lookup
 ##########################################################################
 
 
-def convert_to_inline_style(txt: str, pitch_color: str) -> str:
+def convert_to_inline_style(txt: str, pitch_color: str, pitch_accent_style: PitchPatternStyle) -> str:
     """Map style classes to their user-configured inline versions."""
-    for k, v in STYLE_MAP[cfg.pitch_accent.html_style].items():
+    for k, v in STYLE_MAP[pitch_accent_style].items():
         txt = txt.replace(k, v)
     txt = txt.replace(PITCH_COLOR_PLACEHOLDER, pitch_color)
     return txt
@@ -47,6 +47,7 @@ def update_html(entry: FormattedEntry, with_number: bool = False) -> str:
     html_notation = convert_to_inline_style(
         f"{entry.html_notation} {entry.pitch_number_html}" if with_number else entry.html_notation,
         pitch_color=pitch_color_from_entry(entry),
+        pitch_accent_style=cfg.pitch_accent.html_style,
     )
     if cfg.pitch_accent.output_hiragana:
         html_notation = to_hiragana(html_notation)
