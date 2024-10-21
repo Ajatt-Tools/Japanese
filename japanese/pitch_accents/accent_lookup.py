@@ -1,5 +1,6 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
+import typing
 from collections import OrderedDict
 from typing import Optional
 
@@ -26,11 +27,18 @@ def html_to_text_line(text: str) -> str:
         return text
 
 
+class LookupKeyTuple(typing.NamedTuple):
+    expr: str
+    sanitize: bool
+    recurse: bool
+    use_mecab: bool
+
+
 class AccentLookup:
     _cfg: JapaneseConfig
     _mecab: MecabController
     _db: Optional[Sqlite3Buddy]
-    _cache: LRUCache[tuple[str, bool, bool, bool], AccentDict] = LRUCache()
+    _cache: LRUCache[LookupKeyTuple, AccentDict] = LRUCache()
 
     def __init__(self, cfg: JapaneseConfig, mecab: MecabController, db: Optional[Sqlite3Buddy] = None) -> None:
         self._db = db
@@ -58,7 +66,7 @@ class AccentLookup:
     def get_pronunciations(
         self, expr: str, *, sanitize: bool = True, recurse: bool = True, use_mecab: bool = True
     ) -> AccentDict:
-        key = (expr, sanitize, recurse, use_mecab)
+        key = LookupKeyTuple(expr, sanitize, recurse, use_mecab)
         try:
             return self._cache[key]
         except KeyError:
