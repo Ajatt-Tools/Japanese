@@ -64,7 +64,12 @@ class AccentLookup:
         )
 
     def get_pronunciations(
-        self, expr: str, *, sanitize: bool = True, recurse: bool = True, use_mecab: bool = True
+        self,
+        expr: str,
+        *,
+        sanitize: bool = True,
+        recurse: bool = True,
+        use_mecab: bool = True,
     ) -> AccentDict:
         key = LookupKeyTuple(expr, sanitize, recurse, use_mecab)
         try:
@@ -76,7 +81,12 @@ class AccentLookup:
             )
 
     def _get_pronunciations(
-        self, expr: str, *, sanitize: bool = True, recurse: bool = True, use_mecab: bool = True
+        self,
+        expr: str,
+        *,
+        sanitize: bool = True,
+        recurse: bool = True,
+        use_mecab: bool = True,
     ) -> AccentDict:
         """
         Search pitch accent info (pronunciations) for a particular expression.
