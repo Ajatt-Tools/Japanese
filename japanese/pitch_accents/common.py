@@ -48,6 +48,7 @@ class FormattedEntry(NamedTuple):
 
 AccentDict = dict[str, list[FormattedEntry]]
 
+
 class OrderedSet(collections.OrderedDict, typing.Sequence[Stored]):
     def __init__(self, iterable: typing.Optional[Iterable[Stored]] = None) -> None:
         super().__init__()

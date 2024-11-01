@@ -77,7 +77,12 @@ class AccentLookup:
         except KeyError:
             return self._cache.setdefault(
                 key,
-                self._get_pronunciations(expr, sanitize=sanitize, recurse=recurse, use_mecab=use_mecab),
+                self._get_pronunciations(
+                    expr,
+                    sanitize=sanitize,
+                    recurse=recurse,
+                    use_mecab=use_mecab,
+                ),
             )
 
     def _get_pronunciations(
@@ -136,20 +141,38 @@ class AccentLookup:
         """
         ret: AccentDict = OrderedDict()
         # Sanitize is always set to False because the part must be already sanitized.
-        ret.update(self.get_pronunciations(expr_part, sanitize=False, recurse=False))
+        ret.update(
+            self.get_pronunciations(
+                expr_part,
+                sanitize=False,
+                recurse=False,
+            )
+        )
 
         # Only if lookups were not successful, we try splitting with Mecab
         if not ret and use_mecab is True:
             for out in self._mecab.translate(expr_part):
                 # Avoid infinite recursion by saying that we should not try
                 # Mecab again if we do not find any matches for this sub-expression.
-                ret.update(self.get_pronunciations(out.headword, sanitize=False, recurse=False))
+                ret.update(
+                    self.get_pronunciations(
+                        out.headword,
+                        sanitize=False,
+                        recurse=False,
+                    )
+                )
 
                 # If everything failed, try katakana lookups.
                 # Katakana lookups are possible because of the additional key in the pitch accents dictionary.
                 # If the word was in conjugated form, this lookup will also fail.
                 if out.headword not in ret and out.katakana_reading and self._cfg.pitch_accent.kana_lookups is True:
-                    ret.update(self.get_pronunciations(out.katakana_reading, sanitize=False, recurse=False))
+                    ret.update(
+                        self.get_pronunciations(
+                            out.katakana_reading,
+                            sanitize=False,
+                            recurse=False,
+                        )
+                    )
         return ret
 
     def single_word_reading(self, word: str) -> str:
