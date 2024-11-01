@@ -77,6 +77,55 @@ class TestAccDictManager:
             ),
         ]
 
+    def test_pitch_lookup_as_dict(self, faux_reader: SqliteAccDictReader) -> None:
+        r = faux_reader
+        result = r.look_up_grouped("あくび")
+        assert result == {
+            "欠伸": [
+                FormattedEntry(
+                    katakana_reading="アクビ",
+                    html_notation="<low_rise>ア</low_rise><high>クビ</high>",
+                    pitch_number="0",
+                )
+            ],
+            "悪日": [
+                FormattedEntry(
+                    katakana_reading="アクビ",
+                    html_notation="<high_drop>ア</high_drop><low>クビ</low>",
+                    pitch_number="1",
+                ),
+                FormattedEntry(
+                    katakana_reading="アクビ",
+                    html_notation="<low_rise>ア</low_rise><high_drop>ク</high_drop><low>ビ</low>",
+                    pitch_number="2",
+                ),
+            ],
+            "アクビ": [
+                FormattedEntry(
+                    katakana_reading="アクビ",
+                    html_notation="<low_rise>ア</low_rise><high>クビ</high>",
+                    pitch_number="0",
+                ),
+                FormattedEntry(
+                    katakana_reading="アクビ",
+                    html_notation="<high_drop>ア</high_drop><low>クビ</low>",
+                    pitch_number="1",
+                ),
+                FormattedEntry(
+                    katakana_reading="アクビ",
+                    html_notation="<low_rise>ア</low_rise><high_drop>ク</high_drop><low>ビ</low>",
+                    pitch_number="2",
+                ),
+            ],
+            "欠": [
+                FormattedEntry(
+                    katakana_reading="アクビ",
+                    html_notation="<low_rise>ア</low_rise><high>クビ</high>",
+                    pitch_number="0",
+                )
+            ],
+        }
+
     def test_pitch_lookup_overridden_by_user(self, faux_reader: SqliteAccDictReader) -> None:
         """
         There's some fake pitch data in the test user's file.
