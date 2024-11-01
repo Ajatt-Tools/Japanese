@@ -406,13 +406,17 @@ class Sqlite3Buddy:
             )
             self.con.commit()
 
-    def search_pitch_accents(self, word: Optional[str], prefer_provider_name: str) -> list[tuple[str, str, str]]:
+    PITCH_RETRIEVE_KEYS = ("katakana_reading", "html_notation", "pitch_number")
+
+    def search_pitch_accents(
+        self, word: Optional[str], prefer_provider_name: str, select_keys: Sequence[str] = PITCH_RETRIEVE_KEYS
+    ) -> list[Sequence[str]]:
         with cursor_buddy(self.con) as cur:
             # The user overrides the default (bundled) rows with their own data.
             # Return relevant rows from the user's data if they can be found.
             # Otherwise, return all results for the target word.
-            query = """
-            SELECT DISTINCT katakana_reading, html_notation, pitch_number FROM (
+            query = f"""
+            SELECT DISTINCT {', '.join(select_keys)} FROM (
                 WITH all_results AS (
                     SELECT * FROM pitch_accents_formatted
                     WHERE ( headword = ? OR katakana_reading = ? )
