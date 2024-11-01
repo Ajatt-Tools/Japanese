@@ -99,7 +99,7 @@ class ViewPitchAccentsDialog(QDialog):
 
     def lookup_pronunciations(self, search: str):
         with Sqlite3Buddy() as db:
-            self._pronunciations = lookup.with_new_buddy(db).get_pronunciations(search)
+            self._pronunciations = lookup.with_new_buddy(db).get_pronunciations(search, group_by_headword=True)
         return self
 
     def _format_html_result(self) -> str:

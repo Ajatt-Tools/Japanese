@@ -133,16 +133,38 @@ def extend_acc_dict(
 class SqliteAccDictReader:
     _db: Sqlite3Buddy
 
-    def __init__(self, db: Sqlite3Buddy) -> None:
+    def __init__(self, db: Sqlite3Buddy, group_by_headword: bool = False) -> None:
         self._db = db
+        self._group_by_headword = group_by_headword
 
-    def look_up(self, expr: str) -> typing.Sequence[FormattedEntry]:
+    def look_up(self, expr: str) -> list[FormattedEntry]:
         return [
             FormattedEntry(*row)
             for row in self._db.search_pitch_accents(to_katakana(expr), prefer_provider_name=AccDictProvider.user)
         ]
 
+    def look_up_grouped(self, expr: str) -> AccentDict:
+        headword_to_entries: collections.defaultdict[str, list[FormattedEntry]] = collections.defaultdict(list)
+        for headword, *entry in self._db.search_pitch_accents(
+            to_katakana(expr),
+            prefer_provider_name=AccDictProvider.user,
+            select_keys=("headword", *Sqlite3Buddy.PITCH_RETRIEVE_KEYS),
+        ):
+            headword_to_entries[headword].append(FormattedEntry(*entry))
+        return headword_to_entries
+
     def look_up_and_extend(self, acc_dict: AccentDict, expr: str, expr_reading: str = "") -> None:
+        if self._group_by_headword:
+            self._handle_grouped_lookup(acc_dict, expr, expr_reading)
+        else:
+            self._handle_direct_lookup(acc_dict, expr, expr_reading)
+
+    def _handle_grouped_lookup(self, acc_dict: AccentDict, expr: str, expr_reading: str) -> None:
+        if lookup_result := self.look_up_grouped(expr):
+            for headword, entries in lookup_result.items():
+                extend_acc_dict(acc_dict, headword, entries, expr_reading)
+
+    def _handle_direct_lookup(self, acc_dict: AccentDict, expr: str, expr_reading: str) -> None:
         if entries := self.look_up(expr):
             extend_acc_dict(acc_dict, expr, entries, expr_reading)
 

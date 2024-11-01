@@ -12,9 +12,8 @@ from ..helpers.sqlite3_buddy import Sqlite3Buddy
 from ..helpers.tokens import split_separators
 from ..mecab_controller import MecabController
 from ..mecab_controller.lru_cache import LRUCache
-from ..mecab_controller.unify_readings import literal_pronunciation as pr
 from .acc_dict_mgr_2 import SqliteAccDictReader
-from .common import AccentDict, FormattedEntry, OrderedSet
+from .common import AccentDict
 
 
 def html_to_text_line(text: str) -> str:
@@ -32,6 +31,7 @@ class LookupKeyTuple(typing.NamedTuple):
     sanitize: bool
     recurse: bool
     use_mecab: bool
+    group_by_headword: bool
 
 
 class AccentLookup:
@@ -70,8 +70,9 @@ class AccentLookup:
         sanitize: bool = True,
         recurse: bool = True,
         use_mecab: bool = True,
+        group_by_headword: bool = False,
     ) -> AccentDict:
-        key = LookupKeyTuple(expr, sanitize, recurse, use_mecab)
+        key = LookupKeyTuple(expr, sanitize, recurse, use_mecab, group_by_headword)
         try:
             return self._cache[key]
         except KeyError:
@@ -82,6 +83,7 @@ class AccentLookup:
                     sanitize=sanitize,
                     recurse=recurse,
                     use_mecab=use_mecab,
+                    group_by_headword=group_by_headword,
                 ),
             )
 
@@ -92,6 +94,7 @@ class AccentLookup:
         sanitize: bool = True,
         recurse: bool = True,
         use_mecab: bool = True,
+        group_by_headword: bool = False,
     ) -> AccentDict:
         """
         Search pitch accent info (pronunciations) for a particular expression.
@@ -113,7 +116,7 @@ class AccentLookup:
         if not expr or self._cfg.pitch_accent.is_blocklisted(expr):
             return ret
 
-        reader = SqliteAccDictReader(self.db)
+        reader = SqliteAccDictReader(self.db, group_by_headword=group_by_headword)
 
         # Look up the main expression.
         reader.look_up_and_extend(ret, expr, expr_reading)
@@ -130,10 +133,16 @@ class AccentLookup:
         # and check if any of those brings results.
         if not ret and recurse:
             for section in split_separators(expr):
-                ret.update(self._get_pronunciations_part(section, use_mecab=use_mecab))
+                ret.update(
+                    self._get_pronunciations_part(
+                        section,
+                        use_mecab=use_mecab,
+                        group_by_headword=group_by_headword,
+                    )
+                )
         return ret
 
-    def _get_pronunciations_part(self, expr_part: str, *, use_mecab: bool) -> AccentDict:
+    def _get_pronunciations_part(self, expr_part: str, *, use_mecab: bool, group_by_headword: bool) -> AccentDict:
         """
         Search pitch accent info (pronunciations) for a part of expression.
         The part must be already sanitized.
@@ -146,6 +155,7 @@ class AccentLookup:
                 expr_part,
                 sanitize=False,
                 recurse=False,
+                group_by_headword=group_by_headword,
             )
         )
 
@@ -159,6 +169,7 @@ class AccentLookup:
                         out.headword,
                         sanitize=False,
                         recurse=False,
+                        group_by_headword=group_by_headword,
                     )
                 )
 
@@ -171,6 +182,7 @@ class AccentLookup:
                             out.katakana_reading,
                             sanitize=False,
                             recurse=False,
+                            group_by_headword=group_by_headword,
                         )
                     )
         return ret
