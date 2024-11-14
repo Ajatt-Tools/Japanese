@@ -16,13 +16,10 @@ from ..config_view import (
     ContextMenuConfigView,
     DefinitionsConfigView,
     FuriganaConfigView,
-    LookupDialogPitchOutputFormat,
     PitchConfigView,
-    ReadingsDiscardMode,
     SvgPitchGraphOptionsConfigView,
 )
 from ..helpers.misc import split_list
-from ..helpers.profiles import PitchOutputFormat
 from ..helpers.sakura_client import AddDefBehavior, DictName, SearchType
 from ..pitch_accents.styles import HTMLPitchPatternStyle
 from .addon_opts import (
@@ -185,10 +182,6 @@ class PitchSettingsForm(MultiColumnSettingsForm):
         self._widgets.maximum_results = NarrowSpinBox(
             initial_value=self._config.maximum_results,
         )
-        self._widgets.discard_mode = EnumSelectCombo(
-            enum_type=ReadingsDiscardMode,
-            initial_value=self._config.discard_mode,
-        )
         self._widgets.html_style = EnumSelectCombo(
             enum_type=HTMLPitchPatternStyle,
             initial_value=self._config.html_style,
@@ -216,12 +209,6 @@ class PitchSettingsForm(MultiColumnSettingsForm):
         self._widgets.maximum_results.setToolTip(
             "Maximum number of results to output.\n" "Too many results are not informative and will bloat Anki cards."
         )
-        self._widgets.discard_mode.setToolTip(
-            "Approach used when the number of results exceeds the maximum number of results.\n"
-            "Keep first — Output only the first accent.\n"
-            "Discard extra — Output the first few accents, no more than the maximum number.\n"
-            "Discard all — Output nothing."
-        )
         self._widgets.lookup_shortcut.setToolTip("A keyboard shortcut for looking up selected text.")
         self._widgets.lookup_pitch_format.setToolTip(
             "Pitch output format used when the lookup window is shown.\n" "Has no effect on Profiles."
@@ -240,10 +227,6 @@ class FuriganaSettingsForm(MultiColumnSettingsForm):
     def _add_widgets(self) -> None:
         super()._add_widgets()
         self._widgets.maximum_results = NarrowSpinBox(initial_value=self._config.maximum_results)
-        self._widgets.discard_mode = EnumSelectCombo(
-            enum_type=ReadingsDiscardMode,
-            initial_value=self._config.discard_mode,
-        )
         self._widgets.reading_separator = NarrowLineEdit(self._config.reading_separator)
         self._widgets.blocklisted_words = WordsEdit(initial_values=self._config.blocklisted_words)
         self._widgets.mecab_only = WordsEdit(initial_values=self._config.mecab_only)
@@ -269,12 +252,6 @@ class FuriganaSettingsForm(MultiColumnSettingsForm):
         )
         self._widgets.maximum_results.setToolTip(
             "Maximum number of results to output.\n" "Too many results are not informative and will bloat Anki cards."
-        )
-        self._widgets.discard_mode.setToolTip(
-            "Approach used when the number of results exceeds the maximum number of results.\n"
-            "Keep first — Output only the first accent.\n"
-            "Discard extra — Output the first few accents, no more than the maximum number.\n"
-            "Discard all — Output nothing."
         )
 
 
