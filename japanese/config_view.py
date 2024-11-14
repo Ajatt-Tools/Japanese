@@ -48,13 +48,6 @@ class WordBlockListManager(ConfigSubViewBase):
         return False
 
 
-@enum.unique
-class ReadingsDiscardMode(enum.Enum):
-    keep_first = enum.auto()
-    discard_extra = enum.auto()
-    discard_all = enum.auto()
-
-
 class PitchAndFuriganaCommon(WordBlockListManager):
     @property
     def maximum_results(self) -> int:
@@ -63,10 +56,6 @@ class PitchAndFuriganaCommon(WordBlockListManager):
     @property
     def reading_separator(self) -> str:
         return self["reading_separator"]
-
-    @property
-    def discard_mode(self) -> ReadingsDiscardMode:
-        return ReadingsDiscardMode[self["discard_mode"]]
 
 
 @final
