@@ -143,6 +143,7 @@ TAPE_PAIRS: Final[frozenset[tuple[str, str]]] = frozenset(
         ("でき", "ん"),
         ("しや", "が"),
         ("が", "って"),
+        ("て", "くる"),
     )
 )
 DETACH_PAIRS: Final[frozenset[tuple[str, str]]] = frozenset(
