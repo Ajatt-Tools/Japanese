@@ -4,7 +4,7 @@ import dataclasses
 from collections.abc import Hashable, Iterable, Sequence
 from typing import Callable, Optional, TypeVar
 
-from ..config_view import FuriganaConfigView, JapaneseConfig, ReadingsDiscardMode
+from ..config_view import FuriganaConfigView, JapaneseConfig
 from ..helpers.common_kana import adjust_to_inflection
 from ..helpers.consts import LONG_VOWEL_MARK
 from ..helpers.mingle_readings import mingle_readings
@@ -22,25 +22,6 @@ from .color_code_wrapper import ColorCodeWrapper
 from .furigana_list import FuriganaList
 
 T = TypeVar("T")
-
-
-def discard_extra_readings(
-    readings: Sequence[str],
-    *,
-    max_results: int,
-    discard_mode: ReadingsDiscardMode,
-) -> Sequence[str]:
-    """Depending on the settings, if there are too many readings, discard some or all but the first."""
-    if max_results <= 0 or len(readings) <= max_results:
-        return readings
-    elif discard_mode == ReadingsDiscardMode.discard_extra:
-        return readings[:max_results]
-    elif discard_mode == ReadingsDiscardMode.keep_first:
-        return readings[:1]
-    elif discard_mode == ReadingsDiscardMode.discard_all:
-        return []
-    else:
-        raise ValueError(f"No handler for mode {discard_mode}.")
 
 
 def as_self(val):
@@ -185,11 +166,8 @@ class FuriganaGen:
         if is_kana_str(out.word) or self._fcfg.is_blocklisted(out.word):
             return out.word
 
-        readings = discard_extra_readings(
-            readings=self.unique_readings(self.all_hiragana_readings(out)),
-            max_results=self._fcfg.maximum_results,
-            discard_mode=self._fcfg.discard_mode,
-        )
+        readings = self.unique_readings(self.all_hiragana_readings(out))
+        readings = readings[: self._fcfg.maximum_results]
 
         if not readings:
             return out.word

@@ -7,7 +7,7 @@ from typing import Optional
 from aqt import gui_hooks
 
 from .config_view import config_view as cfg
-from .furigana.gen_furigana import FuriganaGen, discard_extra_readings
+from .furigana.gen_furigana import FuriganaGen
 from .helpers.profiles import ColorCodePitchFormat, PitchOutputFormat
 from .helpers.sqlite3_buddy import Sqlite3Buddy
 from .mecab_controller.kana_conv import to_hiragana
@@ -82,11 +82,9 @@ def entries_to_html(
     """
     Convert entries to HTML, sort and remove duplicates.
     """
-    return discard_extra_readings(
-        tuple(dict.fromkeys(get_notation(entry, output_format) for entry in sort_entries(entries))),
-        max_results=max_results or cfg.pitch_accent.maximum_results,
-        discard_mode=cfg.pitch_accent.discard_mode,
-    )
+    readings = tuple(dict.fromkeys(get_notation(entry, output_format) for entry in sort_entries(entries)))
+    max_results = max_results or cfg.pitch_accent.maximum_results
+    return readings[:max_results]
 
 
 def format_pronunciations(
