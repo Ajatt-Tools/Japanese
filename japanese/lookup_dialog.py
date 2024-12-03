@@ -19,6 +19,7 @@ from .helpers.consts import ADDON_NAME
 from .helpers.sqlite3_buddy import Sqlite3Buddy
 from .helpers.tokens import clean_furigana
 from .helpers.webview_utils import anki_addon_web_relpath
+from .mecab_controller import to_hiragana
 from .pitch_accents.common import AccentDict, FormattedEntry, OrderedSet
 from .pitch_accents.styles import HTMLPitchPatternStyle
 from .reading import format_pronunciations, lookup, svg_graph_maker, update_html
@@ -109,7 +110,7 @@ class ViewPitchAccentsDialog(QDialog):
         html = io.StringIO()
         html.write('<main class="ajt__pitch_lookup">')
         for word, entries in self._pronunciations.items():
-            html.write(f'<div class="keyword">{word}</div>')
+            html.write(f'<div class="keyword">{to_hiragana(word)}</div>')
             html.write('<div class="pitch_accents">')
             html.write("<ul>")
             for entry in entries_to_html(entries):
