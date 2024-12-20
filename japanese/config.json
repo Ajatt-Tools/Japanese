@@ -75,7 +75,8 @@
     "to_half_width_katakana": true,
     "literal_pronunciation": true,
     "look_up_word": true,
-    "browser_search": true
+    "browser_search": true,
+    "remove_spaces": true
   },
   "toolbar": {
     "generate_all_button": {

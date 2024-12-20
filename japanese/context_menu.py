@@ -2,6 +2,7 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import abc
+import re
 from typing import Optional
 
 import aqt
@@ -135,6 +136,18 @@ class BrowserSearch(ContextMenuAction):
         browser = aqt.dialogs.open("Browser", aqt.mw)  # browser requires mw (AnkiQt) to be passed as parent
         browser.activateWindow()
         browser.search_for(search_text)
+
+
+class RemoveSpaces(ContextMenuAction):
+    key = "remove_spaces"
+    label = "Remove all spaces"
+    _re_space = re.compile(r'\s+', flags=re.MULTILINE|re.IGNORECASE)
+
+    def action(self, text: str) -> str:
+        """
+        Remove all spaces from the text.
+        """
+        return re.sub(self._re_space, "", text)
 
 
 def add_editor_context_menu_items(webview: EditorWebView, menu: QMenu) -> None:

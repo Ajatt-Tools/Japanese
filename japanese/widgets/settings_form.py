@@ -84,16 +84,6 @@ class SettingsForm(QWidget):
         return layout
 
 
-class ContextMenuSettingsForm(SettingsForm):
-    _config: ContextMenuConfigView
-    _title: str = "Context menu"
-
-    def _add_tooltips(self):
-        super()._add_tooltips()
-        for action in self._widgets.__dict__.values():
-            action.setToolTip("Show this action in the context menu.")
-
-
 class DefinitionsSettingsForm(SettingsForm):
     _config: DefinitionsConfigView
     _title: str = "Add definition"
@@ -171,6 +161,17 @@ class MultiColumnSettingsForm(SettingsForm):
             if self._equal_col_width:
                 layout.setStretch(index, 1)
         return layout
+
+
+class ContextMenuSettingsForm(MultiColumnSettingsForm):
+    _columns: int = 2
+    _config: ContextMenuConfigView
+    _title: str = "Context menu"
+
+    def _add_tooltips(self):
+        super()._add_tooltips()
+        for action in self._widgets.__dict__.values():
+            action.setToolTip("Show this action in the context menu.")
 
 
 class PitchSettingsForm(MultiColumnSettingsForm):

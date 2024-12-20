@@ -616,6 +616,9 @@ class SettingsDialog(QDialog, MgrPropMixIn):
         layout.addWidget(self._toolbar_settings, 0, 0, 1, -1)
         layout.addWidget(self._context_menu_settings, 1, 0)
         layout.addWidget(self._definitions_settings, 1, 1)
+        # Note: create equally sized columns.
+        layout.setColumnStretch(0, 1)
+        layout.setColumnStretch(1, 1)
         self._tabs.addTab(tab, "Menus")
 
     def _setup_ui(self) -> None:
