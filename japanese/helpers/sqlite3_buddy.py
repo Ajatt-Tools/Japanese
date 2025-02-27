@@ -78,6 +78,7 @@ class Sqlite3Buddy:
         if self.can_execute():
             raise Sqlite3BuddyError("connection is already created.")
         self._con: sqlite3.Connection = sqlite3.connect(self._db_path)
+        self._con.row_factory = sqlite3.Row
         self._prepare_tables()
 
     def end_session(self) -> None:
@@ -96,22 +97,22 @@ class Sqlite3Buddy:
         with cursor_buddy(self.con) as cur:
             query = """ SELECT media_dir_abs FROM meta WHERE source_name = ? LIMIT 1; """
             result = cur.execute(query, (source_name,)).fetchone()
-            assert type(result) is tuple and len(result) == 1 and (type(result[0]) in (str, NoneType))
-            return result[0]
+            assert len(result) == 1 and (type(result[0]) in (str, NoneType))
+            return result["media_dir_abs"]
 
     def get_media_dir_rel(self, source_name: str) -> str:
         with cursor_buddy(self.con) as cur:
             query = """ SELECT media_dir FROM meta WHERE source_name = ? LIMIT 1; """
             result = cur.execute(query, (source_name,)).fetchone()
             assert len(result) == 1 and type(result[0]) is str
-            return result[0]
+            return result["media_dir"]
 
     def get_original_url(self, source_name: str) -> Optional[str]:
         with cursor_buddy(self.con) as cur:
             query = """ SELECT original_url FROM meta WHERE source_name = ? LIMIT 1; """
             result = cur.execute(query, (source_name,)).fetchone()
             assert len(result) == 1 and (type(result[0]) in (str, NoneType))
-            return result[0]
+            return result["original_url"]
 
     def set_original_url(self, source_name: str, new_url: str) -> None:
         with cursor_buddy(self.con) as cur:
