@@ -191,60 +191,41 @@ class Sqlite3Buddy:
         self.prepare_pitch_accents_table()
 
     def prepare_audio_tables(self) -> None:
+        audio_tables_schema = """
+        CREATE TABLE IF NOT EXISTS meta(
+            source_name TEXT primary key not null,
+            dictionary_name TEXT not null,
+            year INTEGER not null,
+            version INTEGER not null,
+            original_url TEXT,
+            media_dir TEXT not null,
+            media_dir_abs TEXT
+        );
+
+        CREATE TABLE IF NOT EXISTS headwords(
+            source_name TEXT not null,
+            headword TEXT not null,
+            file_name TEXT not null
+        );
+
+        CREATE TABLE IF NOT EXISTS files(
+            source_name TEXT not null,
+            file_name TEXT not null,
+            kana_reading TEXT not null,
+            pitch_pattern TEXT,
+            pitch_number TEXT
+        );
+
+        CREATE INDEX IF NOT EXISTS index_names ON meta(source_name);
+        CREATE INDEX IF NOT EXISTS index_file_names ON headwords(source_name, headword);
+        CREATE INDEX IF NOT EXISTS index_file_info ON files(source_name, file_name);
+        """
         with cursor_buddy(self.con) as cur:
             # Note: `source_name` is the name given to the audio source by the user,
             # and it can be arbitrary (e.g. NHK-2016).
             # `dictionary_name` is the name given to the audio source by its creator.
             # E.g. the NHK audio source provided by Ajatt-Tools has `dictionary_name` set to "NHK日本語発音アクセント新辞典".
-            cur.execute(
-                """
-                CREATE TABLE IF NOT EXISTS meta(
-                    source_name TEXT primary key not null,
-                    dictionary_name TEXT not null,
-                    year INTEGER not null,
-                    version INTEGER not null,
-                    original_url TEXT,
-                    media_dir TEXT not null,
-                    media_dir_abs TEXT
-                );
-            """
-            )
-            cur.execute(
-                """
-                CREATE TABLE IF NOT EXISTS headwords(
-                    source_name TEXT not null,
-                    headword TEXT not null,
-                    file_name TEXT not null
-                );
-            """
-            )
-            cur.execute(
-                """
-                CREATE TABLE IF NOT EXISTS files(
-                    source_name TEXT not null,
-                    file_name TEXT not null,
-                    kana_reading TEXT not null,
-                    pitch_pattern TEXT,
-                    pitch_number TEXT
-                );
-            """
-            )
-            cur.execute(
-                """
-                CREATE INDEX IF NOT EXISTS index_names ON meta(source_name);
-            """
-            )
-            cur.execute(
-                """
-                CREATE INDEX IF NOT EXISTS index_file_names ON headwords(source_name, headword);
-            """
-            )
-            cur.execute(
-                """
-                CREATE INDEX IF NOT EXISTS index_file_info ON files(source_name, file_name);
-            """
-            )
-
+            cur.executescript(audio_tables_schema)
             self.con.commit()
 
     def search_files_in_source(self, source_name: str, headword: str) -> Iterable[BoundFile]:
@@ -349,38 +330,28 @@ class Sqlite3Buddy:
             return int(result[0])
 
     def prepare_pitch_accents_table(self) -> None:
+        pitch_tables_schema = """
+        CREATE TABLE IF NOT EXISTS pitch_accents_formatted(
+            headword TEXT not null,
+            katakana_reading TEXT not null,
+            html_notation TEXT not null,
+            pitch_number TEXT not null,
+            frequency INTEGER not null,
+            source TEXT not null
+        );
+
+        CREATE INDEX IF NOT EXISTS index_pitch_accents_headword
+        ON pitch_accents_formatted(headword);
+
+        CREATE INDEX IF NOT EXISTS index_pitch_accents_reading
+        ON pitch_accents_formatted(katakana_reading);
+
+        -- Filtering by source is used when retrieving results and when reloading the user's override table.
+        CREATE INDEX IF NOT EXISTS index_pitch_accents_source
+        ON pitch_accents_formatted(source);
+        """
         with cursor_buddy(self.con) as cur:
-            cur.execute(
-                """
-                CREATE TABLE IF NOT EXISTS pitch_accents_formatted(
-                    headword TEXT not null,
-                    katakana_reading TEXT not null,
-                    html_notation TEXT not null,
-                    pitch_number TEXT not null,
-                    frequency INTEGER not null,
-                    source TEXT not null
-                );
-                """
-            )
-            cur.execute(
-                """
-                CREATE INDEX IF NOT EXISTS index_pitch_accents_headword
-                ON pitch_accents_formatted(headword);
-                """
-            )
-            cur.execute(
-                """
-                CREATE INDEX IF NOT EXISTS index_pitch_accents_reading
-                ON pitch_accents_formatted(katakana_reading);
-                """
-            )
-            cur.execute(
-                # Filtering by source is used when retrieving results and when reloading the user's override table.
-                """
-                CREATE INDEX IF NOT EXISTS index_pitch_accents_source
-                ON pitch_accents_formatted(source);
-                """
-            )
+            cur.executescript(pitch_tables_schema)
             self.con.commit()
 
     def insert_pitch_accent_data(self, rows: typing.Iterable[AccDictRawTSVEntry], provider_name: str) -> None:
