@@ -88,6 +88,23 @@ class Sqlite3Buddy:
         self.con.close()
         self._con = None
 
+    def __enter__(self):
+        """
+        Create a temporary connection.
+        Use when working in a different thread since the same connection can't be reused in another thread.
+        """
+        assert self._con is None
+        self.start_session()
+        assert self._con is not None
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+        """
+        Clean up a temporary connection.
+        Use when working in a different thread since the same connection can't be reused in another thread.
+        """
+        self.end_session()
+
     @property
     def con(self) -> sqlite3.Connection:
         assert self._con
@@ -444,20 +461,3 @@ class Sqlite3Buddy:
             queries = """ DELETE FROM meta ; DELETE FROM headwords ; DELETE FROM files ; """
             cur.executescript(queries)
             self.con.commit()
-
-    def __enter__(self):
-        """
-        Create a temporary connection.
-        Use when working in a different thread since the same connection can't be reused in another thread.
-        """
-        assert self._con is None
-        self.start_session()
-        assert self._con is not None
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
-        """
-        Clean up a temporary connection.
-        Use when working in a different thread since the same connection can't be reused in another thread.
-        """
-        self.end_session()
