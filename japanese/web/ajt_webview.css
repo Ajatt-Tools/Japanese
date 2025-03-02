@@ -10,8 +10,8 @@ body {
     margin: 0;
     padding: 0 2px;
     font-size: 1rem;
-    font-family: "Noto Serif", "Noto Serif CJK JP", "Yu Mincho", "Liberation Serif", "Times New Roman", Times, Georgia,
-        Serif;
+    font-family:
+        "Noto Serif", "Noto Serif CJK JP", "Yu Mincho", "Liberation Serif", "Times New Roman", Times, Georgia, Serif;
     line-height: 1.4;
     text-align: left;
 }
@@ -60,8 +60,9 @@ li + li {
 
 .pitch_number {
     vertical-align: top;
-    font-family: "Noto Sans", "Droid Sans", "DejaVu Sans", "Liberation Sans", Roboto, Cantarell, "Segoe UI", Arial,
-        Meiryo, Oxygen, Ubuntu, "Helvetica Neue", Helvetica, "Noto Color Emoji", "Noto Sans CJK JP", Sans, sans-serif;
+    font-family:
+        "Noto Sans", "Droid Sans", "DejaVu Sans", "Liberation Sans", Roboto, Cantarell, "Segoe UI", Arial, Meiryo,
+        Oxygen, Ubuntu, "Helvetica Neue", Helvetica, "Noto Color Emoji", "Noto Sans CJK JP", Sans, sans-serif;
     text-align: center;
     display: inline-block;
     text-transform: lowercase;
