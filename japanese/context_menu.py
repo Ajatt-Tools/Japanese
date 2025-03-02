@@ -141,7 +141,7 @@ class BrowserSearch(ContextMenuAction):
 class RemoveSpaces(ContextMenuAction):
     key = "remove_spaces"
     label = "Remove all spaces"
-    _re_space = re.compile(r'\s+', flags=re.MULTILINE|re.IGNORECASE)
+    _re_space = re.compile(r"\s+", flags=re.MULTILINE | re.IGNORECASE)
 
     def action(self, text: str) -> str:
         """
