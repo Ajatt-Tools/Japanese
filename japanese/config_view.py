@@ -174,10 +174,6 @@ class ToolbarConfigView(ConfigSubViewBase):
     def audio_search_button(self) -> ToolbarButtonConfig:
         return self["audio_search_button"]
 
-    @property
-    def add_definition_button(self) -> ToolbarButtonConfig:
-        return self["add_definition_button"]
-
 
 @final
 class AudioSettingsConfigView(ConfigSubViewBase, AudioSettingsConfigViewABC):
@@ -344,7 +340,6 @@ class JapaneseConfig(AddonConfigManager):
         self._context_menu = ContextMenuConfigView(self)
         self._toolbar = ToolbarConfigView(self)
         self._audio_settings = AudioSettingsConfigView(self)
-        self._definitions = DefinitionsConfigView(self)
         self._svg_graphs = SvgPitchGraphOptionsConfigView(self)
 
     def iter_profiles(self) -> Iterable[Profile]:
@@ -386,10 +381,6 @@ class JapaneseConfig(AddonConfigManager):
     @property
     def toolbar(self) -> ToolbarConfigView:
         return self._toolbar
-
-    @property
-    def definitions(self) -> DefinitionsConfigView:
-        return self._definitions
 
     @property
     def svg_graphs(self) -> SvgPitchGraphOptionsConfigView:

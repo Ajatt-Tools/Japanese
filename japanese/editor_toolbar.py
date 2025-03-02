@@ -16,7 +16,6 @@ from .ajt_common.consts import ADDON_SERIES
 from .audio import aud_src_mgr, format_audio_tags
 from .config_view import ToolbarButtonConfig
 from .config_view import config_view as cfg
-from .definitions import sakura_client
 from .helpers.profiles import TaskCaller
 from .helpers.sqlite3_buddy import Sqlite3Buddy
 from .helpers.tokens import clean_furigana
@@ -184,12 +183,6 @@ def query_buttons() -> Iterable[ToolbarButton]:
             on_press=modify_note(search_audio),
             tip="Search audio files to add to note",
             conf=cfg.toolbar.audio_search_button,
-        ),
-        ToolbarButton(
-            id="add_definition_button",
-            on_press=modify_note(sakura_client.add_definition),
-            tip="Add dictionary definition for the target word.",
-            conf=cfg.toolbar.add_definition_button,
         ),
     )
 

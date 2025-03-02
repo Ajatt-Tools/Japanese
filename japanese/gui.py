@@ -553,7 +553,6 @@ class SettingsDialog(QDialog, MgrPropMixIn):
         # Menus tab
         self._toolbar_settings = ToolbarSettingsForm()
         self._context_menu_settings = GroupBoxWrapper(ContextMenuSettingsForm(cfg.context_menu))
-        self._definitions_settings = GroupBoxWrapper(DefinitionsSettingsForm(cfg.definitions))
 
         # Overrides tab
         self._accents_override = PitchOverrideWidget(self, file_path=USER_DATA_CSV_PATH)
@@ -611,14 +610,10 @@ class SettingsDialog(QDialog, MgrPropMixIn):
 
         # Menus
         tab = QWidget()
-        tab.setLayout(layout := QGridLayout())
+        tab.setLayout(layout := QVBoxLayout())
         # int fromRow, int fromColumn, int rowSpan, int columnSpan
-        layout.addWidget(self._toolbar_settings, 0, 0, 1, -1)
-        layout.addWidget(self._context_menu_settings, 1, 0)
-        layout.addWidget(self._definitions_settings, 1, 1)
-        # Note: create equally sized columns.
-        layout.setColumnStretch(0, 1)
-        layout.setColumnStretch(1, 1)
+        layout.addWidget(self._toolbar_settings)
+        layout.addWidget(self._context_menu_settings)
         self._tabs.addTab(tab, "Menus")
 
     def _setup_ui(self) -> None:
@@ -653,7 +648,6 @@ class SettingsDialog(QDialog, MgrPropMixIn):
         cfg["svg_graphs"].update(self._svg_settings.as_dict())
         cfg["furigana"].update(self._furigana_settings.as_dict())
         cfg["context_menu"].update(self._context_menu_settings.as_dict())
-        cfg["definitions"].update(self._definitions_settings.as_dict())
         cfg["toolbar"].update(self._toolbar_settings.as_dict())
         cfg["profiles"] = [
             *self._furigana_profiles_edit.as_list(),

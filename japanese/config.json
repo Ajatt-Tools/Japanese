@@ -108,11 +108,6 @@
       "enabled": true,
       "shortcut": "",
       "text": "検"
-    },
-    "add_definition_button": {
-      "enabled": true,
-      "shortcut": "",
-      "text": "意"
     }
   },
   "audio_sources": [
