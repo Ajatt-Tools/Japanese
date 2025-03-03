@@ -200,7 +200,7 @@ class AudioSourceManager:
         try:
             self._db.insert_data(source.name, json.loads(bytes_data))
         except UnicodeDecodeError:
-            with zipfile.ZipFile(io.BytesIO(bytes_data)) as zip_in:
+            with io.BytesIO(bytes_data) as file, zipfile.ZipFile(file) as zip_in:
                 self._db.insert_data(source.name, json.loads(read_zip(zip_in, source)))
 
     def _get_file(self, file: FileUrlData) -> bytes:
