@@ -163,6 +163,11 @@ def html_to_media_line(txt: str) -> str:
 
 
 class DoTasks:
+    _note: Note
+    _caller: TaskCaller
+    _src_field: Optional[str]
+    _overwrite: bool
+
     def __init__(
         self,
         note: Note,
@@ -173,13 +178,12 @@ class DoTasks:
     ):
         self._note = note
         self._caller = caller
-        self._tasks = iter_tasks(note, src_field)
+        self._src_field = src_field
         self._overwrite = overwrite
 
     def run(self, changed: bool = False) -> bool:
-
         with Sqlite3Buddy() as db:
-            for task in self._tasks:
+            for task in iter_tasks(self._note, self._src_field):
                 if task.should_answer_to(self._caller) and task.applies_to_note(self._note):
                     changed = self._do_task(task, db) or changed
             return changed
