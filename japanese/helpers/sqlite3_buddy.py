@@ -210,6 +210,11 @@ class Sqlite3Buddy:
 
     def prepare_audio_tables(self) -> None:
         audio_tables_schema = """
+        --- Note: `source_name` is the name given to the audio source by the user,
+        --- and it can be arbitrary (e.g. NHK-2016).
+        --- `dictionary_name` is the name given to the audio source by its creator.
+        --- E.g. the NHK audio source provided by Ajatt-Tools has `dictionary_name` set to "NHK日本語発音アクセント新辞典".
+
         CREATE TABLE IF NOT EXISTS meta(
             source_name TEXT primary key not null,
             dictionary_name TEXT not null,
@@ -239,10 +244,6 @@ class Sqlite3Buddy:
         CREATE INDEX IF NOT EXISTS index_file_info ON files(source_name, file_name);
         """
         with cursor_buddy(self.con) as cur:
-            # Note: `source_name` is the name given to the audio source by the user,
-            # and it can be arbitrary (e.g. NHK-2016).
-            # `dictionary_name` is the name given to the audio source by its creator.
-            # E.g. the NHK audio source provided by Ajatt-Tools has `dictionary_name` set to "NHK日本語発音アクセント新辞典".
             cur.executescript(audio_tables_schema)
             self.con.commit()
 
