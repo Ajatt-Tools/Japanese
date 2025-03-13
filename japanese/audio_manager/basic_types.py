@@ -2,6 +2,7 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import dataclasses
+import typing
 from typing import Optional, Union
 
 import requests
@@ -18,6 +19,12 @@ class FileUrlData:
     pitch_number: str = "?"
 
 
+class AudioSourceConfigDict(typing.TypedDict):
+    enabled: bool
+    name: str
+    url: str
+
+
 @dataclasses.dataclass
 class AudioSourceConfig:
     enabled: bool
@@ -28,7 +35,7 @@ class AudioSourceConfig:
     def is_valid(self) -> str:
         return self.name and self.url
 
-    def as_config_dict(self):
+    def as_config_dict(self) -> AudioSourceConfigDict:
         return dataclasses.asdict(self)
 
 

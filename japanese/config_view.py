@@ -11,7 +11,7 @@ from aqt import mw
 
 from .ajt_common.addon_config import AddonConfigManager, ConfigSubViewBase
 from .audio_manager.abstract import AudioSettingsConfigViewABC
-from .audio_manager.basic_types import AudioSourceConfig
+from .audio_manager.basic_types import AudioSourceConfig, AudioSourceConfigDict
 from .helpers.profiles import Profile
 from .helpers.sakura_client import AddDefBehavior, DictName, SearchType
 from .helpers.tokens import RE_FLAGS
@@ -355,7 +355,7 @@ class JapaneseConfig(AddonConfigManager):
         return self._audio_settings
 
     @property
-    def audio_sources(self) -> MutableSequence[MutableMapping]:
+    def audio_sources(self) -> MutableSequence[AudioSourceConfigDict]:
         return self["audio_sources"]
 
     @property
