@@ -2,11 +2,12 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import dataclasses
-import typing
 from typing import Optional, Union
 
 import requests
 from requests import RequestException
+
+from ..helpers.types import SourceConfigDict, SourceConfig
 
 
 @dataclasses.dataclass(frozen=True)
@@ -19,24 +20,13 @@ class FileUrlData:
     pitch_number: str = "?"
 
 
-class AudioSourceConfigDict(typing.TypedDict):
-    enabled: bool
-    name: str
-    url: str
+class AudioSourceConfigDict(SourceConfigDict):
+    pass
 
 
 @dataclasses.dataclass
-class AudioSourceConfig:
-    enabled: bool
-    name: str
-    url: str
-
-    @property
-    def is_valid(self) -> str:
-        return self.name and self.url
-
-    def as_config_dict(self) -> AudioSourceConfigDict:
-        return dataclasses.asdict(self)
+class AudioSourceConfig(SourceConfig):
+    pass
 
 
 @dataclasses.dataclass
