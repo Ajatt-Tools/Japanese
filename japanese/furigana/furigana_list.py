@@ -79,11 +79,12 @@ class FuriganaList:
     def append_token(self, token: AnyToken) -> None:
         try:
             attach_to = self.last_token_if_known_accent()
+        except TokenAccessError:
+            pass
+        else:
             if should_attach_token(attach_to, token):
                 attach_to.attached_tokens.append(token.word)
                 return
-        except TokenAccessError:
-            pass
         self._list.append(token)
 
     def extend(self, tokens: Iterable[AnyToken]) -> None:
