@@ -11,7 +11,7 @@ def adjust_to_inflection(raw_word: str, headword: str, headword_reading: str) ->
     E.g., if raw_word is 食べた and the reading is たべる, it should output たべた.
     """
     if _(headword) == _(headword_reading):
-        return raw_word
+        return headword_reading
     if _(headword) == _(raw_word):
         return headword_reading
     if is_kana_str(raw_word):
