@@ -56,7 +56,7 @@ def save_files(
     results = FileSaveResults([], [])
     for future in futures:
         try:
-            result = future.result()
+            result: DownloadedData = future.result()
         except AudioManagerException as ex:
             results.fails.append(ex)
         else:
