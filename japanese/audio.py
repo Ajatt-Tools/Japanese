@@ -82,7 +82,7 @@ def iter_tokens(src_text: str) -> Iterable[ParseableToken]:
             yield token
 
 
-def iter_mecab_variants(token: MecabParsedToken):
+def iter_mecab_variants(token: MecabParsedToken) -> Iterable[str]:
     yield token.headword
     if token.katakana_reading:
         yield token.katakana_reading
