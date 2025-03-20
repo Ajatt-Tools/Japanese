@@ -222,8 +222,8 @@ class AnkiAudioSourceManager(AudioSourceManager, AnkiAudioSourceManagerABC):
 
     def _download_tag(self, audio_file: FileUrlData) -> DownloadedData:
         return DownloadedData(
-            audio_file.desired_filename,
-            self._get_file(audio_file),
+            desired_filename=audio_file.desired_filename,
+            data=self._get_file(audio_file),
         )
 
     def remove_unused_audio_data(self):
