@@ -5,13 +5,6 @@ import abc
 
 from ..helpers.sqlite3_buddy import Sqlite3Buddy
 from .basic_types import FileUrlData
-from .source_manager import AudioSourceManager
-
-
-class AudioSourceManagerFactoryABC(abc.ABC):
-    @abc.abstractmethod
-    def request_new_session(self, db: Sqlite3Buddy) -> AudioSourceManager:
-        raise NotImplementedError()
 
 
 class AnkiAudioSourceManagerABC(abc.ABC):
@@ -28,6 +21,12 @@ class AnkiAudioSourceManagerABC(abc.ABC):
 
     @abc.abstractmethod
     def download_and_save_tags(self, hits, *, on_finish) -> None:
+        raise NotImplementedError()
+
+
+class AudioSourceManagerFactoryABC(abc.ABC):
+    @abc.abstractmethod
+    def request_new_session(self, db: Sqlite3Buddy) -> AnkiAudioSourceManagerABC:
         raise NotImplementedError()
 
 
