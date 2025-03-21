@@ -215,3 +215,16 @@ class AudioSourceManager:
 
     def clear_audio_tables(self) -> None:
         self._db.clear_all_audio_data()
+
+    def already_initialized(self) -> Sequence[AudioSourceConfig]:
+        """
+        Returns audio sources that have been fully initialized,
+        meaning they are enabled and the database has cached them.
+        """
+        return tuple(s.to_cfg() for s in self._audio_sources.values() if s.enabled and s.is_cached())
+
+    def must_be_initialized(self) -> Sequence[AudioSourceConfig]:
+        """
+        Returns audio sources that the add-on needs right now based on the current config.
+        """
+        return tuple(s for s in self._config.iter_audio_sources() if s.enabled)
