@@ -7,7 +7,7 @@ from typing import Optional, Union
 import requests
 from requests import RequestException
 
-from ..helpers.types import SourceConfigDict, SourceConfig
+from ..helpers.types import SourceConfig, SourceConfigDict
 
 
 @dataclasses.dataclass(frozen=True)

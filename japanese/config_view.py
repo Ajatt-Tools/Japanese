@@ -4,7 +4,7 @@
 import enum
 import functools
 import re
-from collections.abc import Iterable, MutableMapping, MutableSequence, Sequence
+from collections.abc import Iterable, MutableSequence, Sequence
 from typing import NamedTuple, final
 
 from aqt import mw

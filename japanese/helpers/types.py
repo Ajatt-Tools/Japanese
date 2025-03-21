@@ -15,6 +15,7 @@ class SourceConfig:
     """
     Audio source or dictionary source.
     """
+
     enabled: bool
     name: str
     url: str

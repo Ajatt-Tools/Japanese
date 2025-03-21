@@ -25,6 +25,7 @@ class NoAnkiConfigView(JapaneseConfig):
 @pytest.fixture(scope="session")
 def no_anki_config() -> NoAnkiConfigView:
     config = NoAnkiConfigView()
+    config.furigana["maximum_results"] = 1
     # substitute audio sources
     config["audio_sources"] = [
         {
