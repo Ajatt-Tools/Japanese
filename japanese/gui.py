@@ -263,7 +263,6 @@ class FuriganaProfileEditForm(ProfileEditForm, profile_class=ProfileFurigana):
 
 
 class PitchProfileEditForm(ProfileEditForm, profile_class=ProfilePitch):
-
     def _expand_form(self) -> None:
         super()._expand_form()
         self._form.output_format = EnumSelectCombo(enum_type=PitchOutputFormat)

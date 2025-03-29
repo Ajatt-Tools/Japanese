@@ -17,7 +17,7 @@ from ..helpers.sqlite3_buddy import BoundFile, Sqlite3Buddy
 from ..mecab_controller.kana_conv import to_katakana
 from ..pitch_accents.common import split_pitch_numbers
 from .audio_source import AudioSource
-from .basic_types import AudioManagerException, FileUrlData, AudioSourceConfig
+from .basic_types import AudioManagerException, AudioSourceConfig, FileUrlData
 
 RE_FILENAME_PROHIBITED = re.compile(r'[\\\n\t\r#%&\[\]{}<>^*?/$!\'":@+`|=]+', flags=re.MULTILINE | re.IGNORECASE)
 MAX_LEN_BYTES = 120 - 4

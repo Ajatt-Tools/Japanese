@@ -18,7 +18,6 @@ class SplitFurigana(NamedTuple):
 
 
 class NoFurigana(str):
-
     @property
     def head(self):
         return self
