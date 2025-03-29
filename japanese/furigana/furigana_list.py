@@ -95,8 +95,9 @@ class FuriganaList:
         last = self.back()
         if not isinstance(last, AccDbParsedToken):
             raise TokenAccessError("Last token is not parsed.")
-        if not last.has_pitch():
-            raise TokenAccessError("Last token has no known pitch accent.")
+        # not stictly necessary:
+        # if not last.has_pitch():
+        #     raise TokenAccessError("Last token has no known pitch accent.")
         return last
 
     def back(self) -> AnyToken:
