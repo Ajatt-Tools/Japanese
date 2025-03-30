@@ -135,6 +135,11 @@
       "enabled": true,
       "name": "TAAS",
       "url": "https://github.com/Ajatt-Tools/taas_pronunciations_index/releases/latest/download/TAAS_main.zip"
+    },
+    {
+      "enabled": true,
+      "name": "Oubunsha-Kogo",
+      "url": "https://github.com/Ajatt-Tools/oubunsha_kogo_pronunciations_index/releases/latest/download/Oubunsha-Kogo_main.zip"
     }
   ],
   "audio_settings": {
