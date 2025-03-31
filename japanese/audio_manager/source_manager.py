@@ -108,6 +108,10 @@ class AudioSourceManager:
     def audio_sources(self) -> Iterable[AudioSource]:
         return self._audio_sources.values()
 
+    @property
+    def buddy(self) -> Sqlite3Buddy:
+        return self._db
+
     def distinct_file_count(self) -> int:
         return self._db.distinct_file_count(source_names=tuple(source.name for source in self.audio_sources))
 
@@ -229,3 +233,11 @@ class AudioSourceManager:
         Returns audio sources that the add-on needs right now based on the current config.
         """
         return tuple(s for s in self._config.iter_audio_sources() if s.enabled)
+
+    def source_config_changed(self) -> bool:
+        """
+        Returns true if the configuration of audio sources has changed.
+        Used to skip unnecessary re-init operations.
+        Count only enabled sources. Disabled sources have no effect on the audio manager's operation.
+        """
+        return self.already_initialized() != self.must_be_initialized()

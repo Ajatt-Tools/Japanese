@@ -5,7 +5,7 @@ from aqt.qt import *
 
 from japanese.config_view import ContextMenuConfigView
 from japanese.widgets.settings_form import ContextMenuSettingsForm
-from tests.no_anki_config import NoAnkiConfigView
+from playground.utils import NoAnkiConfigView
 
 
 class MockWindow(QDialog):

@@ -14,13 +14,12 @@ from aqt import gui_hooks, mw
 from aqt.operations import QueryOp
 from aqt.utils import show_warning, tooltip
 
-from .audio_manager.abstract import AnkiAudioSourceManagerABC
-from .audio_manager.audio_manager import AudioSourceManagerFactory
-from .audio_manager.basic_types import (
-    AudioManagerException,
-    AudioSourceConfig,
-    FileUrlData,
+from .audio_manager.abstract import (
+    AnkiAudioSourceManagerABC,
+    AudioSourceManagerFactoryABC,
 )
+from .audio_manager.audio_manager import AudioSourceManagerFactory
+from .audio_manager.basic_types import AudioManagerException, FileUrlData
 from .audio_manager.source_manager import (
     AudioSourceManager,
     InitResult,
@@ -260,12 +259,14 @@ def report_audio_init_errors(result: InitResult) -> None:
         )
 
 
-class AnkiAudioSourceManagerFactory(AudioSourceManagerFactory):
+
+
+class AnkiAudioSourceManagerFactory(AudioSourceManagerFactoryABC):
     _config: JapaneseConfig
 
     def __init__(self, config: JapaneseConfig):
-        super().__init__(config)
-        assert self._db_path is None
+        self._config = config
+        self._fac = AudioSourceManagerFactory(config)
 
     def request_new_session(self, db: Sqlite3Buddy) -> AnkiAudioSourceManager:
         """
@@ -275,9 +276,9 @@ class AnkiAudioSourceManagerFactory(AudioSourceManagerFactory):
         assert mw, "Anki should be running."
         return AnkiAudioSourceManager(
             config=self._config,
-            http_client=self._http_client,
+            http_client=self._fac.http_client,
             db=db,
-            audio_sources=self._audio_sources,
+            audio_sources=self._fac.audio_sources,
         )
 
     def purge_everything(
@@ -288,16 +289,16 @@ class AnkiAudioSourceManagerFactory(AudioSourceManagerFactory):
         assert mw, "Anki should be running."
 
         def on_finish_wrapper():
-            self._set_sources([])
+            self._fac.set_sources([])
             on_finish()
 
         QueryOp(
             parent=mw,
-            op=lambda collection: self._purge_sources(),
+            op=lambda collection: self._fac.purge_sources(),
             success=lambda result: on_finish_wrapper(),
         ).run_in_background()
 
-    def init_sources(
+    def init_sources_anki(
         self,
         *,
         on_finish: Optional[Callable[[InitResult], Any]] = None,
@@ -310,21 +311,13 @@ class AnkiAudioSourceManagerFactory(AudioSourceManagerFactory):
         ).run_in_background()
 
     def _get_sources(self) -> InitResult:
-        if not self._source_config_changed():
-            print("audio sources haven't changed.")
-            return InitResult.did_not_run()
-        else:
-            return super()._get_sources()
-
-    def _source_config_changed(self) -> bool:
-        """
-        Returns true if the configuration of audio sources has changed.
-        Used to skip unnecessary re-init operations.
-        Count only enabled sources. Disabled sources have no effect on the audio manager's operation.
-        """
         with Sqlite3Buddy() as db:
             session = self.request_new_session(db)
-            return session.already_initialized() != session.must_be_initialized()
+            if not session.source_config_changed():
+                print("audio sources haven't changed.")
+                return InitResult.did_not_run()
+            else:
+                return self._fac.get_sources(session)
 
     def get_statistics(self) -> TotalAudioStats:
         """
@@ -345,7 +338,7 @@ class AnkiAudioSourceManagerFactory(AudioSourceManagerFactory):
         on_finish: Optional[Callable[[InitResult], Any]] = None,
     ) -> None:
         if result.did_run:
-            self._set_sources(result.sources)
+            self._fac.set_sources(result.sources)
             self._remove_unused_audio_data()
             report_audio_init_errors(result)
             print("Initialized all audio sources.")
@@ -359,4 +352,4 @@ class AnkiAudioSourceManagerFactory(AudioSourceManagerFactory):
 
 aud_src_mgr = AnkiAudioSourceManagerFactory(cfg)
 # react to anki's state changes
-gui_hooks.profile_did_open.append(aud_src_mgr.init_sources)
+gui_hooks.profile_did_open.append(aud_src_mgr.init_sources_anki)

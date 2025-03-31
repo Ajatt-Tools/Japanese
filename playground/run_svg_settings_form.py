@@ -4,7 +4,7 @@ from aqt.qt import *
 
 from japanese.config_view import SvgPitchGraphOptionsConfigView
 from japanese.widgets.svg_settings import SvgSettingsWidget
-from tests.no_anki_config import NoAnkiConfigView
+from playground.utils import NoAnkiConfigView
 
 
 class MockWindow(QDialog):

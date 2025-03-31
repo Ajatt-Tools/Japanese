@@ -1,23 +1,22 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
-import abc
 import pathlib
 from collections.abc import Iterable
 from typing import Optional
 
 from aqt import mw
 
+from .abstract import AnkiAudioSourceManagerABC
 from ..config_view import JapaneseConfig
 from ..helpers.basic_types import AudioManagerHttpClientABC
 from ..helpers.http_client import AudioManagerHttpClient
 from ..helpers.sqlite3_buddy import InvalidSourceIndex, Sqlite3Buddy
-from .abstract import AudioSourceManagerFactoryABC
 from .audio_source import AudioSource
 from .basic_types import AudioManagerException
-from .source_manager import InitResult, AudioSourceManager
+from .source_manager import AudioSourceManager, InitResult
 
 
-class AudioSourceManagerFactory(AudioSourceManagerFactoryABC, abc.ABC):
+class AudioSourceManagerFactory:
     _config: JapaneseConfig
     _http_client: AudioManagerHttpClientABC
     _audio_sources: list[AudioSource]
@@ -35,6 +34,16 @@ class AudioSourceManagerFactory(AudioSourceManagerFactoryABC, abc.ABC):
         self._db_path = db_path or self._db_path
         self._http_client = AudioManagerHttpClient(self._config.audio_settings)
         self._audio_sources = []
+        if mw:
+            assert self._db_path is None
+
+    @property
+    def http_client(self) -> AudioManagerHttpClientABC:
+        return self._http_client
+
+    @property
+    def audio_sources(self) -> list[AudioSource]:
+        return self._audio_sources
 
     def request_new_session(self, db: Sqlite3Buddy) -> AudioSourceManager:
         """
@@ -50,40 +59,45 @@ class AudioSourceManagerFactory(AudioSourceManagerFactoryABC, abc.ABC):
         )
 
     def init_sources(self) -> None:
-        self._set_sources(self._get_sources().sources)
+        assert mw is None, "Anki shouldn't be running"
+        with Sqlite3Buddy() as db:
+            session = self.request_new_session(db)
+            result = self.get_sources(session)
+            print(f"{result.did_run=}")
+            print(f"{result.errors=}")
+            print(f"{result.sources=}")
+            self.set_sources(result.sources)
 
-    def _set_sources(self, sources: list[AudioSource]) -> None:
+    def set_sources(self, sources: list[AudioSource]) -> None:
         self._audio_sources = [source.with_db(None) for source in sources]
 
     def _iter_audio_sources(self, db: Sqlite3Buddy) -> Iterable[AudioSource]:
         return (AudioSource.from_cfg(source, db) for source in self._config.iter_audio_sources())
 
-    def _get_sources(self) -> InitResult:
+    def get_sources(self, session: AudioSourceManager) -> InitResult:
         """
         This method is normally run in a different thread.
         A separate db connection is used.
         """
         sources, errors = [], []
-        with Sqlite3Buddy(self._db_path) as db:
-            session = self.request_new_session(db)
-            for source in self._iter_audio_sources(db):
-                if not source.enabled:
-                    continue
-                try:
-                    session.read_pronunciation_data(source)
-                except AudioManagerException as ex:
-                    print(f"Ignoring audio source {source.name}: {ex.describe_short()}.")
-                    errors.append(ex)
-                    continue
-                except InvalidSourceIndex as ex:
-                    print(ex)
-                    errors.append(AudioManagerException(source, str(ex)))
-                else:
-                    sources.append(source)
-                    print(f"Initialized audio source: {source.name}")
-            return InitResult(sources, errors)
+        for source in self._iter_audio_sources(session.buddy):
+            if not source.enabled:
+                continue
+            try:
+                session.read_pronunciation_data(source)
+            except AudioManagerException as ex:
+                print(f"Ignoring audio source {source.name}: {ex.describe_short()}.")
+                errors.append(ex)
+                continue
+            except InvalidSourceIndex as ex:
+                print(ex)
+                errors.append(AudioManagerException(source, str(ex)))
+            else:
+                sources.append(source)
+                print(f"Initialized audio source: {source.name}")
+        return InitResult(sources, errors)
 
-    def _purge_sources(self) -> None:
+    def purge_sources(self) -> None:
         """
         This method is normally run in a different thread.
         A separate db connection is used.

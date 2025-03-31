@@ -501,7 +501,7 @@ class AudioSourcesEditTable(QWidget):
         self._apply_button.setEnabled(False)
         cfg["audio_sources"] = [source.as_config_dict() for source in self.iterateConfigs()]
         cfg.write_config()
-        aud_src_mgr.init_sources(on_finish=self._on_audio_sources_init_finished)
+        aud_src_mgr.init_sources_anki(on_finish=self._on_audio_sources_init_finished)
 
     def _on_audio_sources_init_finished(self, result: InitResult) -> None:
         self._apply_button.setEnabled(True)
@@ -661,7 +661,7 @@ class SettingsDialog(QDialog, MgrPropMixIn):
         self._accents_override.save_to_disk()
         # Reload
         acc_dict.reload_user_accents_from_disk()
-        aud_src_mgr.init_sources(on_finish=show_audio_init_result_tooltip)
+        aud_src_mgr.init_sources_anki(on_finish=show_audio_init_result_tooltip)
         # if new profiles were added, add imports to the note types.
         prepare_note_types()
         return super().accept()

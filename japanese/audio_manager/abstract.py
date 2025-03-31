@@ -8,6 +8,11 @@ from .basic_types import FileUrlData
 
 
 class AnkiAudioSourceManagerABC(abc.ABC):
+    @property
+    @abc.abstractmethod
+    def buddy(self) -> Sqlite3Buddy:
+        raise NotImplementedError()
+
     @abc.abstractmethod
     def search_audio(
         self,

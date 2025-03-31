@@ -1,10 +1,11 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
+import pathlib
 
 from japanese.audio_manager.audio_manager import AudioSourceManagerFactory
 from japanese.audio_manager.source_manager import AudioSourceManager, TotalAudioStats
 from japanese.helpers.sqlite3_buddy import Sqlite3Buddy
-from tests.no_anki_config import NoAnkiConfigView
+from playground.utils import NoAnkiConfigView, persistent_sqlite3_db_path
 
 
 class NoAnkiAudioSourceManagerFactory(AudioSourceManagerFactory):
@@ -17,7 +18,7 @@ def init_testing_audio_manager(db_path: pathlib.Path) -> NoAnkiAudioSourceManage
 
 
 def main() -> None:
-    with tmp_sqlite3_db_path() as db_path:
+    with persistent_sqlite3_db_path() as db_path:
         factory = init_testing_audio_manager(db_path)
         factory.init_sources()
         session: AudioSourceManager

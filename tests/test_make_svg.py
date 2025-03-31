@@ -6,8 +6,9 @@ import pytest
 from japanese.config_view import SvgPitchGraphOptionsConfigView
 from japanese.pitch_accents.common import FormattedEntry
 from japanese.pitch_accents.svg_graphs import SvgPitchGraphMaker
+from playground.utils import NoAnkiConfigView
 from tests import DATA_DIR
-from tests.no_anki_config import NoAnkiConfigView, no_anki_config
+from tests.no_anki_config import no_anki_config
 
 TEST_ENTRIES = (
     FormattedEntry(

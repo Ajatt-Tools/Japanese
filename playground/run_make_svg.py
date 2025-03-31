@@ -3,8 +3,8 @@
 
 from japanese.config_view import SvgPitchGraphOptionsConfigView
 from japanese.pitch_accents.svg_graphs import SvgPitchGraphMaker
+from playground.utils import NoAnkiConfigView
 from tests import DATA_DIR
-from tests.no_anki_config import NoAnkiConfigView
 from tests.test_make_svg import TEST_ENTRIES
 
 

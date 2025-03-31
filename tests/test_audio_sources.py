@@ -2,7 +2,8 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 from japanese.audio_manager.audio_source import AudioSource
 from japanese.helpers.sqlite3_buddy import Sqlite3Buddy
-from tests.no_anki_config import NoAnkiConfigView, no_anki_config
+from playground.utils import NoAnkiConfigView
+from tests.no_anki_config import no_anki_config
 
 
 def some_media_dir() -> str:

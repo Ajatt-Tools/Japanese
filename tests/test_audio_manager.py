@@ -10,14 +10,6 @@ from tests.no_anki_config import no_anki_config
 
 
 class NoAnkiAudioSourceManagerFactory(AudioSourceManagerFactory):
-    def request_new_session(self, db: Sqlite3Buddy) -> AudioSourceManager:
-        return AudioSourceManager(
-            config=self._config,
-            http_client=self._http_client,
-            db=db,
-            audio_sources=self._audio_sources,
-        )
-
     @property
     def db_path(self):
         return self._db_path
