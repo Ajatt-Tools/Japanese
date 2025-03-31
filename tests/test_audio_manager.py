@@ -3,7 +3,8 @@
 import pytest
 
 from japanese.audio_manager.audio_manager import AudioSourceManagerFactory
-from japanese.audio_manager.source_manager import AudioSourceManager, TotalAudioStats
+from japanese.audio_manager.basic_types import NameUrl, NameUrlSet, TotalAudioStats
+from japanese.audio_manager.source_manager import AudioSourceManager
 from japanese.helpers.sqlite3_buddy import Sqlite3Buddy
 from tests.conftest import tmp_sqlite3_db_path
 from tests.no_anki_config import no_anki_config
@@ -22,7 +23,7 @@ def init_factory(no_anki_config, tmp_sqlite3_db_path):
     return factory
 
 
-def test_audio_stats(init_factory) -> None:
+def test_audio_stats(init_factory: NoAnkiAudioSourceManagerFactory) -> None:
     session: AudioSourceManager
     stats: TotalAudioStats
 
@@ -35,3 +36,20 @@ def test_audio_stats(init_factory) -> None:
         assert stats.sources[0].num_files == 19438
         assert stats.sources[0].num_headwords == 21569
         assert len(list(session.search_word("ひらがな"))) == 3
+
+
+def test_delete_cache(init_factory: NoAnkiAudioSourceManagerFactory) -> None:
+    with Sqlite3Buddy(init_factory.db_path) as db:
+        session = init_factory.request_new_session(db)
+        stats = session.total_stats()
+        assert len(stats.sources) == 1
+        test_source = db.get_source_by_name("TAAS-TEST-BAD")
+        assert test_source is None
+        test_source = db.get_source_by_name("TAAS-TEST")
+        assert test_source.name == "TAAS-TEST"
+        removed = session.remove_sources(NameUrlSet([test_source, NameUrl("TAAS-TEST-BAD", "")]))
+        assert removed == [test_source]
+        stats = session.total_stats()
+        assert len(stats.sources) == 0
+        assert stats.unique_files == 0
+        assert stats.unique_headwords == 0
