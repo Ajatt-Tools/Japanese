@@ -10,10 +10,10 @@ from typing import Optional
 
 from aqt import mw
 
-from ..pitch_accents.common import AccDictRawTSVEntry
 from .audio_json_schema import FileInfo, SourceIndex
 from .file_ops import user_files_dir
 from .sqlite_schema import CURRENT_DB
+from ..pitch_accents.common import AccDictRawTSVEntry
 
 NoneType = type(None)  # fix for the official binary bundle
 
@@ -254,11 +254,11 @@ class Sqlite3Buddy:
             self.con.commit()
 
     def search_files_in_source(self, source_name: str, headword: str) -> Iterable[BoundFile]:
+        query = """
+        SELECT file_name FROM headwords
+        WHERE source_name = ? AND headword = ?;
+        """
         with cursor_buddy(self.con) as cur:
-            query = """
-            SELECT file_name FROM headwords
-            WHERE source_name = ? AND headword = ?;
-            """
             results = cur.execute(query, (source_name, headword)).fetchall()
             assert type(results) is list
             return (
@@ -266,11 +266,11 @@ class Sqlite3Buddy:
             )
 
     def search_files(self, headword: str) -> Iterable[BoundFile]:
+        query = """
+        SELECT file_name, source_name FROM headwords
+        WHERE headword = ?;
+        """
         with cursor_buddy(self.con) as cur:
-            query = """
-            SELECT file_name, source_name FROM headwords
-            WHERE headword = ?;
-            """
             results = cur.execute(query, (headword,)).fetchall()
             assert type(results) is list
             return (
@@ -279,12 +279,12 @@ class Sqlite3Buddy:
             )
 
     def get_file_info(self, source_name: str, file_name: str) -> FileInfo:
+        query = """
+        SELECT kana_reading, pitch_pattern, pitch_number FROM files
+        WHERE source_name = ? AND file_name = ?
+        LIMIT 1;
+        """
         with cursor_buddy(self.con) as cur:
-            query = """
-            SELECT kana_reading, pitch_pattern, pitch_number FROM files
-            WHERE source_name = ? AND file_name = ?
-            LIMIT 1;
-            """
             result = cur.execute(query, (source_name, file_name)).fetchone()
             assert len(result) == 3 and all((type(val) in (str, NoneType)) for val in result)
             return {
@@ -297,12 +297,12 @@ class Sqlite3Buddy:
         """
         Remove all info about audio source from the database.
         """
+        queries = (
+            """ DELETE FROM meta      WHERE source_name = ?; """,
+            """ DELETE FROM headwords WHERE source_name = ?; """,
+            """ DELETE FROM files     WHERE source_name = ?; """,
+        )
         with cursor_buddy(self.con) as cur:
-            queries = (
-                """ DELETE FROM meta      WHERE source_name = ?; """,
-                """ DELETE FROM headwords WHERE source_name = ?; """,
-                """ DELETE FROM files     WHERE source_name = ?; """,
-            )
             for query in queries:
                 cur.execute(query, (source_name,))
             self.con.commit()
@@ -310,18 +310,18 @@ class Sqlite3Buddy:
     def distinct_file_count(self, source_names: Sequence[str]) -> int:
         if not source_names:
             return 0
+        # Filenames in different audio sources may collide,
+        # although it's not likely with the currently released audio sources.
+        # To resolve collisions when counting distinct filenames,
+        # dictionary_name and year are also taken into account.
+        query = """
+        SELECT COUNT(*) FROM (
+            SELECT DISTINCT f.file_name, m.dictionary_name, m.year FROM files f
+            INNER JOIN meta m ON f.source_name = m.source_name
+            WHERE %s
+        );
+        """
         with cursor_buddy(self.con) as cur:
-            # Filenames in different audio sources may collide,
-            # although it's not likely with the currently released audio sources.
-            # To resolve collisions when counting distinct filenames,
-            # dictionary_name and year are also taken into account.
-            query = """
-                SELECT COUNT(*) FROM (
-                    SELECT DISTINCT f.file_name, m.dictionary_name, m.year FROM files f
-                    INNER JOIN meta m ON f.source_name = m.source_name
-                    WHERE %s
-                );
-            """
             result = cur.execute(
                 query % build_or_clause("f.source_name", len(source_names)),
                 source_names,
@@ -332,8 +332,10 @@ class Sqlite3Buddy:
     def distinct_headword_count(self, source_names: Sequence[str]) -> int:
         if not source_names:
             return 0
+        query = """
+        SELECT COUNT(*) FROM (SELECT DISTINCT headword FROM headwords WHERE %s);
+        """
         with cursor_buddy(self.con) as cur:
-            query = """ SELECT COUNT(*) FROM (SELECT DISTINCT headword FROM headwords WHERE %s); """
             # Return the number of unique headwords in the specified sources.
             result = cur.execute(
                 query % build_or_clause("source_name", len(source_names)),
@@ -348,8 +350,10 @@ class Sqlite3Buddy:
             return [result_tuple[0] for result_tuple in query_result]
 
     def get_pitch_accents_headword_count(self) -> int:
+        query = """
+        SELECT COUNT(DISTINCT headword) FROM pitch_accents_formatted;
+        """
         with cursor_buddy(self.con) as cur:
-            query = """ SELECT COUNT(DISTINCT headword) FROM pitch_accents_formatted; """
             result = cur.execute(query).fetchone()
             assert len(result) == 1
             return int(result[0])
@@ -380,12 +384,12 @@ class Sqlite3Buddy:
             self.con.commit()
 
     def insert_pitch_accent_data(self, rows: typing.Iterable[AccDictRawTSVEntry], provider_name: str) -> None:
+        query = """
+        INSERT INTO pitch_accents_formatted
+        (headword, katakana_reading, html_notation, pitch_number, frequency, source)
+        VALUES(?, ?, ?, ?, ?, ?);
+        """
         with cursor_buddy(self.con) as cur:
-            query = """
-            INSERT INTO pitch_accents_formatted
-            (headword, katakana_reading, html_notation, pitch_number, frequency, source)
-            VALUES(?, ?, ?, ?, ?, ?);
-            """
             cur.executemany(
                 query,
                 (
@@ -405,28 +409,28 @@ class Sqlite3Buddy:
     PITCH_RETRIEVE_KEYS = ("katakana_reading", "html_notation", "pitch_number")
 
     def search_pitch_accents(
-        self, word: Optional[str], prefer_provider_name: str, select_keys: Sequence[str] = PITCH_RETRIEVE_KEYS
+            self, word: Optional[str], prefer_provider_name: str, select_keys: Sequence[str] = PITCH_RETRIEVE_KEYS
     ) -> list[Sequence[str]]:
-        with cursor_buddy(self.con) as cur:
-            # The user overrides the default (bundled) rows with their own data.
-            # Return relevant rows from the user's data if they can be found.
-            # Otherwise, return all results for the target word.
-            query = f"""
-            SELECT DISTINCT {', '.join(select_keys)} FROM (
-                WITH all_results AS (
-                    SELECT * FROM pitch_accents_formatted
-                    WHERE ( headword = ? OR katakana_reading = ? )
-                ),
-                preferred_results AS (
-                    SELECT * FROM all_results
-                    WHERE source = ?
-                )
-                SELECT * FROM preferred_results
-                UNION ALL
-                SELECT * FROM all_results WHERE NOT EXISTS (SELECT 1 FROM preferred_results)
+        # The user overrides the default (bundled) rows with their own data.
+        # Return relevant rows from the user's data if they can be found.
+        # Otherwise, return all results for the target word.
+        query = f"""
+        SELECT DISTINCT {', '.join(select_keys)} FROM (
+            WITH all_results AS (
+                SELECT * FROM pitch_accents_formatted
+                WHERE ( headword = ? OR katakana_reading = ? )
+            ),
+            preferred_results AS (
+                SELECT * FROM all_results
+                WHERE source = ?
             )
-            ORDER BY frequency DESC, pitch_number ASC, katakana_reading ASC ;
-            """
+            SELECT * FROM preferred_results
+            UNION ALL
+            SELECT * FROM all_results WHERE NOT EXISTS (SELECT 1 FROM preferred_results)
+        )
+        ORDER BY frequency DESC, pitch_number ASC, katakana_reading ASC ;
+        """
+        with cursor_buddy(self.con) as cur:
             result = cur.execute(query, (word, word, prefer_provider_name)).fetchall()
             # example row
             # [
@@ -440,23 +444,27 @@ class Sqlite3Buddy:
         """
         Remove all pitch accent entries.
         """
+        query = """
+        DELETE FROM pitch_accents_formatted;
+        """
         with cursor_buddy(self.con) as cur:
-            query = """ DELETE FROM pitch_accents_formatted; """
             cur.execute(query)
             self.con.commit()
 
     def clear_pitch_accents(self, provider_name: str) -> None:
+        query = """
+        DELETE FROM pitch_accents_formatted
+        WHERE source = ? ;
+        """
         with cursor_buddy(self.con) as cur:
-            query = """
-            DELETE FROM pitch_accents_formatted
-            WHERE source = ? ;
-            """
             cur.execute(query, (provider_name,))
             self.con.commit()
 
     def delete_pitch_accents_table(self) -> None:
+        query = """
+        DROP TABLE pitch_accents_formatted;
+        """
         with cursor_buddy(self.con) as cur:
-            query = """ DROP TABLE pitch_accents_formatted; """
             cur.execute(query)
             self.con.commit()
 
@@ -464,7 +472,11 @@ class Sqlite3Buddy:
         """
         Remove all info about audio sources from the database.
         """
+        queries = """
+        DELETE FROM meta ;
+        DELETE FROM headwords ;
+        DELETE FROM files ;
+        """
         with cursor_buddy(self.con) as cur:
-            queries = """ DELETE FROM meta ; DELETE FROM headwords ; DELETE FROM files ; """
             cur.executescript(queries)
             self.con.commit()
