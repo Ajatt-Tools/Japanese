@@ -27,7 +27,7 @@ class SourceEnableCheckbox(QCheckBox):
         )
 
 
-def tooltip_cache_remove_complete(removed: list[AudioSourceConfig]) -> None:
+def tooltip_cache_remove_complete(removed: list[NameUrl]) -> None:
     from aqt import mw
     from aqt.utils import tooltip
 

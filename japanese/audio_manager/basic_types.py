@@ -50,3 +50,17 @@ class NameUrlSet(frozenset[NameUrl]):
     """This type is created to work around pyqtSignal not accepting generic types."""
 
     pass
+
+
+@dataclasses.dataclass(frozen=True)
+class AudioStats:
+    source_name: str
+    num_files: int
+    num_headwords: int
+
+
+@dataclasses.dataclass(frozen=True)
+class TotalAudioStats:
+    unique_headwords: int
+    unique_files: int
+    sources: list[AudioStats]

@@ -21,8 +21,13 @@ from .ajt_common.enum_select_combo import EnumSelectCombo
 from .ajt_common.grab_key import ShortCutGrabButton
 from .ajt_common.utils import ui_translate
 from .audio import aud_src_mgr, show_audio_init_result_tooltip
-from .audio_manager.basic_types import AudioSourceConfig, NameUrlSet
-from .audio_manager.source_manager import InitResult, TotalAudioStats
+from .audio_manager.basic_types import (
+    AudioSourceConfig,
+    NameUrl,
+    NameUrlSet,
+    TotalAudioStats,
+)
+from .audio_manager.source_manager import InitResult
 from .config_view import config_view as cfg
 from .helpers.consts import ADDON_NAME, THIS_ADDON_MODULE
 from .helpers.misc import split_list
@@ -516,7 +521,7 @@ class AudioSourcesEditTable(QWidget):
         self._apply_button.setEnabled(False)
         aud_src_mgr.remove_sources_from_db(selected_sources, on_finish=self._on_remove_selected_sources_finished)
 
-    def _on_remove_selected_sources_finished(self, removed: list[AudioSourceConfig]) -> None:
+    def _on_remove_selected_sources_finished(self, removed: list[NameUrl]) -> None:
         self._apply_button.setEnabled(True)
         if removed:
             self._populate()

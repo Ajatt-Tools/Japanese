@@ -17,7 +17,14 @@ from ..helpers.sqlite3_buddy import BoundFile, Sqlite3Buddy
 from ..mecab_controller.kana_conv import to_katakana
 from ..pitch_accents.common import split_pitch_numbers
 from .audio_source import AudioSource
-from .basic_types import AudioManagerException, AudioSourceConfig, FileUrlData
+from .basic_types import (
+    AudioManagerException,
+    AudioSourceConfig,
+    FileUrlData,
+    NameUrl,
+    NameUrlSet,
+    TotalAudioStats,
+)
 
 RE_FILENAME_PROHIBITED = re.compile(r'[\\\n\t\r#%&\[\]{}<>^*?/$!\'":@+`|=]+', flags=re.MULTILINE | re.IGNORECASE)
 MAX_LEN_BYTES = 120 - 4
@@ -59,20 +66,6 @@ class InitResult:
     def did_not_run(cls):
         # indicates that the init operation didn't start (it wasn't necessary)
         return cls([], [], did_run=False)
-
-
-@dataclasses.dataclass(frozen=True)
-class AudioStats:
-    source_name: str
-    num_files: int
-    num_headwords: int
-
-
-@dataclasses.dataclass(frozen=True)
-class TotalAudioStats:
-    unique_headwords: int
-    unique_files: int
-    sources: list[AudioStats]
 
 
 def read_zip(zip_in: zipfile.ZipFile, audio_source: AudioSource) -> bytes:
@@ -119,18 +112,14 @@ class AudioSourceManager:
         return self._db.distinct_headword_count(source_names=tuple(source.name for source in self.audio_sources))
 
     def total_stats(self) -> TotalAudioStats:
-        stats = [
-            AudioStats(
-                source_name=source.name,
-                num_files=source.distinct_file_count(),
-                num_headwords=source.distinct_headword_count(),
-            )
-            for source in self.audio_sources
-        ]
         return TotalAudioStats(
             unique_files=self.distinct_file_count(),
             unique_headwords=self.distinct_headword_count(),
-            sources=stats,
+            sources=[
+                stats
+                for source in self._config.iter_audio_sources()
+                if (stats := self._db.get_stats_by_name(NameUrl(source.name, source.url)))
+            ],
         )
 
     def search_word(self, word: str) -> Iterable[FileUrlData]:
@@ -217,6 +206,22 @@ class AudioSourceManager:
 
     def remove_data(self, source_name: str) -> None:
         self._db.remove_data(source_name)
+
+    def remove_sources(self, sources_to_delete: NameUrlSet) -> list[NameUrl]:
+        """
+        Remove audio sources from the database.
+        Config file stays unchanged.
+        """
+        removed: list[NameUrl] = []
+        for to_delete in sources_to_delete:
+            cached = self._db.get_source_by_name(to_delete.name)
+            if cached and cached == to_delete:
+                self.remove_data(to_delete.name)
+                removed.append(to_delete)
+                print(f"Removed cache for source: {to_delete.name} ({to_delete.url})")
+            else:
+                print(f"Source isn't cached: {to_delete.name} ({to_delete.url})")
+        return removed
 
     def clear_audio_tables(self) -> None:
         self._db.clear_all_audio_data()

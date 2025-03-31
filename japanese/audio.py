@@ -23,13 +23,11 @@ from .audio_manager.basic_types import (
     AudioManagerException,
     AudioSourceConfig,
     FileUrlData,
+    NameUrl,
     NameUrlSet,
-)
-from .audio_manager.source_manager import (
-    AudioSourceManager,
-    InitResult,
     TotalAudioStats,
 )
+from .audio_manager.source_manager import AudioSourceManager, InitResult
 from .config_view import JapaneseConfig
 from .config_view import config_view as cfg
 from .helpers.inflections import is_inflected
@@ -275,7 +273,7 @@ class AnkiAudioSourceManagerFactory:
         self,
         gui_selected_sources: NameUrlSet,
         *,
-        on_finish: Callable[[list[AudioSourceConfig]], Any],
+        on_finish: Callable[[list[NameUrl]], Any],
     ) -> None:
         assert mw, "Anki should be running."
         QueryOp(

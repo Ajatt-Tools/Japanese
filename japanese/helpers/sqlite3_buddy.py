@@ -10,10 +10,11 @@ from typing import Optional
 
 from aqt import mw
 
+from ..audio_manager.basic_types import AudioStats, NameUrl
+from ..pitch_accents.common import AccDictRawTSVEntry
 from .audio_json_schema import FileInfo, SourceIndex
 from .file_ops import user_files_dir
 from .sqlite_schema import CURRENT_DB
-from ..pitch_accents.common import AccDictRawTSVEntry
 
 NoneType = type(None)  # fix for the official binary bundle
 
@@ -191,6 +192,20 @@ class AudioSqlite3Buddy:
             assert len(result) == 1
             return result[0]
 
+    def get_stats_by_name(self: "Sqlite3Buddy", source: NameUrl) -> Optional[AudioStats]:
+        query = """
+        SELECT
+            (SELECT COUNT(DISTINCT headword)  FROM headwords WHERE source_name = m.source_name) AS num_headwords,
+            (SELECT COUNT(DISTINCT file_name) FROM files     WHERE source_name = m.source_name) AS num_files
+        FROM meta m
+        WHERE m.source_name = ? AND m.original_url = ? ;
+        """
+        with cursor_buddy(self.con) as cur:
+            row = cur.execute(query, (source.name, source.url)).fetchone()
+            if row is None:
+                return None
+            return AudioStats(source_name=source.name, num_headwords=row["num_headwords"], num_files=row["num_files"])
+
     def source_names(self: "Sqlite3Buddy") -> list[str]:
         with cursor_buddy(self.con) as cur:
             query_result = cur.execute(""" SELECT source_name FROM meta; """).fetchall()
@@ -213,21 +228,21 @@ class AudioSqlite3Buddy:
         with cursor_buddy(self.con) as cur:
             query = """ SELECT media_dir_abs FROM meta WHERE source_name = ? LIMIT 1; """
             result = cur.execute(query, (source_name,)).fetchone()
-            assert len(result) == 1 and (type(result[0]) in (str, NoneType))
+            assert len(result) == 1 and (type(result["media_dir_abs"]) in (str, NoneType))
             return result["media_dir_abs"]
 
     def get_media_dir_rel(self: "Sqlite3Buddy", source_name: str) -> str:
         with cursor_buddy(self.con) as cur:
             query = """ SELECT media_dir FROM meta WHERE source_name = ? LIMIT 1; """
             result = cur.execute(query, (source_name,)).fetchone()
-            assert len(result) == 1 and type(result[0]) is str
+            assert len(result) == 1 and type(result["media_dir"]) is str
             return result["media_dir"]
 
     def get_original_url(self: "Sqlite3Buddy", source_name: str) -> Optional[str]:
         with cursor_buddy(self.con) as cur:
             query = """ SELECT original_url FROM meta WHERE source_name = ? LIMIT 1; """
             result = cur.execute(query, (source_name,)).fetchone()
-            assert len(result) == 1 and (type(result[0]) in (str, NoneType))
+            assert len(result) == 1 and (type(result["original_url"]) in (str, NoneType))
             return result["original_url"]
 
     def set_original_url(self: "Sqlite3Buddy", source_name: str, new_url: str) -> None:
@@ -246,6 +261,19 @@ class AudioSqlite3Buddy:
             )
             results = [cur.execute(query, (source_name,)).fetchone() for query in queries]
             return all(result is not None for result in results)
+
+    def get_source_by_name(self: "Sqlite3Buddy", source_name: str) -> Optional[NameUrl]:
+        query = """
+        SELECT m.source_name, m.original_url
+        FROM meta m
+        WHERE m.source_name = ?
+          AND EXISTS (SELECT 1 FROM headwords WHERE source_name = m.source_name LIMIT 1)
+          AND EXISTS (SELECT 1 FROM files     WHERE source_name = m.source_name LIMIT 1) ;
+        """
+        with cursor_buddy(self.con) as cur:
+            result = cur.execute(query, (source_name,)).fetchone()
+            assert result is None or type(result["source_name"]) is str
+            return NameUrl(result["source_name"], result["original_url"]) if result else None
 
     def insert_data(self: "Sqlite3Buddy", source_name: str, data: SourceIndex):
         raise_if_invalid_json(data)
@@ -303,6 +331,7 @@ class AudioSqlite3Buddy:
             )
             self.con.commit()
 
+
 class PitchSqlite3Buddy:
     def prepare_pitch_accents_table(self: "Sqlite3Buddy") -> None:
         pitch_tables_schema = """
@@ -338,7 +367,9 @@ class PitchSqlite3Buddy:
             assert len(result) == 1
             return int(result[0])
 
-    def insert_pitch_accent_data(self: "Sqlite3Buddy", rows: typing.Iterable[AccDictRawTSVEntry], provider_name: str) -> None:
+    def insert_pitch_accent_data(
+        self: "Sqlite3Buddy", rows: typing.Iterable[AccDictRawTSVEntry], provider_name: str
+    ) -> None:
         query = """
         INSERT INTO pitch_accents_formatted
         (headword, katakana_reading, html_notation, pitch_number, frequency, source)
@@ -364,7 +395,10 @@ class PitchSqlite3Buddy:
     PITCH_RETRIEVE_KEYS = ("katakana_reading", "html_notation", "pitch_number")
 
     def search_pitch_accents(
-            self: "Sqlite3Buddy", word: Optional[str], prefer_provider_name: str, select_keys: Sequence[str] = PITCH_RETRIEVE_KEYS
+        self: "Sqlite3Buddy",
+        word: Optional[str],
+        prefer_provider_name: str,
+        select_keys: Sequence[str] = PITCH_RETRIEVE_KEYS,
     ) -> list[Sequence[str]]:
         # The user overrides the default (bundled) rows with their own data.
         # Return relevant rows from the user's data if they can be found.

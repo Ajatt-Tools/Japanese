@@ -105,19 +105,11 @@ class AudioSourceManagerFactory:
             session = self.request_new_session(db)
             session.clear_audio_tables()
 
-    def remove_selected(self, sources_to_delete: NameUrlSet) -> list[AudioSourceConfig]:
+    def remove_selected(self, sources_to_delete: NameUrlSet) -> list[NameUrl]:
         """
         Remove selected sources from the database.
         Config file stays unchanged.
         """
-        removed: list[AudioSourceConfig] = []
         with Sqlite3Buddy(self._db_path) as db:
             session = self.request_new_session(db)
-            for cached in session.audio_sources:
-                if NameUrl(cached.name, cached.url) in sources_to_delete:
-                    session.remove_data(cached.name)
-                    removed.append(cached)
-                    print(f"Removed cache for source: {cached.name} ({cached.url})")
-                else:
-                    print(f"Source isn't cached: {cached.name} ({cached.url})")
-        return removed
+            return session.remove_sources(sources_to_delete)
