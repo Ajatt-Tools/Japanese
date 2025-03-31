@@ -21,7 +21,7 @@ from .ajt_common.enum_select_combo import EnumSelectCombo
 from .ajt_common.grab_key import ShortCutGrabButton
 from .ajt_common.utils import ui_translate
 from .audio import aud_src_mgr, show_audio_init_result_tooltip
-from .audio_manager.basic_types import AudioSourceConfig
+from .audio_manager.basic_types import AudioSourceConfig, NameUrlSet
 from .audio_manager.source_manager import InitResult, TotalAudioStats
 from .config_view import config_view as cfg
 from .helpers.consts import ADDON_NAME, THIS_ADDON_MODULE
@@ -40,14 +40,13 @@ from .pitch_accents.consts import USER_DATA_CSV_PATH
 from .reading import acc_dict
 from .widgets.addon_opts import EditableSelector, relevant_field_names
 from .widgets.anki_style import fix_default_anki_style
-from .widgets.audio_sources import AudioSourcesTable
+from .widgets.audio_sources import AudioSourcesTable, tooltip_cache_remove_complete
 from .widgets.audio_sources_stats import AudioStatsDialog
 from .widgets.enum_selector import FlagSelectCombo
 from .widgets.pitch_override_widget import PitchOverrideWidget
 from .widgets.settings_form import (
     AudioSettingsForm,
     ContextMenuSettingsForm,
-    DefinitionsSettingsForm,
     FuriganaSettingsForm,
     PitchSettingsForm,
     SettingsForm,
@@ -431,7 +430,7 @@ class AudioSourcesEditTable(QWidget):
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
-        self._audio_sources_table = AudioSourcesTable(aud_src_mgr).populate(cfg.iter_audio_sources())
+        self._audio_sources_table = AudioSourcesTable().populate(cfg.iter_audio_sources())
         self._bottom_label = QLabel()
         self._audio_stats = None
         self._apply_button = QPushButton("Apply")
@@ -467,6 +466,7 @@ class AudioSourcesEditTable(QWidget):
         qconnect(self._stats_button.clicked, self._on_show_statistics_clicked)
         qconnect(self._apply_button.clicked, self._on_apply_clicked)
         qconnect(self._choose_file_button.clicked, self._on_choose_file_clicked)
+        qconnect(self._audio_sources_table.remove_requested, self._on_remove_selected_sources_clicked)
 
     def _populate(self) -> None:
         assert mw
@@ -507,6 +507,20 @@ class AudioSourcesEditTable(QWidget):
         self._apply_button.setEnabled(True)
         if result.did_run:
             self._populate()
+
+    def _on_remove_selected_sources_clicked(self, selected_sources: NameUrlSet) -> None:
+        """
+        Remove cached rows for the selected audio sources.
+        Missing audio sources are skipped.
+        """
+        self._apply_button.setEnabled(False)
+        aud_src_mgr.remove_sources_from_db(selected_sources, on_finish=self._on_remove_selected_sources_finished)
+
+    def _on_remove_selected_sources_finished(self, removed: list[AudioSourceConfig]) -> None:
+        self._apply_button.setEnabled(True)
+        if removed:
+            self._populate()
+        tooltip_cache_remove_complete(removed)
 
     def _on_choose_file_clicked(self) -> None:
         name, mime = QFileDialog.getOpenFileName(

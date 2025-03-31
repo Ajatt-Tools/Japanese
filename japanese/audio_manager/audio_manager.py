@@ -6,13 +6,12 @@ from typing import Optional
 
 from aqt import mw
 
-from .abstract import AnkiAudioSourceManagerABC
 from ..config_view import JapaneseConfig
 from ..helpers.basic_types import AudioManagerHttpClientABC
 from ..helpers.http_client import AudioManagerHttpClient
 from ..helpers.sqlite3_buddy import InvalidSourceIndex, Sqlite3Buddy
 from .audio_source import AudioSource
-from .basic_types import AudioManagerException
+from .basic_types import AudioManagerException, AudioSourceConfig, NameUrl, NameUrlSet
 from .source_manager import AudioSourceManager, InitResult
 
 
@@ -105,3 +104,20 @@ class AudioSourceManagerFactory:
         with Sqlite3Buddy(self._db_path) as db:
             session = self.request_new_session(db)
             session.clear_audio_tables()
+
+    def remove_selected(self, sources_to_delete: NameUrlSet) -> list[AudioSourceConfig]:
+        """
+        Remove selected sources from the database.
+        Config file stays unchanged.
+        """
+        removed: list[AudioSourceConfig] = []
+        with Sqlite3Buddy(self._db_path) as db:
+            session = self.request_new_session(db)
+            for cached in session.audio_sources:
+                if NameUrl(cached.name, cached.url) in sources_to_delete:
+                    session.remove_data(cached.name)
+                    removed.append(cached)
+                    print(f"Removed cache for source: {cached.name} ({cached.url})")
+                else:
+                    print(f"Source isn't cached: {cached.name} ({cached.url})")
+        return removed

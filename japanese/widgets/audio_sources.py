@@ -9,11 +9,9 @@ from typing import Optional
 
 from aqt.qt import *
 
-from ..ajt_common.utils import clamp, ui_translate
-from ..audio_manager.abstract import AudioSourceManagerFactoryABC
-from ..audio_manager.basic_types import AudioSourceConfig
+from ..ajt_common.utils import clamp, q_emit, ui_translate
+from ..audio_manager.basic_types import AudioSourceConfig, NameUrl, NameUrlSet
 from ..audio_manager.source_manager import normalize_filename
-from ..helpers.sqlite3_buddy import Sqlite3Buddy
 from .table import CellContent, ExpandingTableWidget, TableRow
 
 
@@ -44,6 +42,8 @@ def tooltip_cache_remove_complete(removed: list[AudioSourceConfig]) -> None:
         msg.write("No cache files to remove")
     if mw:
         tooltip(msg.getvalue(), period=5000)
+    else:
+        print(msg.getvalue())
 
 
 class AudioSourcesTable(ExpandingTableWidget):
@@ -52,9 +52,10 @@ class AudioSourcesTable(ExpandingTableWidget):
     # since names and file paths can contain a wide range of characters.
     _sep_regex: re.Pattern = re.compile(r"[\r\t\n；;。、・]+", flags=re.IGNORECASE | re.MULTILINE)
 
-    def __init__(self, audio_mgr: AudioSourceManagerFactoryABC, *args) -> None:
-        super().__init__(*args)
-        self._audio_mgr = audio_mgr
+    remove_requested = pyqtSignal(NameUrlSet)
+
+    def __init__(self, parent=None) -> None:
+        super().__init__(parent)
         self.addMoveRowContextActions()
         self.addClearCacheContextAction()
 
@@ -70,22 +71,13 @@ class AudioSourcesTable(ExpandingTableWidget):
 
     def clearCacheForSelectedSources(self) -> None:
         """
-        Remove cache files for the selected audio sources.
-        Missing cache files are skipped.
+        Remove cache data for the selected audio sources.
+        Missing audio sources are skipped.
         """
-        removed: list[AudioSourceConfig] = []
-        gui_selected_sources = frozenset((selected.name, selected.url) for selected in self.iterateSelectedConfigs())
-
-        with Sqlite3Buddy() as db:
-            session = self._audio_mgr.request_new_session(db)
-            for cached in session.audio_sources:
-                if (cached.name, cached.url) in gui_selected_sources:
-                    session.remove_data(cached.name)
-                    removed.append(cached)
-                    print(f"Removed cache for source: {cached.name} ({cached.url})")
-                else:
-                    print(f"Source isn't cached: {cached.name} ({cached.url})")
-        tooltip_cache_remove_complete(removed)
+        q_emit(
+            self.remove_requested,
+            NameUrlSet(NameUrl(selected.name, selected.url) for selected in self.iterateSelectedConfigs()),
+        )
 
     def addMoveRowContextActions(self) -> None:
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.ActionsContextMenu)

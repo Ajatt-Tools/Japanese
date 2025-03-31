@@ -4,7 +4,7 @@
 import abc
 
 from ..helpers.sqlite3_buddy import Sqlite3Buddy
-from .basic_types import FileUrlData
+from .basic_types import AudioSourceConfig, FileUrlData, NameUrl, NameUrlSet
 
 
 class AnkiAudioSourceManagerABC(abc.ABC):

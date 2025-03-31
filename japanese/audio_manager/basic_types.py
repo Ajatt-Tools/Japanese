@@ -2,6 +2,7 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import dataclasses
+import typing
 from typing import Optional, Union
 
 import requests
@@ -38,3 +39,14 @@ class AudioManagerException(RequestException):
 
     def describe_short(self) -> str:
         return str(self.exception.__class__.__name__ if self.exception else self.response.status_code)
+
+
+class NameUrl(typing.NamedTuple):
+    name: str
+    url: str
+
+
+class NameUrlSet(frozenset[NameUrl]):
+    """This type is created to work around pyqtSignal not accepting generic types."""
+
+    pass

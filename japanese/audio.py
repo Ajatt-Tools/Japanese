@@ -19,7 +19,12 @@ from .audio_manager.abstract import (
     AudioSourceManagerFactoryABC,
 )
 from .audio_manager.audio_manager import AudioSourceManagerFactory
-from .audio_manager.basic_types import AudioManagerException, FileUrlData
+from .audio_manager.basic_types import (
+    AudioManagerException,
+    AudioSourceConfig,
+    FileUrlData,
+    NameUrlSet,
+)
 from .audio_manager.source_manager import (
     AudioSourceManager,
     InitResult,
@@ -259,14 +264,25 @@ def report_audio_init_errors(result: InitResult) -> None:
         )
 
 
-
-
-class AnkiAudioSourceManagerFactory(AudioSourceManagerFactoryABC):
+class AnkiAudioSourceManagerFactory:
     _config: JapaneseConfig
 
     def __init__(self, config: JapaneseConfig):
         self._config = config
         self._fac = AudioSourceManagerFactory(config)
+
+    def remove_sources_from_db(
+        self,
+        gui_selected_sources: NameUrlSet,
+        *,
+        on_finish: Callable[[list[AudioSourceConfig]], Any],
+    ) -> None:
+        assert mw, "Anki should be running."
+        QueryOp(
+            parent=mw,
+            op=lambda collection: self._fac.remove_selected(gui_selected_sources),
+            success=lambda result: on_finish(result),
+        ).without_collection().run_in_background()
 
     def request_new_session(self, db: Sqlite3Buddy) -> AnkiAudioSourceManager:
         """
