@@ -60,7 +60,7 @@ class AudioSourceManagerFactory:
 
     def init_sources(self) -> None:
         assert mw is None, "Anki shouldn't be running"
-        with Sqlite3Buddy() as db:
+        with Sqlite3Buddy(self._db_path) as db:
             session = self.request_new_session(db)
             result = self.get_sources(session)
             print(f"{result.did_run=}")

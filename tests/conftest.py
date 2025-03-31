@@ -10,7 +10,7 @@ from tests import DATA_DIR
 
 @pytest.fixture(scope="class")
 def tmp_sqlite3_db_path(tmp_path_factory):
-    db_path = tmp_path_factory.mktemp("data") / "db.sqlite"
+    db_path = tmp_path_factory.mktemp("data") / "db.sqlite3"
     yield db_path
     rm_file(db_path)
 
