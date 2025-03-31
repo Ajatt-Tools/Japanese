@@ -5,6 +5,8 @@ import pathlib
 from collections.abc import Iterable
 from typing import Optional
 
+from aqt import mw
+
 from ..config_view import JapaneseConfig
 from ..helpers.basic_types import AudioManagerHttpClientABC
 from ..helpers.http_client import AudioManagerHttpClient
@@ -12,7 +14,7 @@ from ..helpers.sqlite3_buddy import InvalidSourceIndex, Sqlite3Buddy
 from .abstract import AudioSourceManagerFactoryABC
 from .audio_source import AudioSource
 from .basic_types import AudioManagerException
-from .source_manager import InitResult
+from .source_manager import InitResult, AudioSourceManager
 
 
 class AudioSourceManagerFactory(AudioSourceManagerFactoryABC, abc.ABC):
@@ -33,6 +35,19 @@ class AudioSourceManagerFactory(AudioSourceManagerFactoryABC, abc.ABC):
         self._db_path = db_path or self._db_path
         self._http_client = AudioManagerHttpClient(self._config.audio_settings)
         self._audio_sources = []
+
+    def request_new_session(self, db: Sqlite3Buddy) -> AudioSourceManager:
+        """
+        If tasks are being done in a different thread, prepare a new db connection
+        to avoid sqlite3 throwing an instance of sqlite3.ProgrammingError.
+        """
+        assert mw is None, "Anki shouldn't be running"
+        return AudioSourceManager(
+            config=self._config,
+            http_client=self._http_client,
+            db=db,
+            audio_sources=self._audio_sources,
+        )
 
     def init_sources(self) -> None:
         self._set_sources(self._get_sources().sources)

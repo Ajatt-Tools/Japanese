@@ -8,17 +8,7 @@ from tests.no_anki_config import NoAnkiConfigView
 
 
 class NoAnkiAudioSourceManagerFactory(AudioSourceManagerFactory):
-    def request_new_session(self, db: Sqlite3Buddy) -> AudioSourceManager:
-        """
-        If tasks are being done in a different thread, prepare a new db connection
-        to avoid sqlite3 throwing an instance of sqlite3.ProgrammingError.
-        """
-        return AudioSourceManager(
-            config=self._config,
-            http_client=self._http_client,
-            db=db,
-            audio_sources=self._audio_sources,
-        )
+    pass
 
 
 def init_testing_audio_manager(db_path: pathlib.Path) -> NoAnkiAudioSourceManagerFactory:
