@@ -60,7 +60,7 @@ def save_files(
         except AudioManagerException as ex:
             results.fails.append(ex)
         else:
-            assert mw
+            assert mw, "Anki should be running."
             mw.col.media.write_data(
                 desired_fname=result.desired_filename,
                 data=result.data,
@@ -179,7 +179,7 @@ class AnkiAudioSourceManager(AudioSourceManager, AnkiAudioSourceManagerABC):
             # Sequence is empty. Nothing to do.
             return
 
-        assert mw
+        assert mw, "Anki should be running."
         return QueryOp(
             parent=mw,
             op=lambda col: self._download_tags(only_missing(col, hits)),
@@ -245,7 +245,7 @@ def describe_audio_stats(stats: TotalAudioStats) -> str:
 
 def show_audio_init_result_tooltip(result: InitResult) -> None:
     if result.sources:
-        assert mw
+        assert mw, "Anki should be running."
         QueryOp(
             parent=mw,
             op=lambda collection: aud_src_mgr.get_statistics(),
@@ -272,6 +272,7 @@ class AnkiAudioSourceManagerFactory(AudioSourceManagerFactory):
         If tasks are being done in a different thread, prepare a new db connection
         to avoid sqlite3 throwing an instance of sqlite3.ProgrammingError.
         """
+        assert mw, "Anki should be running."
         return AnkiAudioSourceManager(
             config=self._config,
             http_client=self._http_client,
@@ -284,7 +285,7 @@ class AnkiAudioSourceManagerFactory(AudioSourceManagerFactory):
         *,
         on_finish: Callable[[], Any],
     ) -> None:
-        assert mw
+        assert mw, "Anki should be running."
 
         def on_finish_wrapper():
             self._set_sources([])
@@ -301,7 +302,7 @@ class AnkiAudioSourceManagerFactory(AudioSourceManagerFactory):
         *,
         on_finish: Optional[Callable[[InitResult], Any]] = None,
     ) -> None:
-        assert mw
+        assert mw, "Anki should be running."
         QueryOp(
             parent=mw,
             op=lambda collection: self._get_sources(),
