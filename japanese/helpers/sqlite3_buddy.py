@@ -8,6 +8,8 @@ from collections.abc import Iterable, Sequence
 from contextlib import contextmanager
 from typing import Optional
 
+from aqt import mw
+
 from ..pitch_accents.common import AccDictRawTSVEntry
 from .audio_json_schema import FileInfo, SourceIndex
 from .file_ops import user_files_dir
@@ -68,6 +70,10 @@ class Sqlite3Buddy:
     _con: Optional[sqlite3.Connection]
 
     def __init__(self, db_path: Optional[pathlib.Path] = None) -> None:
+        if mw is None:
+            # if running tests
+            assert db_path, "db path should be set"
+            assert db_path != self._db_path, "db path should not point to the user's database"
         self._db_path = db_path or self._db_path
         self._con = None
 
