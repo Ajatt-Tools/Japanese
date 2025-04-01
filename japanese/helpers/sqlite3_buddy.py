@@ -1,6 +1,6 @@
 # Copyright: Ren Tatsumoto <tatsu at autistici.org> and contributors
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
-
+import os
 import pathlib
 import sqlite3
 import typing
@@ -29,6 +29,9 @@ class BoundFile(typing.NamedTuple):
     headword: str
     file_name: str
     source_name: str
+
+    def ext(self) -> str:
+        return os.path.splitext(self.file_name)[-1]
 
 
 def build_or_clause(repeated_field_name: str, count: int) -> str:
@@ -211,6 +214,25 @@ class AudioSqlite3Buddy:
             query_result = cur.execute(""" SELECT source_name FROM meta; """).fetchall()
             return [result_tuple[0] for result_tuple in query_result]
 
+    def get_cached_sources(self: "Sqlite3Buddy") -> list[NameUrl]:
+        query = """
+        SELECT m.source_name, m.original_url
+        FROM meta m
+        WHERE EXISTS (
+            SELECT 1 FROM headwords
+            WHERE source_name = m.source_name
+            LIMIT 1
+        )
+        AND EXISTS (
+            SELECT 1 FROM files
+            WHERE source_name = m.source_name
+            LIMIT 1
+        );
+        """
+        with cursor_buddy(self.con) as cur:
+            rows = cur.execute(query).fetchall()
+            return [NameUrl(row["source_name"], row["original_url"]) for row in rows]
+
     def clear_all_audio_data(self: "Sqlite3Buddy") -> None:
         """
         Remove all info about audio sources from the database.
@@ -267,8 +289,16 @@ class AudioSqlite3Buddy:
         SELECT m.source_name, m.original_url
         FROM meta m
         WHERE m.source_name = ?
-          AND EXISTS (SELECT 1 FROM headwords WHERE source_name = m.source_name LIMIT 1)
-          AND EXISTS (SELECT 1 FROM files     WHERE source_name = m.source_name LIMIT 1) ;
+        AND EXISTS (
+            SELECT 1 FROM headwords
+            WHERE source_name = m.source_name
+            LIMIT 1
+        )
+        AND EXISTS (
+            SELECT 1 FROM files
+            WHERE source_name = m.source_name
+            LIMIT 1
+        );
         """
         with cursor_buddy(self.con) as cur:
             result = cur.execute(query, (source_name,)).fetchone()
