@@ -2,6 +2,8 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 import pathlib
 
+from aqt import mw
+
 from japanese.audio_manager.audio_manager import AudioSourceManagerFactory
 from japanese.audio_manager.basic_types import TotalAudioStats
 from japanese.audio_manager.source_manager import AudioSourceManager
@@ -10,7 +12,32 @@ from playground.utils import NoAnkiConfigView, persistent_sqlite3_db_path
 
 
 class NoAnkiAudioSourceManagerFactory(AudioSourceManagerFactory):
-    pass
+    @property
+    def db_path(self):
+        return self._db_path
+
+    def request_new_session(self, db: Sqlite3Buddy) -> AudioSourceManager:
+        """
+        If tasks are being done in a different thread, prepare a new db connection
+        to avoid sqlite3 throwing an instance of sqlite3.ProgrammingError.
+        """
+        assert mw is None, "Anki shouldn't be running"
+        return AudioSourceManager(
+            config=self._config,
+            http_client=self._http_client,
+            db=db,
+            audio_sources=self._audio_sources,
+        )
+
+    def init_sources(self) -> None:
+        assert mw is None, "Anki shouldn't be running"
+        with Sqlite3Buddy(self._db_path) as db:
+            session = self.request_new_session(db)
+            result = self.get_sources(session)
+            print(f"{result.did_run=}")
+            print(f"{result.errors=}")
+            print(f"{result.sources=}")
+            self.set_sources(result.sources)
 
 
 def init_testing_audio_manager(db_path: pathlib.Path) -> NoAnkiAudioSourceManagerFactory:
