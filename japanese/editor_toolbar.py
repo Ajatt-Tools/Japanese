@@ -17,7 +17,7 @@ from .audio import aud_src_mgr, format_audio_tags
 from .config_view import ToolbarButtonConfig
 from .config_view import config_view as cfg
 from .helpers.profiles import TaskCaller
-from .helpers.sqlite3_buddy import Sqlite3Buddy
+from .database.sqlite3_buddy import Sqlite3Buddy
 from .helpers.tokens import clean_furigana
 from .reading import generate_furigana
 from .tasks import DoTasks

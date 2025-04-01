@@ -8,7 +8,7 @@ from japanese.audio_manager.audio_manager import AudioSourceManagerFactory
 from japanese.audio_manager.audio_source import AudioSourceError
 from japanese.audio_manager.basic_types import TotalAudioStats
 from japanese.audio_manager.source_manager import AudioSourceManager
-from japanese.helpers.sqlite3_buddy import Sqlite3Buddy
+from japanese.database.sqlite3_buddy import Sqlite3Buddy
 from playground.utils import NoAnkiConfigView, persistent_sqlite3_db_path
 
 

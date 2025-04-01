@@ -4,7 +4,7 @@
 import os
 from typing import NamedTuple
 
-from .file_ops import user_files_dir
+from ..helpers.file_ops import user_files_dir
 
 
 class DbFileSchema(NamedTuple):

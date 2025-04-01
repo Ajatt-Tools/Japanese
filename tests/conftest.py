@@ -4,7 +4,7 @@
 import pytest
 
 from japanese.helpers.file_ops import rm_file
-from japanese.helpers.sqlite3_buddy import Sqlite3Buddy
+from japanese.database.sqlite3_buddy import Sqlite3Buddy
 from tests import DATA_DIR
 
 

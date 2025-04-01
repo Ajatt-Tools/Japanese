@@ -9,7 +9,7 @@ from aqt import mw
 from aqt.operations import QueryOp
 
 from ..helpers.file_ops import rm_file, touch
-from ..helpers.sqlite3_buddy import Sqlite3Buddy
+from ..database.sqlite3_buddy import Sqlite3Buddy
 from ..mecab_controller.kana_conv import to_katakana
 from ..mecab_controller.unify_readings import literal_pronunciation as pr
 from .common import (

@@ -5,7 +5,7 @@ import os
 from typing import Optional, Union
 
 from ..helpers.file_ops import file_exists
-from ..helpers.sqlite3_buddy import Sqlite3Buddy
+from ..database.sqlite3_buddy import Sqlite3Buddy
 from .basic_types import AudioSourceConfig
 
 
@@ -23,15 +23,8 @@ class AudioSource(AudioSourceConfig):
 
     @classmethod
     def from_cfg(cls, source: AudioSourceConfig, db: Sqlite3Buddy) -> "AudioSource":
+        # noinspection PyTypeChecker
         return cls(**dataclasses.asdict(source), db=db)
-
-    def to_cfg(self) -> AudioSourceConfig:
-        """
-        Used to compare changes in the config file.
-        """
-        data = dataclasses.asdict(self.with_db(None))
-        del data["db"]
-        return AudioSourceConfig(**data)
 
     def is_cached(self) -> bool:
         if not self.db:
@@ -53,12 +46,13 @@ class AudioSource(AudioSourceConfig):
             return dir_path_abs
         # e.g. if self.url = "/path/to/taas/index.json" and media_dir = "media",
         # then join("/path/to/taas", "media") = "/path/to/taas/media"
-        return self.join(os.path.dirname(self.url), self.db.get_media_dir_rel(self.name))
+        return self.join_media_path(os.path.dirname(self.url), self.db.get_media_dir_rel(self.name))
 
-    def join(self, *args) -> Union[str, bytes]:
+    def join_media_path(self, *args) -> Union[str, bytes]:
         """Join multiple paths."""
         if self.is_local:
             # Local paths are platform-dependent.
+            # noinspection PyArgumentList
             return os.path.join(*args)
         else:
             # URLs are always joined with '/'.

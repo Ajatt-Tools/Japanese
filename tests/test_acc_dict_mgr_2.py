@@ -4,7 +4,7 @@ import pathlib
 
 import pytest
 
-from japanese.helpers.sqlite3_buddy import Sqlite3Buddy
+from japanese.database.sqlite3_buddy import Sqlite3Buddy
 from japanese.pitch_accents.acc_dict_mgr_2 import (
     SqliteAccDictReader,
     SqliteAccDictWriter,

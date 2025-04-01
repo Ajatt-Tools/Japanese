@@ -27,7 +27,7 @@ from .helpers.profiles import (
     ProfilePitch,
     TaskCaller,
 )
-from .helpers.sqlite3_buddy import Sqlite3Buddy
+from .database.sqlite3_buddy import Sqlite3Buddy
 from .pitch_accents.accent_lookup import AccentLookup
 from .reading import fgen, format_pronunciations, lookup
 

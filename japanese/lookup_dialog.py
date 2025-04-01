@@ -16,7 +16,7 @@ from .ajt_common.about_menu import menu_root_entry, tweak_window
 from .config_view import LookupDialogPitchOutputFormat
 from .config_view import config_view as cfg
 from .helpers.consts import ADDON_NAME
-from .helpers.sqlite3_buddy import Sqlite3Buddy
+from .database.sqlite3_buddy import Sqlite3Buddy
 from .helpers.tokens import clean_furigana
 from .helpers.webview_utils import anki_addon_web_relpath
 from .mecab_controller import to_hiragana

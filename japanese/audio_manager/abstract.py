@@ -3,7 +3,7 @@
 
 import abc
 
-from ..helpers.sqlite3_buddy import Sqlite3Buddy
+from ..database.sqlite3_buddy import Sqlite3Buddy
 from .basic_types import FileUrlData
 
 

@@ -6,7 +6,7 @@ import pytest
 
 from japanese.audio_manager.basic_types import NameUrl, NameUrlSet, TotalAudioStats
 from japanese.audio_manager.source_manager import AudioSourceManager
-from japanese.helpers.sqlite3_buddy import Sqlite3Buddy
+from japanese.database.sqlite3_buddy import Sqlite3Buddy
 from playground.run_audio_manager import NoAnkiAudioSourceManagerFactory
 from playground.utils import NoAnkiConfigView
 from tests.conftest import tmp_sqlite3_db_path

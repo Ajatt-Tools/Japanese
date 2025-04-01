@@ -9,7 +9,7 @@ from aqt import gui_hooks
 from .config_view import config_view as cfg
 from .furigana.gen_furigana import FuriganaGen
 from .helpers.profiles import ColorCodePitchFormat, PitchOutputFormat
-from .helpers.sqlite3_buddy import Sqlite3Buddy
+from .database.sqlite3_buddy import Sqlite3Buddy
 from .mecab_controller.kana_conv import to_hiragana
 from .mecab_controller.mecab_controller import MecabController
 from .pitch_accents.acc_dict_mgr_2 import AccentDictManager2

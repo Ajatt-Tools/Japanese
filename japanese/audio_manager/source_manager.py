@@ -11,7 +11,9 @@ from collections.abc import Iterable
 from ..config_view import JapaneseConfig
 from ..helpers.audio_json_schema import FileInfo
 from ..helpers.basic_types import AudioManagerHttpClientABC
-from ..helpers.sqlite3_buddy import BoundFile, InvalidSourceIndex, Sqlite3Buddy
+from ..database.sqlite3_buddy import Sqlite3Buddy
+from ..database.audio_buddy import BoundFile
+from ..database.basic_types import InvalidSourceIndex
 from ..mecab_controller.kana_conv import to_katakana
 from ..pitch_accents.common import split_pitch_numbers
 from .audio_source import AudioSource
@@ -162,7 +164,7 @@ class AudioSourceManager:
         )
         desired_filename = f"{normalize_filename(desired_filename)}{file.ext()}"
         return FileUrlData(
-            url=source.join(source.media_dir, file.file_name),
+            url=source.join_media_path(source.media_dir, file.file_name),
             desired_filename=desired_filename,
             word=file.headword,
             source_name=source.name,
