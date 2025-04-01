@@ -9,6 +9,10 @@ from ..helpers.sqlite3_buddy import Sqlite3Buddy
 from .basic_types import AudioSourceConfig
 
 
+class AudioSourceError(RuntimeError):
+    pass
+
+
 @dataclasses.dataclass
 class AudioSource(AudioSourceConfig):
     # current schema has three fields: "meta", "headwords", "files"
@@ -31,12 +35,12 @@ class AudioSource(AudioSourceConfig):
 
     def is_cached(self) -> bool:
         if not self.db:
-            raise RuntimeError("db is none")
+            raise AudioSourceError("db is none")
         return self.db.is_source_cached(self.name)
 
     def raise_if_not_ready(self):
         if not self.is_cached():
-            raise RuntimeError("Attempt to access property of an uninitialized source.")
+            raise AudioSourceError("Attempt to access property of an uninitialized source.")
 
     @property
     def media_dir(self) -> str:
@@ -47,6 +51,8 @@ class AudioSource(AudioSourceConfig):
         assert self.db
         if dir_path_abs := self.db.get_media_dir_abs(self.name):
             return dir_path_abs
+        # e.g. if self.url = "/path/to/taas/index.json" and media_dir = "media",
+        # then join("/path/to/taas", "media") = "/path/to/taas/media"
         return self.join(os.path.dirname(self.url), self.db.get_media_dir_rel(self.name))
 
     def join(self, *args) -> Union[str, bytes]:
@@ -73,13 +79,3 @@ class AudioSource(AudioSourceConfig):
         self.raise_if_not_ready()
         assert self.db
         self.db.set_original_url(self.name, self.url)
-
-    def distinct_file_count(self) -> int:
-        self.raise_if_not_ready()
-        assert self.db
-        return self.db.distinct_file_count(source_names=(self.name,))
-
-    def distinct_headword_count(self) -> int:
-        self.raise_if_not_ready()
-        assert self.db
-        return self.db.distinct_headword_count(source_names=(self.name,))

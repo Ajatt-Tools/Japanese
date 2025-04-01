@@ -4,6 +4,7 @@
 import collections
 import concurrent.futures
 import itertools
+import pathlib
 from collections.abc import Collection, Iterable, Sequence
 from concurrent.futures import Future
 from typing import Any, Callable, NamedTuple, Optional
@@ -14,14 +15,10 @@ from aqt import gui_hooks, mw
 from aqt.operations import QueryOp
 from aqt.utils import show_warning, tooltip
 
-from .audio_manager.abstract import (
-    AnkiAudioSourceManagerABC,
-    AudioSourceManagerFactoryABC,
-)
+from .audio_manager.abstract import AnkiAudioSourceManagerABC
 from .audio_manager.audio_manager import AudioSourceManagerFactory
 from .audio_manager.basic_types import (
     AudioManagerException,
-    AudioSourceConfig,
     FileUrlData,
     NameUrl,
     NameUrlSet,
@@ -228,13 +225,21 @@ class AnkiAudioSourceManager(AudioSourceManager, AnkiAudioSourceManagerABC):
             data=self._get_file(audio_file),
         )
 
-    def remove_unused_audio_data(self):
-        user_specified_source_names = frozenset(source.name for source in self._config.iter_audio_sources())
-        source_names_in_db = frozenset(self._db.source_names())
-        sources_to_remove = source_names_in_db - user_specified_source_names
-        for source_name in sources_to_remove:
-            print(f"Removing unused cache data for audio source: {source_name}")
-            self.remove_data(source_name)
+    def remove_unused_audio_data(self) -> None:
+        """
+        Remove unused audio sources from the database (after they've been deleted from the config).
+        Cached but disabled sources are kept in the database (in case get enabled in the future).
+        """
+
+        def sources_in_config() -> frozenset[str]:
+            return frozenset(source.name for source in self._config.iter_audio_sources())
+
+        def sources_in_db() -> frozenset[str]:
+            return frozenset(self._db.source_names())
+
+        for to_remove in sources_in_db() - sources_in_config():
+            print(f"Removing unused cache data for audio source: {to_remove}")
+            self.remove_data(to_remove)
 
 
 def describe_audio_stats(stats: TotalAudioStats) -> str:
@@ -262,12 +267,24 @@ def report_audio_init_errors(result: InitResult) -> None:
         )
 
 
-class AnkiAudioSourceManagerFactory:
+class AnkiAudioSourceManagerFactory(AudioSourceManagerFactory):
     _config: JapaneseConfig
+    _db_path: Optional[pathlib.Path] = None
 
     def __init__(self, config: JapaneseConfig):
-        self._config = config
-        self._fac = AudioSourceManagerFactory(config)
+        super().__init__(config)
+
+    def request_new_session(self, db: Sqlite3Buddy) -> AnkiAudioSourceManager:
+        """
+        If tasks are being done in a different thread, prepare a new db connection
+        to avoid sqlite3 throwing an instance of sqlite3.ProgrammingError.
+        """
+        assert mw, "Anki should be running."
+        return AnkiAudioSourceManager(
+            config=self._config,
+            http_client=self._http_client,
+            db=db,
+        )
 
     def remove_sources_from_db(
         self,
@@ -278,22 +295,20 @@ class AnkiAudioSourceManagerFactory:
         assert mw, "Anki should be running."
         QueryOp(
             parent=mw,
-            op=lambda collection: self._fac.remove_selected(gui_selected_sources),
+            op=lambda collection: self._remove_selected(gui_selected_sources),
             success=lambda result: on_finish(result),
         ).without_collection().run_in_background()
 
-    def request_new_session(self, db: Sqlite3Buddy) -> AnkiAudioSourceManager:
+    def _remove_selected(self, sources_to_delete: NameUrlSet) -> list[NameUrl]:
         """
-        If tasks are being done in a different thread, prepare a new db connection
-        to avoid sqlite3 throwing an instance of sqlite3.ProgrammingError.
+        Remove selected sources from the database.
+        Config file stays unchanged.
+        This method is normally run in a different thread.
+        A separate db connection is used.
         """
-        assert mw, "Anki should be running."
-        return AnkiAudioSourceManager(
-            config=self._config,
-            http_client=self._fac.http_client,
-            db=db,
-            audio_sources=self._fac.audio_sources,
-        )
+        with Sqlite3Buddy(self._db_path) as db:
+            session = self.request_new_session(db)
+            return session.remove_sources(sources_to_delete)
 
     def purge_everything(
         self,
@@ -302,15 +317,20 @@ class AnkiAudioSourceManagerFactory:
     ) -> None:
         assert mw, "Anki should be running."
 
-        def on_finish_wrapper():
-            self._fac.set_sources([])
-            on_finish()
-
         QueryOp(
             parent=mw,
-            op=lambda collection: self._fac.purge_sources(),
-            success=lambda result: on_finish_wrapper(),
+            op=lambda collection: self._purge_sources(),
+            success=lambda result: on_finish(),
         ).run_in_background()
+
+    def _purge_sources(self) -> None:
+        """
+        This method is normally run in a different thread.
+        A separate db connection is used.
+        """
+        with Sqlite3Buddy(self._db_path) as db:
+            session = self.request_new_session(db)
+            session.clear_audio_tables()
 
     def init_sources_anki(
         self,
@@ -325,26 +345,37 @@ class AnkiAudioSourceManagerFactory:
         ).run_in_background()
 
     def _get_sources(self) -> InitResult:
-        with Sqlite3Buddy() as db:
+        with Sqlite3Buddy(self._db_path) as db:
             session = self.request_new_session(db)
-            if not session.source_config_changed():
+            if requires_init := session.requires_init_operation():
+                print(f"must be initialized: {[s.name for s in requires_init]}")
+                return session.get_sources()
+            else:
                 print("audio sources haven't changed.")
                 return InitResult.did_not_run()
-            else:
-                return self._fac.get_sources(session)
 
     def get_statistics(self) -> TotalAudioStats:
         """
         Return statistics, running in a new session.
         """
-        with Sqlite3Buddy() as db:
+        assert mw, "Anki should be running."
+        with Sqlite3Buddy(self._db_path) as db:
             session = self.request_new_session(db)
             return session.total_stats()
 
     def _remove_unused_audio_data(self) -> None:
-        with Sqlite3Buddy() as db:
-            session = self.request_new_session(db)
-            session.remove_unused_audio_data()
+        assert mw, "Anki should be running."
+
+        def remove_unused_sources() -> None:
+            with Sqlite3Buddy(self._db_path) as db:
+                session = self.request_new_session(db)
+                session.remove_unused_audio_data()
+
+        QueryOp(
+            parent=mw,
+            op=lambda collection: remove_unused_sources(),
+            success=lambda result: None,
+        ).without_collection().run_in_background()
 
     def _after_init(
         self,
@@ -352,17 +383,15 @@ class AnkiAudioSourceManagerFactory:
         on_finish: Optional[Callable[[InitResult], Any]] = None,
     ) -> None:
         if result.did_run:
-            self._fac.set_sources(result.sources)
-            self._remove_unused_audio_data()
             report_audio_init_errors(result)
             print("Initialized all audio sources.")
+        self._remove_unused_audio_data()
         if on_finish:
             on_finish(result)
 
 
 # Entry point
 ##########################################################################
-
 
 aud_src_mgr = AnkiAudioSourceManagerFactory(cfg)
 # react to anki's state changes

@@ -1,6 +1,5 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
-import contextlib
 import dataclasses
 import io
 import json
@@ -8,18 +7,16 @@ import os
 import re
 import zipfile
 from collections.abc import Iterable
-from typing import Sequence
 
 from ..config_view import JapaneseConfig
 from ..helpers.audio_json_schema import FileInfo
 from ..helpers.basic_types import AudioManagerHttpClientABC
-from ..helpers.sqlite3_buddy import BoundFile, Sqlite3Buddy
+from ..helpers.sqlite3_buddy import BoundFile, InvalidSourceIndex, Sqlite3Buddy
 from ..mecab_controller.kana_conv import to_katakana
 from ..pitch_accents.common import split_pitch_numbers
 from .audio_source import AudioSource
 from .basic_types import (
     AudioManagerException,
-    AudioSourceConfig,
     FileUrlData,
     NameUrl,
     NameUrlSet,
@@ -83,33 +80,34 @@ class AudioSourceManager:
     _config: JapaneseConfig
     _http_client: AudioManagerHttpClientABC
     _db: Sqlite3Buddy
-    _audio_sources: dict[str, AudioSource]
 
     def __init__(
         self,
         config: JapaneseConfig,
         http_client: AudioManagerHttpClientABC,
         db: Sqlite3Buddy,
-        audio_sources: list[AudioSource],
     ) -> None:
         self._config = config
         self._http_client = http_client
         self._db = db
-        self._audio_sources = {source.name: source.with_db(db) for source in audio_sources}
 
-    @property
-    def audio_sources(self) -> Iterable[AudioSource]:
-        return self._audio_sources.values()
-
-    @property
-    def buddy(self) -> Sqlite3Buddy:
-        return self._db
+    def iter_enabled_audio_sources(self) -> Iterable[AudioSource]:
+        """
+        Returns all enabled audio sources, regardless if they are initialized or not.
+        """
+        return (
+            AudioSource.from_cfg(source, self._db) for source in self._config.iter_audio_sources() if source.enabled
+        )
 
     def distinct_file_count(self) -> int:
-        return self._db.distinct_file_count(source_names=tuple(source.name for source in self.audio_sources))
+        return self._db.distinct_file_count(
+            source_names=tuple(source.name for source in self.iter_enabled_audio_sources())
+        )
 
     def distinct_headword_count(self) -> int:
-        return self._db.distinct_headword_count(source_names=tuple(source.name for source in self.audio_sources))
+        return self._db.distinct_headword_count(
+            source_names=tuple(source.name for source in self.iter_enabled_audio_sources())
+        )
 
     def total_stats(self) -> TotalAudioStats:
         return TotalAudioStats(
@@ -123,11 +121,9 @@ class AudioSourceManager:
         )
 
     def search_word(self, word: str) -> Iterable[FileUrlData]:
-        for source_name in self._audio_sources:
-            for file in self._db.search_files_in_source(source_name, word):
-                with contextlib.suppress(KeyError):
-                    # Accessing a disabled source results in a key error.
-                    yield self._resolve_file(self._audio_sources[file.source_name], file)
+        for source in self.iter_enabled_audio_sources():
+            for file in self._db.search_files_in_source(source.name, word):
+                yield self._resolve_file(source, file)
 
     def read_pronunciation_data(self, source: AudioSource) -> None:
         if source.is_cached():
@@ -164,8 +160,7 @@ class AudioSourceManager:
                 source.name,
             )
         )
-        desired_filename = f"{normalize_filename(desired_filename)}{os.path.splitext(file.file_name)[-1]}"
-
+        desired_filename = f"{normalize_filename(desired_filename)}{file.ext()}"
         return FileUrlData(
             url=source.join(source.media_dir, file.file_name),
             desired_filename=desired_filename,
@@ -226,23 +221,43 @@ class AudioSourceManager:
     def clear_audio_tables(self) -> None:
         self._db.clear_all_audio_data()
 
-    def already_initialized(self) -> Sequence[AudioSourceConfig]:
+    def already_initialized(self) -> frozenset[NameUrl]:
         """
-        Returns audio sources that have been fully initialized,
-        meaning they are enabled and the database has cached them.
+        Returns audio sources that are cached in the database.
         """
-        return tuple(s.to_cfg() for s in self._audio_sources.values() if s.enabled and s.is_cached())
+        return frozenset(self._db.get_cached_sources())
 
-    def must_be_initialized(self) -> Sequence[AudioSourceConfig]:
+    def must_be_initialized(self) -> frozenset[NameUrl]:
         """
         Returns audio sources that the add-on needs right now based on the current config.
         """
-        return tuple(s for s in self._config.iter_audio_sources() if s.enabled)
+        return frozenset(NameUrl(s.name, s.url) for s in self._config.iter_audio_sources() if s.enabled)
 
-    def source_config_changed(self) -> bool:
+    def requires_init_operation(self) -> frozenset[NameUrl]:
         """
-        Returns true if the configuration of audio sources has changed.
+        Returns a set of audio sources that are enabled but not initialized.
         Used to skip unnecessary re-init operations.
         Count only enabled sources. Disabled sources have no effect on the audio manager's operation.
         """
-        return self.already_initialized() != self.must_be_initialized()
+        return self.must_be_initialized() - self.already_initialized()
+
+    def get_sources(self) -> InitResult:
+        """
+        This method is normally run in a different thread.
+        A separate db connection is used.
+        """
+        sources, errors = [], []
+        for source in self.iter_enabled_audio_sources():
+            try:
+                self.read_pronunciation_data(source)
+            except AudioManagerException as ex:
+                print(f"Ignoring audio source {source.name}: {ex.describe_short()}.")
+                errors.append(ex)
+                continue
+            except InvalidSourceIndex as ex:
+                print(ex)
+                errors.append(AudioManagerException(source, str(ex)))
+            else:
+                sources.append(source)
+                print(f"Initialized audio source: {source.name}")
+        return InitResult(sources, errors)

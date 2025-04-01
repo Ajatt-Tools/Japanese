@@ -164,10 +164,11 @@ class AudioSqlite3Buddy:
         # Filenames in different audio sources may collide,
         # although it's not likely with the currently released audio sources.
         # To resolve collisions when counting distinct filenames,
-        # dictionary_name and year are also taken into account.
+        # dictionary_name and original_url are also taken into account.
         query = """
         SELECT COUNT(*) FROM (
-            SELECT DISTINCT f.file_name, m.dictionary_name, m.year FROM files f
+            SELECT DISTINCT f.file_name, m.dictionary_name, m.original_url
+            FROM files f
             INNER JOIN meta m ON f.source_name = m.source_name
             WHERE %s
         );

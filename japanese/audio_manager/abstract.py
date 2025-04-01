@@ -4,15 +4,10 @@
 import abc
 
 from ..helpers.sqlite3_buddy import Sqlite3Buddy
-from .basic_types import AudioSourceConfig, FileUrlData, NameUrl, NameUrlSet
+from .basic_types import FileUrlData
 
 
 class AnkiAudioSourceManagerABC(abc.ABC):
-    @property
-    @abc.abstractmethod
-    def buddy(self) -> Sqlite3Buddy:
-        raise NotImplementedError()
-
     @abc.abstractmethod
     def search_audio(
         self,
