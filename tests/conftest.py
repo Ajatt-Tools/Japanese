@@ -3,8 +3,8 @@
 
 import pytest
 
-from japanese.helpers.file_ops import rm_file
 from japanese.database.sqlite3_buddy import Sqlite3Buddy
+from japanese.helpers.file_ops import rm_file
 from tests import DATA_DIR
 
 

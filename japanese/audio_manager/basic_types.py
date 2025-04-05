@@ -31,7 +31,7 @@ class AudioSourceConfig(SourceConfig):
 
 
 @dataclasses.dataclass
-class AudioManagerException(RequestException):
+class AudioManagerException(OSError):
     file: Union[AudioSourceConfig, FileUrlData]
     explanation: str
     response: Optional[requests.Response] = None

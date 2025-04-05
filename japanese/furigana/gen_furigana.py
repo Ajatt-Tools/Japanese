@@ -5,11 +5,11 @@ from collections.abc import Hashable, Iterable, Sequence
 from typing import Callable, Optional, TypeVar
 
 from ..config_view import FuriganaConfigView, JapaneseConfig
+from ..database.sqlite3_buddy import Sqlite3Buddy
 from ..helpers.common_kana import adjust_to_inflection
 from ..helpers.consts import LONG_VOWEL_MARK
 from ..helpers.mingle_readings import mingle_readings
 from ..helpers.profiles import ColorCodePitchFormat
-from ..database.sqlite3_buddy import Sqlite3Buddy
 from ..helpers.tokens import ParseableToken, Token, tokenize
 from ..mecab_controller import MecabController, format_output, is_kana_str, to_hiragana
 from ..mecab_controller.basic_types import Inflection, MecabParsedToken, PartOfSpeech

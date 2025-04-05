@@ -3,9 +3,8 @@
 import typing
 from typing import Optional, Sequence
 
-from .basic_types import cursor_buddy
-from .basic_types import Sqlite3Buddy
 from ..pitch_accents.common import AccDictRawTSVEntry
+from .basic_types import Sqlite3Buddy, cursor_buddy
 
 
 class PitchSqlite3Buddy:

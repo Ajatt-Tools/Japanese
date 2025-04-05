@@ -2,13 +2,11 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 import os
 import typing
-from typing import Iterable, Sequence, Optional
+from typing import Iterable, Optional, Sequence
 
-from .basic_types import InvalidSourceIndex, cursor_buddy
-from .basic_types import Sqlite3Buddy
-from ..audio_manager.basic_types import NameUrl, AudioStats
-
-from ..helpers.audio_json_schema import SourceIndex, FileInfo
+from ..audio_manager.basic_types import AudioStats, NameUrl
+from ..helpers.audio_json_schema import FileInfo, SourceIndex
+from .basic_types import InvalidSourceIndex, Sqlite3Buddy, cursor_buddy
 
 NoneType = type(None)  # fix for the official binary bundle
 

@@ -18,6 +18,7 @@ from aqt.utils import tooltip
 from .audio import FileSaveResults, aud_src_mgr, format_audio_tags
 from .audio_manager.basic_types import FileUrlData
 from .config_view import config_view as cfg
+from .database.sqlite3_buddy import Sqlite3Buddy
 from .furigana.gen_furigana import FuriganaGen
 from .helpers.profiles import (
     PitchOutputFormat,
@@ -27,7 +28,6 @@ from .helpers.profiles import (
     ProfilePitch,
     TaskCaller,
 )
-from .database.sqlite3_buddy import Sqlite3Buddy
 from .pitch_accents.accent_lookup import AccentLookup
 from .reading import fgen, format_pronunciations, lookup
 

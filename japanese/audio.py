@@ -27,9 +27,9 @@ from .audio_manager.basic_types import (
 from .audio_manager.source_manager import AudioSourceManager, InitResult
 from .config_view import JapaneseConfig
 from .config_view import config_view as cfg
+from .database.sqlite3_buddy import Sqlite3Buddy
 from .helpers.inflections import is_inflected
 from .helpers.mingle_readings import split_possible_furigana
-from .database.sqlite3_buddy import Sqlite3Buddy
 from .helpers.tokens import ParseableToken, tokenize
 from .helpers.unique_files import ensure_unique_files
 from .mecab_controller.kana_conv import to_hiragana, to_katakana

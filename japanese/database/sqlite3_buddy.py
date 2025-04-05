@@ -6,11 +6,11 @@ from typing import Optional
 
 from aqt import mw
 
+from ..helpers.file_ops import user_files_dir
 from .audio_buddy import AudioSqlite3Buddy
 from .basic_types import Sqlite3BuddyError
 from .pitch_buddy import PitchSqlite3Buddy
 from .sqlite_schema import CURRENT_DB
-from ..helpers.file_ops import user_files_dir
 
 CURRENT_DB.remove_deprecated_files()
 

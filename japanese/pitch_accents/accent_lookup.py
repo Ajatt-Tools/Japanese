@@ -7,8 +7,8 @@ from typing import Optional
 from aqt import mw
 
 from ..config_view import JapaneseConfig
-from ..helpers.mingle_readings import split_possible_furigana
 from ..database.sqlite3_buddy import Sqlite3Buddy
+from ..helpers.mingle_readings import split_possible_furigana
 from ..helpers.tokens import split_separators
 from ..mecab_controller import MecabController
 from ..mecab_controller.lru_cache import LRUCache

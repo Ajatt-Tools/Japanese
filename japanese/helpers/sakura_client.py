@@ -76,7 +76,7 @@ class SakuraParisClient(anki.httpclient.HttpClient):
                 return ""
             return DEF_SEP.join(self._parse_result(r.text))
 
-    def _parse_result(self, html_page: str) -> str:
+    def _parse_result(self, html_page: str) -> typing.Iterable[str]:
         soup = BeautifulSoup(html_page, "html.parser")
         for node in soup.find_all("div", class_="content"):
             del node["class"]

@@ -41,9 +41,9 @@ class SearchBar(QWidget):
         self._search_line = QLineEdit()
         self._search_button = QPushButton("Search")
         qconnect(self._search_line.returnPressed, self._search_button.click)
-        self._initUI()
+        self._init_ui()
 
-    def keyPressEvent(self, evt: QKeyEvent):
+    def keyPressEvent(self, evt: QKeyEvent) -> None:
         if evt.key() == Qt.Key.Key_Enter or evt.key() == Qt.Key.Key_Return:
             return
         return super().keyPressEvent(evt)
@@ -52,13 +52,13 @@ class SearchBar(QWidget):
     def search_committed(self) -> pyqtSignal:
         return self._search_button.clicked
 
-    def current_text(self):
+    def current_text(self) -> str:
         return self._search_line.text()
 
-    def set_text(self, text: str):
+    def set_text(self, text: str) -> None:
         self._search_line.setText(text)
 
-    def _initUI(self):
+    def _init_ui(self) -> None:
         hbox = QHBoxLayout()
         hbox.setContentsMargins(0, 0, 0, 0)
         hbox.setSpacing(3)
@@ -181,7 +181,7 @@ class AudioSearchDialog(QDialog):
         """
         pass
 
-    def _create_top_layout(self):
+    def _create_top_layout(self) -> QLayout:
         layout = QHBoxLayout()
         layout.addWidget(QLabel("Source:"))
         layout.addWidget(self._src_field_selector)
@@ -197,13 +197,13 @@ class AudioSearchDialog(QDialog):
         return layout
 
     @property
-    def table(self):
+    def table(self) -> SearchResultsTable:
         return self._table_widget
 
     def files_to_add(self) -> list[FileUrlData]:
         return self._table_widget.files_to_add()
 
-    def search(self, search_text: typing.Optional[str] = None):
+    def search(self, search_text: typing.Optional[str] = None) -> None:
         self._table_widget.clear()
         # strip media in case source field and destination field are the same.
         search_text = strip_html_and_media(search_text or self._search_bar.current_text())
@@ -226,7 +226,7 @@ class AudioSearchDialog(QDialog):
         *,
         selected_src_field_name: str,
         selected_dest_field_name: str,
-    ):
+    ) -> None:
         for combo in (self._src_field_selector, self._dest_field_selector):
             combo.clear()
             combo.addItems(field_names)
@@ -245,12 +245,12 @@ class AudioSearchDialog(QDialog):
 class AnkiAudioSearchDialog(AudioSearchDialog):
     name = "ajt__audio_search_dialog"
 
-    def __init__(self, audio_manager: AnkiAudioSourceManagerABC, parent=None):
+    def __init__(self, audio_manager: AnkiAudioSourceManagerABC, parent=None) -> None:
         super().__init__(audio_manager, parent)
         # Restore previous geom
         restoreGeom(self, self.name, adjustSize=True)
 
-    def _play_audio_file(self, file: FileUrlData):
+    def _play_audio_file(self, file: FileUrlData) -> None:
         if os.path.isfile(file.url):
             return sound.av_player.play_tags([SoundOrVideoTag(filename=file.url)])
         elif mw.col.media.have(file.desired_filename):
@@ -264,7 +264,7 @@ class AnkiAudioSearchDialog(AudioSearchDialog):
                 ),
             )
 
-    def _open_audio_file(self, file: FileUrlData):
+    def _open_audio_file(self, file: FileUrlData) -> None:
         tooltip(tr.qt_misc_loading(), period=1000)
 
         if os.path.isfile(file.url):

@@ -6,9 +6,9 @@ from collections.abc import Sequence
 
 import pytest
 
+from japanese.database.sqlite3_buddy import Sqlite3Buddy
 from japanese.furigana.gen_furigana import FuriganaGen
 from japanese.helpers.profiles import ColorCodePitchFormat
-from japanese.database.sqlite3_buddy import Sqlite3Buddy
 from japanese.helpers.tokens import HTML_AND_MEDIA_REGEX, clean_furigana
 from japanese.mecab_controller import MecabController, to_katakana
 from japanese.pitch_accents.acc_dict_mgr_2 import AccentDictManager2
