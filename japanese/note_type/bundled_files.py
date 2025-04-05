@@ -60,7 +60,14 @@ def get_file_version(file_path: str) -> VersionedFile:
     return VersionedFile(UNK_VERSION)
 
 
-class BundledCSSFile(typing.NamedTuple):
+class HasVersionTuple:
+    version: FileVersionTuple
+
+    def version_str(self) -> str:
+        return '.'.join(map(str, self.version))
+
+
+class BundledCSSFile(HasVersionTuple, typing.NamedTuple):
     file_path: str
     version: FileVersionTuple
     import_str: str
@@ -86,11 +93,7 @@ class BundledCSSFile(typing.NamedTuple):
             text_content=vf.text_content,
         )
 
-    def version_str(self) -> str:
-        return '.'.join(map(str, self.version))
-
-
-class BundledJSFile(typing.NamedTuple):
+class BundledJSFile(HasVersionTuple, typing.NamedTuple):
     file_path: str
     version: FileVersionTuple
     import_str: str
@@ -103,9 +106,6 @@ class BundledJSFile(typing.NamedTuple):
             version=vf.version,
             import_str=inline_bundled_js(vf),
         )
-
-    def version_str(self) -> str:
-        return '.'.join(map(str, self.version))
 
 
 BUNDLED_CSS_FILE = BundledCSSFile.new(AJT_JAPANESE_CSS_PATH)
