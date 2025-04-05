@@ -1,5 +1,5 @@
 /*
- * AJT Japanese JS 24.10.8.1
+ * AJT Japanese JS 25.4.5.1
  * Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
  * License: GNU AGPL, version 3 or later; https://www.gnu.org/licenses/agpl-3.0.html
  */
@@ -156,12 +156,21 @@ function ajt__format_readings_as_list(readings) {
     return list_elem;
 }
 
+function ajt__fixup_br(element) {
+    // If there's a <br> tag inside the reading, e.g. <ruby><rb>矜持</rb><rt>きょうじ<br>きんじ</rt></ruby>,
+    // then replace it with a space.
+    element.querySelectorAll("br").forEach((element) => {
+        element.insertAdjacentText("afterend", " ");
+        element.remove();
+    });
+    return element;
+}
+
 function ajt__find_kanji_readings(ruby_tag) {
     // <rb> contains the kanji word (on some platforms). <rt> contains the kana reading(s) (furigana).
-    const separators = /[\s;,.、・。]+/iu;
+    const separators = /[\n\s;,.、・。]+/iu;
     const kanji = (ruby_tag.querySelector("rb") || ruby_tag.firstChild).textContent.trim();
-    const readings = ruby_tag
-        .querySelector("rt")
+    const readings = ajt__fixup_br(ruby_tag.querySelector("rt"))
         .textContent.split(separators)
         .map((str) => str.trim())
         .filter((str) => str.length);

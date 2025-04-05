@@ -86,6 +86,9 @@ class BundledCSSFile(typing.NamedTuple):
             text_content=vf.text_content,
         )
 
+    def version_str(self) -> str:
+        return '.'.join(map(str, self.version))
+
 
 class BundledJSFile(typing.NamedTuple):
     file_path: str
@@ -100,6 +103,9 @@ class BundledJSFile(typing.NamedTuple):
             version=vf.version,
             import_str=inline_bundled_js(vf),
         )
+
+    def version_str(self) -> str:
+        return '.'.join(map(str, self.version))
 
 
 BUNDLED_CSS_FILE = BundledCSSFile.new(AJT_JAPANESE_CSS_PATH)

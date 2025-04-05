@@ -119,3 +119,5 @@ assert find_ajt_japanese_js_import(BUNDLED_JS_FILE.import_str) == VersionedFile(
     BUNDLED_JS_FILE.import_str,
 )
 assert re.fullmatch(RE_AJT_CSS_IMPORT, BUNDLED_CSS_FILE.import_str)
+print(f"bundled JS version: {BUNDLED_JS_FILE.version_str()}")
+print(f"bundled CSS version: {BUNDLED_CSS_FILE.version_str()}")
