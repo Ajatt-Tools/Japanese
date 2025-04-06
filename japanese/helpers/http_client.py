@@ -71,7 +71,7 @@ class AudioManagerHttpClient(AudioManagerHttpClientABC):
         except OSError as ex:
             raise AudioManagerException(
                 file,
-                f"{file.url} download failed with {ex.__class__.__name__}",
+                f"{file.url} download failed with exception {ex.__class__.__name__}",
                 exception=ex,
             )
         if response.status_code != requests.codes.ok:
