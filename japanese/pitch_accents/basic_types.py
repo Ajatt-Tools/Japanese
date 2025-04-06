@@ -75,6 +75,10 @@ class PitchParam(NamedTuple):
     number: str
 
     def describe(self):
+        """
+        Returns pattern name if not nakadaka: unknown, heiban, atamadaka, odaka, kifuku.
+        Otherwise, returns pattern + pitch number: nakadaka-2, nakadaka-3, etc.
+        """
         if self.type == PitchType.nakadaka:
             return f"{self.type.name}{SEP_PITCH_TYPE_NUM}{self.number}"
         else:
@@ -97,6 +101,13 @@ class PitchAccentEntry(NamedTuple):
         return bool(self.pitches and any(pitch.type != PitchType.unknown for pitch in self.pitches))
 
     def describe_pitches(self) -> str:
+        """
+        Returns reading and its pitch accents, separated by a colon.
+        Examples:
+            コウソクドウロ:nakadaka-5
+            メイワク:atamadaka
+            キシ・カイセイ:nakadaka-2,heiban (the first part of the word is 2, the second part is 0)
+        """
         return (
             self.katakana_reading_sep
             + SEP_READING_PITCH
@@ -134,8 +145,10 @@ class AccDbParsedToken(MecabParsedToken):
 
     def describe_pitches(self) -> str:
         """
-        reading1:pitch_type reading2:pitch_type
-        コッキョウ:heiban クニザカイ:nakadaka-3
+        Returns readings in this format: reading1:pitch_type reading2:pitch_type
+        Examples:
+            コッキョウ:heiban クニザカイ:nakadaka-3 (one word has two different readings, with their accents listed)
+            マンビキ:heiban マンビキ:odaka (one word has two possible accents)
         """
         return SEP_PITCH_GROUP.join(pitch.describe_pitches() for pitch in self.headword_accents)
 
