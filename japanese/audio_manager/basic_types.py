@@ -9,6 +9,7 @@ import requests
 from requests import RequestException
 
 from ..helpers.types import SourceConfig, SourceConfigDict
+from ..pitch_accents.consts import NO_ACCENT
 
 
 @dataclasses.dataclass(frozen=True)
@@ -18,7 +19,7 @@ class FileUrlData:
     word: str
     source_name: str
     reading: str = ""
-    pitch_number: str = "?"
+    pitch_number: str = NO_ACCENT
 
 
 class AudioSourceConfigDict(SourceConfigDict):

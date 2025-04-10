@@ -2,15 +2,14 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 import collections
 import csv
-import enum
 import os
 import pathlib
 import re
 import typing
-from collections.abc import Iterable, Sequence
-from typing import NamedTuple, NewType
+from collections.abc import Iterable
+from typing import NamedTuple
 
-from .consts import NO_ACCENT, PITCH_DIR_PATH
+from .consts import NO_ACCENT
 
 Stored = typing.TypeVar("Stored")
 

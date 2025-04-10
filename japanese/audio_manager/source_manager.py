@@ -16,6 +16,7 @@ from ..helpers.audio_json_schema import FileInfo
 from ..helpers.basic_types import AudioManagerHttpClientABC
 from ..mecab_controller.kana_conv import to_katakana
 from ..pitch_accents.common import split_pitch_numbers
+from ..pitch_accents.consts import NO_ACCENT
 from .audio_source import AudioSource
 from .basic_types import (
     AudioManagerException,
@@ -52,7 +53,7 @@ def norm_pitch_numbers(s: str) -> str:
     When an audio file has more than one accent, it basically represents two or more words chained together.
     E.g., かも-知れない (1-0), 黒い-霧 (2-0), 作用,反作用の,法則 (1-3-0), 八幡,大菩薩 (2-3), 入り代わり-立ち代わり (0-0), 七転,八起き (3-1)
     """
-    return "-".join(split_pitch_numbers(s)) or "?"
+    return "-".join(split_pitch_numbers(s)) or NO_ACCENT
 
 
 @dataclasses.dataclass
@@ -152,7 +153,7 @@ class AudioSourceManager:
             components.append(to_katakana(file_info["kana_reading"]))
 
         # If pitch number is present, append it after reading.
-        if file_info["pitch_number"]:
+        if file_info["pitch_number"] and file_info["pitch_number"] != NO_ACCENT:
             components.append(norm_pitch_numbers(file_info["pitch_number"]))
 
         desired_filename = "_".join(
@@ -169,7 +170,7 @@ class AudioSourceManager:
             word=file.headword,
             source_name=source.name,
             reading=(file_info["kana_reading"] or ""),
-            pitch_number=(file_info["pitch_number"] or "?"),
+            pitch_number=(file_info["pitch_number"] or NO_ACCENT),
         )
 
     def _read_local_json(self, source: AudioSource) -> None:
