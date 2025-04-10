@@ -2,7 +2,7 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 import pytest
 
-from japanese.database.basic_types import Sqlite3BuddyGetVersionError
+from japanese.database.basic_types import Sqlite3BuddyVersionError
 from japanese.database.sqlite3_buddy import Sqlite3Buddy
 from tests.conftest import tmp_db_connection
 
@@ -11,11 +11,12 @@ class TestDbVersion:
     def test_set_and_get(self, tmp_db_connection: Sqlite3Buddy) -> None:
         con = tmp_db_connection
         # verify that everything is empty
-        cur = con.con.execute("""
+        query = """
         SELECT COUNT(*) FROM version
-        """)
+        """
+        cur = con.con.execute(query)
         assert cur.fetchone()[0] == 0, "table should not be filled yet"
-        with pytest.raises(Sqlite3BuddyGetVersionError):
+        with pytest.raises(Sqlite3BuddyVersionError):
             # version is not set yet => get exception
             con.get_db_version("test_schema_1")
         con.set_db_version("test_schema_1", 1)
