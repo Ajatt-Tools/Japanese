@@ -47,44 +47,46 @@ def raise_if_invalid_json(data: SourceIndex):
         raise InvalidSourceIndex(f"Outdated index schema: {version}. Minimum supported version: {MIN_SOURCE_VERSION}")
 
 
+AUDIO_TABLES_SCHEMA = """
+--- Note: `source_name` is the name given to the audio source by the user,
+--- and it can be arbitrary (e.g. NHK-2016).
+--- `dictionary_name` is the name given to the audio source by its creator.
+--- E.g. the NHK audio source provided by Ajatt-Tools has `dictionary_name` set to "NHK日本語発音アクセント新辞典".
+
+CREATE TABLE IF NOT EXISTS meta(
+    source_name     TEXT primary key NOT NULL,
+    dictionary_name TEXT             NOT NULL,
+    year            INTEGER          NOT NULL,
+    version         INTEGER          NOT NULL,
+    original_url    TEXT,
+    media_dir       TEXT             NOT NULL,
+    media_dir_abs   TEXT
+);
+
+CREATE TABLE IF NOT EXISTS headwords(
+    source_name TEXT NOT NULL,
+    headword    TEXT NOT NULL,
+    file_name   TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS files(
+    source_name   TEXT NOT NULL,
+    file_name     TEXT NOT NULL,
+    kana_reading  TEXT NOT NULL,
+    pitch_pattern TEXT,
+    pitch_number  TEXT
+);
+
+CREATE INDEX IF NOT EXISTS index_names ON meta(source_name);
+CREATE INDEX IF NOT EXISTS index_file_names ON headwords(source_name, headword);
+CREATE INDEX IF NOT EXISTS index_file_info ON files(source_name, file_name);
+"""
+
+
 class AudioSqlite3Buddy:
     def prepare_audio_tables(self: Sqlite3Buddy) -> None:
-        audio_tables_schema = """
-        --- Note: `source_name` is the name given to the audio source by the user,
-        --- and it can be arbitrary (e.g. NHK-2016).
-        --- `dictionary_name` is the name given to the audio source by its creator.
-        --- E.g. the NHK audio source provided by Ajatt-Tools has `dictionary_name` set to "NHK日本語発音アクセント新辞典".
-
-        CREATE TABLE IF NOT EXISTS meta(
-            source_name TEXT primary key not null,
-            dictionary_name TEXT not null,
-            year INTEGER not null,
-            version INTEGER not null,
-            original_url TEXT,
-            media_dir TEXT not null,
-            media_dir_abs TEXT
-        );
-
-        CREATE TABLE IF NOT EXISTS headwords(
-            source_name TEXT not null,
-            headword TEXT not null,
-            file_name TEXT not null
-        );
-
-        CREATE TABLE IF NOT EXISTS files(
-            source_name TEXT not null,
-            file_name TEXT not null,
-            kana_reading TEXT not null,
-            pitch_pattern TEXT,
-            pitch_number TEXT
-        );
-
-        CREATE INDEX IF NOT EXISTS index_names ON meta(source_name);
-        CREATE INDEX IF NOT EXISTS index_file_names ON headwords(source_name, headword);
-        CREATE INDEX IF NOT EXISTS index_file_info ON files(source_name, file_name);
-        """
         with cursor_buddy(self.con) as cur:
-            cur.executescript(audio_tables_schema)
+            cur.executescript(AUDIO_TABLES_SCHEMA)
             self.con.commit()
 
     def search_files_in_source(self: Sqlite3Buddy, source_name: str, headword: str) -> Iterable[BoundFile]:
@@ -306,7 +308,7 @@ class AudioSqlite3Buddy:
                         data["meta"]["name"],
                         data["meta"]["year"],
                         data["meta"]["version"],
-                        None,
+                        None,  # original URL can be null
                         data["meta"]["media_dir"],
                         data["meta"].get("media_dir_abs"),  # Possibly unset
                     ),

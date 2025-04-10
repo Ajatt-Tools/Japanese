@@ -7,31 +7,32 @@ from typing import Optional
 from ..pitch_accents.common import AccDictRawTSVEntry
 from .basic_types import Sqlite3Buddy, cursor_buddy
 
+PITCH_TABLES_SCHEMA = """
+CREATE TABLE IF NOT EXISTS pitch_accents_formatted(
+    headword         TEXT    NOT NULL,
+    katakana_reading TEXT    NOT NULL,
+    html_notation    TEXT    NOT NULL,
+    pitch_number     TEXT    NOT NULL,
+    frequency        INTEGER NOT NULL,
+    source           TEXT    NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS index_pitch_accents_headword
+ON pitch_accents_formatted(headword);
+
+CREATE INDEX IF NOT EXISTS index_pitch_accents_reading
+ON pitch_accents_formatted(katakana_reading);
+
+-- Filtering by source is used when retrieving results and when reloading the user's override table.
+CREATE INDEX IF NOT EXISTS index_pitch_accents_source
+ON pitch_accents_formatted(source);
+"""
+
 
 class PitchSqlite3Buddy:
     def prepare_pitch_accents_table(self: Sqlite3Buddy) -> None:
-        pitch_tables_schema = """
-        CREATE TABLE IF NOT EXISTS pitch_accents_formatted(
-            headword TEXT not null,
-            katakana_reading TEXT not null,
-            html_notation TEXT not null,
-            pitch_number TEXT not null,
-            frequency INTEGER not null,
-            source TEXT not null
-        );
-
-        CREATE INDEX IF NOT EXISTS index_pitch_accents_headword
-        ON pitch_accents_formatted(headword);
-
-        CREATE INDEX IF NOT EXISTS index_pitch_accents_reading
-        ON pitch_accents_formatted(katakana_reading);
-
-        -- Filtering by source is used when retrieving results and when reloading the user's override table.
-        CREATE INDEX IF NOT EXISTS index_pitch_accents_source
-        ON pitch_accents_formatted(source);
-        """
         with cursor_buddy(self.con) as cur:
-            cur.executescript(pitch_tables_schema)
+            cur.executescript(PITCH_TABLES_SCHEMA)
             self.con.commit()
 
     def get_pitch_accents_headword_count(self: Sqlite3Buddy) -> int:
