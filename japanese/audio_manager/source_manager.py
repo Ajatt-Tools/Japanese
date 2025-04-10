@@ -258,7 +258,7 @@ class AudioSourceManager:
                 continue
             except InvalidSourceIndex as ex:
                 print(ex)
-                errors.append(AudioManagerException(source, str(ex)))
+                errors.append(AudioManagerException(source, str(ex), exception=ex))
             else:
                 sources.append(source)
                 print(f"Initialized audio source: {source.name}")
