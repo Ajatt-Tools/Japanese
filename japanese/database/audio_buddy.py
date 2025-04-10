@@ -38,8 +38,8 @@ def raise_if_invalid_json(data: SourceIndex):
         if field_name not in data:
             raise InvalidSourceIndex(f"audio source file is missing a required key: '{field_name}'")
     try:
-        version = data["meta"]["version"]
-    except KeyError:
+        version = int(data["meta"]["version"])
+    except (KeyError, ValueError):
         raise InvalidSourceIndex(f"Audio source index version not found.")
 
     if version < MIN_SOURCE_VERSION:
