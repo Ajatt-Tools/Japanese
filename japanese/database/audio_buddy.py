@@ -297,18 +297,21 @@ class AudioSqlite3Buddy:
             VALUES(?, ?, ?, ?, ?, ?, ?);
             """
             # Insert meta.
-            cur.execute(
-                query,
-                (
-                    source_name,
-                    data["meta"]["name"],
-                    data["meta"]["year"],
-                    data["meta"]["version"],
-                    None,
-                    data["meta"]["media_dir"],
-                    data["meta"].get("media_dir_abs"),  # Possibly unset
-                ),
-            )
+            try:
+                cur.execute(
+                    query,
+                    (
+                        source_name,
+                        data["meta"]["name"],
+                        data["meta"]["year"],
+                        data["meta"]["version"],
+                        None,
+                        data["meta"]["media_dir"],
+                        data["meta"].get("media_dir_abs"),  # Possibly unset
+                    ),
+                )
+            except KeyError as ex:
+                raise InvalidSourceIndex(f"Missing field '{ex}'")
             # Insert headwords and file names
             query = """
                 INSERT INTO headwords
@@ -329,17 +332,20 @@ class AudioSqlite3Buddy:
                 ( source_name, file_name, kana_reading, pitch_pattern, pitch_number )
                 VALUES(?, ?, ?, ?, ?);
             """
-            cur.executemany(
-                query,
-                (
+            try:
+                cur.executemany(
+                    query,
                     (
-                        source_name,
-                        file_name,
-                        file_info["kana_reading"],
-                        file_info.get("pitch_pattern"),
-                        file_info.get("pitch_number"),
-                    )
-                    for file_name, file_info in data["files"].items()
-                ),
-            )
+                        (
+                            source_name,
+                            file_name,
+                            file_info["kana_reading"],
+                            file_info.get("pitch_pattern"),
+                            file_info.get("pitch_number"),
+                        )
+                        for file_name, file_info in data["files"].items()
+                    ),
+                )
+            except KeyError as ex:
+                raise InvalidSourceIndex(f"Missing field '{ex}'")
             self.con.commit()
