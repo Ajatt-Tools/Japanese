@@ -38,6 +38,8 @@ class AudioManagerException(OSError):
     exception: Optional[Exception] = None
 
     def describe_short(self) -> str:
+        if self.exception is None and self.response is None:
+            raise ValueError("can't produce a short description. no response or exception provided.")
         return str(self.exception.__class__.__name__ if self.exception else self.response.status_code)
 
 
