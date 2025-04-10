@@ -228,6 +228,7 @@ class FuriganaSettingsForm(MultiColumnSettingsForm):
     def _add_widgets(self) -> None:
         super()._add_widgets()
         self._widgets.maximum_results = NarrowSpinBox(initial_value=self._config.maximum_results)
+        self._widgets.maximum_pitch_accents = NarrowSpinBox(initial_value=self._config.maximum_pitch_accents)
         self._widgets.reading_separator = NarrowLineEdit(self._config.reading_separator)
         self._widgets.blocklisted_words = WordsEdit(initial_values=self._config.blocklisted_words)
         self._widgets.mecab_only = WordsEdit(initial_values=self._config.mecab_only)

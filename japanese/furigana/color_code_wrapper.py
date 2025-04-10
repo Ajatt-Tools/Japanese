@@ -81,7 +81,7 @@ class ColorCodeWrapper(io.StringIO):
         self.write(f'<span class="ajt__word_info"')
         if ColorCodePitchFormat.attributes in self._output_format:
             self.write(f' part_of_speech="{self._token.part_of_speech.name}"')
-            self.write(f' pitch="{self._token.describe_pitches()}"')
+            self.write(f' pitch="{self._token.describe_pitches(self._cfg.furigana.maximum_pitch_accents)}"')
         if html_color := get_main_pitch_color(self._token):
             self._write_inline_color(html_color)
         self.write(">")

@@ -143,14 +143,14 @@ class AccDbParsedToken(MecabParsedToken):
     # Attached tokens are stored in this list to apply pitch color-code to them.
     attached_tokens: MutableSequence[str] = dataclasses.field(default_factory=list)
 
-    def describe_pitches(self) -> str:
+    def describe_pitches(self, maximum_pitch_accents: int = 99) -> str:
         """
         Returns readings in this format: reading1:pitch_type reading2:pitch_type
         Examples:
             コッキョウ:heiban クニザカイ:nakadaka-3 (one word has two different readings, with their accents listed)
             マンビキ:heiban マンビキ:odaka (one word has two possible accents)
         """
-        return SEP_PITCH_GROUP.join(pitch.describe_pitches() for pitch in self.headword_accents)
+        return SEP_PITCH_GROUP.join(pitch.describe_pitches() for pitch in self.headword_accents[:maximum_pitch_accents])
 
     def has_pitch(self) -> bool:
         return bool(self.headword_accents and all(token.has_accent() for token in self.headword_accents))

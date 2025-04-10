@@ -74,6 +74,10 @@ class FuriganaConfigView(PitchAndFuriganaCommon):
     def can_lookup_in_db(self, word: str) -> bool:
         return self.maximum_results > 1 and (word not in self.mecab_only)
 
+    @property
+    def maximum_pitch_accents(self) -> int:
+        return int(self["maximum_pitch_accents"])
+
 
 @enum.unique
 class LookupDialogPitchOutputFormat(enum.Enum):
