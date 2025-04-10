@@ -121,9 +121,9 @@ class AudioSqlite3Buddy:
             result = cur.execute(query, (source_name, file_name)).fetchone()
             assert len(result) == 3 and all((type(val) in (str, NoneType)) for val in result)
             return {
-                "kana_reading": result[0],
-                "pitch_pattern": result[1],
-                "pitch_number": result[2],
+                "kana_reading": result["kana_reading"],
+                "pitch_pattern": result["pitch_pattern"],
+                "pitch_number": result["pitch_number"],
             }
 
     def remove_data(self: Sqlite3Buddy, source_name: str) -> None:
