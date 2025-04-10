@@ -2,15 +2,15 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 
-from typing import NewType, TypedDict
+from typing import NewType, Optional, TypedDict
 
 FileList = NewType("FileList", list[str])
 
 
 class FileInfo(TypedDict):
     kana_reading: str
-    pitch_pattern: str
-    pitch_number: str
+    pitch_pattern: Optional[str]
+    pitch_number: Optional[str]
 
 
 class SourceMeta(TypedDict):
