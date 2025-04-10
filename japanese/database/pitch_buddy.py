@@ -1,7 +1,8 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 import typing
-from typing import Optional, Sequence
+from collections.abc import Sequence
+from typing import Optional
 
 from ..pitch_accents.common import AccDictRawTSVEntry
 from .basic_types import Sqlite3Buddy, cursor_buddy

@@ -10,7 +10,6 @@ from collections.abc import Iterable
 
 from ..config_view import JapaneseConfig
 from ..database.audio_buddy import BoundFile
-from ..database.basic_types import InvalidSourceIndex
 from ..database.sqlite3_buddy import Sqlite3Buddy
 from ..helpers.audio_json_schema import FileInfo
 from ..helpers.basic_types import AudioManagerHttpClientABC

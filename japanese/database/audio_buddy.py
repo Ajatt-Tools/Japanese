@@ -2,7 +2,8 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 import os
 import typing
-from typing import Iterable, Optional, Sequence
+from collections.abc import Iterable, Sequence
+from typing import Optional
 
 from ..audio_manager.basic_types import AudioStats, NameUrl
 from ..helpers.audio_json_schema import FileInfo, SourceIndex
