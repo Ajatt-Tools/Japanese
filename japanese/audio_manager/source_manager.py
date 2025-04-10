@@ -257,7 +257,7 @@ class AudioSourceManager:
                 print(f"Ignoring audio source {source.name}: {ex.describe_short()}.")
                 errors.append(ex)
                 continue
-            except InvalidSourceIndex as ex:
+            except Exception as ex:
                 print(ex)
                 errors.append(AudioManagerException(source, str(ex), exception=ex))
             else:
