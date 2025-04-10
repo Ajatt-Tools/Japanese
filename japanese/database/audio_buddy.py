@@ -9,6 +9,7 @@ from ..helpers.audio_json_schema import FileInfo, SourceIndex
 from .basic_types import InvalidSourceIndex, Sqlite3Buddy, cursor_buddy
 
 NoneType = type(None)  # fix for the official binary bundle
+MIN_SOURCE_VERSION = 2
 
 
 class BoundFile(typing.NamedTuple):
@@ -29,9 +30,20 @@ def build_or_clause(repeated_field_name: str, count: int) -> str:
 
 
 def raise_if_invalid_json(data: SourceIndex):
+    """
+    Validate index schema.
+    Raise if format is not supported.
+    """
     for field_name in SourceIndex.__annotations__:
         if field_name not in data:
             raise InvalidSourceIndex(f"audio source file is missing a required key: '{field_name}'")
+    try:
+        version = data["meta"]["version"]
+    except KeyError:
+        raise InvalidSourceIndex(f"Audio source index version not found.")
+
+    if version < MIN_SOURCE_VERSION:
+        raise InvalidSourceIndex(f"Outdated index schema: {version}. Minimum supported version: {MIN_SOURCE_VERSION}")
 
 
 class AudioSqlite3Buddy:
