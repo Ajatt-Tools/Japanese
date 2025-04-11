@@ -44,14 +44,15 @@ class Sqlite3Buddy(VersionSqlite3Buddy, AudioSqlite3Buddy, PitchSqlite3Buddy):
     def start_session(self) -> None:
         if self.can_execute():
             raise Sqlite3BuddyError("connection is already created.")
+        is_new_file = not self._db_path.is_file()
         self._con: sqlite3.Connection = sqlite3.connect(self._db_path)
         self._con.row_factory = sqlite3.Row
-        self._prepare_tables()
+        self._prepare_tables(is_new_file)
 
-    def _prepare_tables(self):
+    def _prepare_tables(self, is_new_file: bool):
         self.prepare_version_table()
-        self.prepare_audio_tables()
-        self.prepare_pitch_accents_table()
+        self.prepare_audio_tables(is_new_file)
+        self.prepare_pitch_accents_table(is_new_file)
 
     def end_session(self) -> None:
         if not self.can_execute():

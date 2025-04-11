@@ -76,7 +76,7 @@ class SqliteAccDictWriter:
 
     def recreate_table(self) -> None:
         self._db.delete_pitch_accents_table()
-        self._db.prepare_pitch_accents_table()
+        self._db.prepare_pitch_accents_table(is_new_file=True)
         self.mark_table_old()
 
     def mark_table_old(self) -> None:

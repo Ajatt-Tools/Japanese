@@ -1,15 +1,18 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
+import abc
 import sqlite3
 from contextlib import contextmanager
 
 
-class Sqlite3Buddy:
+class Sqlite3BuddyABC(abc.ABC):
     con: sqlite3.Connection
 
+    @abc.abstractmethod
     def get_db_version(self, schema_name: str) -> int:
         raise NotImplementedError()
 
+    @abc.abstractmethod
     def set_db_version(self, schema_name: str, value: int) -> None:
         raise NotImplementedError()
 
