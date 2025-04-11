@@ -140,7 +140,8 @@ class AudioSqlite3Buddy(Sqlite3BuddyABC, abc.ABC):
             results = cur.execute(query, (source_name, headword)).fetchall()
             assert type(results) is list
             return (
-                BoundFile(file_name=result_tup[0], source_name=source_name, headword=headword) for result_tup in results
+                BoundFile(file_name=result_tup["file_name"], source_name=source_name, headword=headword)
+                for result_tup in results
             )
 
     def search_files(self, headword: str) -> Iterable[BoundFile]:
@@ -152,7 +153,7 @@ class AudioSqlite3Buddy(Sqlite3BuddyABC, abc.ABC):
             results = cur.execute(query, (headword,)).fetchall()
             assert type(results) is list
             return (
-                BoundFile(file_name=result_tup[0], source_name=result_tup[1], headword=headword)
+                BoundFile(file_name=result_tup["file_name"], source_name=result_tup["source_name"], headword=headword)
                 for result_tup in results
             )
 
@@ -359,34 +360,34 @@ class AudioSqlite3Buddy(Sqlite3BuddyABC, abc.ABC):
                 raise InvalidSourceIndex(f"Missing field '{ex}'")
             # Insert headwords and file names
             query = """
-                INSERT INTO headwords
-                (source_name, headword, file_name)
-                VALUES(?, ?, ?);
-                """
+            INSERT INTO headwords
+            ( source_name, headword, file_name )
+            VALUES( :source_name, :headword, :file_name );
+            """
             cur.executemany(
                 query,
                 (
-                    (source_name, headword, file_name)
+                    dict(source_name=source_name, headword=headword, file_name=file_name)
                     for headword, file_list in data["headwords"].items()
                     for file_name in file_list
                 ),
             )
             # Insert readings and accent info.
             query = """
-                INSERT INTO files
-                ( source_name, file_name, kana_reading, pitch_pattern, pitch_number )
-                VALUES(?, ?, ?, ?, ?);
+            INSERT INTO files
+            ( source_name, file_name, kana_reading, pitch_pattern, pitch_number )
+            VALUES( :source_name, :file_name, :kana_reading, :pitch_pattern, :pitch_number );
             """
             try:
                 cur.executemany(
                     query,
                     (
-                        (
-                            source_name,
-                            file_name,
-                            file_info["kana_reading"],
-                            file_info.get("pitch_pattern"),
-                            file_info.get("pitch_number"),
+                        dict(
+                            source_name=source_name,
+                            file_name=file_name,
+                            kana_reading=file_info["kana_reading"],
+                            pitch_pattern=file_info.get("pitch_pattern"),
+                            pitch_number=file_info.get("pitch_number"),
                         )
                         for file_name, file_info in data["files"].items()
                     ),
