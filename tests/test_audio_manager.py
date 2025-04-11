@@ -1,14 +1,19 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
+import json
 import pathlib
+import sqlite3
 
 import pytest
 
 from japanese.audio_manager.basic_types import NameUrl, NameUrlSet, TotalAudioStats
 from japanese.audio_manager.source_manager import AudioSourceManager
+from japanese.database.basic_types import InvalidSourceIndex
 from japanese.database.sqlite3_buddy import Sqlite3Buddy
+from japanese.helpers.audio_json_schema import SourceIndex
 from playground.run_audio_manager import NoAnkiAudioSourceManagerFactory
 from playground.utils import NoAnkiConfigView
+from tests import DATA_DIR
 from tests.conftest import tmp_sqlite3_db_path
 from tests.no_anki_config import no_anki_config
 
@@ -56,3 +61,27 @@ def test_delete_cache(init_factory: NoAnkiAudioSourceManagerFactory) -> None:
         assert len(stats.sources) == 0
         assert stats.unique_files == 0
         assert stats.unique_headwords == 0
+
+
+def test_insert_bad_source(init_factory: NoAnkiAudioSourceManagerFactory) -> None:
+    """
+    Vandalize the source on purpose and test if the expected errors are raised.
+    """
+    taas_data: SourceIndex = json.loads(DATA_DIR.joinpath("taas_index.json").read_bytes())
+    with pytest.raises(sqlite3.IntegrityError):
+        # None can't be used according to the schema.
+        taas_data["files"]["修理_しゅうり_core6k.1367.ogg"]["kana_reading"] = None  # type: ignore
+        with Sqlite3Buddy(init_factory.db_path) as db:
+            db.insert_data("fake-source", taas_data)
+
+    with pytest.raises(InvalidSourceIndex):
+        # will raise KeyError and caught inside the transaction.
+        del taas_data["files"]["修理_しゅうり_core6k.1367.ogg"]["kana_reading"]  # type: ignore
+        with Sqlite3Buddy(init_factory.db_path) as db:
+            db.insert_data("fake-source", taas_data)
+
+    with pytest.raises(InvalidSourceIndex):
+        # audio source file is missing a required key: 'files'
+        del taas_data["files"]  # type: ignore
+        with Sqlite3Buddy(init_factory.db_path) as db:
+            db.insert_data("fake-source", taas_data)
