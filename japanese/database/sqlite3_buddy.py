@@ -69,6 +69,7 @@ class Sqlite3Buddy(VersionSqlite3Buddy, AudioSqlite3Buddy, PitchSqlite3Buddy):
         assert self._con is None
         self.start_session()
         assert self._con is not None
+        self.con.__enter__()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
@@ -76,4 +77,7 @@ class Sqlite3Buddy(VersionSqlite3Buddy, AudioSqlite3Buddy, PitchSqlite3Buddy):
         Clean up a temporary connection.
         Use when working in a different thread since the same connection can't be reused in another thread.
         """
+        # Call __exit__ of the connection instance.
+        # If there was any exception, a rollback takes place. Otherwise, it commits.
+        self.con.__exit__(exc_type, exc_val, exc_tb)
         self.end_session()
