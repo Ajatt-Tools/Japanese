@@ -124,12 +124,14 @@ def test_css_imports(css_styling: str, is_modified: bool, modified_css: Optional
         ),
         (
             # Older version (but it is formatted)
-            "<!--whatever-->\n\n"
-            "<script>\n"
-            "    /* AJT Japanese JS 24.7.14.0 */\n"
-            "    //some old code\n"
-            "</script>\n"
-            "<!--whatever-->",
+            (
+                "<!--whatever-->\n\n"
+                "<script>\n"
+                "    /* AJT Japanese JS 24.7.14.0 */\n"
+                "    //some old code\n"
+                "</script>\n"
+                "<!--whatever-->"
+            ),
             True,
             f"<!--whatever-->\n\n{BUNDLED_JS_FILE.import_str}\n<!--whatever-->",
         ),

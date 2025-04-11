@@ -7,7 +7,12 @@ from typing import Optional
 
 from ..audio_manager.basic_types import AudioStats, NameUrl
 from ..helpers.audio_json_schema import FileInfo, SourceIndex
-from .basic_types import InvalidSourceIndex, Sqlite3Buddy, cursor_buddy
+from .basic_types import (
+    InvalidSourceIndex,
+    Sqlite3Buddy,
+    Sqlite3BuddyVersionError,
+    cursor_buddy,
+)
 
 NoneType = type(None)  # fix for the official binary bundle
 MIN_SOURCE_VERSION = 2
@@ -47,7 +52,7 @@ def raise_if_invalid_json(data: SourceIndex):
         raise InvalidSourceIndex(f"Outdated index schema: {version}. Minimum supported version: {MIN_SOURCE_VERSION}")
 
 
-AUDIO_TABLES_SCHEMA = """
+AUDIO_TABLES_SCHEMA: typing.Final[str] = """
 --- Note: `source_name` is the name given to the audio source by the user,
 --- and it can be arbitrary (e.g. NHK-2016).
 --- `dictionary_name` is the name given to the audio source by its creator.

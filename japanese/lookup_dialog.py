@@ -37,7 +37,10 @@ def html_style() -> HTMLPitchPatternStyle:
 
 def get_notation(entry: FormattedEntry, mode: LookupDialogPitchOutputFormat) -> str:
     if mode == LookupDialogPitchOutputFormat.html:
-        return f'<span class="pitch_html">{update_html(entry, pitch_accent_style=html_style())}</span> {entry.pitch_number_html}'
+        return (
+            f'<span class="pitch_html">{update_html(entry, pitch_accent_style=html_style())}</span>'
+            f" {entry.pitch_number_html}"
+        )
     elif mode == LookupDialogPitchOutputFormat.svg:
         return f"{svg_graph_maker.make_graph(entry)} {entry.pitch_number_html}"
     raise RuntimeError("Unreachable.")

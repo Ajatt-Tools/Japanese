@@ -106,10 +106,19 @@ STYLE_MAP[HTMLPitchPatternStyle.kanjium] = {
     XmlTags.low_rise_end: "",
     # high
     XmlTags.high_start: '<span style="display:inline-block;position:relative;"><span style="display:inline;">',
-    XmlTags.high_end: '</span><span style="border-color:currentColor;display:block;user-select:none;pointer-events:none;position:absolute;top:0.1em;left:0;right:0;height:0;border-top-width:0.1em;border-top-style:solid;"></span></span>',
+    XmlTags.high_end: (
+        "</span><span"
+        ' style="border-color:currentColor;display:block;user-select:none;pointer-events:none;position:absolute;top:0.1em;left:0;right:0;height:0;border-top-width:0.1em;border-top-style:solid;"></span></span>'
+    ),
     # high, drop at the end
-    XmlTags.high_drop_start: '<span style="display:inline-block;position:relative;padding-right:0.1em;margin-right:0.1em;"><span style="display:inline;">',
-    XmlTags.high_drop_end: '</span><span style="border-color:currentColor;display:block;user-select:none;pointer-events:none;position:absolute;top:0.1em;left:0;right:0;height:0;border-top-width:0.1em;border-top-style:solid;right:-0.1em;height:0.4em;border-right-width:0.1em;border-right-style:solid;"></span></span>',
+    XmlTags.high_drop_start: (
+        '<span style="display:inline-block;position:relative;padding-right:0.1em;margin-right:0.1em;"><span'
+        ' style="display:inline;">'
+    ),
+    XmlTags.high_drop_end: (
+        "</span><span"
+        ' style="border-color:currentColor;display:block;user-select:none;pointer-events:none;position:absolute;top:0.1em;left:0;right:0;height:0;border-top-width:0.1em;border-top-style:solid;right:-0.1em;height:0.4em;border-right-width:0.1em;border-right-style:solid;"></span></span>'
+    ),
 }
 
 # none: use class names.

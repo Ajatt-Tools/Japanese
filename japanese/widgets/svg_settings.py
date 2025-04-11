@@ -65,14 +65,12 @@ svg {
 
 class NoAnkiWebView(QWebEngineView):
     def stdHtml(self, body: str, head: str) -> None:
-        return self.setHtml(
-            f"""
+        return self.setHtml(f"""
         <html>
         <head>{head}</head>
         <body>{body}</body>
         </html>
-        """
-        )
+        """)
 
 
 class SvgSettingsWidget(QWidget):

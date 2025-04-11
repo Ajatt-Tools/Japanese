@@ -106,6 +106,6 @@ class ColorCodeWrapper(io.StringIO):
         if ColorCodePitchFormat.underline in self._output_format:
             self.write(
                 f"text-decoration: underline; text-decoration-color: {html_color};"
-                f" text-decoration-thickness: 2px; text-underline-offset: 3px;"
+                " text-decoration-thickness: 2px; text-underline-offset: 3px;"
             )
         self.write('"')

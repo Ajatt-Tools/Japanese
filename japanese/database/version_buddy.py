@@ -1,7 +1,7 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
-from .basic_types import Sqlite3BuddyBase, Sqlite3BuddyVersionError, cursor_buddy
+from .basic_types import Sqlite3Buddy, Sqlite3BuddyVersionError, cursor_buddy
 
 VERSION_TABLES_SCHEMA = """
 CREATE TABLE IF NOT EXISTS version(
@@ -11,17 +11,17 @@ CREATE TABLE IF NOT EXISTS version(
 """
 
 
-class VersionSqlite3Buddy(Sqlite3BuddyBase):
+class VersionSqlite3Buddy:
     """
     Manages versions of the table groups inside the database.
     """
 
-    def prepare_version_table(self: Sqlite3BuddyBase) -> None:
+    def prepare_version_table(self: Sqlite3Buddy) -> None:
         with cursor_buddy(self.con) as cur:
             cur.executescript(VERSION_TABLES_SCHEMA)
             self.con.commit()
 
-    def get_db_version(self, schema_name: str) -> int:
+    def get_db_version(self: Sqlite3Buddy, schema_name: str) -> int:
         query = """
         SELECT number FROM version
         WHERE schema_name = ?
@@ -34,7 +34,7 @@ class VersionSqlite3Buddy(Sqlite3BuddyBase):
         assert result[0] > 0, "expected positive integer"
         return result[0]
 
-    def set_db_version(self, schema_name: str, value: int) -> None:
+    def set_db_version(self: Sqlite3Buddy, schema_name: str, value: int) -> None:
         query = """
         INSERT INTO version (schema_name, number)
         VALUES (:schema_name, :number)

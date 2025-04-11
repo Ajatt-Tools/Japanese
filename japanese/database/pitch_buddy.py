@@ -7,7 +7,7 @@ from typing import Optional
 from ..pitch_accents.common import AccDictRawTSVEntry
 from .basic_types import Sqlite3Buddy, cursor_buddy
 
-PITCH_TABLES_SCHEMA = """
+PITCH_TABLES_SCHEMA: typing.Final[str] = """
 CREATE TABLE IF NOT EXISTS pitch_accents_formatted(
     headword         TEXT    NOT NULL,
     katakana_reading TEXT    NOT NULL,

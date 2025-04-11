@@ -18,13 +18,11 @@ from .table import CellContent, ExpandingTableWidget, TableRow
 class SourceEnableCheckbox(QCheckBox):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.setStyleSheet(
-            """
+        self.setStyleSheet("""
         QCheckBox {
             margin: 0 auto;
         }
-        """
-        )
+        """)
 
 
 def tooltip_cache_remove_complete(removed: list[NameUrl]) -> None:

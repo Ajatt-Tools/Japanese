@@ -155,13 +155,11 @@ class AudioSourceManager:
         if file_info["pitch_number"] and file_info["pitch_number"] != NO_ACCENT:
             components.append(norm_pitch_numbers(file_info["pitch_number"]))
 
-        desired_filename = "_".join(
-            (
-                file.headword,
-                *components,
-                source.name,
-            )
-        )
+        desired_filename = "_".join((
+            file.headword,
+            *components,
+            source.name,
+        ))
         desired_filename = f"{normalize_filename(desired_filename)}{file.ext()}"
         return FileUrlData(
             url=source.join_media_path(source.media_dir, file.file_name),

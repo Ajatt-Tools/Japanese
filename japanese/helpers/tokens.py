@@ -17,7 +17,8 @@ RE_NON_JP = re.compile(
 )
 RE_JP_SEP = re.compile(
     # Reference: https://wikiless.org/wiki/List_of_Japanese_typographic_symbols
-    r"[\r\n\t仝　 ・、※【】「」〒◎×〃゜『』《》～〜~〽,.。〄〇〈〉〓〔〕〖〗〘〙〚〛〝〞〟〠〡〢〣〥〦〧〨〭〮〯〫〬〶〷〸〹〺〻〼〾〿！？…ヽヾゞ〱〲〳〵〴（）［］｛｝｟｠゠＝‥•◦﹅﹆＊♪♫♬♩ⓍⓁⓎ]+",
+    r"[\r\n\t仝　 ・、※【】「」〒◎×〃゜『』《》～〜~〽,.。"
+    r"〄〇〈〉〓〔〕〖〗〘〙〚〛〝〞〟〠〡〢〣〥〦〧〨〭〮〯〫〬〶〷〸〹〺〻〼〾〿！？…ヽヾゞ〱〲〳〵〴（）［］｛｝｟｠゠＝‥•◦﹅﹆＊♪♫♬♩ⓍⓁⓎ]+",
     flags=RE_FLAGS,
 )
 RE_COUNTERS = re.compile(

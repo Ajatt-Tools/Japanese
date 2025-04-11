@@ -6,7 +6,6 @@ import typing
 from typing import Optional, Union
 
 import requests
-from requests import RequestException
 
 from ..helpers.types import SourceConfig, SourceConfigDict
 from ..pitch_accents.consts import NO_ACCENT

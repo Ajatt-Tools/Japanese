@@ -544,7 +544,7 @@ class AudioSourcesEditTable(QWidget):
 
     def _add_tooltips(self) -> None:
         self._stats_button.setToolTip("Show statistics for each imported audio source.")
-        self._purge_button.setToolTip("Remove the database file.\n" "It will be recreated from scratch again.")
+        self._purge_button.setToolTip("Remove the database file.\nIt will be recreated from scratch again.")
         self._apply_button.setToolTip("Apply current sources configuration.")
 
 

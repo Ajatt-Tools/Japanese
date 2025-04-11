@@ -13,8 +13,7 @@ def fix_default_anki_style(self: QTableWidget):
         # Running an old version of Anki. No action is necessary.
         return
     if mw.pm.get_widget_style() == WidgetStyle.ANKI:
-        self.setStyleSheet(
-            """
+        self.setStyleSheet("""
                 QTableWidget,
                 QTableView,
                 QLineEdit,
@@ -28,5 +27,4 @@ def fix_default_anki_style(self: QTableWidget):
                     border-radius: 0px;
                     padding: 0px;
                 }
-                """
-        )
+                """)
