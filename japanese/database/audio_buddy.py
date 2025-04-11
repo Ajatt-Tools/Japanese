@@ -86,13 +86,37 @@ CREATE INDEX IF NOT EXISTS index_names ON meta(source_name);
 CREATE INDEX IF NOT EXISTS index_file_names ON headwords(source_name, headword);
 CREATE INDEX IF NOT EXISTS index_file_info ON files(source_name, file_name);
 """
+AUDIO_TABLES_SCHEMA_VERSION: typing.Final[int] = 1
+AUDIO_TABLES_SCHEMA_NAME: typing.Final[str] = "audio"
 
 
 class AudioSqlite3Buddy:
     def prepare_audio_tables(self: Sqlite3Buddy) -> None:
+        """
+        Create sqlite3 tables if needed.
+        If the db schema changes in the future, update the existing db here.
+        """
         with cursor_buddy(self.con) as cur:
             cur.executescript(AUDIO_TABLES_SCHEMA)
             self.con.commit()
+
+        version = self.get_db_version(AUDIO_TABLES_SCHEMA_NAME)
+        if version == AUDIO_TABLES_SCHEMA_VERSION:
+            return
+        if version == 1:
+            # Example:
+            # query = """
+            #   ALTER TABLE ...
+            # """
+            # self.con.executescript(query)
+            # version += 1
+            pass
+
+        if version != AUDIO_TABLES_SCHEMA_VERSION:
+            raise Sqlite3BuddyVersionError(
+                f"After migration, version should be {AUDIO_TABLES_SCHEMA_VERSION}, but got {version}"
+            )
+        self.set_db_version(AUDIO_TABLES_SCHEMA_NAME, AUDIO_TABLES_SCHEMA_VERSION)
 
     def search_files_in_source(self: Sqlite3Buddy, source_name: str, headword: str) -> Iterable[BoundFile]:
         query = """

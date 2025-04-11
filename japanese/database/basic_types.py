@@ -7,12 +7,22 @@ from contextlib import contextmanager
 class Sqlite3Buddy:
     con: sqlite3.Connection
 
+    def get_db_version(self, schema_name: str) -> int:
+        raise NotImplementedError()
+
+    def set_db_version(self, schema_name: str, value: int) -> None:
+        raise NotImplementedError()
+
 
 class Sqlite3BuddyError(RuntimeError):
     pass
 
 
 class InvalidSourceIndex(Sqlite3BuddyError):
+    pass
+
+
+class Sqlite3BuddyVersionError(Sqlite3BuddyError):
     pass
 
 

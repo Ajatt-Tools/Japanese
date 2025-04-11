@@ -11,11 +11,12 @@ from .audio_buddy import AudioSqlite3Buddy
 from .basic_types import Sqlite3BuddyError
 from .pitch_buddy import PitchSqlite3Buddy
 from .sqlite_schema import CURRENT_DB
+from .version_buddy import VersionSqlite3Buddy
 
 CURRENT_DB.remove_deprecated_files()
 
 
-class Sqlite3Buddy(AudioSqlite3Buddy, PitchSqlite3Buddy):
+class Sqlite3Buddy(VersionSqlite3Buddy, AudioSqlite3Buddy, PitchSqlite3Buddy):
     """
     Tables for audio:  ('meta', 'headwords', 'files')
     Table for pitch accents: 'pitch_accents_formatted'
@@ -48,6 +49,7 @@ class Sqlite3Buddy(AudioSqlite3Buddy, PitchSqlite3Buddy):
         self._prepare_tables()
 
     def _prepare_tables(self):
+        self.prepare_version_table()
         self.prepare_audio_tables()
         self.prepare_pitch_accents_table()
 
