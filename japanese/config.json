@@ -139,6 +139,11 @@
     },
     {
       "enabled": true,
+      "name": "JapanesePod101",
+      "url": "https://github.com/Ajatt-Tools/jpod_pronunciations_index/releases/latest/download/JapanesePod101_main.zip"
+    },
+    {
+      "enabled": true,
       "name": "Oubunsha-Kogo",
       "url": "https://github.com/Ajatt-Tools/oubunsha_kogo_pronunciations_index/releases/latest/download/Oubunsha-Kogo_main.zip"
     }
