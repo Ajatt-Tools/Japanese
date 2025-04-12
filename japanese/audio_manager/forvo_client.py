@@ -130,7 +130,7 @@ def make_search_result_filename(audio_url: str, word: str, lang: str) -> str:
     return f"{word}_forvo_{lang}.{file_type(audio_url)}"
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class ForvoClientException(AudioManagerExceptionBase):
     word: str
     explanation: str
