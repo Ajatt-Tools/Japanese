@@ -97,6 +97,7 @@ class ForvoPronunciation:
 RE_FIND_USERNAME = re.compile(r"Pronunciation by(?P<username>[^()]+)")
 RE_FIND_GENDER = re.compile(r"\((?P<gender>Male|Female)")
 RE_FIND_COUNTRY = re.compile(r"\((?:Male|Female) from (?P<country>[^()]+)")
+RE_SPACES = re.compile(r"\s+")
 
 
 def find_username(result: PageElement) -> str:
@@ -124,7 +125,7 @@ def find_country(result: PageElement) -> Optional[str]:
 
 
 def audio_transcription_from_play_button(element: Tag) -> str:
-    return element.text.removesuffix("pronunciation").strip()
+    return re.sub(RE_SPACES, "_", element.text.removesuffix("pronunciation").strip())
 
 
 def make_search_result_filename(audio_url: str, word: str, lang: str) -> str:
