@@ -126,6 +126,8 @@ def search_audio(editor: Editor) -> None:
         cfg.write_config()
         # process results
         results = dialog.files_to_add()
+        if not results:
+            return
         editor.note[dialog.destination_field_name] = (
             editor.note[dialog.destination_field_name]
             + (cfg.audio_settings.tag_separator if editor.note[dialog.destination_field_name] else "")
