@@ -566,8 +566,10 @@ class SettingsDialog(QDialog, MgrPropMixIn):
 
         # Audio tab
         self._audio_profiles_edit = AudioProfilesEdit()
-        self._audio_sources_edit = AudioSourcesEditTable()
         self._audio_settings = GroupBoxWrapper(AudioSettingsForm(cfg.audio_settings))
+
+        # Audio sources
+        self._audio_sources_edit = AudioSourcesEditTable()
 
         # Menus tab
         self._toolbar_settings = ToolbarSettingsForm()
