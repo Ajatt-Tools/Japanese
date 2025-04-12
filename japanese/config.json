@@ -107,7 +107,7 @@
     },
     "audio_search_button": {
       "enabled": true,
-      "shortcut": "",
+      "shortcut": "Alt+F",
       "text": "検"
     }
   },
