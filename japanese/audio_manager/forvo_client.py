@@ -6,7 +6,7 @@ import dataclasses
 import enum
 import re
 import sys
-from typing import Optional
+from typing import Optional, Union
 
 import requests
 from bs4 import BeautifulSoup, PageElement, ResultSet, Tag
@@ -14,6 +14,7 @@ from requests.adapters import HTTPAdapter
 from urllib3 import Retry
 
 from ..ajt_common.utils import clamp
+from ..config_view import ForvoSettingsConfigView
 from ..helpers.http_client import get_headers
 from .basic_types import AudioManagerExceptionBase, FileUrlData
 
@@ -166,8 +167,10 @@ class ForvoClient:
 
     _server_host: str = "https://forvo.com"
     _audio_http_host: str = "https://audio12.forvo.com"
+    _config: Union[ForvoConfig, ForvoSettingsConfigView]
+    _session: requests.Session
 
-    def __init__(self, config: ForvoConfig) -> None:
+    def __init__(self, config: Union[ForvoConfig, ForvoSettingsConfigView]) -> None:
         self._config = config
         self._session = create_session(self._config.retry_attempts)
 
