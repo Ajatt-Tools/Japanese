@@ -123,6 +123,10 @@ def find_country(result: PageElement) -> Optional[str]:
     return None
 
 
+def audio_transcription_from_play_button(element: Tag) -> str:
+    return element.text.removesuffix("pronunciation").strip()
+
+
 def make_search_result_filename(audio_url: str, word: str, lang: str) -> str:
     """
     For search result the author (username) is unknown. Omit their name, country, gender, etc.
@@ -325,7 +329,11 @@ class ForvoClient:
         return [
             FileUrlData(
                 url=(url := self._extract_url(result)),
-                desired_filename=make_search_result_filename(url, word, self._config.language),
+                desired_filename=make_search_result_filename(
+                    url,
+                    audio_transcription_from_play_button(result),
+                    self._config.language,
+                ),
                 word=word,
                 source_name="Forvo Search",
             )
