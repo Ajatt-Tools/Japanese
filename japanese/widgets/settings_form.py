@@ -15,6 +15,7 @@ from ..config_view import (
     AudioSettingsConfigView,
     ContextMenuConfigView,
     DefinitionsConfigView,
+    ForvoSettingsConfigView,
     FuriganaConfigView,
     PitchConfigView,
     SvgPitchGraphOptionsConfigView,
@@ -293,6 +294,32 @@ class AudioSettingsForm(MultiColumnSettingsForm):
         self._widgets.tag_separator.setToolTip(
             "Separate [sound:filename.ogg] tags with this string\nwhen adding audio files to cards."
         )
+
+
+class ForvoSettingsForm(MultiColumnSettingsForm):
+    _title: str = "Forvo settings"
+    _config: ForvoSettingsConfigView
+    _columns: int = 1
+
+    def _add_widgets(self) -> None:
+        super()._add_widgets()
+        self._widgets.language = NarrowLineEdit(self._config.language)
+        self._widgets.preferred_usernames = WordsEdit(initial_values=self._config.preferred_usernames)
+        self._widgets.preferred_countries = WordsEdit(initial_values=self._config.preferred_countries)
+        self._widgets.timeout_seconds = NarrowSpinBox(initial_value=self._config.timeout_seconds)
+        self._widgets.retry_attempts = NarrowSpinBox(initial_value=self._config.retry_attempts)
+
+    def _add_tooltips(self) -> None:
+        super()._add_tooltips()
+        self._widgets.show_gender.setToolTip("Add the user's gender to the filename.")
+        self._widgets.show_country.setToolTip("Add the user's country to the filename.")
+        self._widgets.language.setToolTip(
+            'Audio language. Other languages will be skipped.\n"ja" for Japanese, "zh" for Mandarin, etc.'
+        )
+        self._widgets.timeout_seconds.setToolTip("Download timeout in seconds.")
+        self._widgets.retry_attempts.setToolTip("Number of attempts before giving up.")
+        self._widgets.preferred_usernames.setToolTip("A comma-separated list of usernames that will be sorted higher.")
+        self._widgets.preferred_countries.setToolTip("A comma-separated list of countries that will be sorted higher.")
 
 
 SvgOptValueType = type[Union[int, float]]
