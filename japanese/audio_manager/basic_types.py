@@ -30,17 +30,22 @@ class AudioSourceConfig(SourceConfig):
     pass
 
 
-@dataclasses.dataclass
-class AudioManagerException(OSError):
-    file: Union[AudioSourceConfig, FileUrlData]
-    explanation: str
-    response: Optional[requests.Response] = None
-    exception: Optional[Exception] = None
+class AudioManagerExceptionBase(OSError):
+    response: Optional[requests.Response]
+    exception: Optional[Exception]
 
     def describe_short(self) -> str:
         if self.exception is None and self.response is None:
             raise ValueError("can't produce a short description. no response or exception provided.")
         return str(self.exception.__class__.__name__ if self.exception else self.response.status_code)
+
+
+@dataclasses.dataclass
+class AudioManagerException(AudioManagerExceptionBase):
+    file: Union[AudioSourceConfig, FileUrlData]
+    explanation: str
+    response: Optional[requests.Response] = None
+    exception: Optional[Exception] = None
 
 
 class NameUrl(typing.NamedTuple):
