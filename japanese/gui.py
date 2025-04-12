@@ -52,6 +52,7 @@ from .widgets.pitch_override_widget import PitchOverrideWidget
 from .widgets.settings_form import (
     AudioSettingsForm,
     ContextMenuSettingsForm,
+    ForvoSettingsForm,
     FuriganaSettingsForm,
     PitchSettingsForm,
     SettingsForm,
@@ -571,6 +572,7 @@ class SettingsDialog(QDialog, MgrPropMixIn):
         # Menus tab
         self._toolbar_settings = ToolbarSettingsForm()
         self._context_menu_settings = GroupBoxWrapper(ContextMenuSettingsForm(cfg.context_menu))
+        self._forvo_settings = GroupBoxWrapper(ForvoSettingsForm(cfg.forvo))
 
         # Overrides tab
         self._accents_override = PitchOverrideWidget(self, file_path=USER_DATA_CSV_PATH)
@@ -628,11 +630,15 @@ class SettingsDialog(QDialog, MgrPropMixIn):
 
         # Menus
         tab = QWidget()
-        tab.setLayout(layout := QVBoxLayout())
+        tab.setLayout(layout := QGridLayout())
         # int fromRow, int fromColumn, int rowSpan, int columnSpan
-        layout.addWidget(self._toolbar_settings)
-        layout.addWidget(self._context_menu_settings)
+        layout.addWidget(self._toolbar_settings, 0, 0, 1, -1)
+        layout.addWidget(self._context_menu_settings, 1, 0)
+        layout.addWidget(self._forvo_settings, 1, 1)
         self._tabs.addTab(tab, "Menus")
+        # Note: create equally sized columns.
+        layout.setColumnStretch(0, 1)
+        layout.setColumnStretch(1, 1)
 
     def _setup_ui(self) -> None:
         cast(QDialog, self).setWindowModality(Qt.WindowModality.ApplicationModal)
