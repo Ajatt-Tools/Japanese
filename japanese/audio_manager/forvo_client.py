@@ -6,7 +6,8 @@ import dataclasses
 import enum
 import re
 import sys
-from typing import Optional
+import typing
+from typing import Optional, Union
 
 import requests
 from bs4 import BeautifulSoup, PageElement, ResultSet, Tag
@@ -26,8 +27,8 @@ class ForvoConfig:
     preferred_countries: list[str] = dataclasses.field(default_factory=list)
     show_gender: bool = True
     show_country: bool = False
-    timeout_seconds: int = 10
-    retry_attempts: int = 5
+    timeout_seconds: int = 5
+    retry_attempts: int = 3
 
     def __post_init__(self) -> None:
         self.preferred_countries = [c.lower() for c in self.preferred_countries]
@@ -137,6 +138,19 @@ class ForvoClientException(AudioManagerExceptionBase):
     response: Optional[requests.Response] = None
     exception: Optional[Exception] = None
 
+    def __str__(self) -> str:
+        return self.explanation
+
+
+@dataclasses.dataclass
+class FullForvoResult:
+    """
+    Used to retrieve all results when using Anki's QueryOp
+    """
+    error_word: Optional[Exception] = None
+    error_search: Optional[Exception] = None
+    files: list[FileUrlData] = dataclasses.field(default_factory=list)
+
 
 class ForvoClient:
     """
@@ -177,7 +191,7 @@ class ForvoClient:
             self._restart_session()
             raise ForvoClientException(
                 word=word,
-                explanation=f"Forvo access failed with return code {response.status_code}",
+                explanation=f"Forvo access failed with return code {response.status_code} ({response.reason})",
                 response=response,
             )
         return response
@@ -317,3 +331,23 @@ class ForvoClient:
             )
             for result in results
         ]
+
+    def full_search(self, query: str) -> FullForvoResult:
+        """
+        Perform word search and normal search.
+        """
+        full_result = FullForvoResult()
+        audio_files: dict[str, FileUrlData] = {}
+        try:
+            for result in self.word(query):
+                audio_files[result.url] = result
+        except Exception as ex:
+            full_result.error_word = ex
+        try:
+            for result in self.search(query):
+                if result.url not in audio_files:
+                    audio_files[result.url] = result
+        except Exception as ex:
+            full_result.error_search = ex
+        full_result.files = [*audio_files.values()]
+        return full_result

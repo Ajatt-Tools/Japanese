@@ -9,12 +9,15 @@ from typing import cast
 from anki.sound import SoundOrVideoTag
 from anki.utils import no_bundled_libs
 from aqt import mw, sound
+from aqt.operations import QueryOp
 from aqt.qt import *
 from aqt.utils import restoreGeom, saveGeom, tooltip, tr
 
+from .audio_serach_result_label import AudioSearchResultLabel
 from ..ajt_common.utils import ui_translate
 from ..audio_manager.abstract import AnkiAudioSourceManagerABC
 from ..audio_manager.basic_types import FileUrlData
+from ..audio_manager.forvo_client import ForvoConfig, ForvoClient, ForvoClientException, FullForvoResult
 from ..helpers.consts import ADDON_NAME
 from ..helpers.file_ops import open_file
 from ..helpers.misc import strip_html_and_media
@@ -43,10 +46,10 @@ class SearchBar(QWidget):
         qconnect(self._search_line.returnPressed, self._search_button.click)
         self._init_ui()
 
-    def keyPressEvent(self, evt: QKeyEvent) -> None:
-        if evt.key() == Qt.Key.Key_Enter or evt.key() == Qt.Key.Key_Return:
+    def keyPressEvent(self, event: QKeyEvent) -> None:
+        if event.key() == Qt.Key.Key_Enter or event.key() == Qt.Key.Key_Return:
             return
-        return super().keyPressEvent(evt)
+        return super().keyPressEvent(event)
 
     @property
     def search_committed(self) -> pyqtSignal:
@@ -93,9 +96,9 @@ class SearchResultsTable(QTableWidget):
         self._last_results: list[FileUrlData] = []
         self.verticalHeader().setVisible(False)
         self.horizontalHeader().setStretchLastSection(True)
-        cast(QWidget, self).setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.setColumnCount(SearchResultsTableColumns.column_count())
-        cast(QTableWidget, self).setHorizontalHeaderLabels(
+        self.setHorizontalHeaderLabels(
             ui_translate(item.name) for item in SearchResultsTableColumns
         )
         self.setSectionResizeModes()
@@ -139,26 +142,49 @@ class SearchResultsTable(QTableWidget):
             qconnect(pb.clicked, functools.partial(self.play_requested.emit, file))  # type:ignore
             qconnect(ob.clicked, functools.partial(self.open_requested.emit, file))  # type:ignore
 
+class SearchLock:
+    """
+    Class used to indicate that a search operation is in progress.
+    Until a search operation finishes, don't allow subsequent searches.
+    """
+
+    def __init__(self, search_bar: SearchBar) -> None:
+        self._search_bar = search_bar
+        self._is_searching = False
+
+    def set_searching(self, searching: bool) -> None:
+        self._is_searching = searching
+        self._search_bar.setDisabled(searching)
+
+    def is_searching(self) -> bool:
+        return self._is_searching
+
 
 class AudioSearchDialog(QDialog):
     def __init__(self, audio_manager: AnkiAudioSourceManagerABC, parent=None):
         super().__init__(parent)
-        self._audio_manager = audio_manager
         self.setMinimumSize(600, 400)
-        cast(QDialog, self).setWindowTitle(f"{ADDON_NAME} - Audio search")
+        self.setWindowTitle(f"{ADDON_NAME} - Audio search")
+        self._audio_manager = audio_manager
+        self._forvo_client = ForvoClient(config=ForvoConfig())
 
         # create widgets
         self._search_bar = SearchBar()
         self._src_field_selector = QComboBox()
         self._dest_field_selector = QComboBox()
         self._table_widget = SearchResultsTable()
+        self._search_result_label = AudioSearchResultLabel()
         self._button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         self._button_box.button(QDialogButtonBox.StandardButton.Ok).setText("Add audio and close")
+
+        # Create lock.
+        self._search_lock = SearchLock(self._search_bar)
 
         # add search bar, button, and table to main layout
         main_layout = QVBoxLayout()
         main_layout.addLayout(self._create_top_layout())
         main_layout.addWidget(self._table_widget)
+        main_layout.addWidget(self._search_result_label)
         main_layout.addWidget(self._button_box)
         self.setLayout(main_layout)
 
@@ -204,6 +230,8 @@ class AudioSearchDialog(QDialog):
         return self._table_widget.files_to_add()
 
     def search(self, search_text: typing.Optional[str] = None) -> None:
+        if self._search_lock.is_searching():
+            return
         self._table_widget.clear()
         # strip media in case source field and destination field are the same.
         search_text = strip_html_and_media(search_text or self._search_bar.current_text())
@@ -219,6 +247,16 @@ class AudioSearchDialog(QDialog):
                 stop_if_one_source_has_results=False,
             )
         )
+        # search Forvo
+        self._search_forvo(search_text)
+
+    def _search_forvo(self, search_text: str) -> None:
+        """
+        Search audio files on the Forvo website.
+        """
+        results = self._forvo_client.full_search(search_text)
+        self._table_widget.populate_with_results(results.files)
+        self._search_result_label.set_count(results)
 
     def set_note_fields(
         self,
@@ -278,3 +316,39 @@ class AnkiAudioSearchDialog(AudioSearchDialog):
     def done(self, *args, **kwargs) -> None:
         saveGeom(self, self.name)
         return super().done(*args, **kwargs)
+
+    def _search_forvo(self, search_text: str) -> None:
+        """
+        Search audio files on the Forvo website.
+        """
+        if self._search_lock.is_searching():
+            return
+
+        self._search_result_label.hide_count()
+
+        def search_on_forvo(_col) -> FullForvoResult:
+            """
+            Search and collect results from Forvo
+            """
+            return self._forvo_client.full_search(search_text)
+
+        def set_search_results(results: FullForvoResult) -> None:
+            self._table_widget.populate_with_results(results.files)
+            self._search_result_label.set_count(results)
+            self._search_lock.set_searching(False)
+
+        def on_exception(exception: Exception) -> None:
+            self._search_lock.set_searching(False)
+            self._search_result_label.set_error(exception)
+
+        self._search_lock.set_searching(True)
+        (
+            QueryOp(
+                parent=self,
+                op=search_on_forvo,
+                success=set_search_results,
+            )
+            .failure(on_exception)
+            .without_collection()
+            .run_in_background()
+        )

@@ -55,7 +55,7 @@ def main():
         selected_dest_field_name="Audio",
         selected_src_field_name="Question",
     )
-    dialog.search("test")
+    dialog.search("清楚")
     dialog.show()
     app.exec()
     print("chosen:")
