@@ -159,6 +159,15 @@
     "search_dialog_dest_field_name": "VocabAudio",
     "tag_separator": "<br>"
   },
+  "forvo": {
+    "language": "ja",
+    "preferred_usernames": "akitomo,skent",
+    "preferred_countries": "Japan",
+    "show_gender": true,
+    "show_country": false,
+    "timeout_seconds": 5,
+    "retry_attempts": 3
+  },
   "definitions": {
     "timeout": 10,
     "remove_marks": true,

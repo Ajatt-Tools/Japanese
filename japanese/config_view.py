@@ -21,10 +21,15 @@ from .pitch_accents.styles import HTMLPitchPatternStyle
 RE_CFG_WORD_SEP = re.compile(r"[\n;、, ]+", flags=RE_FLAGS)
 
 
-@functools.lru_cache(maxsize=20)
+@functools.lru_cache(maxsize=50)
 def split_cfg_words(config_value: str) -> Sequence[str]:
     """Splits string by comma. Cache identical values."""
     return dict.fromkeys(re.split(RE_CFG_WORD_SEP, config_value))
+
+
+@functools.lru_cache(maxsize=50)
+def as_lower_str_list(values: Sequence[str]) -> Sequence[str]:
+    return [value.lower() for value in values]
 
 
 class WordBlockListManager(ConfigSubViewBase):
@@ -229,6 +234,42 @@ class AudioSettingsConfigView(ConfigSubViewBase, AudioSettingsConfigViewABC):
 
 
 @final
+class ForvoSettingsConfigView(ConfigSubViewBase):
+    _view_key: str = "forvo"
+
+    @property
+    def language(self) -> str:
+        """Audio language. Other languages will be skipped."""
+        return self["language"].lower()
+
+    @property
+    def preferred_usernames(self) -> Sequence[str]:
+        """Returns a user-defined list of preferred usernames."""
+        return as_lower_str_list(split_cfg_words(self["preferred_usernames"]))
+
+    @property
+    def preferred_countries(self) -> Sequence[str]:
+        """Returns a user-defined list of preferred countries."""
+        return as_lower_str_list(split_cfg_words(self["preferred_countries"]))
+
+    @property
+    def show_gender(self) -> bool:
+        return bool(self["show_gender"])
+
+    @property
+    def show_country(self) -> bool:
+        return bool(self["show_country"])
+
+    @property
+    def timeout_seconds(self) -> int:
+        return int(self["timeout_seconds"])
+
+    @property
+    def retry_attempts(self) -> int:
+        return int(self["retry_attempts"])
+
+
+@final
 class DefinitionsConfigView(ConfigSubViewBase):
     _view_key: str = "definitions"
 
@@ -344,6 +385,7 @@ class JapaneseConfig(AddonConfigManager):
         self._context_menu = ContextMenuConfigView(self)
         self._toolbar = ToolbarConfigView(self)
         self._audio_settings = AudioSettingsConfigView(self)
+        self._forvo_settings = ForvoSettingsConfigView(self)
         self._svg_graphs = SvgPitchGraphOptionsConfigView(self)
 
     def iter_profiles(self) -> Iterable[Profile]:
@@ -357,6 +399,10 @@ class JapaneseConfig(AddonConfigManager):
     @property
     def audio_settings(self) -> AudioSettingsConfigView:
         return self._audio_settings
+
+    @property
+    def forvo(self) -> ForvoSettingsConfigView:
+        return self._forvo_settings
 
     @property
     def audio_sources(self) -> MutableSequence[AudioSourceConfigDict]:
