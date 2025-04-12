@@ -126,8 +126,7 @@ class SearchResultsTable(QTableWidget):
         return to_add
 
     def populate_with_results(self, results: list[FileUrlData]):
-        self._last_results = results
-        for row_n, file in enumerate(results):
+        for row_n, file in enumerate(results, start=len(self._last_results)):
             self.insertRow(row_n)
             self.setCellWidget(row_n, SearchResultsTableColumns.add_to_note.value, SourceEnableCheckbox())
             self.setCellWidget(row_n, SearchResultsTableColumns.play_audio.value, pb := QPushButton("Play"))
@@ -144,6 +143,9 @@ class SearchResultsTable(QTableWidget):
                 item.setFlags(item.flags() ^ Qt.ItemFlag.ItemIsEditable)
             qconnect(pb.clicked, functools.partial(self.play_requested.emit, file))  # type:ignore
             qconnect(ob.clicked, functools.partial(self.open_requested.emit, file))  # type:ignore
+        # remember results
+        self._last_results.extend(results)
+
 
 class SearchLock:
     """
