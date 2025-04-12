@@ -3,6 +3,7 @@
 
 import enum
 import functools
+import subprocess
 import typing
 from typing import cast
 
@@ -13,15 +14,10 @@ from aqt.operations import QueryOp
 from aqt.qt import *
 from aqt.utils import restoreGeom, saveGeom, tooltip, tr
 
-from ..ajt_common.utils import ui_translate
+from ..ajt_common.utils import find_executable, ui_translate
 from ..audio_manager.abstract import AnkiAudioSourceManagerABC
 from ..audio_manager.basic_types import FileUrlData
-from ..audio_manager.forvo_client import (
-    ForvoClient,
-    ForvoClientException,
-    ForvoConfig,
-    FullForvoResult,
-)
+from ..audio_manager.forvo_client import ForvoClient, ForvoConfig, FullForvoResult
 from ..helpers.consts import ADDON_NAME
 from ..helpers.file_ops import open_file
 from ..helpers.misc import strip_html_and_media
@@ -210,7 +206,12 @@ class AudioSearchDialog(QDialog):
         """
         This method requires Anki to be running.
         """
-        pass
+        if opener := find_executable("xdg-open"):
+            subprocess.Popen(
+                [opener, file.url],
+                shell=False,
+                start_new_session=True,
+            )
 
     def _create_top_layout(self) -> QLayout:
         layout = QHBoxLayout()
