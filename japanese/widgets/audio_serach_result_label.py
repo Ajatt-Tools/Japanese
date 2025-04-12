@@ -25,7 +25,11 @@ def explain_error(ex: Exception) -> str:
 
 
 def is_not_found(ex: Exception) -> bool:
-    return isinstance(ex, ForvoClientException) and ex.response and ex.response.status_code == requests.codes.not_found
+    return (
+        isinstance(ex, ForvoClientException)
+        and ex.response is not None
+        and ex.response.status_code == requests.codes.not_found
+    )
 
 
 def is_serious_error(ex: Optional[Exception]) -> bool:
