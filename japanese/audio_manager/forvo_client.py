@@ -25,12 +25,14 @@ class ForvoConfig:
     preferred_usernames: list[str] = dataclasses.field(default_factory=list)
     preferred_countries: list[str] = dataclasses.field(default_factory=list)
     show_gender: bool = True
-    show_country: bool = False
+    show_country: bool = True
     timeout_seconds: int = 5
     retry_attempts: int = 3
 
     def __post_init__(self) -> None:
-        self.preferred_countries = [c.lower() for c in self.preferred_countries]
+        self.language = self.language.lower()
+        self.preferred_usernames = [user.lower() for user in self.preferred_usernames]
+        self.preferred_countries = [country.lower() for country in self.preferred_countries]
 
 
 def create_session(retry_attempts: int) -> requests.Session:
@@ -224,13 +226,13 @@ class ForvoClient:
 
         def username_key(pronunciation: ForvoPronunciation) -> int:
             try:
-                return self._config.preferred_usernames.index(pronunciation.username)
+                return self._config.preferred_usernames.index(pronunciation.username.lower())
             except ValueError:
                 return sys.maxsize
 
         def country_key(pronunciation: ForvoPronunciation) -> int:
             try:
-                return self._config.preferred_countries.index(pronunciation.country)
+                return self._config.preferred_countries.index(pronunciation.country.lower())
             except ValueError:
                 return sys.maxsize
 
