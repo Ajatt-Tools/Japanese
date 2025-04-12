@@ -6,8 +6,7 @@ import dataclasses
 import enum
 import re
 import sys
-import typing
-from typing import Optional, Union
+from typing import Optional
 
 import requests
 from bs4 import BeautifulSoup, PageElement, ResultSet, Tag
@@ -15,8 +14,8 @@ from requests.adapters import HTTPAdapter
 from urllib3 import Retry
 
 from ..ajt_common.utils import clamp
-from .basic_types import FileUrlData, AudioManagerExceptionBase
 from ..helpers.http_client import get_headers
+from .basic_types import AudioManagerExceptionBase, FileUrlData
 
 
 # Config default values
@@ -147,6 +146,7 @@ class FullForvoResult:
     """
     Used to retrieve all results when using Anki's QueryOp
     """
+
     error_word: Optional[Exception] = None
     error_search: Optional[Exception] = None
     files: list[FileUrlData] = dataclasses.field(default_factory=list)

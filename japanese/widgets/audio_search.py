@@ -13,14 +13,19 @@ from aqt.operations import QueryOp
 from aqt.qt import *
 from aqt.utils import restoreGeom, saveGeom, tooltip, tr
 
-from .audio_serach_result_label import AudioSearchResultLabel
 from ..ajt_common.utils import ui_translate
 from ..audio_manager.abstract import AnkiAudioSourceManagerABC
 from ..audio_manager.basic_types import FileUrlData
-from ..audio_manager.forvo_client import ForvoConfig, ForvoClient, ForvoClientException, FullForvoResult
+from ..audio_manager.forvo_client import (
+    ForvoClient,
+    ForvoClientException,
+    ForvoConfig,
+    FullForvoResult,
+)
 from ..helpers.consts import ADDON_NAME
 from ..helpers.file_ops import open_file
 from ..helpers.misc import strip_html_and_media
+from .audio_serach_result_label import AudioSearchResultLabel
 from .audio_sources import SourceEnableCheckbox
 
 if mw is None:
@@ -98,9 +103,7 @@ class SearchResultsTable(QTableWidget):
         self.horizontalHeader().setStretchLastSection(True)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.setColumnCount(SearchResultsTableColumns.column_count())
-        self.setHorizontalHeaderLabels(
-            ui_translate(item.name) for item in SearchResultsTableColumns
-        )
+        self.setHorizontalHeaderLabels(ui_translate(item.name) for item in SearchResultsTableColumns)
         self.setSectionResizeModes()
 
     def setSectionResizeModes(self):
