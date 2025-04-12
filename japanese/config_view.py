@@ -24,7 +24,7 @@ RE_CFG_WORD_SEP = re.compile(r"[\n;、, ]+", flags=RE_FLAGS)
 @functools.lru_cache(maxsize=50)
 def split_cfg_words(config_value: str) -> Sequence[str]:
     """Splits string by comma. Cache identical values."""
-    return dict.fromkeys(re.split(RE_CFG_WORD_SEP, config_value))
+    return tuple(dict.fromkeys(re.split(RE_CFG_WORD_SEP, config_value)))
 
 
 @functools.lru_cache(maxsize=50)
