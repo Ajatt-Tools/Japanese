@@ -296,10 +296,9 @@ class AudioSettingsForm(MultiColumnSettingsForm):
         )
 
 
-class ForvoSettingsForm(MultiColumnSettingsForm):
-    _title: str = "Forvo settings"
+class ForvoSettingsForm(SettingsForm):
+    _title: str = "Forvo settings (Audio Search)"
     _config: ForvoSettingsConfigView
-    _columns: int = 1
 
     def _add_widgets(self) -> None:
         super()._add_widgets()
