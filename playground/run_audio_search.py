@@ -8,6 +8,7 @@ from aqt.qt import *
 
 from japanese.audio_manager.abstract import AnkiAudioSourceManagerABC
 from japanese.audio_manager.basic_types import FileUrlData
+from japanese.audio_manager.forvo_client import ForvoClient, ForvoConfig
 from japanese.widgets.audio_search import AudioSearchDialog
 
 
@@ -44,7 +45,7 @@ class NoAnkiAudioSourceManager(AnkiAudioSourceManagerABC):
 
 def main():
     app = QApplication(sys.argv)
-    dialog = AudioSearchDialog(NoAnkiAudioSourceManager())
+    dialog = AudioSearchDialog(NoAnkiAudioSourceManager(), ForvoClient(config=ForvoConfig()))
     dialog.set_note_fields(
         [
             "Question",

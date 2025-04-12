@@ -17,7 +17,7 @@ from aqt.utils import restoreGeom, saveGeom, tooltip, tr
 from ..ajt_common.utils import find_executable, ui_translate
 from ..audio_manager.abstract import AnkiAudioSourceManagerABC
 from ..audio_manager.basic_types import FileUrlData
-from ..audio_manager.forvo_client import ForvoClient, ForvoConfig, FullForvoResult
+from ..audio_manager.forvo_client import ForvoClient, FullForvoResult
 from ..helpers.consts import ADDON_NAME
 from ..helpers.file_ops import open_file
 from ..helpers.misc import strip_html_and_media
@@ -162,12 +162,15 @@ class SearchLock:
 
 
 class AudioSearchDialog(QDialog):
-    def __init__(self, audio_manager: AnkiAudioSourceManagerABC, parent=None):
+    _audio_manager: AnkiAudioSourceManagerABC
+    _forvo_client: ForvoClient
+
+    def __init__(self, audio_manager: AnkiAudioSourceManagerABC, forvo_client: ForvoClient, parent=None):
         super().__init__(parent)
         self.setMinimumSize(600, 400)
         self.setWindowTitle(f"{ADDON_NAME} - Audio search")
         self._audio_manager = audio_manager
-        self._forvo_client = ForvoClient(config=ForvoConfig())
+        self._forvo_client = forvo_client
 
         # create widgets
         self._search_bar = SearchBar()
@@ -289,8 +292,8 @@ class AudioSearchDialog(QDialog):
 class AnkiAudioSearchDialog(AudioSearchDialog):
     name = "ajt__audio_search_dialog"
 
-    def __init__(self, audio_manager: AnkiAudioSourceManagerABC, parent=None) -> None:
-        super().__init__(audio_manager, parent)
+    def __init__(self, audio_manager: AnkiAudioSourceManagerABC, forvo_client: ForvoClient, parent=None) -> None:
+        super().__init__(audio_manager, forvo_client, parent)
         # Restore previous geom
         restoreGeom(self, self.name, adjustSize=True)
 

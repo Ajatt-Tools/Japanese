@@ -1,10 +1,6 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
-from japanese.audio_manager.forvo_client import (
-    ForvoClient,
-    ForvoClientException,
-    ForvoConfig,
-)
+from japanese.audio_manager.forvo_client import ForvoClient, ForvoConfig
 
 
 def main():
