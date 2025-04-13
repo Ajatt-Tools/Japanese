@@ -674,6 +674,7 @@ class SettingsDialog(QDialog, MgrPropMixIn):
         cfg["svg_graphs"].update(self._svg_settings.as_dict())
         cfg["furigana"].update(self._furigana_settings.as_dict())
         cfg["context_menu"].update(self._context_menu_settings.as_dict())
+        cfg["forvo"].update(self._forvo_settings.as_dict())
         cfg["toolbar"].update(self._toolbar_settings.as_dict())
         cfg["profiles"] = [
             *self._furigana_profiles_edit.as_list(),
