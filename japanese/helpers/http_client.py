@@ -85,12 +85,16 @@ class AjtHttpClient:
     progress_hook: Optional[anki.httpclient.ProgressCallback] = None
     session: requests.Session
 
-    def __init__(self, progress_hook: Optional[anki.httpclient.ProgressCallback] = None) -> None:
+    def __init__(self, retry_attempts: int = 5, progress_hook: Optional[anki.httpclient.ProgressCallback] = None) -> None:
         self.progress_hook = progress_hook
-        self.session = requests.Session()
+        self.session = create_session(retry_attempts)
         if os.environ.get("ANKI_NOVERIFYSSL"):
             # allow user to accept invalid certs in work/school settings
             self.verify = False
+
+    def restart_session(self, retry_attempts: int = 5) -> None:
+        self.session.close()
+        self.session = create_session(retry_attempts)
 
     def __enter__(self) -> "AjtHttpClient":
         return self
@@ -125,6 +129,10 @@ class AjtHttpClient:
             verify=self.verify,
         )
 
+    def get_with_retry(self, url: str, timeout_seconds: int, retry_attempts: int) -> requests.Response:
+        set_retries_for_session(self.session, retry_attempts)
+        return self.get_with_timeout(url, timeout=timeout_seconds)
+
     def stream_content(self, resp: requests.Response) -> bytes:
         resp.raise_for_status()
         buf = io.BytesIO()
@@ -134,16 +142,6 @@ class AjtHttpClient:
             buf.write(chunk)
         return buf.getvalue()
 
-    def get_with_retry(self, url: str, timeout: int, attempts: int) -> requests.Response:
-        for _attempt in range(clamp(min_val=0, val=attempts - 1, max_val=99)):
-            try:
-                return self.get_with_timeout(url, timeout=timeout)
-            except requests.Timeout:
-                print(f"timeout: {url}")
-                continue
-        # If other tries timed out.
-        return self.get_with_timeout(url, timeout)
-
 
 class AudioManagerHttpClient(AudioManagerHttpClientABC):
     def __init__(
@@ -152,7 +150,7 @@ class AudioManagerHttpClient(AudioManagerHttpClientABC):
         progress_hook: Optional[anki.httpclient.ProgressCallback] = None,
     ) -> None:
         self._audio_settings = audio_settings
-        self._client = AjtHttpClient(progress_hook)
+        self._client = AjtHttpClient(audio_settings.attempts, progress_hook)
 
     def download(self, file: Union[AudioSourceConfig, FileUrlData]) -> bytes:
         """
@@ -168,12 +166,14 @@ class AudioManagerHttpClient(AudioManagerHttpClientABC):
         try:
             response = self._client.get_with_retry(file.url, timeout, attempts)
         except OSError as ex:
+            self._client.restart_session(attempts)
             raise AudioManagerException(
                 file,
                 f"{file.url} download failed with exception {ex.__class__.__name__}",
                 exception=ex,
             )
         if response.status_code != requests.codes.ok:
+            self._client.restart_session(attempts)
             raise AudioManagerException(
                 file,
                 f"{file.url} download failed with return code {response.status_code}",
