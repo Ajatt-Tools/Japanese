@@ -15,6 +15,8 @@ from aqt.qt import *
 from aqt.utils import restoreGeom, saveGeom, tooltip, tr
 
 from ..ajt_common.utils import find_executable, ui_translate
+from ..audio_manager.download_results import FileSaveResults, format_report_results_msg, format_report_errors_msg, \
+    calc_tooltip_offset
 from ..audio_manager.abstract import AnkiAudioSourceManagerABC
 from ..audio_manager.basic_types import FileUrlData
 from ..audio_manager.forvo_client import ForvoClient, FullForvoResult
@@ -304,12 +306,19 @@ class AnkiAudioSearchDialog(AudioSearchDialog):
             return sound.av_player.play_tags([SoundOrVideoTag(filename=file.desired_filename)])
         else:
             # file is not located on this computer and needs to be downloaded first.
+            self._search_result_label.set_downloading(file.desired_filename)
             return self._audio_manager.download_and_save_tags(
                 hits=[file],
-                on_finish=lambda results: sound.av_player.play_tags(
-                    [SoundOrVideoTag(filename=result.desired_filename) for result in results.successes]
-                ),
+                on_finish=self._handle_and_play_download_result,
             )
+
+    def _handle_and_play_download_result(self, results: FileSaveResults):
+        self._search_result_label.hide_count()
+        sound.av_player.play_tags(
+            [SoundOrVideoTag(filename=result.desired_filename) for result in results.successes]
+        )
+        if results.fails and (txt := format_report_errors_msg(results.fails)):
+            return tooltip(msg=txt, parent=self, period=7000, y_offset=calc_tooltip_offset(len(results.fails)))
 
     def _open_audio_file(self, file: FileUrlData) -> None:
         tooltip(tr.qt_misc_loading(), period=1000)

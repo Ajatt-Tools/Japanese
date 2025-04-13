@@ -15,6 +15,7 @@ class ForvoSearchResult(enum.Enum):
     ok = "green"
     warn = "orange"
     error = "red"
+    default = "black"
 
 
 def explain_error(ex: Exception) -> str:
@@ -62,6 +63,9 @@ class AudioSearchResultLabel(QLabel):
 
     def set_nothing_to_do(self) -> None:
         self._set_status_text("Search query is empty. Did nothing.", ForvoSearchResult.warn)
+
+    def set_downloading(self, filename: str) -> None:
+        self._set_status_text(f"Downloading file '{filename}'", ForvoSearchResult.default)
 
     def set_count(self, result: FullForvoResult) -> None:
         status = ForvoSearchResult.ok

@@ -15,8 +15,8 @@ from anki.utils import strip_html_media
 from aqt import mw
 from aqt.utils import tooltip
 
-from .audio import FileSaveResults, aud_src_mgr, format_audio_tags
-from .audio_manager.basic_types import FileUrlData
+from .audio import aud_src_mgr, format_audio_tags
+from .audio_manager.download_results import format_report_results_msg, FileSaveResults, calc_tooltip_offset
 from .config_view import config_view as cfg
 from .database.sqlite3_buddy import Sqlite3Buddy
 from .furigana.gen_furigana import FuriganaGen
@@ -131,23 +131,8 @@ class AddAudio(DoTask, task_type=ProfileAudio):
         """
         if not self._caller.cfg.audio_download_report:
             return
-        buffer = io.StringIO()
-        if r.successes:
-            buffer.write(f"<b>Added {len(r.successes)} files to the collection.</b><ol>")
-            buffer.write("".join(f"<li>{file.desired_filename}</li>" for file in r.successes))
-            buffer.write("</ol>")
-        if r.fails:
-            buffer.write(f"<b>Failed {len(r.fails)} files.</b><ol>")
-            buffer.write(
-                "".join(
-                    f"<li>{fail.file.desired_filename}: {fail.describe_short()}</li>"
-                    for fail in r.fails
-                    if isinstance(fail.file, FileUrlData)
-                )
-            )
-            buffer.write("</ol>")
-        if txt := buffer.getvalue():
-            return tooltip(txt, period=7000, y_offset=80 + 18 * (len(r.successes) + len(r.fails)))
+        if txt := format_report_results_msg(r):
+            return tooltip(txt, period=7000, y_offset=calc_tooltip_offset(len(r.successes) + len(r.fails)))
 
 
 def html_to_media_line(txt: str) -> str:

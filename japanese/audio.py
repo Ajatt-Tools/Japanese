@@ -7,7 +7,7 @@ import itertools
 import pathlib
 from collections.abc import Collection, Iterable, Sequence
 from concurrent.futures import Future
-from typing import Any, Callable, NamedTuple, Optional
+from typing import Any, Callable, Optional
 
 import anki.collection
 from anki.utils import html_to_text_line
@@ -18,12 +18,12 @@ from aqt.utils import show_warning, tooltip
 from .audio_manager.abstract import AnkiAudioSourceManagerABC
 from .audio_manager.audio_manager import AudioSourceManagerFactory
 from .audio_manager.basic_types import (
-    AudioManagerException,
     FileUrlData,
     NameUrl,
     NameUrlSet,
     TotalAudioStats,
 )
+from .audio_manager.download_results import DownloadedData, FileSaveResults, save_files
 from .audio_manager.source_manager import AudioSourceManager, InitResult
 from .config_view import JapaneseConfig
 from .config_view import config_view as cfg
@@ -36,38 +36,6 @@ from .mecab_controller.kana_conv import to_hiragana, to_katakana
 from .mecab_controller.mecab_controller import MecabParsedToken
 from .mecab_controller.unify_readings import literal_pronunciation as pr
 from .reading import mecab
-
-
-class DownloadedData(NamedTuple):
-    desired_filename: str
-    data: bytes
-
-
-class FileSaveResults(NamedTuple):
-    successes: list[DownloadedData]
-    fails: list[AudioManagerException]
-
-
-def save_files(
-    futures: Collection[Future[DownloadedData]],
-    on_finish: Optional[Callable[[FileSaveResults], Any]],
-) -> FileSaveResults:
-    results = FileSaveResults([], [])
-    for future in futures:
-        try:
-            result: DownloadedData = future.result()
-        except AudioManagerException as ex:
-            results.fails.append(ex)
-        else:
-            assert mw, "Anki should be running."
-            mw.col.media.write_data(
-                desired_fname=result.desired_filename,
-                data=result.data,
-            )
-            results.successes.append(result)
-    if on_finish:
-        on_finish(results)
-    return results
 
 
 def only_missing(col: anki.collection.Collection, files: Collection[FileUrlData]):
