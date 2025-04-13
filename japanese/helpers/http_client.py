@@ -6,6 +6,8 @@ from typing import Any, Optional, Union
 
 import anki.httpclient
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3 import Retry
 
 from ..ajt_common.utils import clamp
 from ..audio_manager.abstract import AudioSettingsConfigViewABC
@@ -37,15 +39,51 @@ def get_headers() -> dict[str, str]:
     }
 
 
+def set_retries_for_session(session: requests.Session, retry_attempts: int) -> requests.Session:
+    # Define the number of retries and backoff factor
+    retry_strategy = Retry(
+        # Total number of retries
+        total=clamp(2, retry_attempts, 33),
+        # A backoff factor to apply between attempts;
+        # Causes sleep intervals to grow: factor×1s, factor×2s, factor×4s, factor×8s, etc.
+        backoff_factor=0.5,
+        # Retry on these HTTP statuses
+        status_forcelist=[403, 429, 500, 502, 503, 504],
+        # Methods to retry
+        allowed_methods=["HEAD", "GET", "OPTIONS"],
+    )
+
+    # Create an adapter with the retry configuration
+    adapter = HTTPAdapter(max_retries=retry_strategy)
+
+    # Mount the adapter for both HTTP and HTTPS
+    session.mount("https://", adapter)
+    session.mount("http://", adapter)
+    return session
+
+
+def create_session(retry_attempts: int) -> requests.Session:
+    """
+    Sets the session with basic backoff retries.
+    Put in a separate function so we can try resetting the session if something goes wrong.
+    """
+    # Create a session and mount the adapter for both HTTP and HTTPS
+    session = requests.Session()
+    set_retries_for_session(session, retry_attempts)
+    session.headers.update(get_headers())
+    return session
+
+
 class AjtHttpClient:
     """
     Http Client adapted from Anki with minor tweaks.
     https://github.com/ankitects/anki/blob/a6d5c949970627f2b4dcea8a02fea3a497e0440f/pylib/anki/httpclient.py
     """
 
-    verify = True
+    verify: bool = True
     # args are (upload_bytes_in_chunk, download_bytes_in_chunk)
     progress_hook: Optional[anki.httpclient.ProgressCallback] = None
+    session: requests.Session
 
     def __init__(self, progress_hook: Optional[anki.httpclient.ProgressCallback] = None) -> None:
         self.progress_hook = progress_hook

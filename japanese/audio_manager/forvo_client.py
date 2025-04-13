@@ -10,12 +10,9 @@ from typing import Optional, Union
 
 import requests
 from bs4 import BeautifulSoup, PageElement, ResultSet, Tag
-from requests.adapters import HTTPAdapter
-from urllib3 import Retry
 
-from ..ajt_common.utils import clamp
 from ..config_view import ForvoSettingsConfigView
-from ..helpers.http_client import get_headers
+from ..helpers.http_client import create_session
 from .basic_types import AudioManagerExceptionBase, FileUrlData
 
 
@@ -34,25 +31,6 @@ class ForvoConfig:
         self.language = self.language.lower()
         self.preferred_usernames = [user.lower() for user in self.preferred_usernames]
         self.preferred_countries = [country.lower() for country in self.preferred_countries]
-
-
-def create_session(retry_attempts: int) -> requests.Session:
-    """
-    Sets the session with basic backoff retries.
-    Put in a separate function so we can try resetting the session if something goes wrong.
-    """
-    retry_strategy = Retry(
-        total=clamp(2, retry_attempts, 33),
-        backoff_factor=1,
-        status_forcelist=[403, 429, 500, 502, 503, 504],
-        allowed_methods=["HEAD", "GET", "OPTIONS"],
-    )
-    adapter = HTTPAdapter(max_retries=retry_strategy)
-    session = requests.Session()
-    session.mount("https://", adapter)
-    session.mount("http://", adapter)
-    session.headers.update(get_headers())
-    return session
 
 
 def decode_play_arg(play_arg: str) -> str:
