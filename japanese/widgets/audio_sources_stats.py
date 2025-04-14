@@ -27,36 +27,27 @@ class AudioStatsTable(QTableWidget):
             header.setSectionResizeMode(column_number, QHeaderView.ResizeMode.Stretch)
 
 
-class AudioStatsDialog(QDialog):
+class AudioStatsDialog(AnkiSaveAndRestoreGeomDialog):
     name: str = "ajt__audio_stats_dialog"
+    _table: AudioStatsTable
+    _button_box: QDialogButtonBox
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         super().__init__(parent=parent)
         self: QDialog
         self.setWindowTitle("Audio Statistics")
         self.setMinimumSize(400, 240)
-        self.table = AudioStatsTable()
+        self._table = AudioStatsTable()
         self.setLayout(QVBoxLayout())
         self._button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)
-        self.layout().addWidget(self.table)
+        self.layout().addWidget(self._table)
         self.layout().addWidget(self._button_box)
         qconnect(self._button_box.accepted, self.accept)
         qconnect(self._button_box.rejected, self.reject)
 
-    def load_data(self, stats: TotalAudioStats):
+    def load_data(self, stats: TotalAudioStats) -> "AudioStatsDialog":
         for idx, row in enumerate(stats.sources):
-            self.table.insertRow(idx)
+            self._table.insertRow(idx)
             for jdx, item in enumerate(dataclasses.astuple(row)):
-                self.table.setItem(idx, jdx, QTableWidgetItem(str(item)))
-
-
-def get_mock_stats() -> TotalAudioStats:
-    return TotalAudioStats(
-        unique_files=23,
-        unique_headwords=25,
-        sources=[
-            AudioStats("tick", 5, 6),
-            AudioStats("tack", 7, 7),
-            AudioStats("toe", 10, 9),
-        ],
-    )
+                self._table.setItem(idx, jdx, QTableWidgetItem(str(item)))
+        return self

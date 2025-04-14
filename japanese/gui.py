@@ -495,11 +495,7 @@ class AudioSourcesEditTable(QWidget):
     def _on_show_statistics_clicked(self) -> None:
         if not self._audio_stats:
             return
-        d = AudioStatsDialog()
-        d.load_data(self._audio_stats)
-        restoreGeom(d, d.name, adjustSize=True)
-        d.exec()
-        saveGeom(d, d.name)
+        AudioStatsDialog().load_data(self._audio_stats).exec()
 
     def _on_purge_db_clicked(self) -> None:
         aud_src_mgr.purge_everything(on_finish=self._populate)
