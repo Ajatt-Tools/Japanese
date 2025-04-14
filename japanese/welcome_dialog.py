@@ -189,10 +189,10 @@ class AJTWelcomeDialog(QDialog):
         qconnect(self._button_box.accepted, self.accept)
         qconnect(self._button_box.rejected, self.reject)
 
-    def done(self, *args, **kwargs) -> None:
+    def done(self, result: int) -> None:
         # https://doc.qt.io/qt-6/qdialog.html#done
         self.on_close()
-        return super().done(*args, **kwargs)
+        return super().done(result)
 
     def on_close(self) -> None:
         print("closing AJT welcome window...")
