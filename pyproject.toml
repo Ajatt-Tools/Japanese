@@ -78,3 +78,6 @@ unstable = true
 
 [tool.isort]
 profile = "black"
+
+[tool.basedpyright]
+reportUnusedCallResult = false
