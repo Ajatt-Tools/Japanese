@@ -550,6 +550,7 @@ class AudioSourcesEditTable(QWidget):
         self._apply_button.setToolTip("Apply current sources configuration.")
 
 
+@final
 class SettingsDialog(QDialog, MgrPropMixIn):
     name: str = "ajt__japanese_options"
 

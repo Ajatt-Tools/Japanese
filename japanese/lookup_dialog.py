@@ -52,6 +52,7 @@ def entries_to_html(entries: Sequence[FormattedEntry]) -> OrderedSet[str]:
     return OrderedSet(get_notation(entry, mode=cfg.pitch_accent.lookup_pitch_format) for entry in entries)
 
 
+@final
 class ViewPitchAccentsDialog(QDialog):
     name: str = "ajt__pitch_accent_lookup"
     _css_relpath = f"{anki_addon_web_relpath()}/ajt_webview.css"
