@@ -2,7 +2,6 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import io
-from collections import OrderedDict
 from collections.abc import Sequence
 from gettext import gettext as _
 from typing import final
@@ -52,6 +51,11 @@ def entries_to_html(entries: Sequence[FormattedEntry]) -> OrderedSet[str]:
     return OrderedSet(get_notation(entry, mode=cfg.pitch_accent.lookup_pitch_format) for entry in entries)
 
 
+def lookup_pronunciations(search: str) -> AccentDict:
+    with Sqlite3Buddy() as db:
+        return lookup.with_new_buddy(db).get_pronunciations(search, group_by_headword=True)
+
+
 @final
 class ViewPitchAccentsDialog(AnkiSaveAndRestoreGeomDialog):
     name: str = "ajt__pitch_accent_lookup"
@@ -59,13 +63,14 @@ class ViewPitchAccentsDialog(AnkiSaveAndRestoreGeomDialog):
     _pronunciations: AccentDict
     _web: AnkiWebView
 
-    def __init__(self, parent: QWidget):
+    def __init__(self, parent: QWidget, pronunciations: AccentDict) -> None:
         super().__init__(parent)
         self._web = AnkiWebView(parent=self, title=ACTION_NAME)
         self._web.setProperty("url", QUrl("about:blank"))
-        self._web.setObjectName(self._name)
-        self._pronunciations = OrderedDict()
+        self._web.setObjectName(self.name)
+        self._pronunciations = pronunciations
         self._setup_ui()
+        self._set_html_result()
         tweak_window(self)
 
     def _setup_ui(self) -> None:
@@ -102,11 +107,6 @@ class ViewPitchAccentsDialog(AnkiSaveAndRestoreGeomDialog):
             )
         tooltip("couldn't get clipboard.", parent=self)
 
-    def lookup_pronunciations(self, search: str):
-        with Sqlite3Buddy() as db:
-            self._pronunciations.update(lookup.with_new_buddy(db).get_pronunciations(search, group_by_headword=True))
-        return self
-
     def _format_html_result(self) -> str:
         """Create HTML body"""
         html = io.StringIO()
@@ -122,7 +122,7 @@ class ViewPitchAccentsDialog(AnkiSaveAndRestoreGeomDialog):
         html.write("</main>")
         return html.getvalue()
 
-    def set_html_result(self):
+    def _set_html_result(self):
         """Format pronunciations as an HTML list."""
         self._web.stdHtml(
             body=self._format_html_result(),
@@ -139,12 +139,18 @@ class ViewPitchAccentsDialog(AnkiSaveAndRestoreGeomDialog):
         self._pronunciations.clear()
 
 
+def get_parent_widget(parent: QWidget) -> QWidget:
+    if isinstance(parent, AnkiWebView):
+        return parent.window() or mw
+    return parent
+
+
 def on_lookup_pronunciation(parent: QWidget, text: str) -> None:
     """Do a lookup on the selection"""
     if text := clean_furigana(text).strip():
-        ViewPitchAccentsDialog(parent).lookup_pronunciations(text).set_html_result().show()
+        ViewPitchAccentsDialog(parent, lookup_pronunciations(text)).show()
     else:
-        tooltip(_("Empty selection."), parent=((parent.window() or mw) if isinstance(parent, AnkiWebView) else parent))
+        tooltip(msg=_("Empty selection."), parent=get_parent_widget(parent))
 
 
 def setup_mw_lookup_action(root_menu: QMenu) -> None:
