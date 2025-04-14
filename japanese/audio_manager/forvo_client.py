@@ -26,6 +26,7 @@ class ForvoConfig:
     show_country: bool = True
     timeout_seconds: int = 5
     retry_attempts: int = 3
+    audio_format: ForvoAudioFormat = ForvoAudioFormat.ogg
 
     def __post_init__(self) -> None:
         self.language = self.language.lower()
@@ -223,7 +224,7 @@ class ForvoClient:
 
         return sorted(pronunciations, key=sort_key)
 
-    def _extract_url(self, element: Tag, extension: str = "ogg") -> str:
+    def _extract_url(self, element: Tag) -> str:
         play = element["onclick"]
         # We are interested in Forvo's javascript Play function which takes in some parameters to play the audio
         # Example: Play(3060224,'OTQyN...','OTQyN..',false,'Yy9wL2NwXzk0MjYzOTZfNzZfMzM1NDkxNS5tcDM=','Yy9wL...','h')
@@ -235,10 +236,13 @@ class ForvoClient:
         # /audios/mp3 is normalized and has the filename in the 5th argument of Play base64 encoded
         # /mp3 is raw and has the filename in the 2nd argument of Play encoded
 
-        if extension == "ogg":
+        if self._config.audio_format == ForvoAudioFormat.ogg:
             normalized_arg, raw_arg = 5, 2
-        else:
+        elif self._config.audio_format == ForvoAudioFormat.mp3:
             normalized_arg, raw_arg = 4, 1
+        else:
+            raise ValueError(f"unsupported audio format: {self._config.audio_format.name}")
+
         try:
             file = decode_play_arg(play_args[normalized_arg])
             return f"{self._audio_http_host}/audios/{file_type(file)}/{file}"

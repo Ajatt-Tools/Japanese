@@ -307,6 +307,7 @@ class ForvoSettingsForm(SettingsForm):
         self._widgets.preferred_countries = WordsEdit(initial_values=self._config.preferred_countries)
         self._widgets.timeout_seconds = NarrowSpinBox(initial_value=self._config.timeout_seconds)
         self._widgets.retry_attempts = NarrowSpinBox(initial_value=self._config.retry_attempts)
+        self._widgets.audio_format = EnumSelectCombo(initial_value=self._config.audio_format)
 
     def _add_tooltips(self) -> None:
         super()._add_tooltips()

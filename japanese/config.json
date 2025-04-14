@@ -166,7 +166,8 @@
     "show_gender": true,
     "show_country": false,
     "timeout_seconds": 5,
-    "retry_attempts": 3
+    "retry_attempts": 3,
+    "audio_format": "ogg"
   },
   "definitions": {
     "timeout": 10,

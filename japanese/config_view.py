@@ -233,6 +233,12 @@ class AudioSettingsConfigView(ConfigSubViewBase, AudioSettingsConfigViewABC):
         return self["tag_separator"]
 
 
+@enum.unique
+class ForvoAudioFormat(enum.Enum):
+    mp3 = enum.auto()
+    ogg = enum.auto()
+
+
 @final
 class ForvoSettingsConfigView(ConfigSubViewBase):
     _view_key: str = "forvo"
@@ -267,6 +273,13 @@ class ForvoSettingsConfigView(ConfigSubViewBase):
     @property
     def retry_attempts(self) -> int:
         return int(self["retry_attempts"])
+
+    @property
+    def audio_format(self) -> ForvoAudioFormat:
+        try:
+            return ForvoAudioFormat[self["audio_format"]]
+        except KeyError:
+            return ForvoAudioFormat.ogg
 
 
 @final
