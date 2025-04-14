@@ -5,6 +5,7 @@ import dataclasses
 
 from aqt.qt import *
 
+from ..ajt_common.restore_geom_dialog import AnkiSaveAndRestoreGeomDialog
 from ..ajt_common.utils import ui_translate
 from ..audio_manager.basic_types import AudioStats, TotalAudioStats
 

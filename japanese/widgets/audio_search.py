@@ -14,11 +14,16 @@ from aqt.operations import QueryOp
 from aqt.qt import *
 from aqt.utils import restoreGeom, saveGeom, tooltip, tr
 
+from ..ajt_common.restore_geom_dialog import AnkiSaveAndRestoreGeomDialog
 from ..ajt_common.utils import find_executable, ui_translate
-from ..audio_manager.download_results import FileSaveResults, format_report_results_msg, format_report_errors_msg, \
-    calc_tooltip_offset
 from ..audio_manager.abstract import AnkiAudioSourceManagerABC
 from ..audio_manager.basic_types import FileUrlData
+from ..audio_manager.download_results import (
+    FileSaveResults,
+    calc_tooltip_offset,
+    format_report_errors_msg,
+    format_report_results_msg,
+)
 from ..audio_manager.forvo_client import ForvoClient, FullForvoResult
 from ..helpers.consts import ADDON_NAME
 from ..helpers.file_ops import open_file

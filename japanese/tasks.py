@@ -16,7 +16,11 @@ from aqt import mw
 from aqt.utils import tooltip
 
 from .audio import aud_src_mgr, format_audio_tags
-from .audio_manager.download_results import format_report_results_msg, FileSaveResults, calc_tooltip_offset
+from .audio_manager.download_results import (
+    FileSaveResults,
+    calc_tooltip_offset,
+    format_report_results_msg,
+)
 from .config_view import config_view as cfg
 from .database.sqlite3_buddy import Sqlite3Buddy
 from .furigana.gen_furigana import FuriganaGen

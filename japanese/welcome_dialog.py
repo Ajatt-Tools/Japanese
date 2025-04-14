@@ -3,7 +3,7 @@
 from anki.models import NotetypeNameId
 from aqt import gui_hooks, mw
 from aqt.qt import *
-from aqt.utils import openLink, restoreGeom, saveGeom
+from aqt.utils import openLink
 from aqt.webview import AnkiWebView
 
 from .ajt_common.about_menu import tweak_window
@@ -14,6 +14,7 @@ from .ajt_common.consts import (
     GITHUB_LINK,
     TG_LINK,
 )
+from .ajt_common.restore_geom_dialog import AnkiSaveAndRestoreGeomDialog
 from .config_view import config_view as cfg
 from .gui import EXAMPLE_DECK_ANKIWEB_URL
 from .helpers.consts import ADDON_NAME

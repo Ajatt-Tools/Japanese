@@ -3,7 +3,7 @@
 import os.path
 from collections.abc import Iterable
 from types import SimpleNamespace
-from typing import Optional, TypedDict, cast
+from typing import Optional, TypedDict, cast, final
 
 from aqt import mw
 from aqt.addons import AddonsDialog, ConfigEditor
@@ -19,6 +19,7 @@ from .ajt_common.addon_config import (
 )
 from .ajt_common.enum_select_combo import EnumSelectCombo
 from .ajt_common.grab_key import ShortCutGrabButton
+from .ajt_common.restore_geom_dialog import AnkiSaveAndRestoreGeomDialog
 from .ajt_common.utils import ui_translate
 from .audio import aud_src_mgr, show_audio_init_result_tooltip
 from .audio_manager.basic_types import (

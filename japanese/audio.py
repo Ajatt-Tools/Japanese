@@ -17,12 +17,7 @@ from aqt.utils import show_warning, tooltip
 
 from .audio_manager.abstract import AnkiAudioSourceManagerABC
 from .audio_manager.audio_manager import AudioSourceManagerFactory
-from .audio_manager.basic_types import (
-    FileUrlData,
-    NameUrl,
-    NameUrlSet,
-    TotalAudioStats,
-)
+from .audio_manager.basic_types import FileUrlData, NameUrl, NameUrlSet, TotalAudioStats
 from .audio_manager.download_results import DownloadedData, FileSaveResults, save_files
 from .audio_manager.source_manager import AudioSourceManager, InitResult
 from .config_view import JapaneseConfig

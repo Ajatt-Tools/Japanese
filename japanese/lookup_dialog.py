@@ -2,17 +2,19 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import io
+from collections import OrderedDict
 from collections.abc import Sequence
 from gettext import gettext as _
-from typing import Optional
+from typing import final
 
 from aqt import gui_hooks, mw
 from aqt.browser import Browser
 from aqt.qt import *
-from aqt.utils import restoreGeom, saveGeom, tooltip
+from aqt.utils import tooltip
 from aqt.webview import AnkiWebView
 
 from .ajt_common.about_menu import menu_root_entry, tweak_window
+from .ajt_common.restore_geom_dialog import AnkiSaveAndRestoreGeomDialog
 from .config_view import LookupDialogPitchOutputFormat
 from .config_view import config_view as cfg
 from .database.sqlite3_buddy import Sqlite3Buddy

@@ -1,12 +1,13 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 import io
+from collections.abc import Collection
 from concurrent.futures import Future
-from typing import NamedTuple, Collection, Optional, Callable, Any
+from typing import Any, Callable, NamedTuple, Optional
 
 from aqt import mw
 
-from .basic_types import FileUrlData, AudioManagerException
+from .basic_types import AudioManagerException, FileUrlData
 
 
 class DownloadedData(NamedTuple):

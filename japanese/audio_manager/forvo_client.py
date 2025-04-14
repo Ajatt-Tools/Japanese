@@ -11,7 +11,7 @@ from typing import Optional, Union
 import requests
 from bs4 import BeautifulSoup, PageElement, ResultSet, Tag
 
-from ..config_view import ForvoSettingsConfigView
+from ..config_view import ForvoAudioFormat, ForvoSettingsConfigView
 from ..helpers.http_client import create_session
 from .basic_types import AudioManagerExceptionBase, FileUrlData
 
