@@ -8,14 +8,14 @@ from playground.utils import NoAnkiConfigView
 
 
 class MockWindow(QDialog):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._config = NoAnkiConfigView()
         self._svg_config = SvgPitchGraphOptionsConfigView(self._config)
         self._settings_widget = SvgSettingsWidget(self._svg_config)
         self.initUI()
 
-    def initUI(self):
+    def initUI(self) -> None:
         self.setWindowTitle("Settings Form")
         self.setMinimumSize(300, 300)
 
@@ -27,7 +27,7 @@ class MockWindow(QDialog):
 
         self.setLayout(layout)
 
-    def accept(self):
+    def accept(self) -> None:
         # https://doc.qt.io/qt-6/qdialog.html#accept
         print(f"{self._settings_widget.as_dict()=}")
         return super().accept()

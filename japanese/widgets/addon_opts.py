@@ -17,7 +17,7 @@ class WordsEdit(QTextEdit):
     _min_height = 32
     _font_size = 16
 
-    def __init__(self, initial_values: Sequence[str]):
+    def __init__(self, initial_values: Sequence[str]) -> None:
         super().__init__()
         self.setAcceptRichText(False)
         self.set_values(initial_values)
@@ -107,7 +107,7 @@ class StrokeDisarrayLineEdit(NarrowLineEdit):
 
 
 class EditableSelector(QComboBox):
-    def __init__(self, *args):
+    def __init__(self, *args) -> None:
         super().__init__(*args)
         self.setEditable(True)
 
@@ -124,7 +124,7 @@ def relevant_field_names(note_type_name_fuzzy: Optional[str] = None) -> Iterable
 
 
 class FieldNameSelector(EditableSelector):
-    def __init__(self, initial_value: Optional[str] = None, *args):
+    def __init__(self, initial_value: Optional[str] = None, *args) -> None:
         super().__init__(*args)
         self.clear()
         self.addItems(dict.fromkeys(relevant_field_names()))

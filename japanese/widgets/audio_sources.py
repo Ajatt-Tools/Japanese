@@ -16,7 +16,7 @@ from .table import CellContent, ExpandingTableWidget, TableRow
 
 
 class SourceEnableCheckbox(QCheckBox):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.setStyleSheet("""
         QCheckBox {

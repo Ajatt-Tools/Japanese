@@ -76,7 +76,7 @@ class NoAnkiWebView(QWebEngineView):
 class SvgSettingsWidget(QWidget):
     _web_view: Union[AnkiWebView, NoAnkiWebView]
 
-    def __init__(self, svg_config: SvgPitchGraphOptionsConfigView):
+    def __init__(self, svg_config: SvgPitchGraphOptionsConfigView) -> None:
         super().__init__()
         self._svg_config = svg_config
         self._form = SvgSettingsForm(self._svg_config)

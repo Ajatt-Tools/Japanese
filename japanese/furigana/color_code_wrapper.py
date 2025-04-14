@@ -45,7 +45,7 @@ class ColorCodeWrapper(io.StringIO):
     _coloring_enabled: bool = True
     _cfg: JapaneseConfig
 
-    def __init__(self, token: AccDbParsedToken, output_format: ColorCodePitchFormat, cfg: JapaneseConfig):
+    def __init__(self, token: AccDbParsedToken, output_format: ColorCodePitchFormat, cfg: JapaneseConfig) -> None:
         super().__init__()
         self._cfg = cfg
         self._token = token

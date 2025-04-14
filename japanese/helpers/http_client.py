@@ -85,7 +85,9 @@ class AjtHttpClient:
     progress_hook: Optional[anki.httpclient.ProgressCallback] = None
     session: requests.Session
 
-    def __init__(self, retry_attempts: int = 5, progress_hook: Optional[anki.httpclient.ProgressCallback] = None) -> None:
+    def __init__(
+        self, retry_attempts: int = 5, progress_hook: Optional[anki.httpclient.ProgressCallback] = None
+    ) -> None:
         self.progress_hook = progress_hook
         self.session = create_session(retry_attempts)
         if os.environ.get("ANKI_NOVERIFYSSL"):

@@ -235,7 +235,7 @@ class AnkiAudioSourceManagerFactory(AudioSourceManagerFactory):
     _config: JapaneseConfig
     _db_path: Optional[pathlib.Path] = None
 
-    def __init__(self, config: JapaneseConfig):
+    def __init__(self, config: JapaneseConfig) -> None:
         super().__init__(config)
 
     def request_new_session(self, db: Sqlite3Buddy) -> AnkiAudioSourceManager:

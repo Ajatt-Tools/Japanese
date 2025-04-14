@@ -75,7 +75,7 @@ def is_note_type_installed() -> bool:
 
 
 class NoteTypeNagBar(QGroupBox):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.setTitle("Japanese note type")
         self.setCheckable(False)
@@ -94,7 +94,7 @@ class NoteTypeNagBar(QGroupBox):
 
 
 class LearnJapaneseButtons(QGroupBox):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.setTitle("Learn Japanese")
         self.setCheckable(False)
@@ -111,7 +111,7 @@ class LearnJapaneseButtons(QGroupBox):
 
 
 class CommunityButtons(QGroupBox):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.setTitle("Community")
         self.setCheckable(False)
@@ -126,7 +126,7 @@ class CommunityButtons(QGroupBox):
 
 
 class ProjectButtons(QGroupBox):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.setTitle("Project")
         self.setCheckable(False)
@@ -145,7 +145,7 @@ class AJTWelcomeDialog(AnkiSaveAndRestoreGeomDialog):
     _css_relpath: str = f"{anki_addon_web_relpath()}/ajt_webview.css"
     _web: AnkiWebView
 
-    def __init__(self, parent: QWidget):
+    def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)
         self._web = AnkiWebView(parent=self, title=ACTION_NAME)
         self._web.setProperty("url", QUrl("about:blank"))

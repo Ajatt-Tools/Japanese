@@ -9,7 +9,7 @@ from tests import DATA_DIR
 
 
 class App(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self.setWindowTitle("Test")
         self.table = PitchOverrideTable(self)

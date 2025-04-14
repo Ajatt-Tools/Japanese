@@ -11,7 +11,7 @@ from ..audio_manager.basic_types import AudioStats, TotalAudioStats
 
 
 class AudioStatsTable(QTableWidget):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self: QTableWidget
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)

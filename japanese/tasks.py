@@ -164,7 +164,7 @@ class DoTasks:
         caller: TaskCaller,
         src_field: Optional[str] = None,
         overwrite: bool = False,
-    ):
+    ) -> None:
         self._note = note
         self._caller = caller
         self._src_field = src_field

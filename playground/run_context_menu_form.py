@@ -9,14 +9,14 @@ from playground.utils import NoAnkiConfigView
 
 
 class MockWindow(QDialog):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._config = NoAnkiConfigView()
         self._context_menu_config = ContextMenuConfigView(self._config)
         self.form = ContextMenuSettingsForm(self._context_menu_config)
         self.initUI()
 
-    def initUI(self):
+    def initUI(self) -> None:
         self.setWindowTitle("Settings Form")
         self.setMinimumSize(300, 300)
 

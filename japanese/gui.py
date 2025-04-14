@@ -83,7 +83,7 @@ def is_obj_deleted(self: QWidget) -> bool:
 
 
 class ControlPanel(QHBoxLayout):
-    def __init__(self, *args):
+    def __init__(self, *args) -> None:
         super().__init__(*args)
         self.add_btn = QPushButton("Add")
         self.remove_btn = QPushButton("Remove")
@@ -104,7 +104,7 @@ class NoteTypeSelector(EditableSelector):
 
 
 class ProfileList(QGroupBox):
-    def __init__(self, profile_class: type[Profile], *args):
+    def __init__(self, profile_class: type[Profile], *args) -> None:
         super().__init__(*args)
         self.setTitle("Profiles")
         self.setCheckable(False)
@@ -343,7 +343,7 @@ class AudioProfilesEdit(ProfileEdit, profile_class=ProfileAudio):
 
 
 class GroupBoxWrapper(QGroupBox):
-    def __init__(self, settings_form: SettingsForm, *args):
+    def __init__(self, settings_form: SettingsForm, *args) -> None:
         super().__init__(*args)
         self._form = settings_form
         self.setTitle(settings_form.title)
@@ -361,7 +361,7 @@ class ToolbarButtonConfig(TypedDict):
 
 
 class ToolbarButtonSettingsForm(QGroupBox):
-    def __init__(self, *args):
+    def __init__(self, *args) -> None:
         super().__init__(*args)
         self.setCheckable(True)
         self._shortcut_edit = ShortCutGrabButton()
@@ -397,7 +397,7 @@ class ToolbarSettingsForm(QGroupBox):
 
     _columns = 2
 
-    def __init__(self, *args):
+    def __init__(self, *args) -> None:
         super().__init__(*args)
         self.setTitle("Toolbar")
         self.setCheckable(False)

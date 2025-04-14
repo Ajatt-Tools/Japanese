@@ -47,7 +47,7 @@ class SearchBar(QWidget):
     Combines a line edit and a search button.
     """
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self._search_line = QLineEdit()
         self._search_button = QPushButton("Search")
@@ -100,7 +100,7 @@ class SearchResultsTable(QTableWidget):
     play_requested = pyqtSignal(FileUrlData)
     open_requested = pyqtSignal(FileUrlData)
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self._last_results: list[FileUrlData] = []
         self.verticalHeader().setVisible(False)
@@ -173,7 +173,7 @@ class AudioSearchDialog(QDialog):
     _audio_manager: AnkiAudioSourceManagerABC
     _forvo_client: ForvoClient
 
-    def __init__(self, audio_manager: AnkiAudioSourceManagerABC, forvo_client: ForvoClient, parent=None):
+    def __init__(self, audio_manager: AnkiAudioSourceManagerABC, forvo_client: ForvoClient, parent=None) -> None:
         super().__init__(parent)
         self.setMinimumSize(600, 400)
         self.setWindowTitle(f"{ADDON_NAME} - Audio search")
