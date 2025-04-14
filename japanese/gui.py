@@ -702,7 +702,7 @@ class SettingsDialog(AnkiSaveAndRestoreGeomDialog, MgrPropMixIn):
 
 
 def add_settings_action(root_menu: QMenu):
-    menu_action = QAction(f"{SettingsDialog.name}...", root_menu)
+    menu_action = QAction("Japanese Options...", root_menu)
     qconnect(menu_action.triggered, lambda: SettingsDialog(mw))
     root_menu.addAction(menu_action)
 
