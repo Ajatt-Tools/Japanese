@@ -53,7 +53,7 @@ def entries_to_html(entries: Sequence[FormattedEntry]) -> OrderedSet[str]:
 
 
 @final
-class ViewPitchAccentsDialog(QDialog):
+class ViewPitchAccentsDialog(AnkiSaveAndRestoreGeomDialog):
     name: str = "ajt__pitch_accent_lookup"
     _css_relpath = f"{anki_addon_web_relpath()}/ajt_webview.css"
     _pronunciations: Optional[AccentDict]
@@ -75,7 +75,6 @@ class ViewPitchAccentsDialog(QDialog):
         self.setLayout(layout := QVBoxLayout())
         layout.addWidget(self._web)
         layout.addLayout(self._make_bottom_buttons())
-        restoreGeom(self, self._name)
 
     def _make_bottom_buttons(self) -> QLayout:
         buttons = (
@@ -140,7 +139,6 @@ class ViewPitchAccentsDialog(QDialog):
 
     def on_close(self) -> None:
         print("closing AJT lookup window...")
-        saveGeom(self, self._name)
         self._web = None
         self._pronunciations = None
 
