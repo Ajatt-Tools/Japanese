@@ -28,7 +28,7 @@ class AudioStatsTable(QTableWidget):
 
 
 class AudioStatsDialog(QDialog):
-    name = "ajt__audio_stats_dialog"
+    name: str = "ajt__audio_stats_dialog"
 
     def __init__(self, parent=None):
         super().__init__(parent=parent)

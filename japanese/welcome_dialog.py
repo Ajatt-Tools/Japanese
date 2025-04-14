@@ -141,7 +141,7 @@ class ProjectButtons(QGroupBox):
 
 
 class AJTWelcomeDialog(QDialog):
-    _name = "ajt__welcome_screen"
+    name: str = "ajt__welcome_screen"
     _css_relpath = f"{anki_addon_web_relpath()}/ajt_webview.css"
     _web: AnkiWebView
 

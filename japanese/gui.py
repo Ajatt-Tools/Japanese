@@ -551,7 +551,7 @@ class AudioSourcesEditTable(QWidget):
 
 
 class SettingsDialog(QDialog, MgrPropMixIn):
-    name = "Japanese Options"
+    name: str = "ajt__japanese_options"
 
     def __init__(self, *args) -> None:
         super().__init__(*args)

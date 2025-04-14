@@ -297,7 +297,7 @@ class AudioSearchDialog(QDialog):
 
 
 class AnkiAudioSearchDialog(AudioSearchDialog):
-    name = "ajt__audio_search_dialog"
+    name: str = "ajt__audio_search_dialog"
 
     def __init__(self, audio_manager: AnkiAudioSourceManagerABC, forvo_client: ForvoClient, parent=None) -> None:
         super().__init__(audio_manager, forvo_client, parent)

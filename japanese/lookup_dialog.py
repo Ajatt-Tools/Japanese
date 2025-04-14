@@ -53,7 +53,7 @@ def entries_to_html(entries: Sequence[FormattedEntry]) -> OrderedSet[str]:
 
 
 class ViewPitchAccentsDialog(QDialog):
-    _name = "ajt__pitch_accent_lookup"
+    name: str = "ajt__pitch_accent_lookup"
     _css_relpath = f"{anki_addon_web_relpath()}/ajt_webview.css"
     _pronunciations: Optional[AccentDict]
     _web: Optional[AnkiWebView]
