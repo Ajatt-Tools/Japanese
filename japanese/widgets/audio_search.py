@@ -297,13 +297,8 @@ class AudioSearchDialog(QDialog):
         return self._dest_field_selector.currentText()
 
 
-class AnkiAudioSearchDialog(AudioSearchDialog):
+class AnkiAudioSearchDialog(AudioSearchDialog, AnkiSaveAndRestoreGeomDialog):
     name: str = "ajt__audio_search_dialog"
-
-    def __init__(self, audio_manager: AnkiAudioSourceManagerABC, forvo_client: ForvoClient, parent=None) -> None:
-        super().__init__(audio_manager, forvo_client, parent)
-        # Restore previous geom
-        restoreGeom(self, self.name, adjustSize=True)
 
     def _play_audio_file(self, file: FileUrlData) -> None:
         if os.path.isfile(file.url):
@@ -320,9 +315,7 @@ class AnkiAudioSearchDialog(AudioSearchDialog):
 
     def _handle_and_play_download_result(self, results: FileSaveResults):
         self._search_result_label.hide_count()
-        sound.av_player.play_tags(
-            [SoundOrVideoTag(filename=result.desired_filename) for result in results.successes]
-        )
+        sound.av_player.play_tags([SoundOrVideoTag(filename=result.desired_filename) for result in results.successes])
         if results.fails and (txt := format_report_errors_msg(results.fails)):
             return tooltip(msg=txt, parent=self, period=7000, y_offset=calc_tooltip_offset(len(results.fails)))
 
@@ -336,10 +329,6 @@ class AnkiAudioSearchDialog(AudioSearchDialog):
         else:
             with no_bundled_libs():
                 QDesktopServices.openUrl(QUrl(file.url))
-
-    def done(self, *args, **kwargs) -> None:
-        saveGeom(self, self.name)
-        return super().done(*args, **kwargs)
 
     def _search_forvo(self, search_text: str) -> None:
         """
