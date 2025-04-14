@@ -117,18 +117,23 @@ def search_audio(editor: Editor) -> None:
             editor.web.selectedText()
             or get_note_value(note=editor.note, field_name=cfg.audio_settings.search_dialog_src_field_name)
         )
-        if not dialog.exec():
-            # The user pressed "Cancel". Nothing to do.
-            return
+        # Show the dialog.
+        is_accepted = dialog.exec()
 
         # remember field names for later calls
         cfg.audio_settings.search_dialog_src_field_name = dialog.source_field_name
         cfg.audio_settings.search_dialog_dest_field_name = dialog.destination_field_name
         cfg.write_config()
+
+        if not is_accepted:
+            # The user pressed "Cancel". Nothing to do.
+            return
+
         # process results
         results = dialog.files_to_add()
         if not results:
             return
+
         editor.note[dialog.destination_field_name] = (
             editor.note[dialog.destination_field_name]
             + (cfg.audio_settings.tag_separator if editor.note[dialog.destination_field_name] else "")
