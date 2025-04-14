@@ -667,6 +667,7 @@ class SettingsDialog(AnkiSaveAndRestoreGeomDialog, MgrPropMixIn):
         return layout
 
     def accept(self) -> None:
+        # https://doc.qt.io/qt-6/qdialog.html#accept
         cfg["pitch_accent"].update(self._pitch_settings.as_dict())
         cfg["svg_graphs"].update(self._svg_settings.as_dict())
         cfg["furigana"].update(self._furigana_settings.as_dict())

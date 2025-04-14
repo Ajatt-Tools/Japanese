@@ -190,6 +190,7 @@ class AJTWelcomeDialog(QDialog):
         qconnect(self._button_box.rejected, self.reject)
 
     def done(self, *args, **kwargs) -> None:
+        # https://doc.qt.io/qt-6/qdialog.html#done
         self.on_close()
         return super().done(*args, **kwargs)
 

@@ -55,6 +55,7 @@ class SearchBar(QWidget):
         self._init_ui()
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
+        # https://doc.qt.io/qt-6/qdialog.html#keyPressEvent
         if event.key() == Qt.Key.Key_Enter or event.key() == Qt.Key.Key_Return:
             return
         return super().keyPressEvent(event)

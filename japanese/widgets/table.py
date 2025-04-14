@@ -168,6 +168,7 @@ class ExpandingTableWidget(QTableWidget):
             pass
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
+        # https://doc.qt.io/qt-6/qdialog.html#keyPressEvent
         if event.key() == Qt.Key.Key_Delete:
             self.removeRow(self.currentRow())
         if is_ctrl_v_pressed(event):

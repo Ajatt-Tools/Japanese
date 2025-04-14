@@ -28,6 +28,7 @@ class MockWindow(QDialog):
         self.setLayout(layout)
 
     def accept(self):
+        # https://doc.qt.io/qt-6/qdialog.html#accept
         print(f"{self._settings_widget.as_dict()=}")
         return super().accept()
 
