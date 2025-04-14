@@ -551,7 +551,7 @@ class AudioSourcesEditTable(QWidget):
 
 
 @final
-class SettingsDialog(QDialog, MgrPropMixIn):
+class SettingsDialog(AnkiSaveAndRestoreGeomDialog, MgrPropMixIn):
     name: str = "ajt__japanese_options"
 
     def __init__(self, *args) -> None:
@@ -594,12 +594,7 @@ class SettingsDialog(QDialog, MgrPropMixIn):
         self._add_advanced_button()
 
         # Show window
-        restoreGeom(self, self.name, adjustSize=True)
         self.exec()
-
-    def done(self, *args, **kwargs) -> None:
-        saveGeom(self, self.name)
-        return super().done(*args, **kwargs)
 
     def _setup_tabs(self):
         # Furigana
