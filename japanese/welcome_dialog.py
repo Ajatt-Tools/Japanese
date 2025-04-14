@@ -140,16 +140,16 @@ class ProjectButtons(QGroupBox):
         qconnect(b.clicked, lambda: openLink(DONATE_LINK))
 
 
-class AJTWelcomeDialog(QDialog):
+class AJTWelcomeDialog(AnkiSaveAndRestoreGeomDialog):
     name: str = "ajt__welcome_screen"
-    _css_relpath = f"{anki_addon_web_relpath()}/ajt_webview.css"
+    _css_relpath: str = f"{anki_addon_web_relpath()}/ajt_webview.css"
     _web: AnkiWebView
 
     def __init__(self, parent: QWidget):
         super().__init__(parent)
         self._web = AnkiWebView(parent=self, title=ACTION_NAME)
         self._web.setProperty("url", QUrl("about:blank"))
-        self._web.setObjectName(self._name)
+        self._web.setObjectName(self.name)
         self._web.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self._note_type_nagbar = NoteTypeNagBar()
         self._learn_buttons = LearnJapaneseButtons()
@@ -176,7 +176,6 @@ class AJTWelcomeDialog(QDialog):
         layout.addWidget(self._community_buttons, 2, 1, 1, 1)
         layout.addWidget(self._project_buttons, 2, 2, 1, 1)
         layout.addLayout(self._make_bottom_layout(), 3, 0, 1, 3)
-        restoreGeom(self, self._name)
 
     def _make_bottom_layout(self):
         layout = QHBoxLayout()
@@ -196,7 +195,6 @@ class AJTWelcomeDialog(QDialog):
 
     def on_close(self) -> None:
         print("closing AJT welcome window...")
-        saveGeom(self, self._name)
         cfg.show_welcome_guide = self._show_at_start_checkbox.isChecked()
         cfg.write_config()
 
