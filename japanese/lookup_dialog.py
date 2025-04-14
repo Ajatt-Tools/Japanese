@@ -57,7 +57,7 @@ class ViewPitchAccentsDialog(AnkiSaveAndRestoreGeomDialog):
     name: str = "ajt__pitch_accent_lookup"
     _css_relpath: str = f"{anki_addon_web_relpath()}/ajt_webview.css"
     _pronunciations: AccentDict
-    _web: Optional[AnkiWebView]
+    _web: AnkiWebView
 
     def __init__(self, parent: QWidget):
         super().__init__(parent)
@@ -136,7 +136,6 @@ class ViewPitchAccentsDialog(AnkiSaveAndRestoreGeomDialog):
 
     def on_close(self) -> None:
         print("closing AJT lookup window...")
-        self._web = None
         self._pronunciations.clear()
 
 
