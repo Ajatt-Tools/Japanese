@@ -55,7 +55,7 @@ def entries_to_html(entries: Sequence[FormattedEntry]) -> OrderedSet[str]:
 @final
 class ViewPitchAccentsDialog(AnkiSaveAndRestoreGeomDialog):
     name: str = "ajt__pitch_accent_lookup"
-    _css_relpath = f"{anki_addon_web_relpath()}/ajt_webview.css"
+    _css_relpath: str = f"{anki_addon_web_relpath()}/ajt_webview.css"
     _pronunciations: AccentDict
     _web: Optional[AnkiWebView]
 
