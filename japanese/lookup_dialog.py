@@ -56,7 +56,7 @@ def entries_to_html(entries: Sequence[FormattedEntry]) -> OrderedSet[str]:
 class ViewPitchAccentsDialog(AnkiSaveAndRestoreGeomDialog):
     name: str = "ajt__pitch_accent_lookup"
     _css_relpath = f"{anki_addon_web_relpath()}/ajt_webview.css"
-    _pronunciations: Optional[AccentDict]
+    _pronunciations: AccentDict
     _web: Optional[AnkiWebView]
 
     def __init__(self, parent: QWidget):
@@ -64,7 +64,7 @@ class ViewPitchAccentsDialog(AnkiSaveAndRestoreGeomDialog):
         self._web = AnkiWebView(parent=self, title=ACTION_NAME)
         self._web.setProperty("url", QUrl("about:blank"))
         self._web.setObjectName(self._name)
-        self._pronunciations = None
+        self._pronunciations = OrderedDict()
         self._setup_ui()
         tweak_window(self)
 
@@ -90,7 +90,6 @@ class ViewPitchAccentsDialog(AnkiSaveAndRestoreGeomDialog):
         return hbox
 
     def _copy_pronunciations(self) -> None:
-        assert self._pronunciations
         if clip := QApplication.clipboard():
             return clip.setText(
                 format_pronunciations(
@@ -105,13 +104,11 @@ class ViewPitchAccentsDialog(AnkiSaveAndRestoreGeomDialog):
 
     def lookup_pronunciations(self, search: str):
         with Sqlite3Buddy() as db:
-            self._pronunciations = lookup.with_new_buddy(db).get_pronunciations(search, group_by_headword=True)
+            self._pronunciations.update(lookup.with_new_buddy(db).get_pronunciations(search, group_by_headword=True))
         return self
 
     def _format_html_result(self) -> str:
         """Create HTML body"""
-        assert self._pronunciations is not None, "Populate pronunciations first."
-
         html = io.StringIO()
         html.write('<main class="ajt__pitch_lookup">')
         for word, entries in self._pronunciations.items():
@@ -140,7 +137,7 @@ class ViewPitchAccentsDialog(AnkiSaveAndRestoreGeomDialog):
     def on_close(self) -> None:
         print("closing AJT lookup window...")
         self._web = None
-        self._pronunciations = None
+        self._pronunciations.clear()
 
 
 def on_lookup_pronunciation(parent: QWidget, text: str) -> None:
