@@ -70,6 +70,7 @@ def save_files(
             results.fails.append(ex)
         else:
             assert mw, "Anki should be running."
+            # TODO: write_data() returns possibly-renamed filename. React if file gets renamed.
             mw.col.media.write_data(
                 desired_fname=result.desired_filename,
                 data=result.data,

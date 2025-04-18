@@ -14,6 +14,7 @@ from bs4 import BeautifulSoup, PageElement, ResultSet, Tag
 from ..config_view import ForvoAudioFormat, ForvoSettingsConfigView
 from ..helpers.http_client import create_session
 from .basic_types import AudioManagerExceptionBase, FileUrlData
+from .source_manager import normalize_filename
 
 
 # Config default values
@@ -120,7 +121,8 @@ def make_search_result_filename(audio_url: str, word: str, lang: str) -> str:
     """
     For search result the author (username) is unknown. Omit their name, country, gender, etc.
     """
-    return f"{word}_forvo_{lang}.{file_type(audio_url)}"
+    suffix = f"_forvo_{lang}.{file_type(audio_url)}"
+    return normalize_filename(word, suffix_size=len(suffix)) + suffix
 
 
 @dataclasses.dataclass(frozen=True)
