@@ -63,17 +63,23 @@ class ForvoPronunciation:
     gender: Optional[ForvoGender] = None
     country: Optional[str] = None
 
-    def make_filename(self) -> str:
+
+@dataclasses.dataclass
+class ForvoFilenameBuilder:
+    show_gender: bool
+    show_country: bool
+
+    def make_filename(self, audio: ForvoPronunciation) -> str:
         components = [
-            self.word,
+            audio.word,
             "forvo",
-            self.username,
+            audio.username,
         ]
-        if self.gender:
-            components.append(self.gender.value)
-        if self.country:
-            components.append(self.country)
-        return "_".join(components) + f".{file_type(self.audio_url)}"
+        if self.show_gender and audio.gender:
+            components.append(audio.gender.value)
+        if self.show_country and audio.country:
+            components.append(audio.country)
+        return "_".join(components) + f".{file_type(audio.audio_url)}"
 
 
 RE_FIND_USERNAME = re.compile(r"Pronunciation by(?P<username>[^()]+)")
@@ -290,7 +296,10 @@ class ForvoClient:
         return [
             FileUrlData(
                 url=pronunciation.audio_url,
-                desired_filename=pronunciation.make_filename(),
+                desired_filename=ForvoFilenameBuilder(
+                    show_country=self._config.show_country,
+                    show_gender=self._config.show_gender,
+                ).make_filename(pronunciation),
                 word=word,
                 source_name="Forvo Word",
             )
