@@ -26,23 +26,26 @@ from .basic_types import (
 )
 
 RE_FILENAME_PROHIBITED = re.compile(r'[\\\n\t\r#%&\[\]{}<>^*?/$!\'":@+`|=]+', flags=re.MULTILINE | re.IGNORECASE)
-MAX_LEN_BYTES = 120 - 4
+RE_UNDER = re.compile(r"_+", flags=re.MULTILINE | re.IGNORECASE)
+MAX_LEN_BYTES = 120
 
 
-def cut_to_anki_size(text: str) -> str:
-    return text.encode("utf-8")[:MAX_LEN_BYTES].decode("utf-8", errors="ignore")
+def cut_to_anki_size(text: str, max_len_bytes: int) -> str:
+    return text.encode("utf-8")[:max_len_bytes].decode("utf-8", errors="ignore")
 
 
-def normalize_filename(text: str) -> str:
+def normalize_filename(text: str, suffix_size: int = 4) -> str:
     """
-    Since sources' names are used as filenames to store cache files on disk,
+    Since audio files are stored on disk,
     ensure there are no questionable characters that some OSes may panic from.
+    Suffix size is usually 4 bytes (.ogg, .mp3).
     """
     import unicodedata
 
-    text = cut_to_anki_size(text)
     text = unicodedata.normalize("NFC", text)
     text = re.sub(RE_FILENAME_PROHIBITED, "_", text)
+    text = re.sub(RE_UNDER, "_", text).strip("_")
+    text = cut_to_anki_size(text, max_len_bytes=MAX_LEN_BYTES - suffix_size)
     return text.strip()
 
 
