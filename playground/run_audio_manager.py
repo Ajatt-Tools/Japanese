@@ -39,14 +39,10 @@ class NoAnkiAudioSourceManagerFactory(AudioSourceManagerFactory):
             print(f"{result.sources=}")
 
 
-def init_testing_audio_manager(db_path: pathlib.Path) -> NoAnkiAudioSourceManagerFactory:
-    # Used for testing when Anki isn't running.
-    return NoAnkiAudioSourceManagerFactory(config=NoAnkiConfigView(), db_path=db_path)
-
-
 def main() -> None:
     with persistent_sqlite3_db_path() as db_path:
-        factory = init_testing_audio_manager(db_path)
+        # Used for testing when Anki isn't running.
+        factory = NoAnkiAudioSourceManagerFactory(config=NoAnkiConfigView(), db_path=db_path)
         factory.init_sources()
         session: AudioSourceManager
         stats: TotalAudioStats
