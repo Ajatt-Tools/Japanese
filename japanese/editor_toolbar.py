@@ -106,7 +106,8 @@ def search_audio(editor: Editor) -> None:
 
     with Sqlite3Buddy() as db:
         session = aud_src_mgr.request_new_session(db)
-        dialog = AnkiAudioSearchDialog(session, ForvoClient(config=cfg.forvo))
+        forvo_client = ForvoClient(config=cfg.forvo) if cfg.forvo.enable_forvo_search else None
+        dialog = AnkiAudioSearchDialog(session, forvo_client)
         fix_default_anki_style(dialog.table)
         dialog.set_note_fields(
             editor.note.keys(),

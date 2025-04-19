@@ -12,7 +12,7 @@ from anki.utils import no_bundled_libs
 from aqt import mw, sound
 from aqt.operations import QueryOp
 from aqt.qt import *
-from aqt.utils import restoreGeom, saveGeom, tooltip, tr
+from aqt.utils import tooltip, tr
 
 from ..ajt_common.restore_geom_dialog import AnkiSaveAndRestoreGeomDialog
 from ..ajt_common.utils import find_executable, ui_translate
@@ -22,7 +22,6 @@ from ..audio_manager.download_results import (
     FileSaveResults,
     calc_tooltip_offset,
     format_report_errors_msg,
-    format_report_results_msg,
 )
 from ..audio_manager.forvo_client import ForvoClient, FullForvoResult
 from ..helpers.consts import ADDON_NAME
@@ -171,9 +170,11 @@ class SearchLock:
 
 class AudioSearchDialog(QDialog):
     _audio_manager: AnkiAudioSourceManagerABC
-    _forvo_client: ForvoClient
+    _forvo_client: typing.Optional[ForvoClient]
 
-    def __init__(self, audio_manager: AnkiAudioSourceManagerABC, forvo_client: ForvoClient, parent=None) -> None:
+    def __init__(
+        self, audio_manager: AnkiAudioSourceManagerABC, forvo_client: typing.Optional[ForvoClient], parent=None
+    ) -> None:
         super().__init__(parent)
         self.setMinimumSize(600, 400)
         self.setWindowTitle(f"{ADDON_NAME} - Audio search")
@@ -271,6 +272,8 @@ class AudioSearchDialog(QDialog):
         """
         Search audio files on the Forvo website.
         """
+        if self._forvo_client is None:
+            return
         results = self._forvo_client.full_search(search_text)
         self._table_widget.populate_with_results(results.files)
         self._search_result_label.set_count(results)
@@ -334,6 +337,10 @@ class AnkiAudioSearchDialog(AudioSearchDialog, AnkiSaveAndRestoreGeomDialog):
         """
         Search audio files on the Forvo website.
         """
+        if self._forvo_client is None:
+            # forvo search functionality is disabled by the user.
+            return
+
         if self._search_lock.is_searching():
             return
 

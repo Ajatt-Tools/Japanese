@@ -244,6 +244,10 @@ class ForvoSettingsConfigView(ConfigSubViewBase):
     _view_key: str = "forvo"
 
     @property
+    def enable_forvo_search(self) -> bool:
+        return bool(self["enable_forvo_search"])
+
+    @property
     def language(self) -> str:
         """Audio language. Other languages will be skipped."""
         return self["language"].lower()

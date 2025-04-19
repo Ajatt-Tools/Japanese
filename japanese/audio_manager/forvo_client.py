@@ -20,6 +20,7 @@ from .source_manager import normalize_filename
 # Config default values
 @dataclasses.dataclass
 class ForvoConfig:
+    enable_forvo_search: bool = True
     language: str = "ja"
     preferred_usernames: list[str] = dataclasses.field(default_factory=list)
     preferred_countries: list[str] = dataclasses.field(default_factory=list)

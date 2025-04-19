@@ -160,6 +160,7 @@
     "tag_separator": "<br>"
   },
   "forvo": {
+    "enable_forvo_search": true,
     "language": "ja",
     "preferred_usernames": "akitomo,skent",
     "preferred_countries": "Japan",
