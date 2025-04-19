@@ -91,7 +91,7 @@ class SearchResultsTableColumns(enum.Enum):
     filename = enum.auto()
 
     @classmethod
-    def column_count(cls):
+    def column_count(cls) -> int:
         return sum(1 for _ in cls)
 
 
@@ -116,7 +116,7 @@ class SearchResultsTable(QTableWidget):
         for column_number in (item.value for item in SearchResultsTableColumns):
             hor_header.setSectionResizeMode(column_number, contents)
 
-    def clear(self):
+    def clear(self) -> None:
         self.setRowCount(0)
         self._last_results.clear()
 
@@ -128,7 +128,7 @@ class SearchResultsTable(QTableWidget):
                 to_add.append(result)
         return to_add
 
-    def populate_with_results(self, results: list[FileUrlData]):
+    def populate_with_results(self, results: list[FileUrlData]) -> None:
         for row_n, file in enumerate(results, start=len(self._last_results)):
             self.insertRow(row_n)
             self.setCellWidget(row_n, SearchResultsTableColumns.add_to_note.value, SourceEnableCheckbox())
