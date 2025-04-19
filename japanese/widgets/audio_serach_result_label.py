@@ -41,6 +41,7 @@ class AudioSearchResultLabel(QLabel):
     def __init__(self, *args) -> None:
         super().__init__(*args)
         self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Maximum)
+        self.hide_count()
 
     def hide_count(self) -> None:
         self.setText("")
