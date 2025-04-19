@@ -107,9 +107,9 @@ class SearchResultsTable(QTableWidget):
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.setColumnCount(SearchResultsTableColumns.column_count())
         self.setHorizontalHeaderLabels(ui_translate(item.name) for item in SearchResultsTableColumns)
-        self.setSectionResizeModes()
+        self.set_section_resize_modes()
 
-    def setSectionResizeModes(self):
+    def set_section_resize_modes(self) -> None:
         contents = QHeaderView.ResizeMode.ResizeToContents
         hor_header = self.horizontalHeader()
 
