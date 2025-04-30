@@ -21,6 +21,9 @@ class VersionedFile(typing.NamedTuple):
     text_content: str = ""
 
     def version_as_str(self) -> str:
+        """
+        Returns version as: 25.4.5.1
+        """
         return ".".join(str(num) for num in self.version)
 
 
