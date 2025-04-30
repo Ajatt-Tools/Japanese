@@ -18,6 +18,7 @@ from .typing import AnkiCardTemplateDict, AnkiNoteTypeDict
 RE_AJT_CSS_IMPORT = re.compile(r'@import url\("_ajt_japanese(?:_(?P<version>\d+\.\d+\.\d+\.\d+))?\.css"\);')
 RE_AJT_JS_LEGACY_IMPORT = re.compile(r'<script [^<>]*src="_ajt_japanese[^"]*\.js"></script>\n?')
 RE_AJT_JS_VERSION_COMMENT = re.compile(r"\s*/\* AJT Japanese JS (?P<version>\d+\.\d+\.\d+\.\d+) \*/\n?")
+RE_CHARSET_RULE = re.compile(r'@charset "UTF-8";\n?', flags=re.MULTILINE | re.IGNORECASE)
 CHARSET_RULE = '@charset "UTF-8";'
 
 
@@ -75,7 +76,7 @@ def ensure_css_in_card(css_styling: str) -> str:
 
     # add charset or move it to the top.
     # https://developer.mozilla.org/en-US/docs/Web/CSS/@charset
-    css_styling = css_styling.replace(f"{CHARSET_RULE}\n", "").strip()
+    css_styling = re.sub(RE_CHARSET_RULE, "", css_styling).strip()
     css_styling = f"{CHARSET_RULE}\n{css_styling}"
 
     return css_styling
