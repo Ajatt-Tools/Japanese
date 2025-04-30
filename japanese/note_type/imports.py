@@ -3,7 +3,7 @@
 import enum
 import io
 import re
-from typing import Optional
+from typing import Literal, Optional
 
 from .bundled_files import (
     BUNDLED_CSS_FILE,
@@ -13,6 +13,7 @@ from .bundled_files import (
     VersionedFile,
     version_str_to_tuple,
 )
+from .typing import AnkiCardTemplateDict, AnkiNoteTypeDict
 
 RE_AJT_CSS_IMPORT = re.compile(r'@import url\("_ajt_japanese(?:_(?P<version>\d+\.\d+\.\d+\.\d+))?\.css"\);')
 RE_AJT_JS_LEGACY_IMPORT = re.compile(r'<script [^<>]*src="_ajt_japanese[^"]*\.js"></script>\n?')
@@ -80,7 +81,7 @@ def ensure_css_in_card(css_styling: str) -> str:
     return css_styling
 
 
-def ensure_css_imported(model_dict: dict[str, str]) -> bool:
+def ensure_css_imported(model_dict: AnkiNoteTypeDict) -> bool:
     """
     Takes a model (note type) and ensures that it imports the bundled CSS file.
     Returns True if the model has been modified and Anki needs to save the changes.
@@ -108,7 +109,7 @@ def ensure_js_in_card_side(html_template: str) -> str:
     return html_template
 
 
-def ensure_js_imported(template: dict[str, str], side: str) -> bool:
+def ensure_js_imported(template: AnkiCardTemplateDict, side: Literal["qfmt", "afmt"]) -> bool:
     """
     Takes a card template (from a note type) and ensures that it imports the bundled JS file.
     Returns True if the template has been modified and Anki needs to save the changes.

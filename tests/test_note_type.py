@@ -18,6 +18,7 @@ from japanese.note_type.imports import (
     ensure_js_imported,
     find_existing_css_version,
 )
+from japanese.note_type.typing import AnkiNoteTypeDict
 
 RE_EXPECTED_FILENAME = re.compile(r"_ajt_japanese_(\d+\.){4}(js|css)")
 
@@ -97,7 +98,7 @@ def test_find_existing_css_version(test_input: str, expected: Optional[FileVersi
     ],
 )
 def test_css_imports(css_styling: str, is_modified: bool, modified_css: Optional[str]) -> None:
-    model_dict = {"css": css_styling, "name": "pytest"}
+    model_dict: AnkiNoteTypeDict = {"css": css_styling, "name": "pytest", "tmpls": []}
     assert ensure_css_imported(model_dict) is is_modified
     assert model_dict["css"] == (modified_css or css_styling)
 

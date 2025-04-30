@@ -1,6 +1,7 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 import os.path
+import typing
 from collections.abc import Sequence
 from typing import Any, Optional
 
@@ -16,6 +17,7 @@ from ..tasks import note_type_matches
 from .bundled_files import BUNDLED_CSS_FILE, BundledCSSFile, get_file_version
 from .files_in_col_media import FileInCollection, find_ajt_scripts_in_collection
 from .imports import ensure_css_imported, ensure_js_imported
+from .typing import AnkiNoteTypeDict
 
 
 def not_recent_version(file: BundledCSSFile) -> bool:
@@ -67,11 +69,12 @@ def collect_all_relevant_models() -> Sequence[NotetypeNameId]:
 
 
 def ensure_imports_added_for_model(col: anki.collection.Collection, model: NotetypeNameId) -> bool:
-    model_dict = col.models.get(model.id)
+    model_dict: AnkiNoteTypeDict = col.models.get(model.id)
     if not model_dict:
         return False
     is_dirty = ensure_css_imported(model_dict)
     for template in model_dict["tmpls"]:
+        side: typing.Literal["qfmt", "afmt"]
         for side in ("qfmt", "afmt"):
             is_dirty = ensure_js_imported(template, side) or is_dirty
     if is_dirty:
