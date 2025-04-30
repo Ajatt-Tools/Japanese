@@ -13,6 +13,7 @@ from japanese.note_type.bundled_files import (
 )
 from japanese.note_type.files_in_col_media import FileInCollection
 from japanese.note_type.imports import (
+    CHARSET_RULE,
     ensure_css_imported,
     ensure_js_imported,
     find_existing_css_version,
@@ -61,29 +62,35 @@ def test_find_existing_css_version(test_input: str, expected: Optional[FileVersi
             # Import is missing.
             """/* NO CSS */""",
             True,
-            f"{BUNDLED_CSS_FILE.import_str}\n/* NO CSS */",
+            f"{CHARSET_RULE}\n{BUNDLED_CSS_FILE.import_str}\n/* NO CSS */",
+        ),
+        (
+            # Charset is declared.
+            f"""{CHARSET_RULE}\n/*Other CSS*/""",
+            True,
+            f"{CHARSET_RULE}\n{BUNDLED_CSS_FILE.import_str}\n/*Other CSS*/",
         ),
         (
             # Legacy import found.
             """@import url("_ajt_japanese.css");\n/* Other CSS */""",
             True,
-            f"{BUNDLED_CSS_FILE.import_str}\n/* Other CSS */",
+            f"{CHARSET_RULE}\n{BUNDLED_CSS_FILE.import_str}\n/* Other CSS */",
         ),
         (
             # Older version
             """/* Other CSS */\n@import url("_ajt_japanese_1.1.1.1.css");\n/* Other CSS */""",
             True,
-            f"/* Other CSS */\n{BUNDLED_CSS_FILE.import_str}\n/* Other CSS */",
+            f"{CHARSET_RULE}\n/* Other CSS */\n{BUNDLED_CSS_FILE.import_str}\n/* Other CSS */",
         ),
         (
             # Current version
-            f"{BUNDLED_CSS_FILE.import_str}\n/* Other CSS */\n/* Other CSS */\n",
+            f"{CHARSET_RULE}\n{BUNDLED_CSS_FILE.import_str}\n/* Other CSS */\n/* Other CSS */\n",
             False,
             None,
         ),
         (
             # Newer version
-            """/* Other CSS */\n@import url("_ajt_japanese_999.1.1.1.css");\n/* Other CSS */""",
+            f"""{CHARSET_RULE}\n/* Other CSS */\n@import url("_ajt_japanese_999.1.1.1.css");\n/* Other CSS */""",
             False,
             None,
         ),

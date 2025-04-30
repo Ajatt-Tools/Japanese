@@ -17,6 +17,7 @@ from .bundled_files import (
 RE_AJT_CSS_IMPORT = re.compile(r'@import url\("_ajt_japanese(?:_(?P<version>\d+\.\d+\.\d+\.\d+))?\.css"\);')
 RE_AJT_JS_LEGACY_IMPORT = re.compile(r'<script [^<>]*src="_ajt_japanese[^"]*\.js"></script>\n?')
 RE_AJT_JS_VERSION_COMMENT = re.compile(r"\s*/\* AJT Japanese JS (?P<version>\d+\.\d+\.\d+\.\d+) \*/\n?")
+CHARSET_RULE = '@charset "UTF-8";'
 
 
 def find_ajt_japanese_js_import(template_text: str) -> Optional[VersionedFile]:
@@ -70,6 +71,12 @@ def ensure_css_in_card(css_styling: str) -> str:
     if BUNDLED_CSS_FILE.import_str not in css_styling:
         # The CSS was not imported before. Likely a fresh Note Type or Anki install.
         css_styling = f"{BUNDLED_CSS_FILE.import_str}\n{css_styling}"
+
+    # add charset or move it to the top.
+    # https://developer.mozilla.org/en-US/docs/Web/CSS/@charset
+    css_styling = css_styling.replace(f"{CHARSET_RULE}\n", "").strip()
+    css_styling = f"{CHARSET_RULE}\n{css_styling}"
+
     return css_styling
 
 
