@@ -9,7 +9,7 @@ from aqt import mw
 from aqt.addons import AddonsDialog, ConfigEditor
 from aqt.operations import QueryOp
 from aqt.qt import *
-from aqt.utils import openLink, restoreGeom, saveGeom, tooltip
+from aqt.utils import openLink, tooltip
 
 from .ajt_common.about_menu import menu_root_entry, tweak_window
 from .ajt_common.addon_config import (
