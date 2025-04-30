@@ -13,11 +13,11 @@ def start_addon() -> None:
         editor_toolbar,
         gui,
         lookup_dialog,
-        note_types,
         tasks,
         welcome_dialog,
     )
     from .helpers.webview_utils import anki_addon_set_web_exports
+    from .note_type import note_type
 
     # Ensure that css and other resources are loaded.
     anki_addon_set_web_exports()
@@ -29,7 +29,7 @@ def start_addon() -> None:
     context_menu.init()
     editor_toolbar.init()
     welcome_dialog.init()
-    note_types.init()
+    note_type.init()
 
 
 if mw and "pytest" not in sys.modules:

@@ -41,7 +41,7 @@ from .helpers.profiles import (
     ProfilePitch,
     TaskCaller,
 )
-from .note_types import prepare_note_types
+from .note_type.note_type import prepare_note_types
 from .pitch_accents.consts import USER_DATA_CSV_PATH
 from .reading import acc_dict
 from .widgets.addon_opts import EditableSelector, relevant_field_names
