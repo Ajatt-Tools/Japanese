@@ -56,9 +56,18 @@ from .widgets.settings_form import (
 from .widgets.svg_settings import SvgSettingsWidget
 from .widgets.widgets_to_config_dict import as_config_dict
 
+from .known_words.main import ExportVocabCsvDialog 
+
+
 EDIT_MIN_WIDTH = 100
 EXAMPLE_DECK_ANKIWEB_URL = "https://ankiweb.net/shared/info/1557722832"
 ADDON_SETUP_GUIDE = "https://tatsumoto-ren.github.io/blog/anki-japanese-support.html"
+
+def show_export_vocab_csv_dialog():
+    if not mw: # pragma: no cover
+        return
+    dialog = ExportVocabCsvDialog(mw)
+    dialog.exec()
 
 
 def adjust_to_contents(widget: QWidget):
@@ -678,6 +687,12 @@ def add_deck_download_action(root_menu: QMenu):
 
 def init():
     root_menu = menu_root_entry()
+
+    
+    export_action = QAction("Export Known Vocab", root_menu)
+    qconnect(export_action.triggered, show_export_vocab_csv_dialog)
+    root_menu.addAction(export_action)
+    
     add_settings_action(root_menu)
     add_deck_download_action(root_menu)
     set_config_action(lambda: SettingsDialog(mw))
