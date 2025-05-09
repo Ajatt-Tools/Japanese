@@ -62,7 +62,7 @@ EXAMPLE_DECK_ANKIWEB_URL = "https://ankiweb.net/shared/info/1557722832"
 ADDON_SETUP_GUIDE = "https://tatsumoto-ren.github.io/blog/anki-japanese-support.html"
 
 
-def show_export_vocab_csv_dialog():
+def show_export_vocab_csv_dialog() -> None:
     if not mw:  # pragma: no cover
         return
     dialog = ExportVocabCsvDialog(mw)
