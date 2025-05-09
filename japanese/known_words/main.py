@@ -1,22 +1,35 @@
-import re
 import csv
-import os
 import datetime
 import logging
+import os
+import re
+from typing import Any, Dict, List, Optional, Set, Tuple
 
-from typing import Set, List, Dict, Optional, Any, Tuple
-
+from anki.utils import strip_html_media
 from aqt import mw
 from aqt.qt import (
-    QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, Qt,
-    QComboBox, QSpinBox, QFormLayout, QFileDialog, QLineEdit,
-    QRadioButton, QButtonGroup, QCheckBox, QTextEdit, QGroupBox,
-    QApplication, QWidget, QTabWidget,
+    QApplication,
+    QButtonGroup,
+    QCheckBox,
+    QComboBox,
+    QDialog,
+    QFileDialog,
+    QFormLayout,
     QFrame,
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    QRadioButton,
+    QSpinBox,
+    Qt,
+    QTabWidget,
+    QTextEdit,
+    QVBoxLayout,
+    QWidget,
 )
-from aqt.utils import showInfo, QProgressDialog, tooltip
-from anki.utils import strip_html_media
-
+from aqt.utils import QProgressDialog, showInfo, tooltip
 
 # --- Configuration Keys ---
 CONFIG_KEY_LAST_CSV_PATH = "knownWordsCsvLastPath"
@@ -59,24 +72,27 @@ log = logging.getLogger(__name__)
 try:
     from ..mecab_controller import MecabController
     from ..mecab_controller.basic_types import PartOfSpeech
+
     MECAB_AVAILABLE = True
 except ImportError:
     MECAB_AVAILABLE = False
     log.warning("MecabController or basic_types not found. Lemmatization will be disabled.")
 
-    class MecabController: # type: ignore
+    class MecabController:  # type: ignore
         def translate(self, text: str) -> list:
             return []
 
     class _DummyPosValue:
         def __init__(self, value: str):
             self.value = value
+
         def __str__(self) -> str:
             return self.value
+
         def __repr__(self) -> str:
             return f"_DummyPosValue('{self.value}')"
 
-    class DummyPartOfSpeech: # type: ignore
+    class DummyPartOfSpeech:  # type: ignore
         particle = _DummyPosValue("DUMMY_POS_particle")
         bound_auxiliary = _DummyPosValue("DUMMY_POS_bound_auxiliary")
         symbol = _DummyPosValue("DUMMY_POS_symbol")
@@ -98,18 +114,19 @@ except ImportError:
 
     PartOfSpeech = DummyPartOfSpeech()
 
+
 def _load_dictionary_file(filepath: str) -> Set[str]:
     dictionary_set: Set[str] = set()
     if not filepath or not os.path.exists(filepath):
         return dictionary_set
 
     try:
-        with open(filepath, 'r', encoding='utf-8') as f:
+        with open(filepath, "r", encoding="utf-8") as f:
             for line in f:
                 word = line.strip()
                 if word:
                     dictionary_set.add(word)
-    except (OSError, UnicodeDecodeError) as e: # MODIFIED: IOError to OSError
+    except (OSError, UnicodeDecodeError) as e:  # MODIFIED: IOError to OSError
         log.error(f"Error reading dictionary file '{os.path.basename(filepath)}': {e}", exc_info=True)
         showInfo(f"Error reading dictionary file '{os.path.basename(filepath)}':\n{e}")
     except Exception as e:
@@ -124,12 +141,16 @@ class MeCabProcessor:
     STATUS_FAILED = "FAILED"
 
     DEFAULT_POS_TO_SKIP_NAMES: List[str] = [
-        "particle", "bound_auxiliary", "symbol", "filler",
-        "interjection", "prefix",
+        "particle",
+        "bound_auxiliary",
+        "symbol",
+        "filler",
+        "interjection",
+        "prefix",
     ]
-    SINGLE_KANA_REGEX = re.compile(r'^[\u3040-\u309F\u30A0-\u30FF]$')
-    FULLWIDTH_ALPHANUM_REGEX = re.compile(r'^[Ａ-Ｚａ-ｚ０-９]+$')
-    COUNTER_REGEX = re.compile(r'^\d+[つ個台本枚匹頭羽人日円年々ヵヶ箇カ]$')
+    SINGLE_KANA_REGEX = re.compile(r"^[\u3040-\u309F\u30A0-\u30FF]$")
+    FULLWIDTH_ALPHANUM_REGEX = re.compile(r"^[Ａ-Ｚａ-ｚ０-９]+$")
+    COUNTER_REGEX = re.compile(r"^\d+[つ個台本枚匹頭羽人日円年々ヵヶ箇カ]$")
     UNWANTED_SYMBOLS: Set[str] = {"「", "」", "、", "。", "？", "！", "：", "；", "（", "）", "【", "】", "『", "』"}
 
     def __init__(self, custom_stopwords_str: str = "", stopwords_mode: str = STOPWORDS_MODE_SUPPLEMENT):
@@ -170,16 +191,22 @@ class MeCabProcessor:
             for pos_name in self.DEFAULT_POS_TO_SKIP_NAMES:
                 if hasattr(PartOfSpeech, pos_name):
                     pos_attr = getattr(PartOfSpeech, pos_name)
-                    if hasattr(pos_attr, 'value'):
+                    if hasattr(pos_attr, "value"):
                         temp_pos_set.add(pos_attr.value)
                     else:
-                        log.warning(f"PartOfSpeech attribute '{pos_name}' (type: {type(pos_attr)}) lacks a '.value' attribute. Skipping.")
+                        log.warning(
+                            f"PartOfSpeech attribute '{pos_name}' (type: {type(pos_attr)}) lacks a '.value' attribute. Skipping."
+                        )
                 else:
-                    log.warning(f"PartOfSpeech enum (real or dummy) does not have attribute '{pos_name}'. Skipping for POS filter.")
+                    log.warning(
+                        f"PartOfSpeech enum (real or dummy) does not have attribute '{pos_name}'. Skipping for POS filter."
+                    )
 
             self._pos_to_skip = temp_pos_set
             if not self._pos_to_skip and self.DEFAULT_POS_TO_SKIP_NAMES:
-                log.warning("POS skip set is empty after initialization, though default names were provided. Check PartOfSpeech definitions.")
+                log.warning(
+                    "POS skip set is empty after initialization, though default names were provided. Check PartOfSpeech definitions."
+                )
             self.pos_init_status = self.STATUS_INITIALIZED
             log.debug(f"POS skip set initialized: {self._pos_to_skip}")
 
@@ -204,33 +231,44 @@ class MeCabProcessor:
         try:
             tokens_raw = self.mecab_controller.translate(text)
             if not isinstance(tokens_raw, (list, tuple)):
-                 log.warning(f"MecabController.translate returned an unexpected type: {type(tokens_raw)}. Expected list or tuple.")
-                 return lemmas
+                log.warning(
+                    f"MecabController.translate returned an unexpected type: {type(tokens_raw)}. Expected list or tuple."
+                )
+                return lemmas
 
             for token_idx, token in enumerate(tokens_raw):
-                surface_word = getattr(token, 'word', '')
-                lemma_cand = getattr(token, 'headword', '')
-                raw_token_pos = getattr(token, 'part_of_speech', None)
+                surface_word = getattr(token, "word", "")
+                lemma_cand = getattr(token, "headword", "")
+                raw_token_pos = getattr(token, "part_of_speech", None)
                 token_pos_val: Optional[str] = None
 
                 if raw_token_pos is not None:
-                    if hasattr(raw_token_pos, 'value'):
+                    if hasattr(raw_token_pos, "value"):
                         token_pos_val = raw_token_pos.value
                     else:
-                        log.warning(f"Token POS object {raw_token_pos} (type: {type(raw_token_pos)}) at index {token_idx} lacks .value. Using str().")
+                        log.warning(
+                            f"Token POS object {raw_token_pos} (type: {type(raw_token_pos)}) at index {token_idx} lacks .value. Using str()."
+                        )
                         token_pos_val = str(raw_token_pos)
-                
+
                 if token_pos_val is not None and token_pos_val in self._pos_to_skip:
                     continue
 
                 lemma_to_process = (lemma_cand or surface_word).strip()
-                if not lemma_to_process: continue
-                if lemma_to_process in self.combined_lemma_stop_list: continue
-                if len(lemma_to_process) == 1 and self.SINGLE_KANA_REGEX.fullmatch(lemma_to_process): continue
-                if self.FULLWIDTH_ALPHANUM_REGEX.fullmatch(lemma_to_process): continue
-                if lemma_to_process.isnumeric(): continue
-                if self.COUNTER_REGEX.fullmatch(lemma_to_process): continue
-                if lemma_to_process in self.UNWANTED_SYMBOLS: continue
+                if not lemma_to_process:
+                    continue
+                if lemma_to_process in self.combined_lemma_stop_list:
+                    continue
+                if len(lemma_to_process) == 1 and self.SINGLE_KANA_REGEX.fullmatch(lemma_to_process):
+                    continue
+                if self.FULLWIDTH_ALPHANUM_REGEX.fullmatch(lemma_to_process):
+                    continue
+                if lemma_to_process.isnumeric():
+                    continue
+                if self.COUNTER_REGEX.fullmatch(lemma_to_process):
+                    continue
+                if lemma_to_process in self.UNWANTED_SYMBOLS:
+                    continue
 
                 lemmas.add(lemma_to_process)
         except Exception as e:
@@ -261,23 +299,27 @@ class MeCabProcessor:
             return False
 
         particle_pos_value = None
-        if hasattr(PartOfSpeech, 'particle') and hasattr(getattr(PartOfSpeech, 'particle'), 'value'):
-            particle_pos_value = getattr(PartOfSpeech, 'particle').value
-        
+        if hasattr(PartOfSpeech, "particle") and hasattr(getattr(PartOfSpeech, "particle"), "value"):
+            particle_pos_value = getattr(PartOfSpeech, "particle").value
+
         if self.pos_init_status == self.STATUS_INITIALIZED and particle_pos_value in self._pos_to_skip:
             lemmas_particle = self.get_lemmas("猫が可愛い")
             if "が" in lemmas_particle:
-                log.warning(f"MeCab self-test (2): Particle 'が' was not filtered. Got: {lemmas_particle}. Skipped POS: {self._pos_to_skip}")
-        
+                log.warning(
+                    f"MeCab self-test (2): Particle 'が' was not filtered. Got: {lemmas_particle}. Skipped POS: {self._pos_to_skip}"
+                )
+
         test_stopword = "する"
         if test_stopword in self.combined_lemma_stop_list:
             lemmas_stopword = self.get_lemmas(f"勉強{test_stopword}")
             if test_stopword in lemmas_stopword:
                 log.warning(f"MeCab self-test (3): Stopword '{test_stopword}' was not filtered. Got: {lemmas_stopword}")
                 test_passed = False
-        
+
         if test_passed:
-            log.info("MeCab self-test passed (basic functionality and critical filtering). Warnings may indicate sub-optimal configuration or MeCab variability.")
+            log.info(
+                "MeCab self-test passed (basic functionality and critical filtering). Warnings may indicate sub-optimal configuration or MeCab variability."
+            )
         else:
             log.warning("MeCab self-test indicated potential issues. Review warnings.")
         return test_passed
@@ -292,35 +334,40 @@ class KnownWordsProcessor:
         self.mecab_processor = mecab_processor
         self.progress_parent = progress_parent
 
-    def read_csv_data(self, filepath: str) -> Dict[str, Set[str]]: # Renamed from read_existing_csv
+    def read_csv_data(self, filepath: str) -> Dict[str, Set[str]]:  # Renamed from read_existing_csv
         data: Dict[str, Set[str]] = {}
         if not filepath or not os.path.exists(filepath):
             if filepath:
                 showInfo(f"Specified CSV file not found: {os.path.basename(filepath)}")
             return {}
         try:
-            with open(filepath, 'r', encoding='utf-8', newline='') as f:
+            with open(filepath, "r", encoding="utf-8", newline="") as f:
                 reader = csv.reader(f)
                 try:
                     header = next(reader)
                 except StopIteration:
                     showInfo(f"CSV file '{os.path.basename(filepath)}' is empty.")
                     return {}
-                
-                if not header or len(header) < 2 or \
-                   header[0].lower().strip() != CSV_COLUMN_WORD.lower() or \
-                   header[1].lower().strip() != CSV_COLUMN_SOURCE.lower():
-                    showInfo(f"CSV file '{os.path.basename(filepath)}' has an invalid header. "
-                             f"Expected '{CSV_COLUMN_WORD}' and '{CSV_COLUMN_SOURCE}'.")
+
+                if (
+                    not header
+                    or len(header) < 2
+                    or header[0].lower().strip() != CSV_COLUMN_WORD.lower()
+                    or header[1].lower().strip() != CSV_COLUMN_SOURCE.lower()
+                ):
+                    showInfo(
+                        f"CSV file '{os.path.basename(filepath)}' has an invalid header. "
+                        f"Expected '{CSV_COLUMN_WORD}' and '{CSV_COLUMN_SOURCE}'."
+                    )
                     return {}
 
                 for row_idx, row in enumerate(reader, 1):
                     if not row or len(row) < 1 or not row[0].strip():
                         continue
                     word = row[0].strip()
-                    sources_str = (row[1].strip() if len(row) > 1 and row[1] else "")
-                    data[word] = set(s.strip() for s in sources_str.split(',') if s.strip())
-        except (OSError, csv.Error) as e: # Changed IOError to OSError for consistency
+                    sources_str = row[1].strip() if len(row) > 1 and row[1] else ""
+                    data[word] = set(s.strip() for s in sources_str.split(",") if s.strip())
+        except (OSError, csv.Error) as e:  # Changed IOError to OSError for consistency
             log.error(f"Error reading CSV file '{os.path.basename(filepath)}': {e}", exc_info=True)
             showInfo(f"Error reading CSV file '{os.path.basename(filepath)}':\n{e}")
             return {}
@@ -330,8 +377,9 @@ class KnownWordsProcessor:
             return {}
         return data
 
-    def get_anki_data(self, query: str, sentence_field_name: str,
-                      mature_interval: int, use_lemmatization: bool) -> Set[str]: # Renamed from _get_anki_data
+    def get_anki_data(
+        self, query: str, sentence_field_name: str, mature_interval: int, use_lemmatization: bool
+    ) -> Set[str]:  # Renamed from _get_anki_data
         anki_items: Set[str] = set()
         if not query:
             log.info("get_anki_data: Query is empty, returning no items.")
@@ -351,9 +399,11 @@ class KnownWordsProcessor:
         # Use self.progress_parent if available for the QProgressDialog
         progress_dialog_parent = self.progress_parent if self.progress_parent else mw
         progress = QProgressDialog(
-            f"Scanning Anki notes (field: '{sentence_field_name}')...", 
-            "Cancel", 0, len(note_ids), 
-            progress_dialog_parent # Parent appropriately
+            f"Scanning Anki notes (field: '{sentence_field_name}')...",
+            "Cancel",
+            0,
+            len(note_ids),
+            progress_dialog_parent,  # Parent appropriately
         )
         progress.setWindowModality(Qt.WindowModality.WindowModal)
         progress.setValue(0)
@@ -373,9 +423,11 @@ class KnownWordsProcessor:
                 log.warning(f"Could not retrieve note with nid {nid}. Skipping.")
                 continue
             if sentence_field_name not in note:
-                log.debug(f"Field '{sentence_field_name}' not in note {nid} (type: {note.note_type()['name'] if note.note_type() else 'Unknown'}). Skipping.")
+                log.debug(
+                    f"Field '{sentence_field_name}' not in note {nid} (type: {note.note_type()['name'] if note.note_type() else 'Unknown'}). Skipping."
+                )
                 continue
-            
+
             is_mature_enough = False
             if mature_interval > 0:
                 cards = note.cards()
@@ -388,37 +440,47 @@ class KnownWordsProcessor:
                             break
                 if not is_mature_enough:
                     continue
-            
+
             text_raw = note[sentence_field_name]
             if not text_raw or not text_raw.strip():
                 continue
             text_cleaned = strip_html_media(text_raw)
 
-            if use_lemmatization and self.mecab_processor and \
-               self.mecab_processor.pos_init_status == MeCabProcessor.STATUS_INITIALIZED: # Stricter check
+            if (
+                use_lemmatization
+                and self.mecab_processor
+                and self.mecab_processor.pos_init_status == MeCabProcessor.STATUS_INITIALIZED
+            ):  # Stricter check
                 try:
                     lemmas_from_field = self.mecab_processor.get_lemmas(text_cleaned)
                     anki_items.update(lemmas_from_field)
                 except Exception as e:
                     log.error(f"Error lemmatizing field content from note {nid}: {e}", exc_info=True)
             else:
-                temp_val = re.sub(r'\s*[（(].*?[）)]\s*|\s*\[.*?\]\s*|[\uff08\uff09\u3010\u3011\u300c\u300d\u300e\u300f]', '', text_cleaned).strip()
-                words_from_field = re.split(r'[\s\uff0c\u3001\uff0e\u3002\uff1f\uff01\uff1b\uff1a?!”;:]+', temp_val)
+                temp_val = re.sub(
+                    r"\s*[（(].*?[）)]\s*|\s*\[.*?\]\s*|[\uff08\uff09\u3010\u3011\u300c\u300d\u300e\u300f]",
+                    "",
+                    text_cleaned,
+                ).strip()
+                words_from_field = re.split(r"[\s\uff0c\u3001\uff0e\u3002\uff1f\uff01\uff1b\uff1a?!”;:]+", temp_val)
                 anki_items.update(word for word in words_from_field if word)
-            processed_count +=1
+            processed_count += 1
 
         progress.setValue(len(note_ids))
-        log.info(f"Processed {processed_count}/{len(note_ids)} notes. Extracted {len(anki_items)} unique items from Anki.")
+        log.info(
+            f"Processed {processed_count}/{len(note_ids)} notes. Extracted {len(anki_items)} unique items from Anki."
+        )
         return anki_items
 
-    def merge_data(self, existing_csv_data: Dict[str, Set[str]],
-                   anki_items: Set[str]) -> Tuple[Dict[str, Set[str]], Dict[str, int]]: # Renamed from _merge_csv_data
+    def merge_data(
+        self, existing_csv_data: Dict[str, Set[str]], anki_items: Set[str]
+    ) -> Tuple[Dict[str, Set[str]], Dict[str, int]]:  # Renamed from _merge_csv_data
         merged_data = {k: set(v) for k, v in existing_csv_data.items()}
         stats = {
             "anki_source_removed_not_in_anki": 0,
             "word_deleted_no_sources_left": 0,
             "new_word_from_anki_added": 0,
-            "anki_source_added_to_existing_word": 0
+            "anki_source_added_to_existing_word": 0,
         }
 
         for word in list(merged_data.keys()):
@@ -436,13 +498,15 @@ class KnownWordsProcessor:
             if item in merged_data:
                 if ANKI_SOURCE_TAG not in merged_data[item]:
                     merged_data[item].add(ANKI_SOURCE_TAG)
-                    stats["anki_source_added_to_existing_word"] +=1
+                    stats["anki_source_added_to_existing_word"] += 1
             else:
                 merged_data[item] = {ANKI_SOURCE_TAG}
                 stats["new_word_from_anki_added"] += 1
         return merged_data, stats
 
-    def write_csv_data(self, output_path: str, data_to_write: Dict[str, Set[str]]) -> bool: # Renamed from _write_csv_data
+    def write_csv_data(
+        self, output_path: str, data_to_write: Dict[str, Set[str]]
+    ) -> bool:  # Renamed from _write_csv_data
         output_rows: List[List[str]] = [[CSV_COLUMN_WORD, CSV_COLUMN_SOURCE]]
         for word, sources in sorted(data_to_write.items()):
             if sources:
@@ -453,11 +517,11 @@ class KnownWordsProcessor:
             return False
 
         try:
-            with open(output_path, 'w', encoding='utf-8', newline='') as f:
+            with open(output_path, "w", encoding="utf-8", newline="") as f:
                 csv_writer = csv.writer(f)
                 csv_writer.writerows(output_rows)
             return True
-        except OSError as e: # Changed IOError to OSError
+        except OSError as e:  # Changed IOError to OSError
             log.error(f"OSError writing CSV file to '{os.path.basename(output_path)}': {e}", exc_info=True)
             showInfo(f"Error writing CSV file to '{os.path.basename(output_path)}':\n{e}")
             return False
@@ -480,18 +544,17 @@ class ExportVocabCsvDialog(QDialog):
         self.mecab_processor: Optional[MeCabProcessor] = None
         if MECAB_AVAILABLE:
             try:
-                addon_config = mw.addonManager.getConfig(__name__.split('.')[0]) if mw else {}
+                addon_config = mw.addonManager.getConfig(__name__.split(".")[0]) if mw else {}
                 _initial_custom_stopwords = addon_config.get(CONFIG_KEY_CUSTOM_STOPWORDS, "")
                 _initial_stopwords_mode = addon_config.get(CONFIG_KEY_CUSTOM_STOPWORDS_MODE, STOPWORDS_MODE_SUPPLEMENT)
                 self.mecab_processor = MeCabProcessor(
-                    custom_stopwords_str=_initial_custom_stopwords,
-                    stopwords_mode=_initial_stopwords_mode
+                    custom_stopwords_str=_initial_custom_stopwords, stopwords_mode=_initial_stopwords_mode
                 )
             except Exception as e:
                 log.error(f"Failed to initialize MeCabProcessor for dialog: {e}", exc_info=True)
                 self.mecab_processor = None
                 showInfo("Error initializing MeCab processor. Lemmatization may be unavailable. Check logs.")
-        
+
         main_layout = QVBoxLayout(self)
         main_layout.setSpacing(12)
 
@@ -589,7 +652,7 @@ class ExportVocabCsvDialog(QDialog):
         self.operation_group.addButton(self.radio_update_existing)
         self.operation_group.addButton(self.radio_save_as_new)
         operation_layout = QVBoxLayout()
-        operation_layout.setContentsMargins(0,0,0,0)
+        operation_layout.setContentsMargins(0, 0, 0, 0)
         operation_layout.setSpacing(4)
         operation_layout.addWidget(self.radio_update_existing)
         operation_layout.addWidget(self.radio_save_as_new)
@@ -601,9 +664,10 @@ class ExportVocabCsvDialog(QDialog):
         line_separator.setFrameShadow(QFrame.Shadow.Sunken)
         form_layout.addRow(line_separator)
 
-
         self.filter_by_dict_checkbox = QCheckBox("Filter extracted words against a dictionary file")
-        self.filter_by_dict_checkbox.setToolTip("Only include words/lemmas from Anki if they also exist in the specified dictionary file.")
+        self.filter_by_dict_checkbox.setToolTip(
+            "Only include words/lemmas from Anki if they also exist in the specified dictionary file."
+        )
         self.filter_by_dict_checkbox.stateChanged.connect(self.update_dict_filter_state)
         form_layout.addRow("", self.filter_by_dict_checkbox)
 
@@ -641,7 +705,9 @@ class ExportVocabCsvDialog(QDialog):
         form_layout.addRow(self.lemmatize_checkbox)
 
         self.custom_stopwords_edit = QTextEdit()
-        self.custom_stopwords_edit.setPlaceholderText("Enter custom stopwords (one per line).\nThese supplement or replace built-in stopwords.")
+        self.custom_stopwords_edit.setPlaceholderText(
+            "Enter custom stopwords (one per line).\nThese supplement or replace built-in stopwords."
+        )
         self.custom_stopwords_edit.setMinimumHeight(80)
         form_layout.addRow("Custom Stopwords:", self.custom_stopwords_edit)
 
@@ -708,15 +774,19 @@ class ExportVocabCsvDialog(QDialog):
 
     @property
     def is_lemmatization_module_available(self) -> bool:
-        return (MECAB_AVAILABLE and
-                self.mecab_processor is not None and
-                self.mecab_processor.pos_init_status != MeCabProcessor.STATUS_FAILED)
+        return (
+            MECAB_AVAILABLE
+            and self.mecab_processor is not None
+            and self.mecab_processor.pos_init_status != MeCabProcessor.STATUS_FAILED
+        )
 
     @property
     def is_lemmatization_fully_functional(self) -> bool:
-        return (MECAB_AVAILABLE and
-                self.mecab_processor is not None and
-                self.mecab_processor.pos_init_status == MeCabProcessor.STATUS_INITIALIZED)
+        return (
+            MECAB_AVAILABLE
+            and self.mecab_processor is not None
+            and self.mecab_processor.pos_init_status == MeCabProcessor.STATUS_INITIALIZED
+        )
 
     def _get_start_directory(self, current_path_text: str) -> str:
         if current_path_text:
@@ -724,8 +794,8 @@ class ExportVocabCsvDialog(QDialog):
             if os.path.isfile(current_path_abs):
                 return os.path.dirname(current_path_abs)
             if os.path.isdir(current_path_abs):
-                 return current_path_abs
-        if mw and mw.pm and hasattr(mw.pm, 'profileFolder') and mw.pm.profileFolder():
+                return current_path_abs
+        if mw and mw.pm and hasattr(mw.pm, "profileFolder") and mw.pm.profileFolder():
             return mw.pm.profileFolder()
         return os.path.expanduser("~")
 
@@ -755,8 +825,8 @@ class ExportVocabCsvDialog(QDialog):
         all_fields: Set[str] = set()
         try:
             for model in mw.col.models.all():
-                for field_dict in model['flds']:
-                    all_fields.add(field_dict['name'])
+                for field_dict in model["flds"]:
+                    all_fields.add(field_dict["name"])
         except Exception as e:
             log.error(f"Error loading fields from Anki models: {e}", exc_info=True)
             self.field_combo.addItem("Error loading fields")
@@ -769,31 +839,30 @@ class ExportVocabCsvDialog(QDialog):
             return
 
         sorted_fields = sorted(list(all_fields))
-        
+
         current_selection = ""
         for pf in self.PREFERRED_FIELDS_ORDER:
             if pf in all_fields:
                 current_selection = pf
                 break
-        
+
         if not current_selection and self.DEFAULT_FIELD_SUGGESTION in all_fields:
             current_selection = self.DEFAULT_FIELD_SUGGESTION
-        
+
         if not current_selection and sorted_fields:
             current_selection = sorted_fields[0]
 
         self.field_combo.clear()
         self.field_combo.addItems(sorted_fields)
-        
+
         if current_selection:
             idx = self.field_combo.findText(current_selection)
             if idx != -1:
                 self.field_combo.setCurrentIndex(idx)
             elif self.field_combo.count() > 0:
-                 self.field_combo.setCurrentIndex(0)
+                self.field_combo.setCurrentIndex(0)
         elif self.field_combo.count() > 0:
-             self.field_combo.setCurrentIndex(0)
-
+            self.field_combo.setCurrentIndex(0)
 
     def update_operation_mode_state(self) -> None:
         has_input_path = bool(self.csv_path_edit.text().strip())
@@ -818,7 +887,7 @@ class ExportVocabCsvDialog(QDialog):
             log.warning("Cannot load settings: Anki environment (mw) not available.")
             return
 
-        addon_package = __name__.split('.')[0]
+        addon_package = __name__.split(".")[0]
         config = mw.addonManager.getConfig(addon_package) or {}
 
         self.csv_path_edit.setText(config.get(CONFIG_KEY_LAST_CSV_PATH, ""))
@@ -847,7 +916,7 @@ class ExportVocabCsvDialog(QDialog):
                 self.stopwords_replace_radio.setChecked(True)
             else:
                 self.stopwords_supplement_radio.setChecked(True)
-        
+
         self._update_mecab_processor_stopwords()
 
         self.auto_timestamp_checkbox.setChecked(config.get(CONFIG_KEY_AUTO_TIMESTAMP_FILENAME, False))
@@ -860,19 +929,23 @@ class ExportVocabCsvDialog(QDialog):
             log.warning("Cannot save settings: Anki environment (mw) not available.")
             return
 
-        addon_package = __name__.split('.')[0]
+        addon_package = __name__.split(".")[0]
         config = mw.addonManager.getConfig(addon_package) or {}
 
         config[CONFIG_KEY_LAST_CSV_PATH] = self.csv_path_edit.text()
         config[CONFIG_KEY_NOTE_TYPE_FILTER_STRING] = self.note_type_filter_edit.text()
         config[CONFIG_KEY_LAST_FIELD] = self.field_combo.currentText()
         config[CONFIG_KEY_LAST_INTERVAL] = self.interval_spinbox.value()
-        config[CONFIG_KEY_LAST_OPERATION_MODE] = OP_MODE_UPDATE_EXISTING if self.radio_update_existing.isChecked() else OP_MODE_SAVE_AS_NEW
+        config[CONFIG_KEY_LAST_OPERATION_MODE] = (
+            OP_MODE_UPDATE_EXISTING if self.radio_update_existing.isChecked() else OP_MODE_SAVE_AS_NEW
+        )
 
         if self.is_lemmatization_module_available:
             config[CONFIG_KEY_LEMMATIZE] = self.lemmatize_checkbox.isChecked()
             config[CONFIG_KEY_CUSTOM_STOPWORDS] = self.custom_stopwords_edit.toPlainText()
-            config[CONFIG_KEY_CUSTOM_STOPWORDS_MODE] = STOPWORDS_MODE_REPLACE if self.stopwords_replace_radio.isChecked() else STOPWORDS_MODE_SUPPLEMENT
+            config[CONFIG_KEY_CUSTOM_STOPWORDS_MODE] = (
+                STOPWORDS_MODE_REPLACE if self.stopwords_replace_radio.isChecked() else STOPWORDS_MODE_SUPPLEMENT
+            )
         else:
             config.pop(CONFIG_KEY_LEMMATIZE, None)
             config.pop(CONFIG_KEY_CUSTOM_STOPWORDS, None)
@@ -893,7 +966,7 @@ class ExportVocabCsvDialog(QDialog):
         path, _ = QFileDialog.getOpenFileName(self, "Select CSV File", start_dir, "CSV Files (*.csv);;All Files (*)")
         if path:
             self.csv_path_edit.setText(path)
-    
+
     # Method _determine_output_path remains in ExportVocabCsvDialog as it directly uses UI elements
     # for QFileDialog and radio button states.
     def _determine_output_path(self) -> Optional[str]:
@@ -916,13 +989,13 @@ class ExportVocabCsvDialog(QDialog):
                     suggested_filename_base = os.path.basename(input_csv_path)
                 elif os.path.isdir(input_csv_path):
                     start_dir = input_csv_path
-            
+
             initial_file_path_suggestion = os.path.join(start_dir, suggested_filename_base)
             filter_string_for_dialog = "CSV Files (*.csv);;All Files (*)"
             raw_path, _ = QFileDialog.getSaveFileName(
                 self, "Save Known Words CSV", initial_file_path_suggestion, filter_string_for_dialog
-            ) # QFileDialog needs a parent, `self` (the dialog) is appropriate
-            
+            )  # QFileDialog needs a parent, `self` (the dialog) is appropriate
+
             if not raw_path:
                 return None
 
@@ -936,7 +1009,7 @@ class ExportVocabCsvDialog(QDialog):
                 output_path = f"{name_no_ext}_{timestamp}{current_ext}"
             else:
                 output_path = raw_path
-        
+
         if output_path and os.path.splitext(output_path)[1].lower() != ".csv":
             output_path = os.path.splitext(output_path)[0] + ".csv"
             log.warning(f"Output path extension corrected to .csv: {output_path}")
@@ -955,7 +1028,7 @@ class ExportVocabCsvDialog(QDialog):
         if not note_type_filter_text:
             showInfo("Please enter a filter string for note type names (e.g., 'japanese'). Cannot be empty.")
             return
-        
+
         normalized_filter = note_type_filter_text.lower()
         try:
             all_note_type_infos = mw.col.models.all_names_and_ids()
@@ -972,12 +1045,14 @@ class ExportVocabCsvDialog(QDialog):
         for nt_info in all_note_type_infos:
             if normalized_filter in nt_info.name.lower():
                 matching_model_names.append(nt_info.name)
-        
+
         if not matching_model_names:
             showInfo(f"No note types found with names containing: '{note_type_filter_text}'.")
             return
 
-        note_type_queries = [f'note:"{name.replace(_SINGLE_DBL_QUOTE, _ESCAPED_DBL_QUOTE)}"' for name in matching_model_names]
+        note_type_queries = [
+            f'note:"{name.replace(_SINGLE_DBL_QUOTE, _ESCAPED_DBL_QUOTE)}"' for name in matching_model_names
+        ]
         anki_query = f"({' OR '.join(note_type_queries)})"
         log.info(f"Constructed Anki query: {anki_query}")
 
@@ -985,14 +1060,17 @@ class ExportVocabCsvDialog(QDialog):
         selected_field_name = self.field_combo.currentText()
         mature_interval = self.interval_spinbox.value()
         # Check for lemmatization fully functional (stricter) before enabling
-        use_lemmatization = (self.is_lemmatization_fully_functional and 
-                             self.lemmatize_checkbox.isChecked())
-        
+        use_lemmatization = self.is_lemmatization_fully_functional and self.lemmatize_checkbox.isChecked()
+
         use_dictionary_filter = self.filter_by_dict_checkbox.isChecked()
         dictionary_path = self.dict_path_edit.text().strip()
         dictionary_set: Set[str] = set()
 
-        if not selected_field_name or selected_field_name in ["No fields found", "Error loading fields", "Error: Anki collection not available"]:
+        if not selected_field_name or selected_field_name in [
+            "No fields found",
+            "Error loading fields",
+            "Error: Anki collection not available",
+        ]:
             showInfo("Please select a valid Anki Field to process.")
             return
 
@@ -1003,27 +1081,30 @@ class ExportVocabCsvDialog(QDialog):
             if not os.path.exists(dictionary_path):
                 showInfo(f"Dictionary file not found at: {dictionary_path}")
                 return
-            dictionary_set = _load_dictionary_file(dictionary_path) # _load_dictionary_file is a module-level function
+            dictionary_set = _load_dictionary_file(dictionary_path)  # _load_dictionary_file is a module-level function
             if not dictionary_set and os.path.exists(dictionary_path):
-                showInfo(f"The dictionary file '{os.path.basename(dictionary_path)}' was found but is empty or failed to load. "
-                         "Filtering against an empty dictionary will result in no words from Anki being included.")
+                showInfo(
+                    f"The dictionary file '{os.path.basename(dictionary_path)}' was found but is empty or failed to load. "
+                    "Filtering against an empty dictionary will result in no words from Anki being included."
+                )
 
-        if use_lemmatization and self.mecab_processor: # mecab_processor must exist for use_lemmatization to be true
-            self._update_mecab_processor_stopwords() # Dialog method updates its mecab_processor instance
+        if use_lemmatization and self.mecab_processor:  # mecab_processor must exist for use_lemmatization to be true
+            self._update_mecab_processor_stopwords()  # Dialog method updates its mecab_processor instance
             if not self.mecab_processor.test_mecab_and_pos():
-                tooltip("Warning: MeCab self-test failed. Lemmatization results may be inaccurate. Check add-on logs for details.", period=7000, parent=self)
+                tooltip(
+                    "Warning: MeCab self-test failed. Lemmatization results may be inaccurate. Check add-on logs for details.",
+                    period=7000,
+                    parent=self,
+                )
 
         existing_csv_data: Dict[str, Set[str]] = {}
         if input_csv_path:
             if self.radio_update_existing.isChecked() and not os.path.exists(input_csv_path):
                 showInfo(f"Update operation selected, but the CSV file does not exist: {input_csv_path}")
                 return
-            existing_csv_data = processor.read_csv_data(input_csv_path) # Use processor instance
+            existing_csv_data = processor.read_csv_data(input_csv_path)  # Use processor instance
 
-        anki_items_raw = processor.get_anki_data(
-            anki_query, selected_field_name,
-            mature_interval, use_lemmatization
-        ) 
+        anki_items_raw = processor.get_anki_data(anki_query, selected_field_name, mature_interval, use_lemmatization)
 
         anki_items_final: Set[str]
         filtered_out_by_dict_count = 0
@@ -1032,41 +1113,45 @@ class ExportVocabCsvDialog(QDialog):
             anki_items_final = {item for item in anki_items_raw if item in dictionary_set}
             filtered_out_by_dict_count = original_count - len(anki_items_final)
             if not anki_items_final and original_count > 0:
-                showInfo(f"No Anki items matched the words in the provided dictionary. "
-                         f"{original_count} items were initially extracted from Anki; all {filtered_out_by_dict_count} were filtered out by the dictionary.")
+                showInfo(
+                    f"No Anki items matched the words in the provided dictionary. "
+                    f"{original_count} items were initially extracted from Anki; all {filtered_out_by_dict_count} were filtered out by the dictionary."
+                )
         else:
             anki_items_final = anki_items_raw
 
         if not anki_items_final and not existing_csv_data:
             message = "No Anki items to process (none found matching criteria"
             if use_dictionary_filter and anki_items_raw:
-                 message += ", or all filtered out by dictionary"
+                message += ", or all filtered out by dictionary"
             message += ") and no existing CSV data to merge/update. Nothing to save."
             showInfo(message)
             return
 
-        merged_data, merge_stats = processor.merge_data(existing_csv_data, anki_items_final) # Use processor instance
+        merged_data, merge_stats = processor.merge_data(existing_csv_data, anki_items_final)  # Use processor instance
 
-        output_path = self._determine_output_path() # This dialog method remains as it needs UI state
+        output_path = self._determine_output_path()  # This dialog method remains as it needs UI state
         if not output_path:
             tooltip("Save operation cancelled or output path could not be determined.", parent=self)
             return
 
-        if processor.write_csv_data(output_path, merged_data): # Use processor instance
+        if processor.write_csv_data(output_path, merged_data):  # Use processor instance
             num_words_saved = len(merged_data)
             stats_summary_parts = [
                 f"New from Anki: {merge_stats['new_word_from_anki_added']}",
                 f"Anki source added: {merge_stats['anki_source_added_to_existing_word']}",
                 f"Anki source removed (no longer in Anki selection): {merge_stats['anki_source_removed_not_in_anki']}",
-                f"Words deleted (no sources left): {merge_stats['word_deleted_no_sources_left']}"
+                f"Words deleted (no sources left): {merge_stats['word_deleted_no_sources_left']}",
             ]
             if use_dictionary_filter:
                 stats_summary_parts.append(f"Filtered out by dictionary: {filtered_out_by_dict_count}")
             stats_summary = ". ".join(stats_summary_parts) + "."
-            
-            parent_widget_for_final_info = self if self.isVisible() else mw 
-            showInfo(f"Successfully saved {num_words_saved} words to:\n{os.path.basename(output_path)}\n\nSummary:\n{stats_summary}",
-                     parent=parent_widget_for_final_info)
+
+            parent_widget_for_final_info = self if self.isVisible() else mw
+            showInfo(
+                f"Successfully saved {num_words_saved} words to:\n{os.path.basename(output_path)}\n\nSummary:\n{stats_summary}",
+                parent=parent_widget_for_final_info,
+            )
 
             if output_path.lower() != self.csv_path_edit.text().strip().lower():
                 self.csv_path_edit.setText(output_path)
@@ -1074,7 +1159,7 @@ class ExportVocabCsvDialog(QDialog):
 
             self.save_settings()
             self.accept()
-    
+
     def on_mecab_test_run_clicked(self) -> None:
         test_text = self.mecab_test_input_edit.text().strip()
         self.mecab_test_output_display.clear()
@@ -1087,8 +1172,10 @@ class ExportVocabCsvDialog(QDialog):
 
         if not self.is_lemmatization_fully_functional:
             msg = "MeCab is not fully functional for testing. "
-            if not MECAB_AVAILABLE: msg += "MeCab components are not installed. "
-            elif self.mecab_processor.pos_init_status == MeCabProcessor.STATUS_FAILED: msg += "Part-of-Speech initialization failed. "
+            if not MECAB_AVAILABLE:
+                msg += "MeCab components are not installed. "
+            elif self.mecab_processor.pos_init_status == MeCabProcessor.STATUS_FAILED:
+                msg += "Part-of-Speech initialization failed. "
             elif self.mecab_processor.pos_init_status == MeCabProcessor.STATUS_UNINITIALIZED:
                 msg += "Part-of-Speech uninitialized. Attempting re-initialization..."
                 log.info("MeCab test: POS uninitialized, attempting re-init.")
@@ -1099,7 +1186,7 @@ class ExportVocabCsvDialog(QDialog):
                     msg += "\nRe-initialization failed. Check logs for details."
             else:
                 msg += "Current status: " + self.mecab_processor.pos_init_status + ". Check logs."
-            
+
             self.mecab_test_output_display.setText(msg)
             log.warning(f"Mecab test: Not fully functional. Status: {self.mecab_processor.pos_init_status}")
             return
@@ -1114,11 +1201,14 @@ class ExportVocabCsvDialog(QDialog):
             if lemmas:
                 self.mecab_test_output_display.setText("\n".join(sorted(list(lemmas))))
             else:
-                self.mecab_test_output_display.setText("No lemmas extracted. Input might be empty after processing, "
-                                                       "all tokens might be stopwords, or filtered by Part-of-Speech rules.")
+                self.mecab_test_output_display.setText(
+                    "No lemmas extracted. Input might be empty after processing, "
+                    "all tokens might be stopwords, or filtered by Part-of-Speech rules."
+                )
         except Exception as e:
             log.error(f"An error occurred during MeCab lemmatization test: {e}", exc_info=True)
             self.mecab_test_output_display.setText(f"An error occurred during lemmatization test:\n{e}")
+
 
 def show_export_vocab_csv_dialog():
     if not mw:
