@@ -7,6 +7,7 @@ import os
 import re
 from typing import Any, Dict, List, Optional, Set, Tuple
 
+from anki.collection import Collection
 from anki.utils import strip_html_media
 from aqt import mw
 from aqt.qt import (
@@ -331,7 +332,7 @@ class MeCabProcessor:
 
 
 class KnownWordsProcessor:
-    def __init__(self, col: Any, mecab_processor: Optional[MeCabProcessor], progress_parent: Optional[QWidget] = None):
+    def __init__(self, col: Collection, mecab_processor: Optional[MeCabProcessor], progress_parent: Optional[QWidget] = None):
         self.col = col
         self.mecab_processor = mecab_processor
         self.progress_parent = progress_parent
