@@ -66,7 +66,7 @@ EXAMPLE_DECK_ANKIWEB_URL = "https://ankiweb.net/shared/info/1557722832"
 ADDON_SETUP_GUIDE = "https://tatsumoto-ren.github.io/blog/anki-japanese-support.html"
 
 
-def adjust_to_contents(widget: QWidget):
+def adjust_to_contents(widget: QWidget) -> None:
     try:
         widget.setSizeAdjustPolicy(widget.AdjustToContents)
     except AttributeError:
@@ -94,7 +94,7 @@ class ControlPanel(QHBoxLayout):
 
 
 class NoteTypeSelector(EditableSelector):
-    def repopulate(self, current_text: Optional[str]):
+    def repopulate(self, current_text: Optional[str]) -> None:
         self.clear()
         self.addItems([n.name for n in mw.col.models.all_names_and_ids()])
         if current_text:
@@ -123,13 +123,13 @@ class ProfileList(QGroupBox):
         for idx in range(self._list_widget.count()):
             yield self._list_widget.item(idx).data(Qt.ItemDataRole.UserRole)
 
-    def _setup_signals(self):
+    def _setup_signals(self) -> None:
         self.current_item_changed = self._list_widget.currentItemChanged
         qconnect(self._control_panel.add_btn.clicked, self.add_profile)
         qconnect(self._control_panel.remove_btn.clicked, self.remove_current)
         qconnect(self._control_panel.clone_btn.clicked, self.clone_profile)
 
-    def add_profile(self):
+    def add_profile(self) -> None:
         self.add_and_select(self._store_type.new())
 
     def remove_current(self) -> Optional[int]:
@@ -138,7 +138,7 @@ class ProfileList(QGroupBox):
             return row
         return None
 
-    def clone_profile(self):
+    def clone_profile(self) -> None:
         if (current := self.current_item()) and current.isSelected():
             self.add_and_select(Profile.clone(current.data(Qt.ItemDataRole.UserRole)))
 
@@ -148,14 +148,14 @@ class ProfileList(QGroupBox):
         layout.addLayout(self._control_panel)
         return layout
 
-    def populate(self):
+    def populate(self) -> None:
         self._list_widget.clear()
         for profile in cfg.iter_profiles():
             if isinstance(profile, self._store_type):
                 self.add_and_select(profile)
         self._list_widget.setCurrentRow(0)
 
-    def add_and_select(self, profile: Profile):
+    def add_and_select(self, profile: Profile) -> None:
         count = self._list_widget.count()
         item = QListWidgetItem()
         item.setText(profile.name)
@@ -174,7 +174,7 @@ class ProfileEditForm(QGroupBox):
         super().__init_subclass__(**kwargs)
         cls._subclasses_map[profile_class] = cls
 
-    def __new__(cls, profile_class: type[Profile], *args, **kwargs):
+    def __new__(cls, profile_class: type[Profile], *args, **kwargs) -> None:
         subclass = cls._subclasses_map[profile_class]
         return QGroupBox.__new__(subclass)
 
@@ -225,7 +225,7 @@ class ProfileEditForm(QGroupBox):
     def as_profile(self) -> Profile:
         return Profile.from_config_dict(self._as_dict())
 
-    def load_profile(self, profile: Profile):
+    def load_profile(self, profile: Profile) -> None:
         self._last_used_profile = profile
         self._form.name.setText(profile.name)
         self._form.note_type.repopulate(profile.note_type)
@@ -374,10 +374,10 @@ class ToolbarButtonSettingsForm(QGroupBox):
         layout.addRow("Label", self._label_edit)
         return layout
 
-    def setButtonLabel(self, label: str):
+    def setButtonLabel(self, label: str) -> None:
         return self._label_edit.setText(label)
 
-    def setButtonKeyboardShortcut(self, shortcut: str):
+    def setButtonKeyboardShortcut(self, shortcut: str) -> None:
         return self._shortcut_edit.setValue(shortcut)
 
     def as_dict(self) -> ToolbarButtonConfig:
@@ -405,7 +405,7 @@ class ToolbarSettingsForm(QGroupBox):
         self._create_widgets()
         self.setLayout(self._make_layout())
 
-    def _create_widgets(self):
+    def _create_widgets(self) -> None:
         for key, button_config in cfg.toolbar.items():
             widget = ToolbarButtonSettingsForm()
             widget.setTitle(ui_translate(key))
@@ -468,7 +468,7 @@ class AudioSourcesEditTable(QWidget):
         layout.addWidget(self._purge_button)
         return layout
 
-    def _connect_widgets(self):
+    def _connect_widgets(self) -> None:
         qconnect(self._purge_button.clicked, self._on_purge_db_clicked)
         qconnect(self._stats_button.clicked, self._on_show_statistics_clicked)
         qconnect(self._apply_button.clicked, self._on_apply_clicked)
@@ -592,7 +592,7 @@ class SettingsDialog(AnkiSaveAndRestoreGeomDialog, MgrPropMixIn):
         # Show window
         self.exec()
 
-    def _setup_tabs(self):
+    def _setup_tabs(self) -> None:
         # Furigana
         tab = QWidget()
         tab.setLayout(layout := QVBoxLayout())
@@ -643,14 +643,14 @@ class SettingsDialog(AnkiSaveAndRestoreGeomDialog, MgrPropMixIn):
         self.setLayout(self.make_layout())
         self.connect_widgets()
 
-    def _add_tooltips(self):
+    def _add_tooltips(self) -> None:
         self._button_box.button(QDialogButtonBox.StandardButton.Ok).setToolTip("Save settings and close the dialog.")
         self._button_box.button(QDialogButtonBox.StandardButton.Cancel).setToolTip(
             "Discard settings and close the dialog."
         )
         self._button_box.button(QDialogButtonBox.StandardButton.Help).setToolTip("Open Guide.")
 
-    def connect_widgets(self):
+    def connect_widgets(self) -> None:
         qconnect(self._button_box.accepted, self.accept)
         qconnect(self._button_box.rejected, self.reject)
         qconnect(self._button_box.helpRequested, lambda: openLink(ADDON_SETUP_GUIDE))
@@ -701,19 +701,19 @@ class SettingsDialog(AnkiSaveAndRestoreGeomDialog, MgrPropMixIn):
         qconnect(b.clicked, on_advanced_clicked)
 
 
-def add_settings_action(root_menu: QMenu):
+def add_settings_action(root_menu: QMenu) -> None:
     menu_action = QAction("Japanese Options...", root_menu)
     qconnect(menu_action.triggered, lambda: SettingsDialog(mw))
     root_menu.addAction(menu_action)
 
 
-def add_deck_download_action(root_menu: QMenu):
+def add_deck_download_action(root_menu: QMenu) -> None:
     menu_action = QAction("Download example deck", root_menu)
     qconnect(menu_action.triggered, lambda: openLink(EXAMPLE_DECK_ANKIWEB_URL))
     root_menu.addAction(menu_action)
 
 
-def init():
+def init() -> None:
     root_menu = menu_root_entry()
     add_settings_action(root_menu)
     add_deck_download_action(root_menu)
