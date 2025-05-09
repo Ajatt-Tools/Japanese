@@ -1024,9 +1024,6 @@ class ExportVocabCsvDialog(QDialog):
             showInfo("Critical error: Anki collection (mw.col) is not available. Cannot proceed.")
             return
 
-        # Instantiate the processor, passing `self` as progress_parent
-        processor = KnownWordsProcessor(mw.col, self.mecab_processor, progress_parent=self)
-
         note_type_filter_text = self.note_type_filter_edit.text().strip()
         if not note_type_filter_text:
             showInfo("Please enter a filter string for note type names (e.g., 'japanese'). Cannot be empty.")
@@ -1099,6 +1096,9 @@ class ExportVocabCsvDialog(QDialog):
                     period=7000,
                     parent=self,
                 )
+
+        # Instantiate the processor, passing `self` as progress_parent
+        processor = KnownWordsProcessor(mw.col, self.mecab_processor, progress_parent=self)
 
         existing_csv_data: Dict[str, Set[str]] = {}
         if input_csv_path:
