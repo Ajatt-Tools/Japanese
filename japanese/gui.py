@@ -684,14 +684,16 @@ def add_deck_download_action(root_menu: QMenu):
     root_menu.addAction(menu_action)
 
 
-def init():
-    root_menu = menu_root_entry()
-
+def add_export_known_vocab_action(root_menu: QMenu) -> None:
     export_action = QAction("Export Known Vocab", root_menu)
     qconnect(export_action.triggered, show_export_vocab_csv_dialog)
     root_menu.addAction(export_action)
 
+
+def init():
+    root_menu = menu_root_entry()
     add_settings_action(root_menu)
     add_deck_download_action(root_menu)
+    add_export_known_vocab_action(root_menu)
     set_config_action(lambda: SettingsDialog(mw))
     set_config_update_action(cfg.update_from_addon_manager)
