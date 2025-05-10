@@ -1,5 +1,5 @@
-# Copyright: (C) 2022 Ren Tatsumoto <tatsu at autistici.org>
-# License: GNU AGPL, version 3 or later; http://www.gnu.org/copyleft/gpl.html
+# Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
+# License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 import os.path
 from collections.abc import Iterable
 from types import SimpleNamespace
