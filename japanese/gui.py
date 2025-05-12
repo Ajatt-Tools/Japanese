@@ -249,7 +249,7 @@ class ProfileEditForm(QGroupBox):
             widget: QComboBox = self._form.__dict__[key]
             current_text = profile.as_config_dict()[key] if profile else widget.currentText()
             widget.clear()
-            widget.addItems(dict.fromkeys(relevant_field_names(self._form.note_type.currentText())))
+            widget.addItems(dict.fromkeys(relevant_field_names(self._form.note_type.currentText().strip())))
             widget.setCurrentText(current_text)
 
 
