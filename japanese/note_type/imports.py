@@ -5,6 +5,7 @@ import io
 import re
 from typing import Literal, Optional
 
+from ..ajt_common.model_utils import AnkiCardTemplateDict, AnkiNoteTypeDict
 from .bundled_files import (
     BUNDLED_CSS_FILE,
     BUNDLED_JS_FILE,
@@ -13,7 +14,6 @@ from .bundled_files import (
     VersionedFile,
     version_str_to_tuple,
 )
-from .typing import AnkiCardTemplateDict, AnkiNoteTypeDict
 
 RE_AJT_CSS_IMPORT = re.compile(r'@import url\("_ajt_japanese(?:_(?P<version>\d+\.\d+\.\d+\.\d+))?\.css"\);')
 RE_AJT_JS_LEGACY_IMPORT = re.compile(r'<script [^<>]*src="_ajt_japanese[^"]*\.js"></script>\n?')

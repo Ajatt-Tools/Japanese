@@ -11,6 +11,7 @@ from anki.models import NotetypeNameId
 from aqt import gui_hooks, mw
 from aqt.operations import CollectionOp
 
+from ..ajt_common.model_utils import AnkiNoteTypeDict, get_model_field_names
 from ..config_view import config_view as cfg
 from ..helpers.consts import ADDON_NAME
 from ..helpers.profiles import ProfileFurigana
@@ -18,7 +19,6 @@ from ..tasks import note_type_matches
 from .bundled_files import BUNDLED_CSS_FILE, BundledCSSFile, get_file_version
 from .files_in_col_media import FileInCollection, find_ajt_scripts_in_collection
 from .imports import ensure_css_imported, ensure_js_imported
-from .typing import AnkiNoteTypeDict
 
 
 def not_recent_version(file: BundledCSSFile) -> bool:
