@@ -21,7 +21,9 @@ from japanese.note_type.imports import (
     CHARSET_RULE,
     ensure_css_imported,
     ensure_js_imported,
+    find_ajt_japanese_js_imports,
     find_existing_css_version,
+    is_current_js_ok,
 )
 
 RE_EXPECTED_FILENAME = re.compile(r"_ajt_japanese_(\d+\.){4}(js|css)")
@@ -107,17 +109,24 @@ def test_css_imports(css_styling: str, is_modified: bool, modified_css: Optional
     assert model_dict["css"] == (modified_css or css_styling)
 
 
+NO_JS = """\
+<!-- empty template -->
+<div>
+    <span>some html</span>
+</div>\
+"""
+
 @pytest.mark.parametrize(
     "template_html, is_modified, modified_html",
     [
         (
             # Import is missing.
-            """<!-- empty template -->""",
+            NO_JS,
             True,
-            f"<!-- empty template -->\n{BUNDLED_JS_FILE.import_str}",
+            f"{NO_JS}\n{BUNDLED_JS_FILE.import_str}",
         ),
         (
-            # Legacy import found.
+            # Legacy import found (script defer).
             """<!-- begin -->\n<script defer src="_ajt_japanese_24.7.14.2.js"></script>\n<!-- end -->""",
             True,
             f"<!-- begin -->\n<!-- end -->\n{BUNDLED_JS_FILE.import_str}",
@@ -130,9 +139,9 @@ def test_css_imports(css_styling: str, is_modified: bool, modified_css: Optional
         ),
         (
             # Older version
-            "<script>\n/* AJT Japanese JS 24.7.14.0 */\n//some old code\n</script>\n<!--whatever-->",
+            "<script>\n/* AJT Japanese JS 24.7.14.0 */\n//some old code\n</script>\n<!-- after old import -->",
             True,
-            f"{BUNDLED_JS_FILE.import_str}\n<!--whatever-->",
+            f"<!-- after old import -->\n{BUNDLED_JS_FILE.import_str}",
         ),
         (
             # Older version (but it is formatted)
@@ -145,13 +154,29 @@ def test_css_imports(css_styling: str, is_modified: bool, modified_css: Optional
                 "<!--whatever-->"
             ),
             True,
-            f"<!--whatever-->\n\n{BUNDLED_JS_FILE.import_str}\n<!--whatever-->",
+            f"<!--whatever-->\n\n<!--whatever-->\n{BUNDLED_JS_FILE.import_str}",
         ),
         (
             # Current version
-            f"<!-- template text -->\n{BUNDLED_JS_FILE.import_str}\n<!-- template text -->",
+            f"<!-- before current JS -->\n{BUNDLED_JS_FILE.import_str}\n<!-- after current JS -->",
             False,
             None,
+        ),
+        (
+            # Current version (repeated for some reason)
+            # Remove the duplicate import.
+            f"""\
+<!-- template text -->
+{BUNDLED_JS_FILE.import_str}
+<!-- template text -->
+{BUNDLED_JS_FILE.import_str}\
+""",
+            True,
+            f"""\
+<!-- template text -->
+{BUNDLED_JS_FILE.import_str}
+<!-- template text -->\
+""",
         ),
         (
             # Newer version
@@ -201,3 +226,7 @@ def test_js_imports(template_html: str, is_modified: bool, modified_html: Option
 def test_file_in_collection(file_name: str, expected_ver: FileVersionTuple) -> None:
     # all files start with '_ajt_japanese'
     assert FileInCollection.new(file_name).version == expected_ver
+
+
+def test_is_bundled_ok() -> None:
+    assert is_current_js_ok()
