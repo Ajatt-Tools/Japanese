@@ -8,6 +8,7 @@ from typing import Optional
 from aqt.qt import *
 
 from ..ajt_common.addon_config import ConfigSubViewBase
+from ..ajt_common.anki_field_selector import AnkiFieldSelector
 from ..ajt_common.enum_select_combo import EnumSelectCombo
 from ..ajt_common.grab_key import ShortCutGrabButton
 from ..ajt_common.utils import q_emit, ui_translate
@@ -24,7 +25,6 @@ from ..helpers.misc import split_list
 from ..helpers.sakura_client import AddDefBehavior, DictName, SearchType
 from ..pitch_accents.styles import HTMLPitchPatternStyle
 from .addon_opts import (
-    FieldNameSelector,
     NarrowLineEdit,
     NarrowSpinBox,
     PxDoubleNarrowSpinBox,
@@ -91,10 +91,10 @@ class DefinitionsSettingsForm(SettingsForm):
 
     def _add_widgets(self) -> None:
         super()._add_widgets()
-        self._widgets.source = FieldNameSelector(
+        self._widgets.source = AnkiFieldSelector(
             initial_value=self._config.source,
         )
-        self._widgets.destination = FieldNameSelector(
+        self._widgets.destination = AnkiFieldSelector(
             initial_value=self._config.destination,
         )
         self._widgets.dict_name = EnumSelectCombo(

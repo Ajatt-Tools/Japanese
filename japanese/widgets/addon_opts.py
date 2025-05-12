@@ -105,12 +105,3 @@ class StrokeDisarrayLineEdit(NarrowLineEdit):
         rx = QRegularExpression(r"^(\d+ )*\d+$")
         validator = QRegularExpressionValidator(rx)
         self.setValidator(validator)
-
-
-class FieldNameSelector(EditableSelector):
-    def __init__(self, initial_value: Optional[str] = None, parent=None) -> None:
-        super().__init__(parent)
-        self.clear()
-        self.addItems(dict.fromkeys(gather_all_field_names()))
-        if initial_value:
-            self.setCurrentText(initial_value)
