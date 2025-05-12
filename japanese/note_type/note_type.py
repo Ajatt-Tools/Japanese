@@ -6,6 +6,7 @@ from collections.abc import Sequence
 from typing import Any, Optional
 
 import anki.collection
+from anki.hooks import wrap
 from anki.models import NotetypeNameId
 from aqt import gui_hooks, mw
 from aqt.operations import CollectionOp
@@ -113,6 +114,15 @@ def remove_old_file_versions() -> None:
             print(f"Removed old version: {file.name}")
 
 
+def on_model_updated(notetype: AnkiNoteTypeDict, skip_checks: bool = False) -> None:
+    # When gomi updates a note type (using AnkiConnect),
+    # it removes AJT Japanese's code (JS and CSS imports) to avoid redundancy.
+    # Now AJT Japanese needs to add the code back to avoid breakage.
+    # Reference: https://github.com/Ajatt-Tools/gomi
+    assert isinstance(notetype, dict), "note type should be a dictionary."
+    ensure_imports_in_model_dict(notetype)
+
+
 def prepare_note_types() -> None:
     if not cfg.insert_scripts_into_templates:
         # Global switch (in Advanced settings, not shown in the GUI settings.)
@@ -122,6 +132,10 @@ def prepare_note_types() -> None:
         ensure_bundled_css_file_saved()
         ensure_imports_added(models)
         remove_old_file_versions()
+
+    # AnkiConnect calls mw.col.models.update_dict()
+    # when the "updateModelTemplates" and "updateModelStyling" actions are used.
+    mw.col.models.update_dict = wrap(mw.col.models.update_dict, on_model_updated, "before")
 
 
 def init():
