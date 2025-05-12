@@ -68,8 +68,7 @@ def collect_all_relevant_models() -> Sequence[NotetypeNameId]:
     return [model for model in mw.col.models.all_names_and_ids() if is_relevant_model(mw.col.models.get(model.id))]
 
 
-def ensure_imports_added_for_model(col: anki.collection.Collection, model: NotetypeNameId) -> bool:
-    model_dict: AnkiNoteTypeDict = col.models.get(model.id)
+def ensure_imports_in_model_dict(model_dict: AnkiNoteTypeDict) -> bool:
     if not model_dict:
         return False
     is_dirty = ensure_css_imported(model_dict)
@@ -78,8 +77,13 @@ def ensure_imports_added_for_model(col: anki.collection.Collection, model: Notet
         for side in ("qfmt", "afmt"):
             is_dirty = ensure_js_imported(template, side) or is_dirty
     if is_dirty:
+        print(f"Model {model_dict['name']} is dirty.")
+    return is_dirty
+
+
+def ensure_imports_and_save_model(col: anki.collection.Collection, model_dict: AnkiNoteTypeDict) -> bool:
+    if is_dirty := ensure_imports_in_model_dict(model_dict):
         col.models.update_dict(model_dict)
-        print(f"Model {model.name} is dirty.")
     return is_dirty
 
 
@@ -91,7 +95,7 @@ def ensure_imports_added_op(
     is_dirty = False
     for model in models:
         print(f"Relevant AJT note type: {model.name}")
-        is_dirty = ensure_imports_added_for_model(col, model) or is_dirty
+        is_dirty = ensure_imports_and_save_model(col, col.models.get(model.id)) or is_dirty
     return col.merge_undo_entries(pos) if is_dirty else anki.collection.OpChanges()
 
 
