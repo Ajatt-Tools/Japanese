@@ -16,7 +16,6 @@ from .bundled_files import (
     BUNDLED_JS_FILE,
     UNK_VERSION,
     FileVersionTuple,
-    VersionedFile,
     version_str_to_tuple,
 )
 
@@ -34,38 +33,51 @@ class JavaScriptImport(typing.NamedTuple):
     end_idx: int
 
 
-def find_ajt_japanese_js_imports(html_template: str) -> Iterable[JavaScriptImport]:
-    idx = 0
+class Range(typing.NamedTuple):
+    start_idx: int
+    end_idx: int
+
+
+def find_js_in_template(html_template: str, cursor_idx: int) -> Optional[Range]:
     script_start_token = "<script>"
     script_end_token = "</script>"
+
+    # try to find an opening script tag
+    script_start_idx = html_template.find(script_start_token, cursor_idx)
+    if script_start_idx < 0:
+        return None
+
+    # move cursor behind the opening tag.
+    # <script>xxx
+    #         ^
+    # try to find a closing script tag
+    script_end_idx = html_template.find(script_end_token, script_start_idx + len(script_start_token))
+    if script_end_idx < 0:
+        return None
+
+    # move cursor behind the closing tag.
+    # </script>xxx
+    #          ^
+    script_end_idx = script_end_idx + len(script_end_token)
+
+    # Handle newline after the script.
+    # In case the script has to be removed from the html template later, it should be removed with the newline.
+    if script_end_idx < len(html_template) and html_template[script_end_idx] == '\n':
+        script_end_idx += 1
+
+    return Range(script_start_idx, script_end_idx)
+
+
+def find_ajt_japanese_js_imports(html_template: str) -> Iterable[JavaScriptImport]:
+    idx = 0
     while idx < len(html_template):
-        # try to find an opening script tag
-        script_start_idx = html_template.find(script_start_token, idx)
-        if script_start_idx < 0:
+        # try to find a script: <script>...</script>
+        script = find_js_in_template(html_template, idx)
+        if script is None:
             return
-
-        # move cursor behind the opening tag.
-        # <script>xxx
-        #         ^
-        idx = script_start_idx + len(script_start_token)
-
-        # try to find a closing script tag
-        script_end_idx = html_template.find(script_end_token, idx)
-        if script_end_idx < 0:
-            return
-
-        # move cursor behind the closing tag.
-        # </script>xxx
-        #          ^
-        idx = script_end_idx + len(script_end_token)
-
-        # Handle newline after the script.
-        # In case the script has to be removed from the html template later, it should be removed with the newline.
-        if idx < len(html_template) and html_template[idx] == '\n':
-            idx += 1
 
         # collect the entire script
-        script_content = html_template[script_start_idx: idx]
+        script_content = html_template[script.start_idx: script.end_idx]
 
         # Try to find out if this is the AJT Japanese JS by searching for its version.
         if m := re.search(RE_AJT_JS_VERSION_COMMENT, script_content):
@@ -73,9 +85,12 @@ def find_ajt_japanese_js_imports(html_template: str) -> Iterable[JavaScriptImpor
             yield JavaScriptImport(
                 version=version,
                 text_content=script_content,
-                start_idx=script_start_idx,
-                end_idx=idx,
+                start_idx=script.start_idx,
+                end_idx=script.end_idx,
             )
+
+        # move cursor behind the closing tag.
+        idx = script.end_idx
 
 
 def find_existing_css_version(css_styling: str) -> Optional[FileVersionTuple]:
