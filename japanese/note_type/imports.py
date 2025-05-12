@@ -1,9 +1,9 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
-import enum
-import io
 import re
-from typing import Literal, Optional
+import typing
+from collections.abc import Iterable
+from typing import Optional
 
 
 from ..ajt_common.model_utils import (
@@ -27,33 +27,55 @@ RE_CHARSET_RULE = re.compile(r'@charset "UTF-8";\n?', flags=re.MULTILINE | re.IG
 CHARSET_RULE = '@charset "UTF-8";'
 
 
-def find_ajt_japanese_js_import(template_text: str) -> Optional[VersionedFile]:
-    buffer = io.StringIO()
+class JavaScriptImport(typing.NamedTuple):
+    version: FileVersionTuple
+    text_content: str
+    start_idx: int
+    end_idx: int
 
-    class Status(enum.Enum):
-        none = 0
-        found_script = 1
-        identified_ajt_script = 2
 
-    status = Status.none
-    version: FileVersionTuple = UNK_VERSION
+def find_ajt_japanese_js_imports(html_template: str) -> Iterable[JavaScriptImport]:
+    idx = 0
+    script_start_token = "<script>"
+    script_end_token = "</script>"
+    while idx < len(html_template):
+        # try to find an opening script tag
+        script_start_idx = html_template.find(script_start_token, idx)
+        if script_start_idx < 0:
+            return
 
-    for line in template_text.splitlines(keepends=True):
-        if line.strip() == "<script>":
-            status = Status.found_script
-        elif (m := re.fullmatch(RE_AJT_JS_VERSION_COMMENT, line)) and status == Status.found_script:
-            status = Status.identified_ajt_script
+        # move cursor behind the opening tag.
+        # <script>xxx
+        #         ^
+        idx = script_start_idx + len(script_start_token)
+
+        # try to find a closing script tag
+        script_end_idx = html_template.find(script_end_token, idx)
+        if script_end_idx < 0:
+            return
+
+        # move cursor behind the closing tag.
+        # </script>xxx
+        #          ^
+        idx = script_end_idx + len(script_end_token)
+
+        # Handle newline after the script.
+        # In case the script has to be removed from the html template later, it should be removed with the newline.
+        if idx < len(html_template) and html_template[idx] == '\n':
+            idx += 1
+
+        # collect the entire script
+        script_content = html_template[script_start_idx: idx]
+
+        # Try to find out if this is the AJT Japanese JS by searching for its version.
+        if m := re.search(RE_AJT_JS_VERSION_COMMENT, script_content):
             version = version_str_to_tuple(m.group("version"))
-            buffer.write("<script>\n")
-            buffer.write(line)
-        elif line.strip() == "</script>" and status == Status.identified_ajt_script:
-            buffer.write(line)
-            return VersionedFile(version, buffer.getvalue())
-        elif status == Status.identified_ajt_script:
-            buffer.write(line)
-        else:
-            status = Status.none
-    return None
+            yield JavaScriptImport(
+                version=version,
+                text_content=script_content,
+                start_idx=script_start_idx,
+                end_idx=idx,
+            )
 
 
 def find_existing_css_version(css_styling: str) -> Optional[FileVersionTuple]:
@@ -102,17 +124,24 @@ def ensure_css_imported(model_dict: AnkiNoteTypeDict) -> bool:
 def ensure_js_in_card_side(html_template: str) -> str:
     # Replace legacy import (if present)
     html_template = re.sub(RE_AJT_JS_LEGACY_IMPORT, "", html_template)
-    if existing_import := find_ajt_japanese_js_import(html_template):
-        if existing_import.version >= BUNDLED_JS_FILE.version:
+    status_good = False
+    for existing_import in find_ajt_japanese_js_imports(html_template):
+        if status_good is False and existing_import.version >= BUNDLED_JS_FILE.version:
             # The existing version happens to be up to date or newer.
             # This is possible if the template has been updated before
             # or a newer version of the add-on has updated the template on a different computer.
-            return html_template
-        # The JS was imported previously, but a new version has been released.
-        html_template = html_template.replace(existing_import.text_content.strip(), BUNDLED_JS_FILE.import_str.strip())
-    if BUNDLED_JS_FILE.import_str not in html_template:
-        # The JS was not imported before. Likely a fresh Note Type or Anki install.
-        html_template = f"{html_template.strip()}\n{BUNDLED_JS_FILE.import_str}"
+            status_good = True
+        else:
+            # remove an old or duplicate import.
+            # remove once. don't affect other imports.
+            html_template = html_template[:existing_import.start_idx] + html_template[existing_import.end_idx:]
+    if status_good:
+        # Found an existing import, and it is up to date.
+        # Possible duplicate imports have been removed.
+        return html_template.strip()
+    # The JS was not imported before or the import was old and got removed.
+    # Append the current JS import.
+    html_template = f"{html_template.strip()}\n{BUNDLED_JS_FILE.import_str.strip()}"
     return html_template
 
 
@@ -129,10 +158,16 @@ def ensure_js_imported(template: AnkiCardTemplateDict, side: AnkiCardSide) -> bo
     return False
 
 
-assert find_ajt_japanese_js_import(BUNDLED_JS_FILE.import_str) == VersionedFile(
-    BUNDLED_JS_FILE.version,
-    BUNDLED_JS_FILE.import_str,
-)
+def is_current_js_ok() -> bool:
+    imports = list(find_ajt_japanese_js_imports(BUNDLED_JS_FILE.import_str))
+    return (
+        len(imports) == 1
+        and imports[0].version == BUNDLED_JS_FILE.version
+        and str(imports[0].text_content) == BUNDLED_JS_FILE.import_str
+    )
+
+
+assert is_current_js_ok()
 assert re.fullmatch(RE_AJT_CSS_IMPORT, BUNDLED_CSS_FILE.import_str)
 print(f"bundled JS version: {BUNDLED_JS_FILE.version_str()}")
 print(f"bundled CSS version: {BUNDLED_CSS_FILE.version_str()}")
