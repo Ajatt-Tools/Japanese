@@ -14,6 +14,7 @@ from .ajt_common.consts import (
     GITHUB_LINK,
     TG_LINK,
 )
+from .ajt_common.model_utils import get_model_field_names
 from .ajt_common.restore_geom_dialog import AnkiSaveAndRestoreGeomDialog
 from .config_view import config_view as cfg
 from .gui import EXAMPLE_DECK_ANKIWEB_URL
@@ -62,8 +63,7 @@ To configure Note Types, select <code>Tools</code> &gt; <code>Manage Note Types<
 
 def note_type_looks_right(model: NotetypeNameId) -> bool:
     assert mw
-    field_names = {field["name"] for field in mw.col.models.get(model.id)["flds"]}
-    return field_names & REQUIRED_FIELDS == REQUIRED_FIELDS
+    return frozenset(get_model_field_names(mw.col.models.get(model.id))) & REQUIRED_FIELDS == REQUIRED_FIELDS
 
 
 def is_note_type_installed() -> bool:
