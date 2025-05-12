@@ -11,7 +11,11 @@ from anki.models import NotetypeNameId
 from aqt import gui_hooks, mw
 from aqt.operations import CollectionOp
 
-from ..ajt_common.model_utils import AnkiNoteTypeDict, get_model_field_names
+from ..ajt_common.model_utils import (
+    AnkiCardSide,
+    AnkiNoteTypeDict,
+    get_model_field_names,
+)
 from ..config_view import config_view as cfg
 from ..helpers.consts import ADDON_NAME
 from ..helpers.profiles import ProfileFurigana
@@ -74,7 +78,7 @@ def ensure_imports_in_model_dict(model_dict: AnkiNoteTypeDict) -> bool:
         return False
     is_dirty = ensure_css_imported(model_dict)
     for template in model_dict["tmpls"]:
-        side: typing.Literal["qfmt", "afmt"]
+        side: AnkiCardSide
         for side in ("qfmt", "afmt"):
             is_dirty = ensure_js_imported(template, side) or is_dirty
     if is_dirty:

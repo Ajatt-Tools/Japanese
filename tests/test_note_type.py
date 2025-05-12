@@ -5,7 +5,11 @@ from typing import Optional
 
 import pytest
 
-from japanese.ajt_common.model_utils import AnkiNoteTypeDict
+from japanese.ajt_common.model_utils import (
+    AnkiCardSide,
+    AnkiCardTemplateDict,
+    AnkiNoteTypeDict,
+)
 from japanese.note_type.bundled_files import (
     BUNDLED_CSS_FILE,
     BUNDLED_JS_FILE,
@@ -158,8 +162,8 @@ def test_css_imports(css_styling: str, is_modified: bool, modified_css: Optional
     ],
 )
 def test_js_imports(template_html: str, is_modified: bool, modified_html: Optional[str]) -> None:
-    side = "qfmt"
-    template_dict = {side: template_html, "name": "pytest"}
+    side: AnkiCardSide = "qfmt"
+    template_dict: AnkiCardTemplateDict = {side: template_html, "name": "pytest"}
     assert ensure_js_imported(template_dict, side) is is_modified
     assert template_dict[side] == (modified_html or template_html)
 

@@ -5,7 +5,12 @@ import io
 import re
 from typing import Literal, Optional
 
-from ..ajt_common.model_utils import AnkiCardTemplateDict, AnkiNoteTypeDict
+
+from ..ajt_common.model_utils import (
+    AnkiCardSide,
+    AnkiCardTemplateDict,
+    AnkiNoteTypeDict,
+)
 from .bundled_files import (
     BUNDLED_CSS_FILE,
     BUNDLED_JS_FILE,
@@ -111,7 +116,7 @@ def ensure_js_in_card_side(html_template: str) -> str:
     return html_template
 
 
-def ensure_js_imported(template: AnkiCardTemplateDict, side: Literal["qfmt", "afmt"]) -> bool:
+def ensure_js_imported(template: AnkiCardTemplateDict, side: AnkiCardSide) -> bool:
     """
     Takes a card template (from a note type) and ensures that it imports the bundled JS file.
     Returns True if the template has been modified and Anki needs to save the changes.
