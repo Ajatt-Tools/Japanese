@@ -3,7 +3,7 @@
 import os.path
 import typing
 from collections.abc import Sequence
-from typing import Any, Optional
+from typing import Optional
 
 import anki.collection
 from anki.hooks import wrap
@@ -43,14 +43,14 @@ def ensure_bundled_css_file_saved() -> None:
         print(f"Created new file: {BUNDLED_CSS_FILE.name_in_col}")
 
 
-def field_names_from_model_dict(model_dict: dict[str, Any]) -> frozenset[str]:
+def field_names_from_model_dict(model_dict: AnkiNoteTypeDict) -> frozenset[str]:
     """
     Return all field names in the provided note type, e.g. ["VocabKanji", "SentKanji", "VocabDef"].
     """
-    return frozenset(field["name"] for field in model_dict["flds"])
+    return frozenset(get_model_field_names(model_dict))
 
 
-def is_relevant_model(model_dict: Optional[dict[str, Any]]) -> bool:
+def is_relevant_model(model_dict: Optional[AnkiNoteTypeDict]) -> bool:
     assert model_dict, "model dict must not be None"
     all_field_names = field_names_from_model_dict(model_dict)
     return any(
