@@ -1,8 +1,8 @@
 [build-system]
 build-backend = "hatchling.build"
 requires = [
-  "hatchling>=1.24",
-  "hatch-vcs>=0.4",
+    "hatchling>=1.24",
+    "hatch-vcs>=0.4",
 ]
 
 [project]
@@ -14,11 +14,12 @@ requires-python = "~=3.9" # anki officially only runs on 3.9
 license = { file = "LICENSE" }
 keywords = ["ajatt"]
 authors = [
-  { name = "Ren Tatsumoto", email = "tatsu@autistici.org" },
+    { name = "Ajatt-Tools and contributors" },
+    { name = "Ren Tatsumoto", email = "tatsu@autistici.org" },
 ]
 classifiers = [
-  "Programming Language :: Python",
-  "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.9",
 ]
 dependencies = []
 
@@ -26,6 +27,8 @@ dependencies = []
 Documentation = "https://github.com/Ajatt-Tools/japanese"
 Issues = "https://github.com/Ajatt-Tools/japanese/issues"
 Source = "https://github.com/Ajatt-Tools/japanese"
+
+# Tools
 
 [tool.hatch.version]
 source = "vcs"
@@ -39,7 +42,7 @@ dependencies = [
   "mypy>=1.0.0",
   "isort",
   "pytest",
-  "aqt[qt6]",
+  "aqt",
   "pyupgrade",
 ]
 python = "3.9"
@@ -57,7 +60,7 @@ source_pkgs = ["japanese", "tests"]
 branch = true
 parallel = true
 omit = [
-  "japanese/__about__.py",
+    "japanese/__about__.py",
 ]
 
 [tool.coverage.paths]
@@ -66,9 +69,9 @@ tests = ["tests", "*/japanese/tests"]
 
 [tool.coverage.report]
 exclude_lines = [
-  "no cov",
-  "if __name__ == .__main__.:",
-  "if TYPE_CHECKING:",
+    "no cov",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
 ]
 
 [tool.black]
