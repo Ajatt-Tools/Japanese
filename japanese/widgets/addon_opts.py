@@ -7,6 +7,7 @@ from typing import Optional
 from aqt import mw
 from aqt.qt import *
 
+from ..ajt_common.model_utils import get_model_field_names
 from ..config_view import split_cfg_words
 from ..helpers.consts import CFG_WORD_SEP
 
@@ -119,8 +120,7 @@ def relevant_field_names(note_type_name_fuzzy: Optional[str] = None) -> Iterable
     assert mw
     for model in mw.col.models.all_names_and_ids():
         if not note_type_name_fuzzy or note_type_name_fuzzy.lower() in model.name.lower():
-            for field in mw.col.models.get(model.id)["flds"]:
-                yield field["name"]
+            yield from get_model_field_names(mw.col.models.get(model.id))
 
 
 class FieldNameSelector(EditableSelector):
