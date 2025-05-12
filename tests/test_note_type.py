@@ -5,6 +5,7 @@ from typing import Optional
 
 import pytest
 
+from japanese.ajt_common.model_utils import AnkiNoteTypeDict
 from japanese.note_type.bundled_files import (
     BUNDLED_CSS_FILE,
     BUNDLED_JS_FILE,
@@ -18,7 +19,6 @@ from japanese.note_type.imports import (
     ensure_js_imported,
     find_existing_css_version,
 )
-from japanese.note_type.typing import AnkiNoteTypeDict
 
 RE_EXPECTED_FILENAME = re.compile(r"_ajt_japanese_(\d+\.){4}(js|css)")
 
