@@ -6,8 +6,6 @@ from typing import Optional
 
 from aqt.qt import *
 
-from ..ajt_common.anki_field_selector import EditableSelector
-from ..ajt_common.model_utils import gather_all_field_names
 from ..config_view import split_cfg_words
 from ..helpers.consts import CFG_WORD_SEP
 
