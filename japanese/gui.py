@@ -20,6 +20,7 @@ from .ajt_common.addon_config import (
 from .ajt_common.anki_field_selector import EditableSelector
 from .ajt_common.enum_select_combo import EnumSelectCombo
 from .ajt_common.grab_key import ShortCutGrabButton
+from .ajt_common.model_utils import relevant_field_names
 from .ajt_common.restore_geom_dialog import AnkiSaveAndRestoreGeomDialog
 from .ajt_common.utils import ui_translate
 from .audio import aud_src_mgr, show_audio_init_result_tooltip
@@ -45,7 +46,6 @@ from .helpers.profiles import (
 from .note_type.note_type import prepare_note_types
 from .pitch_accents.consts import USER_DATA_CSV_PATH
 from .reading import acc_dict
-from .widgets.addon_opts import relevant_field_names
 from .widgets.anki_style import fix_default_anki_style
 from .widgets.audio_sources import AudioSourcesTable, tooltip_cache_remove_complete
 from .widgets.audio_sources_stats import AudioStatsDialog

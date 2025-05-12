@@ -1,14 +1,13 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Sequence
 from typing import Optional
 
-from aqt import mw
 from aqt.qt import *
 
 from ..ajt_common.anki_field_selector import EditableSelector
-from ..ajt_common.model_utils import get_model_field_names
+from ..ajt_common.model_utils import gather_all_field_names
 from ..config_view import split_cfg_words
 from ..helpers.consts import CFG_WORD_SEP
 
@@ -108,20 +107,10 @@ class StrokeDisarrayLineEdit(NarrowLineEdit):
         self.setValidator(validator)
 
 
-def relevant_field_names(note_type_name_fuzzy: Optional[str] = None) -> Iterable[str]:
-    """
-    Return an iterable of field names present in note types whose names contain the first parameter.
-    """
-    assert mw
-    for model in mw.col.models.all_names_and_ids():
-        if not note_type_name_fuzzy or note_type_name_fuzzy.lower() in model.name.lower():
-            yield from get_model_field_names(mw.col.models.get(model.id))
-
-
 class FieldNameSelector(EditableSelector):
-    def __init__(self, initial_value: Optional[str] = None, *args) -> None:
-        super().__init__(*args)
+    def __init__(self, initial_value: Optional[str] = None, parent=None) -> None:
+        super().__init__(parent)
         self.clear()
-        self.addItems(dict.fromkeys(relevant_field_names()))
+        self.addItems(dict.fromkeys(gather_all_field_names()))
         if initial_value:
             self.setCurrentText(initial_value)
