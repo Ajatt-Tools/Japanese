@@ -7,6 +7,7 @@ from typing import Optional
 from aqt import mw
 from aqt.qt import *
 
+from ..ajt_common.anki_field_selector import EditableSelector
 from ..ajt_common.model_utils import get_model_field_names
 from ..config_view import split_cfg_words
 from ..helpers.consts import CFG_WORD_SEP
@@ -105,12 +106,6 @@ class StrokeDisarrayLineEdit(NarrowLineEdit):
         rx = QRegularExpression(r"^(\d+ )*\d+$")
         validator = QRegularExpressionValidator(rx)
         self.setValidator(validator)
-
-
-class EditableSelector(QComboBox):
-    def __init__(self, *args) -> None:
-        super().__init__(*args)
-        self.setEditable(True)
 
 
 def relevant_field_names(note_type_name_fuzzy: Optional[str] = None) -> Iterable[str]:
