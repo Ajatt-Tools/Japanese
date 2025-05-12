@@ -138,5 +138,5 @@ def prepare_note_types() -> None:
     mw.col.models.update_dict = wrap(mw.col.models.update_dict, on_model_updated, "before")
 
 
-def init():
+def init() -> None:
     gui_hooks.profile_did_open.append(prepare_note_types)
