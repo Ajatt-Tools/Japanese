@@ -12,8 +12,15 @@ RE_JS_COMMENT = re.compile(r"\s*//.*?\n")
 RE_MULTILINE_JS_COMMENT = re.compile(r"/\*.*?\*/")
 RE_ANY_WHITESPACE = re.compile(r"\s+")
 
-FileVersionTuple = tuple[int, int, int, int]
-UNK_VERSION: FileVersionTuple = 0, 0, 0, 0
+
+class FileVersionTuple(typing.NamedTuple):
+    year: int
+    month: int
+    day: int
+    patch: int
+
+
+UNK_VERSION: FileVersionTuple = FileVersionTuple(0, 0, 0, 0)
 
 
 class VersionedFile(typing.NamedTuple):
@@ -42,8 +49,8 @@ def inline_bundled_js(vf: VersionedFile) -> str:
     return wrap_bundled_js(js_text.strip(), vf.version_as_str())
 
 
-def version_str_to_tuple(version_str: str):
-    return tuple(int(value) for value in version_str.split("."))
+def version_str_to_tuple(version_str: str) -> FileVersionTuple:
+    return FileVersionTuple(*(int(value) for value in version_str.split(".")))
 
 
 def parse_version_str(file_content: str):

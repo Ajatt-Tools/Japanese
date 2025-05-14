@@ -15,6 +15,7 @@ from japanese.note_type.bundled_files import (
     BUNDLED_JS_FILE,
     UNK_VERSION,
     FileVersionTuple,
+    version_str_to_tuple,
 )
 from japanese.note_type.files_in_col_media import FileInCollection
 from japanese.note_type.imports import (
@@ -31,6 +32,11 @@ RE_EXPECTED_FILENAME = re.compile(r"_ajt_japanese_(\d+\.){4}(js|css)")
 
 def test_expected_file_name() -> None:
     assert re.fullmatch(RE_EXPECTED_FILENAME, BUNDLED_CSS_FILE.name_in_col)
+
+
+def test_parse_version() -> None:
+    assert version_str_to_tuple("25.5.15.99") == FileVersionTuple(25, 5, 15, 99)
+    assert version_str_to_tuple("0.0.0.0") == FileVersionTuple(0, 0, 0, 0)
 
 
 @pytest.mark.parametrize(
