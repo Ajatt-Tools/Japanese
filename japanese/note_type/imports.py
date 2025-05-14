@@ -5,7 +5,6 @@ import typing
 from collections.abc import Iterable
 from typing import Optional
 
-
 from ..ajt_common.model_utils import (
     AnkiCardSide,
     AnkiCardTemplateDict,
@@ -62,7 +61,7 @@ def find_js_in_template(html_template: str, cursor_idx: int) -> Optional[Range]:
 
     # Handle newline after the script.
     # In case the script has to be removed from the html template later, it should be removed with the newline.
-    if script_end_idx < len(html_template) and html_template[script_end_idx] == '\n':
+    if script_end_idx < len(html_template) and html_template[script_end_idx] == "\n":
         script_end_idx += 1
 
     return Range(script_start_idx, script_end_idx)
@@ -77,13 +76,12 @@ def find_ajt_japanese_js_imports(html_template: str) -> Iterable[JavaScriptImpor
             return
 
         # collect the entire script
-        script_content = html_template[script.start_idx: script.end_idx]
+        script_content = html_template[script.start_idx : script.end_idx]
 
         # Try to find out if this is the AJT Japanese JS by searching for its version.
         if m := re.search(RE_AJT_JS_VERSION_COMMENT, script_content):
-            version = version_str_to_tuple(m.group("version"))
             yield JavaScriptImport(
-                version=version,
+                version=version_str_to_tuple(m.group("version")),
                 text_content=script_content,
                 start_idx=script.start_idx,
                 end_idx=script.end_idx,
@@ -149,7 +147,7 @@ def ensure_js_in_card_side(html_template: str) -> str:
         else:
             # remove an old or duplicate import.
             # remove once. don't affect other imports.
-            html_template = html_template[:existing_import.start_idx] + html_template[existing_import.end_idx:]
+            html_template = html_template[: existing_import.start_idx] + html_template[existing_import.end_idx :]
     if status_good:
         # Found an existing import, and it is up to date.
         # Possible duplicate imports have been removed.

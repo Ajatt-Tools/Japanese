@@ -122,6 +122,7 @@ NO_JS = """\
 </div>\
 """
 
+
 @pytest.mark.parametrize(
     "template_html, is_modified, modified_html",
     [
