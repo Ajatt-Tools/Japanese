@@ -72,19 +72,19 @@ STYLE_MAP[PitchPatternStyle.javdejong] = {
 
 # u-biq: style used on the u-biq website, https://accent.u-biq.org/
 # This version has color-coded lines.
-STYLE_MAP[PitchPatternStyle.u_biq_color_coded] = {
-    **STYLE_MAP[PitchPatternStyle.javdejong],
+STYLE_MAP[HTMLPitchPatternStyle.u_biq_color_coded] = {
+    **STYLE_MAP[HTMLPitchPatternStyle.javdejong],
     # low
-    XmlTags.low_start: f'<span style="box-shadow: inset 0px -2px 0 0px {PITCH_COLOR_PLACEHOLDER};">',
+    XmlTags.low_start: f'<span style="box-shadow: inset 0px -2px 0 0px {PITCH_COLOR_PLACEHOLDER}; padding: 2px;">',
     XmlTags.low_end: "</span>",
     # low, rise at the end
-    XmlTags.low_rise_start: f'<span style="box-shadow: inset -2px -2px 0 0 {PITCH_COLOR_PLACEHOLDER};">',
+    XmlTags.low_rise_start: f'<span style="box-shadow: inset -2px -2px 0 0 {PITCH_COLOR_PLACEHOLDER}; padding: 2px;">',
     XmlTags.low_rise_end: "</span>",
     # high
-    XmlTags.high_start: f'<span style="box-shadow: inset 0px 2px 0 0px {PITCH_COLOR_PLACEHOLDER};">',
+    XmlTags.high_start: f'<span style="box-shadow: inset 0px 2px 0 0px {PITCH_COLOR_PLACEHOLDER}; padding: 2px; ">',
     XmlTags.high_end: "</span>",
     # high, drop at the end
-    XmlTags.high_drop_start: f'<span style="box-shadow: inset -2px 2px 0 0px {PITCH_COLOR_PLACEHOLDER};">',
+    XmlTags.high_drop_start: f'<span style="box-shadow: inset -2px 2px 0 0px {PITCH_COLOR_PLACEHOLDER};padding: 2px;">',
     XmlTags.high_drop_end: "</span>",
 }
 
