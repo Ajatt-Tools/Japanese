@@ -47,6 +47,10 @@ dependencies = [
 ]
 python = "3.9"
 
+[[tool.hatch.envs.dev.matrix]]
+# https://hatch.pypa.io/latest/tutorials/testing/overview/#testing-projects
+python = ["3.9", ]
+
 [tool.hatch.envs.dev.scripts]
 # run as `hatch run dev:scriptname`
 check = "mypy --install-types --non-interactive {args:japanese tests}"
