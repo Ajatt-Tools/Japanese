@@ -138,7 +138,8 @@ def ensure_js_in_card_side(html_template: str) -> str:
     # Replace legacy import (if present)
     html_template = re.sub(RE_AJT_JS_LEGACY_IMPORT, "", html_template)
     status_good = False
-    for existing_import in find_ajt_japanese_js_imports(html_template):
+    # Iterate in reverse to prevent deleting from the beginning and corrupting other ranges.
+    for existing_import in reversed(tuple(find_ajt_japanese_js_imports(html_template))):
         if status_good is False and existing_import.version >= BUNDLED_JS_FILE.version:
             # The existing version happens to be up to date or newer.
             # This is possible if the template has been updated before

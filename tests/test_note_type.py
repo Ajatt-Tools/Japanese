@@ -116,10 +116,19 @@ def test_css_imports(css_styling: str, is_modified: bool, modified_css: Optional
 
 
 NO_JS = """\
-<!-- empty template -->
+<!-- some template code -->
 <div>
     <span>some html</span>
+    <span>some html</span>
 </div>\
+"""
+
+OLD_VER = """\
+<script>
+    /* AJT Japanese JS 24.7.14.0 */
+    //some old code
+    function z() {}
+</script>\
 """
 
 
@@ -146,20 +155,13 @@ NO_JS = """\
         ),
         (
             # Older version
-            "<script>\n/* AJT Japanese JS 24.7.14.0 */\n//some old code\n</script>\n<!-- after old import -->",
+            f"{OLD_VER}\n<!-- after old import -->",
             True,
             f"<!-- after old import -->\n{BUNDLED_JS_FILE.import_str}",
         ),
         (
             # Older version (but it is formatted)
-            (
-                "<!--whatever-->\n\n"
-                "<script>\n"
-                "    /* AJT Japanese JS 24.7.14.0 */\n"
-                "    //some old code\n"
-                "</script>\n"
-                "<!--whatever-->"
-            ),
+            f"<!--whatever-->\n\n{OLD_VER}\n<!--whatever-->",
             True,
             f"<!--whatever-->\n\n<!--whatever-->\n{BUNDLED_JS_FILE.import_str}",
         ),
@@ -171,19 +173,35 @@ NO_JS = """\
         ),
         (
             # Current version (repeated for some reason)
-            # Remove the duplicate import.
+            # Remove the duplicate imports.
             f"""\
-<!-- template text -->
+<!-- template text 1 -->
 {BUNDLED_JS_FILE.import_str}
-<!-- template text -->
+<!-- template text 2 -->
+{BUNDLED_JS_FILE.import_str}
+<!-- template text 3 -->
 {BUNDLED_JS_FILE.import_str}\
 """,
             True,
             f"""\
-<!-- template text -->
-{BUNDLED_JS_FILE.import_str}
-<!-- template text -->\
+<!-- template text 1 -->
+<!-- template text 2 -->
+<!-- template text 3 -->
+{BUNDLED_JS_FILE.import_str}\
 """,
+        ),
+        (
+            # Current version (repeated for some reason)
+            # Remove the duplicate imports.
+            f"{NO_JS}\n{BUNDLED_JS_FILE.import_str}\n{BUNDLED_JS_FILE.import_str}\n{NO_JS}\n{BUNDLED_JS_FILE.import_str}\n{NO_JS}",
+            True,
+            f"{NO_JS}\n{NO_JS}\n{BUNDLED_JS_FILE.import_str}\n{NO_JS}",
+        ),
+        (
+            # Older version and current version
+            f"{NO_JS}\n{OLD_VER}\n{BUNDLED_JS_FILE.import_str}\n{OLD_VER}\n{NO_JS}",
+            True,
+            f"{NO_JS}\n{BUNDLED_JS_FILE.import_str}\n{NO_JS}",
         ),
         (
             # Newer version
