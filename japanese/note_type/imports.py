@@ -173,7 +173,7 @@ def ensure_js_imported(template: AnkiCardTemplateDict, side: AnkiCardSide) -> bo
 
 
 def is_current_js_ok() -> bool:
-    imports = list(find_ajt_japanese_js_imports(BUNDLED_JS_FILE.import_str))
+    imports = tuple(find_ajt_japanese_js_imports(BUNDLED_JS_FILE.import_str))
     return (
         len(imports) == 1
         and imports[0].version == BUNDLED_JS_FILE.version
