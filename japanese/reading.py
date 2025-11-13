@@ -29,6 +29,8 @@ from .pitch_accents.svg_graphs import SvgPitchGraphMaker
 
 def convert_to_inline_style(txt: str, pitch_color: str, pitch_accent_style: HTMLPitchPatternStyle) -> str:
     """Map style classes to their user-configured inline versions."""
+    if not pitch_color:
+        pitch_color = "currentColor" # fallback
     for k, v in STYLE_MAP[pitch_accent_style].items():
         txt = txt.replace(k, v)
     txt = txt.replace(PITCH_COLOR_PLACEHOLDER, pitch_color)
