@@ -1,6 +1,7 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 import abc
+import pathlib
 import sqlite3
 import typing
 from collections.abc import Sequence
@@ -35,6 +36,9 @@ PITCH_TABLES_SCHEMA_NAME: typing.Final[str] = "pitch"
 
 
 class PitchSqlite3Buddy(Sqlite3BuddyABC, abc.ABC):
+    _db_path: pathlib.Path
+    _con: Optional[sqlite3.Connection]
+
     def prepare_pitch_accents_table(self, is_new_file: bool) -> None:
         """
         Create sqlite3 tables and indexes if needed.

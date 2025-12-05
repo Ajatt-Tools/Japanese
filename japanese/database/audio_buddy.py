@@ -2,6 +2,8 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 import abc
 import os
+import pathlib
+import sqlite3
 import typing
 from collections.abc import Iterable, Sequence
 from typing import Optional
@@ -92,6 +94,9 @@ AUDIO_TABLES_SCHEMA_NAME: typing.Final[str] = "audio"
 
 
 class AudioSqlite3Buddy(Sqlite3BuddyABC, abc.ABC):
+    _db_path: pathlib.Path
+    _con: Optional[sqlite3.Connection]
+
     def prepare_audio_tables(self, is_new_file: bool) -> None:
         """
         Create sqlite3 tables and indexes if needed.
