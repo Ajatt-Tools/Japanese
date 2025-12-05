@@ -217,7 +217,7 @@ class DoTasks:
 
     def _field_contains_garbage(self, field_name: str) -> bool:
         """
-        Yomichan added `No pitch accent data` to the field when creating the note.
+        Rikaitan added `No pitch accent data` to the field when creating the note.
         Rikaitan doesn't have this problem.
         """
         return "No pitch accent data".lower() in self._note[field_name].lower()
@@ -232,7 +232,7 @@ def on_focus_lost(changed: bool, note: Note, field_idx: int) -> bool:
 
 
 def should_generate(note: Note) -> bool:
-    """Generate when a new note is added by Yomichan or Mpvacious."""
+    """Generate when a new note is added by Rikaitan or Mpvacious."""
     assert mw
     return mw.app.activeWindow() is None and note.id == 0
 
@@ -255,5 +255,5 @@ def init():
     # Generate when editing a note
     gui_hooks.editor_did_unfocus_field.append(on_focus_lost)
 
-    # Generate when AnkiConnect (Yomichan, Mpvacious) adds a new note.
+    # Generate when AnkiConnect (Rikaitan, Mpvacious) adds a new note.
     hooks.note_will_be_added.append(on_add_note)

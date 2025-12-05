@@ -16,6 +16,7 @@ class AudioSourceManagerFactory:
     _db_path: Optional[pathlib.Path] = None
 
     def __new__(cls, *args, **kwargs):
+        # Note: create a singleton.
         try:
             obj = cls._instance  # type: ignore
         except AttributeError:
