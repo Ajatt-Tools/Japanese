@@ -30,6 +30,9 @@
     }
 
     function ajt__norm_handakuten(text) {
+        // Replaces '°'(0xb0, degree) with '゚' (0x309a, combining)
+        // chr(176) == chr(0xb0)
+        // https://en.wikipedia.org/wiki/Dakuten_and_handakuten#Glyphs
         return text.replace(/\u{b0}/gu, "\u{309a}");
     }
 
