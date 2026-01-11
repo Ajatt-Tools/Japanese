@@ -11,12 +11,13 @@ from japanese.pitch_accents.entry_to_moras import (
     MoraFlag,
     PitchLevel,
     Quark,
+    SpecialSymbols,
     entry_to_moras,
     html_notation_to_moras,
     mora_flags2class_name,
 )
 
-CIRCLE = "°"
+CIRCLE = SpecialSymbols.nasal_dakuten
 
 
 def filter_by_level(moras, level: PitchLevel) -> Sequence[str]:

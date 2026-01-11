@@ -48,7 +48,11 @@ class Mora:
 class SpecialSymbols:
     nasal_dakuten_esc = "&#176;"  # ° is used in the NHK dictionary before カ, etc.
     nasal_dakuten = html.unescape("&#176;")
+    nasal_dakuten_combining = "゚"
     nakaten = "・"
+
+
+assert SpecialSymbols.nasal_dakuten == "°"
 
 
 class MoraSequence(typing.NamedTuple):
