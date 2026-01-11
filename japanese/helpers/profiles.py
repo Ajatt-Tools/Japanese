@@ -14,6 +14,7 @@ class PitchOutputFormat(enum.Enum):
     html = enum.auto()
     html_and_number = enum.auto()
     svg = enum.auto()
+    json = enum.auto()
 
 
 @enum.unique
