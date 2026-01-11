@@ -85,7 +85,7 @@ def nakaten_separated_katakana_reading(html_notation: str) -> str:
     In some (rare) cases (in the NHK accent dictionary),
     a word consists of multiple words, and the parts are separated with a `・`.
     E.g., 起死回生 = キシ・カイセイ(1+0) or キシ・カイセイ(2+0)
-    The boundaries are lost in the katakana reading, but are retained in the html notation.
+    The boundaries are lost in the katakana reading, but are retained in the HTML notation.
     The information is needed to correctly draw downstep graphs from JS code.
     """
     return re.sub(RE_PITCH_TAG, "", html_notation).replace("°", "゚")
