@@ -86,8 +86,10 @@ def replace_degree_with_dakuten(char: str) -> str:
     U+309A: ◌゚ combining katakana-hiragana semi-voiced sound mark
     https://en.wikipedia.org/wiki/Dakuten_and_handakuten#Glyphs
     """
-    return char.replace(SpecialSymbols.nasal_dakuten, SpecialSymbols.nasal_dakuten_combining).replace(
-        SpecialSymbols.nasal_dakuten_esc, SpecialSymbols.nasal_dakuten_combining
+    return (
+        char.replace(SpecialSymbols.nasal_dakuten, SpecialSymbols.nasal_dakuten_combining)
+        .replace(SpecialSymbols.nasal_dakuten_esc, SpecialSymbols.nasal_dakuten_combining)
+        .replace(SpecialSymbols.nasal_dakuten_non_combining, SpecialSymbols.nasal_dakuten_combining)
     )
 
 

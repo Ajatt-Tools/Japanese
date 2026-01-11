@@ -19,9 +19,16 @@ class HTMLPitchPatternStyle(enum.Enum):
 
 
 class SpecialSymbols:
+    """
+    U+309A: ◌゚ combining katakana-hiragana semi-voiced sound mark
+    U+309C ゜ katakana-hiragana semi-voiced sound mark
+    https://en.wikipedia.org/wiki/Dakuten_and_handakuten#Glyphs
+    """
+
     nasal_dakuten_esc = "&#176;"  # ° is used in the NHK dictionary before カ, etc.
-    nasal_dakuten = html.unescape("&#176;")
-    nasal_dakuten_combining = "゚"
+    nasal_dakuten = html.unescape("&#176;")  # Degree mark: chr(176) == chr(0xb0)
+    nasal_dakuten_non_combining = "゜"  # U+309C (not used in the pitch accent TSV files).
+    nasal_dakuten_combining = "゚"  # U+309A
     nakaten = "・"
 
 
