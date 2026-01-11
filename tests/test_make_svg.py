@@ -77,4 +77,6 @@ def test_make_svg(no_anki_config: NoAnkiConfigView, formatted_entry: FormattedEn
     maker = SvgPitchGraphMaker(options=svg_config)
 
     with open(DATA_DIR / svg_file_name, encoding="utf-8") as f:
-        assert f.read().strip() == maker.make_graph(formatted_entry).strip(), "generated content must match"
+        assert (
+            f.read().strip() == maker.make_graph(formatted_entry).strip()
+        ), f"generated content must match: {DATA_DIR / svg_file_name}"

@@ -2,10 +2,17 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 import dataclasses
 import io
+import json
 import typing
 
-from japanese.pitch_accents.common import replace_degree_with_dakuten
-from japanese.pitch_accents.entry_to_moras import MoraFlag, PitchLevel, Mora, Quark, MoraSequence
+from .common import replace_degree_with_dakuten, FormattedEntry
+from .entry_to_moras import (
+    Mora,
+    MoraFlag,
+    MoraSequence,
+    PitchLevel,
+    Quark, entry_to_moras,
+)
 
 
 class MoraOutputJson(typing.TypedDict):
@@ -47,7 +54,7 @@ def mora_to_dict(mora: MoraCombined) -> MoraOutputJson:
     return {
         "txt": mora.txt,
         "level": mora.level.name,
-        "flags": [flag.name for flag in MoraFlag if flag in mora.flags]
+        "flags": [flag.name for flag in MoraFlag if flag in mora.flags],
     }
 
 
