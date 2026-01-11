@@ -48,10 +48,14 @@ You can change field names or add more source and destination fields in the conf
 ## Installation
 
 Install from [AnkiWeb](https://ankiweb.net/shared/info/1344485230),
-or manually with `git`:
 
-```
-git clone 'https://github.com/Ajatt-Tools/Japanese.git' ~/.local/share/Anki2/addons21/ajt_japanese
+## Contributing
+
+Install manually with `git`:
+
+```bash
+git clone 'https://github.com/Ajatt-Tools/Japanese.git'
+ln -sr Japanese/japanese ~/.local/share/Anki2/addons21/ajt_japanese
 ```
 
 ## Configuration
