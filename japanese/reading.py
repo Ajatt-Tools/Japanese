@@ -1,6 +1,5 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
-import json
 from collections import OrderedDict
 from collections.abc import Sequence
 from typing import Optional
@@ -20,7 +19,6 @@ from .pitch_accents.common import AccentDict, FormattedEntry
 from .pitch_accents.pitch_to_json import (
     MoraSequenceOutputJson,
     make_json_from_entry,
-    mora_sequence_to_dict,
 )
 from .pitch_accents.styles import (
     PITCH_COLOR_PLACEHOLDER,
