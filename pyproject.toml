@@ -44,6 +44,7 @@ dependencies = [
   "pytest",
   "aqt",
   "pyupgrade",
+  "beartype",
 ]
 python = "3.9"
 
