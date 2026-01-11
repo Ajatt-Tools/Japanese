@@ -96,7 +96,7 @@ def bad_fake_tsv():
 
 def test_read_bad_user_tsv_file(bad_fake_tsv) -> None:
     for row, expected in szip(read_user_tsv_file(bad_fake_tsv), bad_fake_tsv):
-        assert [expected, None, None] == list(row)
+        assert [expected, "", ""] == list(row)
 
 
 def test_read_user_tsv_file_from_disk(tmp_user_accents_file) -> None:

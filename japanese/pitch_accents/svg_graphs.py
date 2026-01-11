@@ -40,11 +40,15 @@ class Point(typing.NamedTuple):
     x: float
     y: float
 
-    def shift_by(self, *, x: float = 0, y: float = 0):
-        return Point(x=self.x + x, y=self.y + y)
+    @classmethod
+    def new(cls, x: typing.Union[int, float], y: typing.Union[int, float]):
+        return cls(x=float(x), y=float(y))
 
-    def replace(self, *, x: Optional[float] = None, y: Optional[float] = None):
-        return Point(x=x if x is not None else self.x, y=y if y is not None else self.y)
+    def shift_by(self, *, x: typing.Union[int, float] = 0.0, y: typing.Union[int, float] = 0.0):
+        return Point.new(x=self.x + x, y=self.y + y)
+
+    def replace(self, *, x: typing.Union[int, float, None] = None, y: typing.Union[int, float, None] = None):
+        return Point.new(x=x if x is not None else self.x, y=y if y is not None else self.y)
 
 
 class Line:
@@ -237,7 +241,7 @@ class SvgPitchGraphMaker:
         height_high = opts.size_unit
         height_low = height_high + opts.graph_height
         height_kana = height_low + opts.x_step
-        pos = Point(x=opts.size_unit + opts.graph_horizontal_padding, y=opts.size_unit)
+        pos = Point.new(x=opts.size_unit + opts.graph_horizontal_padding, y=opts.size_unit)
 
         word_circles: list[str] = []
         text_moras: list[str] = []

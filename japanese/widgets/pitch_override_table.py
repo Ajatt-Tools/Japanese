@@ -27,9 +27,16 @@ class PitchAccentTableRow(NamedTuple):
     pitch_numbers: str
 
 
+def fix_none(row_dict: dict[str, str]) -> None:
+    for k,v in row_dict.items():
+        if not v:
+            row_dict[k] = ""
+
+
 def read_user_tsv_file(f: Iterable[str]) -> Iterable[PitchAccentTableRow]:
     table_rows: dict[PitchAccentTableRow, None] = {}
     for row_dict in get_user_tsv_reader(f, field_names=tuple(PitchAccentTableRow.__annotations__)):
+        fix_none(row_dict)
         table_rows[PitchAccentTableRow(**row_dict)] = None
     return table_rows.keys()
 

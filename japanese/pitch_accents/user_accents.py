@@ -77,7 +77,7 @@ def split_pitch_numbers(pitch_nums_as_str: str) -> Iterable[typing.Union[str, in
 
 def formatted_from_tsv_row(row_dict: UserAccDictRawTSVEntry) -> typing.Sequence[FormattedEntry]:
     row_dict["katakana_reading"] = to_katakana(row_dict["katakana_reading"])
-    return dict.fromkeys(
+    return tuple(dict.fromkeys(
         FormattedEntry(
             raw_headword=row_dict["headword"],
             katakana_reading=row_dict["katakana_reading"],
@@ -85,7 +85,7 @@ def formatted_from_tsv_row(row_dict: UserAccDictRawTSVEntry) -> typing.Sequence[
             pitch_number=str(pitch_num),
         )
         for pitch_num in split_pitch_numbers(row_dict["pitch_numbers"])
-    )
+    ))
 
 
 def iter_user_formatted_rows(tsv_file_path: pathlib.Path) -> typing.Iterable[AccDictRawTSVEntry]:
