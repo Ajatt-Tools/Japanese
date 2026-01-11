@@ -10,7 +10,7 @@ from collections.abc import Iterable
 from typing import NamedTuple
 
 from .consts import NO_ACCENT
-from .entry_to_moras import SpecialSymbols
+from .styles import SpecialSymbols
 
 Stored = typing.TypeVar("Stored")
 

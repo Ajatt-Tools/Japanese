@@ -3,14 +3,13 @@
 
 import dataclasses
 import enum
-import html
 import typing
 
 from ..mecab_controller import kana_to_moras
 from .basic_types import PitchType, pitch_type_from_pitch_num
 from .common import FormattedEntry, split_html_notation
 from .consts import SMALL_KANA_CHARS
-from .styles import XmlTags
+from .styles import SpecialSymbols, XmlTags
 
 
 @enum.unique
@@ -43,16 +42,6 @@ class Mora:
             assert not self.txt
             return True
         return False
-
-
-class SpecialSymbols:
-    nasal_dakuten_esc = "&#176;"  # ° is used in the NHK dictionary before カ, etc.
-    nasal_dakuten = html.unescape("&#176;")
-    nasal_dakuten_combining = "゚"
-    nakaten = "・"
-
-
-assert SpecialSymbols.nasal_dakuten == "°"
 
 
 class MoraSequence(typing.NamedTuple):

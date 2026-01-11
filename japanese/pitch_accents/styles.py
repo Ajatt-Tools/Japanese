@@ -2,6 +2,7 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import enum
+import html
 
 
 @enum.unique
@@ -15,6 +16,16 @@ class HTMLPitchPatternStyle(enum.Enum):
     javdejong = enum.auto()
     kanjium = enum.auto()
     none = enum.auto()
+
+
+class SpecialSymbols:
+    nasal_dakuten_esc = "&#176;"  # ° is used in the NHK dictionary before カ, etc.
+    nasal_dakuten = html.unescape("&#176;")
+    nasal_dakuten_combining = "゚"
+    nakaten = "・"
+
+
+assert SpecialSymbols.nasal_dakuten == "°"
 
 
 class XmlTags:

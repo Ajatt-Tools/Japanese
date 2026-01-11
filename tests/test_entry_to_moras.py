@@ -11,11 +11,11 @@ from japanese.pitch_accents.entry_to_moras import (
     MoraFlag,
     PitchLevel,
     Quark,
-    SpecialSymbols,
     entry_to_moras,
     html_notation_to_moras,
     mora_flags2class_name,
 )
+from japanese.pitch_accents.styles import SpecialSymbols
 
 CIRCLE = SpecialSymbols.nasal_dakuten
 
