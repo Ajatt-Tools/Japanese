@@ -20,7 +20,7 @@ TEST_ENTRIES = (
     FormattedEntry(
         "吹奏楽",
         "スイソウガク",
-        "<low_rise>ス</low_rise><high_drop>イソ</high_drop><low>ーカ<nasal>&#176;</nasal>ク</low>",
+        "<low_rise>ス</low_rise><high_drop>イソ</high_drop><low>ー<nasal>カ<handakuten>&#176;</handakuten></nasal>ク</low>",
         "3",
     ),
     FormattedEntry(
