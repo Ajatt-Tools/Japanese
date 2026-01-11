@@ -59,3 +59,10 @@ def mora_sequence_to_dict(seq: MoraSequence) -> MoraSequenceOutputJson:
         "pitch_type": seq.pitch_type.name,
         "moras": [mora_to_dict(combine_mora(mora)) for mora in seq.moras if not mora.is_trailing()],
     }
+
+
+def make_json_from_entry(entry: FormattedEntry) -> str:
+    return json.dumps(
+        mora_sequence_to_dict(entry_to_moras(entry, enable_trailing_mora=False)),
+        ensure_ascii=False,
+    )
