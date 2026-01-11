@@ -1,5 +1,6 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
+import json
 from collections import OrderedDict
 from collections.abc import Sequence
 from typing import Optional
@@ -16,7 +17,11 @@ from .pitch_accents.acc_dict_mgr_2 import AccentDictManager2
 from .pitch_accents.accent_lookup import AccentLookup
 from .pitch_accents.basic_types import count_moras, pitch_type_from_pitch_num
 from .pitch_accents.common import AccentDict, FormattedEntry
-from .pitch_accents.pitch_to_json import make_json_from_entry
+from .pitch_accents.pitch_to_json import (
+    MoraSequenceOutputJson,
+    make_json_from_entry,
+    mora_sequence_to_dict,
+)
 from .pitch_accents.styles import (
     PITCH_COLOR_PLACEHOLDER,
     STYLE_MAP,
@@ -64,8 +69,6 @@ def get_notation(entry: FormattedEntry, mode: PitchOutputFormat) -> str:
         return f"{update_html(entry, pitch_accent_style=cfg.pitch_accent.html_style)} {entry.pitch_number_html}"
     elif mode == PitchOutputFormat.svg:
         return svg_graph_maker.make_graph(entry)
-    elif mode == PitchOutputFormat.json:
-        return make_json_from_entry(entry)
     raise RuntimeError("Unreachable.")
 
 
@@ -76,14 +79,20 @@ def sort_entries(entries: Sequence[FormattedEntry]) -> Sequence[FormattedEntry]:
 def entries_to_html(
     entries: Sequence[FormattedEntry],
     output_format: PitchOutputFormat,
-    max_results: Optional[int],
+    max_results: int,
 ) -> Sequence[str]:
     """
     Convert entries to HTML, sort and remove duplicates.
     """
-    readings = tuple(dict.fromkeys(get_notation(entry, output_format) for entry in sort_entries(entries)))
-    max_results = max_results or cfg.pitch_accent.maximum_results
-    return readings[:max_results]
+    return tuple(dict.fromkeys(get_notation(entry, output_format) for entry in sort_entries(entries)))[:max_results]
+
+
+def entries_to_json(pronunciations: AccentDict, max_results: int) -> str:
+    result: dict[str, MoraSequenceOutputJson] = OrderedDict()
+    for word, entries in pronunciations.items():
+        for entry in sort_entries(entries):
+            result[update_html(entry, pitch_accent_style=cfg.pitch_accent.html_style)] = make_json_from_entry(entry)
+    return json.dumps(tuple(result.values())[:max_results], ensure_ascii=False)
 
 
 def format_pronunciations(
@@ -94,6 +103,11 @@ def format_pronunciations(
     expr_sep: Optional[str] = None,
     max_results: Optional[int] = None,
 ) -> str:
+    max_results = max_results or cfg.pitch_accent.maximum_results
+
+    if output_format == PitchOutputFormat.json:
+        return entries_to_json(pronunciations, max_results=max_results)
+
     ordered_dict = OrderedDict()
     for word, entries in pronunciations.items():
         if entries_html := entries_to_html(entries, output_format, max_results=max_results):

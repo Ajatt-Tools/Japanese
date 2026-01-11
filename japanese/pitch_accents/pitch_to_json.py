@@ -5,13 +5,14 @@ import io
 import json
 import typing
 
-from .common import replace_degree_with_dakuten, FormattedEntry
+from .common import FormattedEntry, replace_degree_with_dakuten
 from .entry_to_moras import (
     Mora,
     MoraFlag,
     MoraSequence,
     PitchLevel,
-    Quark, entry_to_moras,
+    Quark,
+    entry_to_moras,
 )
 
 
@@ -68,8 +69,5 @@ def mora_sequence_to_dict(seq: MoraSequence) -> MoraSequenceOutputJson:
     }
 
 
-def make_json_from_entry(entry: FormattedEntry) -> str:
-    return json.dumps(
-        mora_sequence_to_dict(entry_to_moras(entry, enable_trailing_mora=False)),
-        ensure_ascii=False,
-    )
+def make_json_from_entry(entry: FormattedEntry) -> MoraSequenceOutputJson:
+    return mora_sequence_to_dict(entry_to_moras(entry, enable_trailing_mora=False))
