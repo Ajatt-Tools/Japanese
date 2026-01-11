@@ -2,6 +2,7 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import functools
+import json
 from collections.abc import Iterable
 from typing import Optional
 
@@ -32,7 +33,7 @@ from .helpers.profiles import (
     TaskCaller,
 )
 from .pitch_accents.accent_lookup import AccentLookup
-from .reading import fgen, format_pronunciations, lookup
+from .reading import fgen, format_pronunciations, lookup, pronunciations_to_json
 
 
 def note_type_matches(note_type: AnkiNoteTypeDict, profile: Profile) -> bool:
@@ -100,11 +101,19 @@ class AddPitch(DoTask, task_type=ProfilePitch):
         self._lookup = lookup.with_new_buddy(db)
 
     def _generate_text(self, src_text: str) -> str:
+        output_format = PitchOutputFormat[self._task.output_format]
+        pronunciations = self._lookup.get_pronunciations(src_text, use_mecab=self._task.split_morphemes)
+        max_results = cfg.pitch_accent.maximum_results
+
+        if output_format == PitchOutputFormat.json:
+            return json.dumps(pronunciations_to_json(pronunciations, max_results=max_results), ensure_ascii=False)
+
         return format_pronunciations(
-            pronunciations=self._lookup.get_pronunciations(src_text, use_mecab=self._task.split_morphemes),
-            output_format=PitchOutputFormat[self._task.output_format],
+            pronunciations=pronunciations,
+            output_format=output_format,
             sep_single=cfg.pitch_accent.reading_separator,
             sep_multi=cfg.pitch_accent.word_separator,
+            max_results=max_results,
         )
 
 

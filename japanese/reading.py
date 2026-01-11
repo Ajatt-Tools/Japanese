@@ -87,28 +87,25 @@ def entries_to_html(
     return tuple(dict.fromkeys(get_notation(entry, output_format) for entry in sort_entries(entries)))[:max_results]
 
 
-def entries_to_json(pronunciations: AccentDict, max_results: int) -> str:
+def pronunciations_to_json(pronunciations: AccentDict, *, max_results: int) -> Sequence[MoraSequenceOutputJson]:
     result: dict[str, MoraSequenceOutputJson] = OrderedDict()
     for word, entries in pronunciations.items():
         for entry in sort_entries(entries):
             result[update_html(entry, pitch_accent_style=cfg.pitch_accent.html_style)] = make_json_from_entry(entry)
-    return json.dumps(tuple(result.values())[:max_results], ensure_ascii=False)
+    return tuple(result.values())[:max_results]
 
 
 def format_pronunciations(
     pronunciations: AccentDict,
+    *,
     output_format: PitchOutputFormat = PitchOutputFormat.html,
+    max_results: int,
     sep_single: str = "・",
     sep_multi: str = "、",
     expr_sep: Optional[str] = None,
-    max_results: Optional[int] = None,
 ) -> str:
-    max_results = max_results or cfg.pitch_accent.maximum_results
 
-    if output_format == PitchOutputFormat.json:
-        return entries_to_json(pronunciations, max_results=max_results)
-
-    ordered_dict = OrderedDict()
+    ordered_dict: dict[str, str] = OrderedDict()
     for word, entries in pronunciations.items():
         if entries_html := entries_to_html(entries, output_format, max_results=max_results):
             ordered_dict[word] = sep_single.join(entries_html)
