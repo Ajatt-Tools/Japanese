@@ -144,8 +144,8 @@ class SearchResultsTable(QTableWidget):
             for column, field in row_map.items():
                 self.setItem(row_n, column.value, item := QTableWidgetItem(field))
                 item.setFlags(item.flags() ^ Qt.ItemFlag.ItemIsEditable)
-            qconnect(pb.clicked, functools.partial(self.play_requested.emit, file))  # type:ignore
-            qconnect(ob.clicked, functools.partial(self.open_requested.emit, file))  # type:ignore
+            qconnect(pb.clicked, functools.partial(self.play_requested.emit, file))  # type: ignore
+            qconnect(ob.clicked, functools.partial(self.open_requested.emit, file))  # type: ignore
         # remember results
         self._last_results.extend(results)
 
