@@ -67,6 +67,7 @@ DETACH_WORDS: Final[frozenset[str]] = frozenset((
     "として",
     "よ",
     "を",
+    "わ", # ドカ食いすると太りますわよ
 ))
 DETACH_HEADWORDS: Final[frozenset[str]] = frozenset((
     "おいしい",
