@@ -58,28 +58,5 @@ def user_files_dir() -> pathlib.Path:
     raise RuntimeError("couldn't find user_files directory")
 
 
-def open_file(path: str) -> None:
-    """
-    Select file in lf, the preferred terminal file manager, or open it with xdg-open.
-    """
-    from aqt.qt import QDesktopServices, QUrl
-
-    if (terminal := os.getenv("TERMINAL")) and (lf := (os.getenv("FILE") or find_executable("lf"))):
-        subprocess.Popen(
-            [terminal, "-e", lf, path],
-            shell=False,
-            start_new_session=True,
-        )
-    elif opener := find_executable("xdg-open"):
-        subprocess.Popen(
-            [opener, f"file://{path}"],
-            shell=False,
-            start_new_session=True,
-        )
-    else:
-        with no_bundled_libs():
-            QDesktopServices.openUrl(QUrl(f"file://{path}"))
-
-
 def file_exists(file_path: str) -> bool:
     return bool(file_path and os.path.isfile(file_path) and os.stat(file_path).st_size > 0)
