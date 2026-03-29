@@ -75,19 +75,19 @@ def find_js_in_template(html_template: str, cursor_idx: int) -> Optional[Range]:
     )
 
 
-def find_ajt_japanese_js_imports(html_template: str) -> Iterable[CodeBlockInTemplate]:
+def find_ajt_japanese_code_block_imports(template_code: str, *, start_token: str, end_token: str, re_version_comment: re.Pattern) -> Iterable[CodeBlockInTemplate]:
     idx = 0
-    while idx < len(html_template):
+    while idx < len(template_code):
         # try to find a script: <script>...</script>
-        script = find_js_in_template(html_template, idx)
+        script = find_block_in_text(template_code, idx, start_token=start_token, end_token=end_token)
         if script is None:
             return
 
         # collect the entire script
-        script_content = html_template[script.start_idx : script.end_idx]
+        script_content = template_code[script.start_idx: script.end_idx]
 
         # Try to find out if this is the AJT Japanese JS by searching for its version.
-        if m := re.search(RE_AJT_JS_VERSION_COMMENT, script_content):
+        if m := re.search(re_version_comment, script_content):
             yield CodeBlockInTemplate(
                 version=version_str_to_tuple(m.group("version")),
                 text_content=script_content,
@@ -97,6 +97,15 @@ def find_ajt_japanese_js_imports(html_template: str) -> Iterable[CodeBlockInTemp
 
         # move cursor behind the closing tag.
         idx = script.end_idx
+
+
+def find_ajt_japanese_js_imports(html_template: str) -> Iterable[CodeBlockInTemplate]:
+    return find_ajt_japanese_code_block_imports(
+        html_template,
+        start_token="<script>",
+        end_token="</script>",
+        re_version_comment=RE_AJT_JS_VERSION_COMMENT,
+    )
 
 
 def ensure_js_in_card_side(html_template: str) -> str:
