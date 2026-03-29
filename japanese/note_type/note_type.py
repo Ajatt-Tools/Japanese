@@ -150,9 +150,6 @@ def on_model_updated(notetype: AnkiNoteTypeDict, skip_checks: bool = False) -> N
 
 
 def prepare_note_types() -> None:
-    if not cfg.insert_scripts_into_templates:
-        # Global switch (in Advanced settings, not shown in the GUI settings.)
-        return
     if not (models := collect_all_relevant_models()):
         return
     if any(model.is_relevant for model in models):
