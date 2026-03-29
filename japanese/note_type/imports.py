@@ -65,7 +65,7 @@ def find_js_in_template(html_template: str, cursor_idx: int) -> Optional[Range]:
     script_end_idx = script_end_idx + len(script_end_token)
 
     # Handle newline after the script.
-    # In case the script has to be removed from the html template later, it should be removed with the newline.
+    # In case the script has to be removed from the HTML template later, it should be removed with the newline.
     if script_end_idx < len(html_template) and html_template[script_end_idx] == "\n":
         script_end_idx += 1
 
