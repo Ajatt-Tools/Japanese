@@ -174,7 +174,7 @@ def ensure_js_in_card_side(html_template: str) -> str:
         # Found an existing import, and it is up to date.
         # Possible duplicate imports have been removed.
         return html_template.strip()
-    # The JS was not imported before or the import was old and got removed.
+    # The JavaScript was not imported before or the import was old and got removed.
     # Append the current JS import.
     html_template = f"{html_template.strip()}\n{BUNDLED_JS_FILE.import_str.strip()}"
     return html_template

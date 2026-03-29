@@ -28,7 +28,7 @@ class PitchAccentTableRow(NamedTuple):
 
 
 def fix_none(row_dict: dict[str, str]) -> None:
-    for k,v in row_dict.items():
+    for k, v in row_dict.items():
         if not v:
             row_dict[k] = ""
 
