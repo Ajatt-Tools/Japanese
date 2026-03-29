@@ -275,6 +275,10 @@ class FuriganaSettingsForm(MultiColumnSettingsForm):
 
     def _add_tooltips(self) -> None:
         super()._add_tooltips()
+        self._widgets.hiragana_in_popups.setToolTip(
+            "Use hiragana to print text inside popups.\n"
+            "Only applies when \"Color code pitch\" is enabled."
+        )
         self._widgets.color_code_kifuku.setToolTip(
             "Non-heiban verbs and i-adjectives are sometimes referred to as Kifuku.\n"
             "This setting allows painting them with a unique color."
