@@ -22,8 +22,10 @@ from japanese.note_type.imports import (
     CHARSET_RULE,
     ensure_css_imports,
     ensure_js_imports,
+    find_block_in_text,
     find_existing_css_version,
     is_current_js_ok,
+    Range,
 )
 from japanese.note_type.types import ChangeImportsAction
 
@@ -306,6 +308,45 @@ def test_js_imports(
 def test_file_in_collection(file_name: str, expected_ver: FileVersionTuple) -> None:
     # all files start with '_ajt_japanese'
     assert FileInCollection.new(file_name).version == expected_ver
+
+
+@pytest.mark.parametrize(
+    "text, cursor_idx, start_token, end_token, expected",
+    [
+        # Basic block found
+        ("abc<script>content</script>def", 0, "<script>", "</script>", Range(3, 27)),
+        # Block with newline after end token
+        ("<script>content</script>\n", 0, "<script>", "</script>", Range(0, 25)),
+        # Start token not found
+        ("no block here", 0, "<script>", "</script>", None),
+        # End token not found
+        ("<script>content", 0, "<script>", "</script>", None),
+        # Cursor after start token, should not find
+        ("abc<script>content</script>def", 10, "<script>", "</script>", None),
+        # Multiple blocks, find first
+        ("<script>first</script><script>second</script>", 0, "<script>", "</script>", Range(0, 22)),
+        # Cursor at second block
+        ("<script>first</script><script>second</script>", 22, "<script>", "</script>", Range(22, 45)),
+        # Empty text
+        ("", 0, "<script>", "</script>", None),
+        # Tokens that are substrings
+        ("aaabbbccc", 0, "aa", "cc", Range(0, 8)),
+        # Verify newline inclusion only when immediately after end token
+        ("<script>content</script>extra", 0, "<script>", "</script>", Range(0, 24)),
+        ("<script>content</script>\nextra", 0, "<script>", "</script>", Range(0, 25)),
+        # Edge case: multiple newlines after end token, only first included
+        ("<script>content</script>\n\n", 0, "<script>", "</script>", Range(0, 25)),
+    ],
+)
+def test_find_block_in_text(
+    text: str,
+    cursor_idx: int,
+    start_token: str,
+    end_token: str,
+    expected: Optional[Range],
+) -> None:
+    result = find_block_in_text(text, cursor_idx, start_token=start_token, end_token=end_token)
+    assert result == expected
 
 
 def test_is_bundled_ok() -> None:
