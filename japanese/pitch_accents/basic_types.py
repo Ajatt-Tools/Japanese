@@ -6,6 +6,7 @@ import enum
 from collections.abc import MutableSequence, Sequence
 from typing import NamedTuple
 
+from ..mecab_controller import to_hiragana
 from ..mecab_controller.basic_types import MecabParsedToken, PartOfSpeech
 from .common import (
     FormattedEntry,
@@ -123,7 +124,7 @@ class PitchAccentEntry(NamedTuple):
     def has_accent(self) -> bool:
         return bool(self.pitches and any(pitch.type != PitchType.unknown for pitch in self.pitches))
 
-    def describe_pitches(self) -> str:
+    def describe_pitches(self, use_hiragana: bool = False) -> str:
         """
         Returns reading and its pitch accents, separated by a colon.
         Examples:
@@ -131,11 +132,11 @@ class PitchAccentEntry(NamedTuple):
             メイワク:atamadaka
             キシ・カイセイ:nakadaka-2,heiban (the first part of the word is 2, the second part is 0)
         """
-        return (
-            self.katakana_reading_sep
-            + SEP_READING_PITCH
-            + SEP_PITCH_TYPES.join(pitch.describe() for pitch in self.pitches)
-        )
+        if use_hiragana:
+            reading = to_hiragana(self.katakana_reading_sep)
+        else:
+            reading = self.katakana_reading_sep
+        return reading + SEP_READING_PITCH + SEP_PITCH_TYPES.join(pitch.describe() for pitch in self.pitches)
 
     @classmethod
     def from_formatted(cls, entry: FormattedEntry, part_of_speech: PartOfSpeech) -> "PitchAccentEntry":
@@ -166,14 +167,19 @@ class AccDbParsedToken(MecabParsedToken):
     # Attached tokens are stored in this list to apply pitch color-code to them.
     attached_tokens: MutableSequence[str] = dataclasses.field(default_factory=list)
 
-    def describe_pitches(self, maximum_pitch_accents: int = 99) -> str:
+    def describe_pitches(self, maximum_pitch_accents: int = 99, use_hiragana: bool = False) -> str:
         """
         Returns readings in this format: reading1:pitch_type reading2:pitch_type
+        Args:
+            maximum_pitch_accents: Limit number of pitches to print.
+            use_hiragana: Print text in hiragana.
         Examples:
             コッキョウ:heiban クニザカイ:nakadaka-3 (one word has two different readings, with their accents listed)
             マンビキ:heiban マンビキ:odaka (one word has two possible accents)
         """
-        return SEP_PITCH_GROUP.join(pitch.describe_pitches() for pitch in self.headword_accents[:maximum_pitch_accents])
+        return SEP_PITCH_GROUP.join(
+            pitch.describe_pitches(use_hiragana) for pitch in self.headword_accents[:maximum_pitch_accents]
+        )
 
     def has_pitch(self) -> bool:
         return bool(self.headword_accents and all(token.has_accent() for token in self.headword_accents))

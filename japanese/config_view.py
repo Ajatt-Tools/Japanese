@@ -88,6 +88,10 @@ class FuriganaConfigView(PitchAndFuriganaCommon):
     def color_code_kifuku(self) -> bool:
         return bool(self["color_code_kifuku"])
 
+    @property
+    def hiragana_in_popups(self) -> bool:
+        return bool(self["hiragana_in_popups"])
+
 
 @enum.unique
 class LookupDialogPitchOutputFormat(enum.Enum):

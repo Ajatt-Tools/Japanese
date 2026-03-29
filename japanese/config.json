@@ -70,7 +70,8 @@
     "mecab_only": "母,先生,弟,空,猫,お前,女性,体,男,首,女,彼,顔,お,木,頭,僕,行く,私,放る",
     "maximum_results": 3,
     "maximum_pitch_accents": 3,
-    "color_code_kifuku": false
+    "color_code_kifuku": false,
+    "hiragana_in_popups": false
   },
   "pitch_color_codes": {
     "heiban": "#3366CC",
