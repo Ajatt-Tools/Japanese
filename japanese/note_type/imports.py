@@ -42,12 +42,9 @@ class Range(typing.NamedTuple):
     end_idx: int
 
 
-def find_js_in_template(html_template: str, cursor_idx: int) -> Optional[Range]:
-    script_start_token = "<script>"
-    script_end_token = "</script>"
-
+def find_block_in_text(text: str, cursor_idx: int, *, start_token: str, end_token: str) -> Optional[Range]:
     # try to find an opening script tag
-    script_start_idx = html_template.find(script_start_token, cursor_idx)
+    script_start_idx = text.find(start_token, cursor_idx)
     if script_start_idx < 0:
         return None
 
@@ -55,21 +52,30 @@ def find_js_in_template(html_template: str, cursor_idx: int) -> Optional[Range]:
     # <script>xxx
     #         ^
     # try to find a closing script tag
-    script_end_idx = html_template.find(script_end_token, script_start_idx + len(script_start_token))
+    script_end_idx = text.find(end_token, script_start_idx + len(start_token))
     if script_end_idx < 0:
         return None
 
     # move cursor behind the closing tag.
     # </script>xxx
     #          ^
-    script_end_idx = script_end_idx + len(script_end_token)
+    script_end_idx = script_end_idx + len(end_token)
 
     # Handle newline after the script.
     # In case the script has to be removed from the HTML template later, it should be removed with the newline.
-    if script_end_idx < len(html_template) and html_template[script_end_idx] == "\n":
+    if script_end_idx < len(text) and text[script_end_idx] == "\n":
         script_end_idx += 1
 
     return Range(script_start_idx, script_end_idx)
+
+
+def find_js_in_template(html_template: str, cursor_idx: int) -> Optional[Range]:
+    return find_block_in_text(
+        html_template,
+        cursor_idx,
+        start_token="<script>",
+        end_token="</script>"
+    )
 
 
 def find_ajt_japanese_js_imports(html_template: str) -> Iterable[JavaScriptImport]:
