@@ -20,7 +20,8 @@ from ..helpers.profiles import ProfileFurigana
 from ..tasks import note_type_matches
 from .bundled_files import BUNDLED_CSS_FILE, BundledCSSFile, get_file_version
 from .files_in_col_media import FileInCollection, find_ajt_scripts_in_collection
-from .imports import ensure_css_imports, ensure_js_imports
+from .imports import ensure_js_imports
+from .css_imports import ensure_css_imports
 from .types import ChangeImportsAction, RelevantModelSearchResult
 
 

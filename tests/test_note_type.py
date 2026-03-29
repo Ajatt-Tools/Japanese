@@ -19,14 +19,12 @@ from japanese.note_type.bundled_files import (
 )
 from japanese.note_type.files_in_col_media import FileInCollection
 from japanese.note_type.imports import (
-    CHARSET_RULE,
-    ensure_css_imports,
     ensure_js_imports,
     find_block_in_text,
-    find_existing_css_version,
     is_current_js_ok,
     Range,
 )
+from japanese.note_type.css_imports import CHARSET_RULE, find_existing_css_version, ensure_css_imports
 from japanese.note_type.types import ChangeImportsAction
 
 RE_EXPECTED_FILENAME = re.compile(r"_ajt_japanese_(\d+\.){4}(js|css)")
