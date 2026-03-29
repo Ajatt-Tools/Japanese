@@ -43,30 +43,30 @@ class Range(typing.NamedTuple):
 
 
 def find_block_in_text(text: str, cursor_idx: int, *, start_token: str, end_token: str) -> Optional[Range]:
-    # try to find an opening script tag
-    script_start_idx = text.find(start_token, cursor_idx)
-    if script_start_idx < 0:
+    # try to find the start token (e.g. an opening script tag)
+    block_start_idx = text.find(start_token, cursor_idx)
+    if block_start_idx < 0:
         return None
 
-    # move cursor behind the opening tag.
+    # move cursor behind the start token (e.g. an opening script tag).
     # <script>xxx
     #         ^
-    # try to find a closing script tag
-    script_end_idx = text.find(end_token, script_start_idx + len(start_token))
-    if script_end_idx < 0:
+    # try to find the end token
+    block_end_idx = text.find(end_token, block_start_idx + len(start_token))
+    if block_end_idx < 0:
         return None
 
-    # move cursor behind the closing tag.
+    # move cursor behind the end token (e.g. a closing script tag).
     # </script>xxx
     #          ^
-    script_end_idx = script_end_idx + len(end_token)
+    block_end_idx = block_end_idx + len(end_token)
 
-    # Handle newline after the script.
-    # In case the script has to be removed from the HTML template later, it should be removed with the newline.
-    if script_end_idx < len(text) and text[script_end_idx] == "\n":
-        script_end_idx += 1
+    # Handle newline after the block.
+    # In case the block has to be removed from the HTML template later, it should be removed with the newline.
+    if block_end_idx < len(text) and text[block_end_idx] == "\n":
+        block_end_idx += 1
 
-    return Range(script_start_idx, script_end_idx)
+    return Range(block_start_idx, block_end_idx)
 
 
 def find_js_in_template(html_template: str, cursor_idx: int) -> Optional[Range]:
