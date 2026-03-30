@@ -6,8 +6,14 @@ import re
 import typing
 
 from ..helpers.consts import ADDON_NAME
-from .consts import AJT_JAPANESE_CSS_PATH, AJT_JAPANESE_JS_PATH, JS_SCRIPT_START, JS_SCRIPT_END, CSS_START_TOKEN, \
-    CSS_END_TOKEN
+from .consts import (
+    AJT_JAPANESE_CSS_PATH,
+    AJT_JAPANESE_JS_PATH,
+    CSS_END_TOKEN,
+    CSS_START_TOKEN,
+    JS_SCRIPT_END,
+    JS_SCRIPT_START,
+)
 
 RE_VERSION_STR = re.compile(r"AJT Japanese (?P<type>JS|CSS) (?P<version>\d+\.\d+\.\d+\.\d+)\n")
 RE_JS_COMMENT = re.compile(r"\s*//.*?\n")

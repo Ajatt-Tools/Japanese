@@ -9,8 +9,6 @@ from anki.hooks import wrap
 from aqt import gui_hooks, mw
 from aqt.operations import CollectionOp
 
-from .bundled_files import BUNDLED_CSS_FILE
-from .imports import ensure_css_imports, ensure_js_imports
 from ..ajt_common.model_utils import (
     AnkiCardSide,
     AnkiNoteTypeDict,
@@ -20,7 +18,9 @@ from ..config_view import config_view as cfg
 from ..helpers.consts import ADDON_NAME
 from ..helpers.profiles import ProfileFurigana
 from ..tasks import note_type_matches
+from .bundled_files import BUNDLED_CSS_FILE
 from .files_in_col_media import FileInCollection, find_ajt_scripts_in_collection
+from .imports import ensure_css_imports, ensure_js_imports
 from .types import ChangeImportsAction, RelevantModelSearchResult
 
 

@@ -5,11 +5,11 @@ import typing
 from collections.abc import Iterable
 from typing import Optional
 
-from japanese.ajt_common.model_utils import AnkiNoteTypeDict
-from japanese.note_type.types import ChangeImportsAction
-from .consts import JS_SCRIPT_START, JS_SCRIPT_END, CSS_START_TOKEN, CSS_END_TOKEN
-
-from ..ajt_common.model_utils import AnkiCardSide, AnkiCardTemplateDict
+from ..ajt_common.model_utils import (
+    AnkiCardSide,
+    AnkiCardTemplateDict,
+    AnkiNoteTypeDict,
+)
 from .bundled_files import (
     BUNDLED_CSS_FILE,
     BUNDLED_JS_FILE,
@@ -17,6 +17,8 @@ from .bundled_files import (
     FileVersionTuple,
     version_str_to_tuple,
 )
+from .consts import CSS_END_TOKEN, CSS_START_TOKEN, JS_SCRIPT_END, JS_SCRIPT_START
+from .types import ChangeImportsAction
 
 
 class CodeBlockInTemplate(typing.NamedTuple):
