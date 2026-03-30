@@ -139,9 +139,6 @@ class BundledCSSFile(BundledCodeFile):
             name_in_col=name_in_col,  # legacy
         )
 
-    def version_str(self) -> str:
-        return ".".join(map(str, self.version))
-
 
 BUNDLED_CSS_FILE = BundledCSSFile.new(AJT_JAPANESE_CSS_PATH)
 BUNDLED_JS_FILE = BundledJSFile.new(AJT_JAPANESE_JS_PATH)
