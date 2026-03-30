@@ -11,15 +11,34 @@ from japanese.ajt_common.model_utils import (
     AnkiNoteTypeDict,
 )
 from japanese.note_type.bundled_files import (
+    BUNDLED_CSS_FILE,
+    BUNDLED_JS_FILE,
     UNK_VERSION,
     FileVersionTuple,
+    VersionedFile,
+    inline_bundled_css,
+    inline_bundled_js,
     version_str_to_tuple,
+    wrap_bundled_css,
+    wrap_bundled_js,
 )
-
+from japanese.note_type.consts import (
+    CSS_END_TOKEN,
+    CSS_START_TOKEN,
+    JS_SCRIPT_END,
+    JS_SCRIPT_START,
+)
 from japanese.note_type.files_in_col_media import FileInCollection
-from japanese.note_type.imports import Range, find_block_in_text, CHARSET_RULE, ensure_css_imports, ensure_js_imports, \
-    is_current_code_import_ok, JSImportManager, CSSImportManager
-from japanese.note_type.bundled_files import BUNDLED_CSS_FILE, BUNDLED_JS_FILE
+from japanese.note_type.imports import (
+    CHARSET_RULE,
+    CSSImportManager,
+    JSImportManager,
+    Range,
+    ensure_css_imports,
+    ensure_js_imports,
+    find_block_in_text,
+    is_current_code_import_ok,
+)
 from japanese.note_type.types import ChangeImportsAction
 
 RE_EXPECTED_FILENAME = re.compile(r"_ajt_japanese_(\d+\.){4}(js|css)")
@@ -316,3 +335,143 @@ def test_find_block_in_text(
 def test_is_bundled_ok() -> None:
     assert is_current_code_import_ok(JSImportManager())
     assert is_current_code_import_ok(CSSImportManager())
+
+
+def test_wrap_bundled_css_structure() -> None:
+    """Verify wrap_bundled_css produces correctly delimited output."""
+    result = wrap_bundled_css("body { color: red; }", "1.2.3.4")
+    assert result.startswith(CSS_START_TOKEN)
+    assert result.endswith(CSS_END_TOKEN)
+    assert "/* AJT Japanese CSS 1.2.3.4 */" in result
+    assert "body { color: red; }" in result
+
+
+def test_wrap_bundled_js_structure() -> None:
+    """Verify wrap_bundled_js produces correctly delimited output."""
+    result = wrap_bundled_js("console.log('hi');", "5.6.7.8")
+    assert result.startswith(JS_SCRIPT_START)
+    assert result.endswith(JS_SCRIPT_END)
+    assert "/* AJT Japanese JS 5.6.7.8 */" in result
+    assert "console.log('hi');" in result
+
+
+def test_inline_bundled_css_strips_comments() -> None:
+    """Verify inline_bundled_css strips CSS comments from the code body."""
+    vf = VersionedFile(
+        version=FileVersionTuple(1, 0, 0, 0),
+        text_content="/* AJT Japanese CSS 1.0.0.0 */\n/* a comment */\nbody { color: red; }\n",
+    )
+    result = inline_bundled_css(vf)
+    # The wrapper adds its own comments (START, version, EDIT_WARN, END),
+    # but the CSS code body between them should have no leftover comments.
+    lines = result.split("\n")
+    # Lines: START, version, EDIT_WARN, css_code, END
+    assert len(lines) == 5
+    css_code_line = lines[3]
+    assert "/* a comment */" not in css_code_line
+    assert "color: red" in css_code_line
+
+
+def test_inline_bundled_js_strips_comments() -> None:
+    """Verify inline_bundled_js strips JS comments from the code body."""
+    vf = VersionedFile(
+        version=FileVersionTuple(1, 0, 0, 0),
+        text_content="/* AJT Japanese JS 1.0.0.0 */\n// a line comment\nfunction foo() {}\n",
+    )
+    result = inline_bundled_js(vf)
+    lines = result.split("\n")
+    assert len(lines) == 5
+    js_code_line = lines[3]
+    assert "// a line comment" not in js_code_line
+    assert "function foo()" in js_code_line
+
+
+def test_css_add_idempotent() -> None:
+    """Calling ensure_css_imports(add) twice should be idempotent after the first call."""
+    model: AnkiNoteTypeDict = {"css": "/* user css */", "name": "pytest", "tmpls": [], "flds": []}
+    assert ensure_css_imports(model, action=ChangeImportsAction.add) is True
+    first_css = model["css"]
+    assert ensure_css_imports(model, action=ChangeImportsAction.add) is False
+    assert model["css"] == first_css
+
+
+def test_js_add_idempotent() -> None:
+    """Calling ensure_js_imports(add) twice should be idempotent after the first call."""
+    side: AnkiCardSide = "qfmt"
+    template: AnkiCardTemplateDict = {side: "<!-- template -->", "name": "pytest"}
+    assert ensure_js_imports(template, side, action=ChangeImportsAction.add) is True
+    first_html = template[side]
+    assert ensure_js_imports(template, side, action=ChangeImportsAction.add) is False
+    assert template[side] == first_html
+
+
+def test_css_newer_inline_version_preserved() -> None:
+    """A newer inline CSS block (not legacy @import) should be preserved, not downgraded."""
+    newer_css = f"{CSS_START_TOKEN}\n/* AJT Japanese CSS 999.1.1.1 */\nsome newer css\n{CSS_END_TOKEN}"
+    css_input = f"{CHARSET_RULE}\n{newer_css}\n/* user css */"
+    model: AnkiNoteTypeDict = {"css": css_input, "name": "pytest", "tmpls": [], "flds": []}
+    assert ensure_css_imports(model, action=ChangeImportsAction.add) is False
+    assert model["css"] == css_input
+
+
+def test_js_newer_inline_version_preserved() -> None:
+    """A newer inline JS block should be preserved, not downgraded."""
+    newer_js = f"{JS_SCRIPT_START}\n/* AJT Japanese JS 999.1.1.1 */\nsome newer js\n{JS_SCRIPT_END}"
+    html_input = f"<!-- before -->\n{newer_js}\n<!-- after -->"
+    side: AnkiCardSide = "qfmt"
+    template: AnkiCardTemplateDict = {side: html_input, "name": "pytest"}
+    assert ensure_js_imports(template, side, action=ChangeImportsAction.add) is False
+    assert template[side] == html_input
+
+
+@pytest.mark.parametrize(
+    "inline_css, expected_version",
+    [
+        (
+            f"{CSS_START_TOKEN}\n/* AJT Japanese CSS 1.2.3.4 */\nsome css\n{CSS_END_TOKEN}",
+            FileVersionTuple(1, 2, 3, 4),
+        ),
+        (
+            f"{CSS_START_TOKEN}\n/* AJT Japanese CSS 25.11.12.1 */\nsome css\n{CSS_END_TOKEN}",
+            FileVersionTuple(25, 11, 12, 1),
+        ),
+    ],
+)
+def test_css_version_detection_from_inline_block(inline_css: str, expected_version: FileVersionTuple) -> None:
+    """Verify CSSImportManager can detect versions from inline CSS blocks."""
+    manager = CSSImportManager()
+    imports = list(manager.find_code_imports(inline_css))
+    assert len(imports) == 1
+    assert imports[0].version == expected_version
+
+
+@pytest.mark.parametrize(
+    "inline_js, expected_version",
+    [
+        (
+            f"{JS_SCRIPT_START}\n/* AJT Japanese JS 24.7.14.0 */\nsome js\n{JS_SCRIPT_END}",
+            FileVersionTuple(24, 7, 14, 0),
+        ),
+        (
+            f"{JS_SCRIPT_START}\n/* AJT Japanese JS 25.11.12.1 */\nsome js\n{JS_SCRIPT_END}",
+            FileVersionTuple(25, 11, 12, 1),
+        ),
+    ],
+)
+def test_js_version_detection_from_inline_block(inline_js: str, expected_version: FileVersionTuple) -> None:
+    """Verify JSImportManager can detect versions from inline JS blocks."""
+    manager = JSImportManager()
+    imports = list(manager.find_code_imports(inline_js))
+    assert len(imports) == 1
+    assert imports[0].version == expected_version
+
+
+def test_css_remove_then_add_round_trip() -> None:
+    """Removing CSS and then adding it should produce the same result as just adding."""
+    css_input = f"{CHARSET_RULE}\n{BUNDLED_CSS_FILE.import_str}\n/* user css */"
+    model: AnkiNoteTypeDict = {"css": css_input, "name": "pytest", "tmpls": [], "flds": []}
+    ensure_css_imports(model, action=ChangeImportsAction.remove)
+    assert BUNDLED_CSS_FILE.import_str not in model["css"]
+    ensure_css_imports(model, action=ChangeImportsAction.add)
+    assert BUNDLED_CSS_FILE.import_str in model["css"]
+    assert model["css"].startswith(CHARSET_RULE)
