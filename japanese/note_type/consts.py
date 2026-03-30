@@ -15,5 +15,5 @@ assert os.path.isfile(AJT_JAPANESE_CSS_PATH), "Add-on CSS must be present."
 JS_SCRIPT_START = "<script>"
 JS_SCRIPT_END = "</script>"
 
-CSS_START_TOKEN = "/* AJT Japanese CSS START */"
-CSS_END_TOKEN = "/* AJT Japanese CSS END */"
+CSS_START_TOKEN = "/* === AJT Japanese CSS BLOCK START === */"
+CSS_END_TOKEN = "/* === AJT Japanese CSS BLOCK END === */"
