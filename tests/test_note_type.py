@@ -11,20 +11,15 @@ from japanese.ajt_common.model_utils import (
     AnkiNoteTypeDict,
 )
 from japanese.note_type.bundled_files import (
-    BUNDLED_CSS_FILE,
-    BUNDLED_JS_FILE,
     UNK_VERSION,
     FileVersionTuple,
     version_str_to_tuple,
 )
+
 from japanese.note_type.files_in_col_media import FileInCollection
-from japanese.note_type.imports import (
-    ensure_js_imports,
-    find_block_in_text,
-    is_current_js_ok,
-    Range,
-)
-from japanese.note_type.css_imports import CHARSET_RULE, find_existing_css_version, ensure_css_imports
+from japanese.note_type.imports import Range, find_block_in_text, CHARSET_RULE, ensure_css_imports, ensure_js_imports, \
+    is_current_code_import_ok, JSImportManager, CSSImportManager
+from japanese.note_type.bundled_files import BUNDLED_CSS_FILE, BUNDLED_JS_FILE
 from japanese.note_type.types import ChangeImportsAction
 
 RE_EXPECTED_FILENAME = re.compile(r"_ajt_japanese_(\d+\.){4}(js|css)")
@@ -40,42 +35,13 @@ def test_parse_version() -> None:
 
 
 @pytest.mark.parametrize(
-    "test_input, expected",
-    [
-        (
-            # Import is missing.
-            """@import url("_file.css");\nbody { color: pink; }""",
-            None,
-        ),
-        (
-            # Legacy import found.
-            """@import url("_file.css");\n@import url("_ajt_japanese.css");\nbody { color: pink; }""",
-            UNK_VERSION,
-        ),
-        (
-            # Version specified
-            """@import url("_file.css");\n@import url("_ajt_japanese_1.1.1.1.css");\nbody { color: pink; }""",
-            (1, 1, 1, 1),
-        ),
-        (
-            # Version specified
-            """@import url("_file.css");\n@import url("_ajt_japanese_12.12.12.12.css");\nbody { color: pink; }""",
-            (12, 12, 12, 12),
-        ),
-    ],
-)
-def test_find_existing_css_version(test_input: str, expected: Optional[FileVersionTuple]) -> None:
-    assert find_existing_css_version(test_input) == expected
-
-
-@pytest.mark.parametrize(
     "css_styling, is_added, added_css, is_removed, removed_css",
     [
         (
             # Import is missing.
             """/* NO CSS */""",
             True,
-            f"{CHARSET_RULE}\n{BUNDLED_CSS_FILE.import_str}\n/* NO CSS */",
+            f"{CHARSET_RULE}\n/* NO CSS */\n{BUNDLED_CSS_FILE.import_str}",
             False,
             None,
         ),
@@ -83,7 +49,7 @@ def test_find_existing_css_version(test_input: str, expected: Optional[FileVersi
             # Charset is declared.
             f"""{CHARSET_RULE}\n/*Other CSS*/""",
             True,
-            f"{CHARSET_RULE}\n{BUNDLED_CSS_FILE.import_str}\n/*Other CSS*/",
+            f"{CHARSET_RULE}\n/*Other CSS*/\n{BUNDLED_CSS_FILE.import_str}",
             False,
             None,
         ),
@@ -91,31 +57,31 @@ def test_find_existing_css_version(test_input: str, expected: Optional[FileVersi
             # Legacy import found.
             """@import url("_ajt_japanese.css");\n/* Other CSS */""",
             True,
-            f"{CHARSET_RULE}\n{BUNDLED_CSS_FILE.import_str}\n/* Other CSS */",
+            f"{CHARSET_RULE}\n/* Other CSS */\n{BUNDLED_CSS_FILE.import_str}",
             True,
             """/* Other CSS */""",
         ),
         (
-            # Older version
+            # Older legacy @import version (treated as legacy, stripped and re-added as inline)
             """/* Other CSS */\n@import url("_ajt_japanese_1.1.1.1.css");\n/* Other CSS */""",
             True,
-            f"{CHARSET_RULE}\n/* Other CSS */\n{BUNDLED_CSS_FILE.import_str}\n/* Other CSS */",
+            f"{CHARSET_RULE}\n/* Other CSS */\n/* Other CSS */\n{BUNDLED_CSS_FILE.import_str}",
             True,
             """/* Other CSS */\n/* Other CSS */""",
         ),
         (
-            # Current version
-            f"{CHARSET_RULE}\n{BUNDLED_CSS_FILE.import_str}\n/* Other CSS */\n/* Other CSS */\n",
+            # Current version (inline CSS block already present and up to date)
+            f"{CHARSET_RULE}\n{BUNDLED_CSS_FILE.import_str}\n/* Other CSS */\n/* Other CSS */",
             False,
             None,
             True,
-            f"{CHARSET_RULE}\n/* Other CSS */\n/* Other CSS */\n",
+            f"{CHARSET_RULE}\n/* Other CSS */\n/* Other CSS */",
         ),
         (
-            # Newer version
+            # Newer legacy @import version (treated as legacy, stripped and re-added as inline)
             f"""{CHARSET_RULE}\n/* Other CSS */\n@import url("_ajt_japanese_999.1.1.1.css");\n/* Other CSS */""",
-            False,
-            None,
+            True,
+            f"{CHARSET_RULE}\n/* Other CSS */\n/* Other CSS */\n{BUNDLED_CSS_FILE.import_str}",
             True,
             f"""{CHARSET_RULE}\n/* Other CSS */\n/* Other CSS */""",
         ),
@@ -348,4 +314,5 @@ def test_find_block_in_text(
 
 
 def test_is_bundled_ok() -> None:
-    assert is_current_js_ok()
+    assert is_current_code_import_ok(JSImportManager())
+    assert is_current_code_import_ok(CSSImportManager())

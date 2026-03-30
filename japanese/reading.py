@@ -16,10 +16,7 @@ from .pitch_accents.acc_dict_mgr_2 import AccentDictManager2
 from .pitch_accents.accent_lookup import AccentLookup
 from .pitch_accents.basic_types import count_moras, pitch_type_from_pitch_num
 from .pitch_accents.common import AccentDict, FormattedEntry
-from .pitch_accents.pitch_to_json import (
-    MoraSequenceOutputJson,
-    make_json_from_entry,
-)
+from .pitch_accents.pitch_to_json import MoraSequenceOutputJson, make_json_from_entry
 from .pitch_accents.styles import (
     PITCH_COLOR_PLACEHOLDER,
     STYLE_MAP,

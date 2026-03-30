@@ -15,7 +15,7 @@ from aqt.qt import *
 from aqt.utils import tooltip, tr
 
 from ..ajt_common.restore_geom_dialog import AnkiSaveAndRestoreGeomDialog
-from ..ajt_common.utils import find_executable, ui_translate
+from ..ajt_common.utils import find_executable, open_file, ui_translate
 from ..audio_manager.abstract import AnkiAudioSourceManagerABC
 from ..audio_manager.basic_types import FileUrlData
 from ..audio_manager.download_results import (
@@ -25,7 +25,6 @@ from ..audio_manager.download_results import (
 )
 from ..audio_manager.forvo_client import ForvoClient, FullForvoResult
 from ..helpers.consts import ADDON_NAME
-from ..ajt_common.utils import open_file
 from ..helpers.misc import strip_html_and_media
 from .audio_serach_result_label import AudioSearchResultLabel
 from .audio_sources import SourceEnableCheckbox

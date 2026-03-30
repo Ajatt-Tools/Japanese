@@ -9,6 +9,8 @@ from anki.hooks import wrap
 from aqt import gui_hooks, mw
 from aqt.operations import CollectionOp
 
+from .bundled_files import BUNDLED_CSS_FILE
+from .imports import ensure_css_imports, ensure_js_imports
 from ..ajt_common.model_utils import (
     AnkiCardSide,
     AnkiNoteTypeDict,
@@ -18,20 +20,8 @@ from ..config_view import config_view as cfg
 from ..helpers.consts import ADDON_NAME
 from ..helpers.profiles import ProfileFurigana
 from ..tasks import note_type_matches
-from .bundled_files import BUNDLED_CSS_FILE, BundledCSSFile, get_file_version
 from .files_in_col_media import FileInCollection, find_ajt_scripts_in_collection
-from .imports import ensure_js_imports
-from .css_imports import ensure_css_imports
 from .types import ChangeImportsAction, RelevantModelSearchResult
-
-
-def not_recent_version(file: BundledCSSFile) -> bool:
-    return file.version > get_file_version(file.path_in_col()).version
-
-
-def save_to_col(file: BundledCSSFile) -> None:
-    with open(file.path_in_col(), "w", encoding="utf-8") as of:
-        of.write(file.text_content)
 
 
 def is_debug_enabled() -> bool:
@@ -39,15 +29,6 @@ def is_debug_enabled() -> bool:
     https://addon-docs.ankiweb.net/debugging.html?highlight=QTWEBENGINE_REMOTE_DEBUGGING#webviews
     """
     return "QTWEBENGINE_REMOTE_DEBUGGING" in os.environ
-
-
-def ensure_bundled_css_file_saved() -> None:
-    """
-    Save the AJT Japanese CSS file to the 'collection.media' folder.
-    """
-    if not_recent_version(BUNDLED_CSS_FILE) or is_debug_enabled():
-        save_to_col(BUNDLED_CSS_FILE)
-        print(f"Created new file: {BUNDLED_CSS_FILE.name_in_col}")
 
 
 def field_names_from_model_dict(model_dict: AnkiNoteTypeDict) -> frozenset[str]:
@@ -79,7 +60,7 @@ def collect_all_relevant_models() -> Sequence[RelevantModelSearchResult]:
     assert mw
     return [
         RelevantModelSearchResult(nameid=model, is_relevant=is_relevant_model(mw.col.models.get(model.id)))
-        for model in mw.col.models.all_names_and_ids() # fmt: skip
+        for model in mw.col.models.all_names_and_ids()  # fmt: skip
     ]
 
 
@@ -155,7 +136,6 @@ def prepare_note_types() -> None:
         return
     if any(model.is_relevant for model in models):
         # Add scripts to templates only if the user has profiles (tasks) where furigana needs to be generated.
-        ensure_bundled_css_file_saved()
         remove_old_file_versions()
 
     ensure_imports_added_or_removed(models)

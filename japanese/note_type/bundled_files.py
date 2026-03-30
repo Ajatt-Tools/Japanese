@@ -1,15 +1,17 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
+import dataclasses
 import os.path
 import re
 import typing
 
 from ..helpers.consts import ADDON_NAME
-from .consts import AJT_JAPANESE_CSS_PATH, AJT_JAPANESE_JS_PATH
+from .consts import AJT_JAPANESE_CSS_PATH, AJT_JAPANESE_JS_PATH, JS_SCRIPT_START, JS_SCRIPT_END, CSS_START_TOKEN, \
+    CSS_END_TOKEN
 
 RE_VERSION_STR = re.compile(r"AJT Japanese (?P<type>JS|CSS) (?P<version>\d+\.\d+\.\d+\.\d+)\n")
 RE_JS_COMMENT = re.compile(r"\s*//.*?\n")
-RE_MULTILINE_JS_COMMENT = re.compile(r"/\*.*?\*/")
+RE_MULTILINE_JS_CSS_COMMENT = re.compile(r"/\*.*?\*/")
 RE_ANY_WHITESPACE = re.compile(r"\s+")
 
 
@@ -37,16 +39,39 @@ class VersionedFile(typing.NamedTuple):
 EDIT_WARN = f"/* DO NOT EDIT! This code will be overwritten by {ADDON_NAME}. */"
 
 
-def wrap_bundled_js(js_text: str, version_str: str) -> str:
-    return f"<script>\n/* {ADDON_NAME} JS {version_str} */\n{EDIT_WARN}\n{js_text}\n</script>"
+def wrap_bundled_js(js_code: str, version_str: str) -> str:
+    return "\n".join((
+        JS_SCRIPT_START,
+        f"/* {ADDON_NAME} JS {version_str} */",
+        EDIT_WARN,
+        js_code,
+        JS_SCRIPT_END,
+    ))
+
+
+def wrap_bundled_css(css_code: str, version_str: str) -> str:
+    return "\n".join((
+        CSS_START_TOKEN,
+        f"/* {ADDON_NAME} CSS {version_str} */",
+        EDIT_WARN,
+        css_code,
+        CSS_END_TOKEN,
+    ))
 
 
 def inline_bundled_js(vf: VersionedFile) -> str:
-    js_text = re.sub(RE_JS_COMMENT, " ", vf.text_content)
-    js_text = js_text.replace("\n", " ")
-    js_text = re.sub(RE_MULTILINE_JS_COMMENT, " ", js_text)
-    js_text = re.sub(RE_ANY_WHITESPACE, " ", js_text)
-    return wrap_bundled_js(js_text.strip(), vf.version_as_str())
+    js_code = re.sub(RE_JS_COMMENT, " ", vf.text_content)
+    js_code = js_code.replace("\n", " ")
+    js_code = re.sub(RE_MULTILINE_JS_CSS_COMMENT, " ", js_code)
+    js_code = re.sub(RE_ANY_WHITESPACE, " ", js_code)
+    return wrap_bundled_js(js_code.strip(), vf.version_as_str())
+
+
+def inline_bundled_css(vf: VersionedFile) -> str:
+    css_code = vf.text_content.replace("\n", " ")
+    css_code = re.sub(RE_MULTILINE_JS_CSS_COMMENT, " ", css_code)
+    css_code = re.sub(RE_ANY_WHITESPACE, " ", css_code)
+    return wrap_bundled_css(css_code.strip(), vf.version_as_str())
 
 
 def version_str_to_tuple(version_str: str) -> FileVersionTuple:
@@ -70,18 +95,31 @@ def get_file_version(file_path: str) -> VersionedFile:
     return VersionedFile(UNK_VERSION)
 
 
-class BundledCSSFile(typing.NamedTuple):
+@dataclasses.dataclass(frozen=True)
+class BundledCodeFile:
     file_path: str
     version: FileVersionTuple
     import_str: str
-    text_content: str
-    name_in_col: str
 
-    def path_in_col(self) -> str:
-        from aqt import mw
+    def version_str(self) -> str:
+        return ".".join(map(str, self.version))
 
-        assert mw, "Function can run only when anki is running."
-        return os.path.join(mw.col.media.dir(), self.name_in_col)
+
+@dataclasses.dataclass(frozen=True)
+class BundledJSFile(BundledCodeFile):
+    @classmethod
+    def new(cls, bundled_file_path: str):
+        vf = get_file_version(bundled_file_path)
+        return cls(
+            file_path=bundled_file_path,
+            version=vf.version,
+            import_str=inline_bundled_js(vf),
+        )
+
+
+@dataclasses.dataclass(frozen=True)
+class BundledCSSFile(BundledCodeFile):
+    name_in_col: str  # legacy
 
     @classmethod
     def new(cls, bundled_file_path: str):
@@ -91,27 +129,8 @@ class BundledCSSFile(typing.NamedTuple):
         return cls(
             file_path=bundled_file_path,
             version=vf.version,
-            name_in_col=name_in_col,
-            import_str=f'@import url("{name_in_col}");',
-            text_content=vf.text_content,
-        )
-
-    def version_str(self) -> str:
-        return ".".join(map(str, self.version))
-
-
-class BundledJSFile(typing.NamedTuple):
-    file_path: str
-    version: FileVersionTuple
-    import_str: str
-
-    @classmethod
-    def new(cls, bundled_file_path: str):
-        vf = get_file_version(bundled_file_path)
-        return cls(
-            file_path=bundled_file_path,
-            version=vf.version,
-            import_str=inline_bundled_js(vf),
+            import_str=inline_bundled_css(vf),
+            name_in_col=name_in_col,  # legacy
         )
 
     def version_str(self) -> str:

@@ -11,3 +11,9 @@ AJT_JAPANESE_CSS_PATH = os.path.join(THIS_DIR_PATH, "_ajt_japanese.css")
 # Ensure everything is ok
 assert os.path.isfile(AJT_JAPANESE_JS_PATH), "Add-on JS must be present."
 assert os.path.isfile(AJT_JAPANESE_CSS_PATH), "Add-on CSS must be present."
+
+JS_SCRIPT_START = "<script>"
+JS_SCRIPT_END = "</script>"
+
+CSS_START_TOKEN = "/* AJT Japanese CSS START */"
+CSS_END_TOKEN = "/* AJT Japanese CSS END */"
