@@ -472,6 +472,8 @@ def test_css_remove_then_add_round_trip() -> None:
     model: AnkiNoteTypeDict = {"css": css_input, "name": "pytest", "tmpls": [], "flds": []}
     ensure_css_imports(model, action=ChangeImportsAction.remove)
     assert BUNDLED_CSS_FILE.import_str not in model["css"]
+    assert model["css"] == f"{CHARSET_RULE}\n/* user css */"
     ensure_css_imports(model, action=ChangeImportsAction.add)
     assert BUNDLED_CSS_FILE.import_str in model["css"]
     assert model["css"].startswith(CHARSET_RULE)
+    assert model["css"] == f"{CHARSET_RULE}\n/* user css */\n{BUNDLED_CSS_FILE.import_str}"
