@@ -13,6 +13,7 @@ from japanese.ajt_common.model_utils import (
 from japanese.note_type.bundled_files import (
     BUNDLED_CSS_FILE,
     BUNDLED_JS_FILE,
+    EDIT_WARN,
     UNK_VERSION,
     FileVersionTuple,
     VersionedFile,
@@ -338,25 +339,32 @@ def test_is_bundled_ok() -> None:
 
 
 def test_wrap_bundled_css_structure() -> None:
-    """Verify wrap_bundled_css produces correctly delimited output."""
+    """Verify wrap_bundled_css() produces correctly delimited output."""
     result = wrap_bundled_css("body { color: red; }", "1.2.3.4")
     assert result.startswith(CSS_START_TOKEN)
     assert result.endswith(CSS_END_TOKEN)
     assert "/* AJT Japanese CSS 1.2.3.4 */" in result
     assert "body { color: red; }" in result
+    assert (
+        result
+        == f"{CSS_START_TOKEN}\n/* AJT Japanese CSS 1.2.3.4 */\n{EDIT_WARN}\nbody {{ color: red; }}\n{CSS_END_TOKEN}"
+    )
 
 
 def test_wrap_bundled_js_structure() -> None:
-    """Verify wrap_bundled_js produces correctly delimited output."""
+    """Verify wrap_bundled_js() produces correctly delimited output."""
     result = wrap_bundled_js("console.log('hi');", "5.6.7.8")
     assert result.startswith(JS_SCRIPT_START)
     assert result.endswith(JS_SCRIPT_END)
     assert "/* AJT Japanese JS 5.6.7.8 */" in result
     assert "console.log('hi');" in result
+    assert (
+        result == f"{JS_SCRIPT_START}\n/* AJT Japanese JS 5.6.7.8 */\n{EDIT_WARN}\nconsole.log('hi');\n{JS_SCRIPT_END}"
+    )
 
 
 def test_inline_bundled_css_strips_comments() -> None:
-    """Verify inline_bundled_css strips CSS comments from the code body."""
+    """Verify inline_bundled_css() strips CSS comments from the code body."""
     vf = VersionedFile(
         version=FileVersionTuple(1, 0, 0, 0),
         text_content="/* AJT Japanese CSS 1.0.0.0 */\n/* a comment */\nbody { color: red; }\n",
@@ -373,7 +381,7 @@ def test_inline_bundled_css_strips_comments() -> None:
 
 
 def test_inline_bundled_js_strips_comments() -> None:
-    """Verify inline_bundled_js strips JS comments from the code body."""
+    """Verify inline_bundled_js() strips JS comments from the code body."""
     vf = VersionedFile(
         version=FileVersionTuple(1, 0, 0, 0),
         text_content="/* AJT Japanese JS 1.0.0.0 */\n// a line comment\nfunction foo() {}\n",
