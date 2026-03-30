@@ -124,8 +124,8 @@ class CodeImportManager:
             # Found an existing import, and it is up to date.
             # Possible duplicate imports have been removed.
             return template_code.strip()
-        # The JavaScript was not imported before or the import was old and got removed.
-        # Append the current JS import.
+        # The code was not imported before or the import was old and got removed.
+        # Append the current import.
         template_code = f"{template_code.strip()}\n{self.bundled.import_str.strip()}"
         return template_code
 
