@@ -363,6 +363,20 @@ def test_wrap_bundled_js_structure() -> None:
     )
 
 
+def extract_code_line(inline_result: str) -> str:
+    """Extract the CSS code body (line index 3) from a wrap_bundled_css/inline_bundled_css output."""
+
+    # The wrapper adds its own comments (START, version, EDIT_WARN, END),
+    # but the CSS code body between them should have no leftover comments.
+    lines = inline_result.split("\n")
+
+    # Lines: START, version, EDIT_WARN, CSS code, END
+    assert len(lines) == 5, f"Expected 5 lines (START, version, EDIT_WARN, code, END), got {len(lines)}"
+
+    # Return
+    return lines[3]
+
+
 def test_inline_bundled_css_strips_comments() -> None:
     """Verify inline_bundled_css() strips CSS comments from the code body."""
     vf = VersionedFile(
@@ -370,12 +384,8 @@ def test_inline_bundled_css_strips_comments() -> None:
         text_content="/* AJT Japanese CSS 1.0.0.0 */\n/* a comment */\nbody { color: red; }\n",
     )
     result = inline_bundled_css(vf)
-    # The wrapper adds its own comments (START, version, EDIT_WARN, END),
-    # but the CSS code body between them should have no leftover comments.
-    lines = result.split("\n")
-    # Lines: START, version, EDIT_WARN, css_code, END
-    assert len(lines) == 5
-    css_code_line = lines[3]
+    css_code_line = extract_code_line(result)
+
     assert "/* a comment */" not in css_code_line
     assert "color: red" in css_code_line
 
@@ -387,9 +397,8 @@ def test_inline_bundled_js_strips_comments() -> None:
         text_content="/* AJT Japanese JS 1.0.0.0 */\n// a line comment\nfunction foo() {}\n",
     )
     result = inline_bundled_js(vf)
-    lines = result.split("\n")
-    assert len(lines) == 5
-    js_code_line = lines[3]
+    js_code_line = extract_code_line(result)
+
     assert "// a line comment" not in js_code_line
     assert "function foo()" in js_code_line
 
@@ -485,3 +494,97 @@ def test_css_remove_then_add_round_trip() -> None:
     assert BUNDLED_CSS_FILE.import_str in model["css"]
     assert model["css"].startswith(CHARSET_RULE)
     assert model["css"] == f"{CHARSET_RULE}\n/* user css */\n{BUNDLED_CSS_FILE.import_str}"
+
+
+def make_css_vf(css_body: str) -> VersionedFile:
+    """Create a VersionedFile with the given CSS body and a dummy version header."""
+    return VersionedFile(
+        version=FileVersionTuple(1, 0, 0, 0),
+        text_content=f"/* AJT Japanese CSS 1.0.0.0 */\n{css_body}\n",
+    )
+
+
+@pytest.mark.parametrize(
+    "css_body, expected",
+    [
+        # Simple comment is removed.
+        (
+            "/* remove me */ body { color: red; }",
+            "body { color: red; }",
+        ),
+        # Multiple comments are removed.
+        (
+            "/* c1 */ .a { color: red; } /* c2 */",
+            ".a { color: red; }",
+        ),
+        # Multi-word comment is removed.
+        (
+            "/* This is a long comment about styling */ .b { margin: 0; }",
+            ".b { margin: 0; }",
+        ),
+        # Verify that all whitespace sequences are collapsed to a single space
+        (
+            ".a   .b {\n    color:   red;\n    margin:  0;\n}",
+            ".a .b { color: red; margin: 0; }",
+        ),
+        # Verify spaces required for CSS validity are preserved.
+        (
+            '.parent .child { font-family: "Noto Sans", sans-serif; }',
+            '.parent .child { font-family: "Noto Sans", sans-serif; }',
+        ),
+        # Comment-like pattern inside a double-quoted content: value must be preserved.
+        (
+            'div::before { content: "/* not a comment */"; }',
+            'div::before { content: "/* not a comment */"; }',
+        ),
+        # Comment-like pattern inside a single-quoted content: value must be preserved.
+        (
+            "div::before { content: '/* not a comment */'; }",
+            "div::before { content: '/* not a comment */'; }",
+        ),
+        # url() with a data URI containing /* must be preserved.
+        (
+            "div { background: url('data:image/svg+xml,<svg>/* x */</svg>'); }",
+            "div { background: url('data:image/svg+xml,<svg>/* x */</svg>'); }",
+        ),
+        # Escaped quotes inside strings must not break the string boundary detection.
+        (
+            r'div::after { content: "say \"/* hello */\""; }',
+            r'div::after { content: "say \"/* hello */\""; }',
+        ),
+        # Regular comment outside strings must still be stripped.
+        (
+            "/* strip me */ div { color: red; }",
+            "div { color: red; }",
+        ),
+        # Mix: comment stripped, string with /* preserved.
+        (
+            '/* strip */ div::before { content: "/* keep */"; } /* strip too */',
+            'div::before { content: "/* keep */"; }',
+        ),
+    ],
+)
+def test_inline_bundled_css(css_body: str, expected: str) -> None:
+    """Verify that CSS comments outside string literals are stripped."""
+    result = inline_bundled_css(make_css_vf(css_body))
+    css_code = extract_code_line(result)
+    assert expected == css_code, f"Expected {expected!r}, got {css_code!r}"
+
+
+def test_inline_css_actual_bundled_file_valid() -> None:
+    """Verify the actual bundled CSS file produces valid inline output."""
+    result = BUNDLED_CSS_FILE.import_str
+    lines = result.split("\n")
+    assert len(lines) == 5
+    assert lines[0] == CSS_START_TOKEN
+    assert lines[4] == CSS_END_TOKEN
+    css_code = lines[3]
+    # Must contain key selectors from the actual CSS.
+    assert 'class^="ajt__"' in css_code
+    assert ".ajt__word_info" in css_code
+    assert ".ajt__pitch_number_tag" in css_code
+    # The hsl() values must not be corrupted.
+    assert "hsl(" in css_code
+    # No stray comment delimiters should appear in the code body.
+    assert "/*" not in css_code
+    assert "*/" not in css_code
