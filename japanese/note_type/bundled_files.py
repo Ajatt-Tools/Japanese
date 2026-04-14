@@ -21,6 +21,24 @@ RE_MULTILINE_JS_CSS_COMMENT = re.compile(r"/\*.*?\*/")
 RE_ANY_WHITESPACE = re.compile(r"\s+")
 
 
+# Matches double-quoted strings, single-quoted strings, or /* ... */ comments.
+# Used to strip comments without corrupting string literals in CSS.
+RE_CSS_STRING_OR_COMMENT = re.compile(
+    r'"(?:[^"\\]|\\.)*"'  # double-quoted string (may contain escaped chars)
+    r"|"
+    r"'(?:[^'\\]|\\.)*'"  # single-quoted string (may contain escaped chars)
+    r"|"
+    r"/\*.*?\*/"  # /* block comment */
+)
+
+
+def replace_css_comments(match: re.Match) -> str:
+    """Keep quoted strings intact; replace block comments with a space."""
+    if match.group(0).startswith("/*"):
+        return " "
+    return match.group(0)
+
+
 class FileVersionTuple(typing.NamedTuple):
     year: int
     month: int
@@ -75,7 +93,7 @@ def inline_bundled_js(vf: VersionedFile) -> str:
 
 def inline_bundled_css(vf: VersionedFile) -> str:
     css_code = vf.text_content.replace("\n", " ")
-    css_code = re.sub(RE_MULTILINE_JS_CSS_COMMENT, " ", css_code)
+    css_code = re.sub(RE_CSS_STRING_OR_COMMENT, replace_css_comments, css_code)
     css_code = re.sub(RE_ANY_WHITESPACE, " ", css_code)
     return wrap_bundled_css(css_code.strip(), vf.version_as_str())
 
