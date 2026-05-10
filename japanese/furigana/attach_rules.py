@@ -148,4 +148,5 @@ DETACH_PAIRS: Final[frozenset[tuple[str, str]]] = frozenset((
     ("しく", "なかっ"),
     ("て", "い"),
     ("たく", "ない"),
+    ("たり", "する"),
 ))
