@@ -148,10 +148,6 @@ def is_current_code_import_ok(manager: CodeImportManager) -> bool:
     )
 
 
-# Used to remove CSS imports, thus contains a trailing newline.
-RE_AJT_CSS_LEGACY_IMPORT = re.compile(r'@import url\("_ajt_japanese[^()"\']*\.css"\);\n?')
-RE_AJT_CSS_VERSION_COMMENT = re.compile(r"\s*/\* AJT Japanese CSS (?P<version>\d+\.\d+\.\d+\.\d+) \*/\n?")
-
 # Charset
 RE_CHARSET_RULE = re.compile(r'@charset "UTF-8";\n?', flags=re.MULTILINE | re.IGNORECASE)
 CHARSET_RULE = '@charset "UTF-8";'
@@ -196,10 +192,10 @@ class CSSImportManager(CodeImportManager):
     bundled: BundledCodeFile = BUNDLED_CSS_FILE
     start_token: str = CSS_START_TOKEN
     end_token: str = CSS_END_TOKEN
-    re_version_comment: re.Pattern = RE_AJT_CSS_VERSION_COMMENT
-    re_legacy_import: re.Pattern = RE_AJT_CSS_LEGACY_IMPORT
 
-
+    # Used to remove CSS imports, thus contains a trailing newline.
+    re_version_comment: re.Pattern = re.compile(r"\s*/\* AJT Japanese CSS (?P<version>\d+\.\d+\.\d+\.\d+) \*/\n?")
+    re_legacy_import: re.Pattern = re.compile(r'@import url\("_ajt_japanese[^()"\']*\.css"\);\n?')
 
 
 class JSImportManager(CodeImportManager):
