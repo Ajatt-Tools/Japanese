@@ -200,16 +200,14 @@ class CSSImportManager(CodeImportManager):
     re_legacy_import: re.Pattern = RE_AJT_CSS_LEGACY_IMPORT
 
 
-RE_AJT_JS_LEGACY_IMPORT = re.compile(r'<script [^<>]*src="_ajt_japanese[^"]*\.js"></script>\n?')
-RE_AJT_JS_VERSION_COMMENT = re.compile(r"\s*/\* AJT Japanese JS (?P<version>\d+\.\d+\.\d+\.\d+) \*/\n?")
 
 
 class JSImportManager(CodeImportManager):
     bundled: BundledCodeFile = BUNDLED_JS_FILE
     start_token: str = JS_SCRIPT_START
     end_token: str = JS_SCRIPT_END
-    re_version_comment: re.Pattern = RE_AJT_JS_VERSION_COMMENT
-    re_legacy_import: re.Pattern = RE_AJT_JS_LEGACY_IMPORT
+    re_version_comment: re.Pattern = re.compile(r"\s*/\* AJT Japanese JS (?P<version>\d+\.\d+\.\d+\.\d+) \*/\n?")
+    re_legacy_import: re.Pattern = re.compile(r'<script [^<>]*src="_ajt_japanese[^"]*\.js"></script>\n?')
 
 
 def ensure_js_imports(template: AnkiCardTemplateDict, side: AnkiCardSide, action: ChangeImportsAction) -> bool:
