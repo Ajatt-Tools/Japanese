@@ -233,7 +233,7 @@ class PitchColorCodesSettingsForm(SettingsForm):
         assert self._config
         for pitch_type in PitchType:
             picker = ColorEditPicker()
-            picker.setText(self._config.lookup_color(pitch_type))
+            picker.set_color(self._config.lookup_color(pitch_type))
             yield pitch_type.name, picker
 
     def _add_widgets(self) -> None:

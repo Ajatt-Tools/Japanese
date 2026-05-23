@@ -14,7 +14,7 @@ def as_config_dict(widgets: dict[str, QWidget]) -> dict[str, Union[bool, str, in
     d = {}
     for key, widget in widgets.items():
         if isinstance(widget, ColorEditPicker):
-            d[key] = widget.text()
+            d[key] = widget.color_hex()
         elif isinstance(widget, FlagSelectCombo):
             d[key] = widget.comma_separated_flags()
         elif isinstance(widget, EnumSelectCombo):
