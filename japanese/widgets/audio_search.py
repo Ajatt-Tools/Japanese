@@ -213,7 +213,7 @@ class AudioSearchDialog(QDialog):
         """
         pass
 
-    def _open_audio_file(self, file: FileUrlData):
+    def _open_audio_file(self, file: FileUrlData) -> None:
         """
         This method requires Anki to be running.
         """
