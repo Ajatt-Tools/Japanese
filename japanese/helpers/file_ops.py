@@ -6,7 +6,7 @@ import os
 import pathlib
 import subprocess
 from collections.abc import Iterable
-from typing import Union
+from typing import Optional, Union
 
 from anki.utils import no_bundled_libs
 
@@ -49,9 +49,18 @@ def find_config_json() -> pathlib.Path:
     return find_file_in_parents("config.json")
 
 
+def get_anki_japanese_user_dir() -> Optional[pathlib.Path]:
+    # https://github.com/Ajatt-Tools/Japanese/issues/28#issuecomment-3788159617
+    if anki_jp_user_dir := os.getenv("ANKI_JAPANESE_DIR"):
+        return pathlib.Path(anki_jp_user_dir)
+    return None
+
+
 @functools.cache
 def user_files_dir() -> pathlib.Path:
     """Return path to the user files directory."""
+    if (anki_jp_user_dir := get_anki_japanese_user_dir()) and anki_jp_user_dir.is_dir():
+        return anki_jp_user_dir
     for parent_dir in walk_parents(__file__):
         if (dir_path := parent_dir.joinpath("user_files")).is_dir():
             return dir_path
