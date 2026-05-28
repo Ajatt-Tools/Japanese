@@ -90,9 +90,9 @@ class SakuraParisClient(anki.httpclient.HttpClient):
         for node in doc("sub"):
             node.decompose()
         for node in doc("a", href=self._re_self_link):
-            node["href"] = f'{SITE_URL}{node["href"]}'
+            node["href"] = f"{SITE_URL}{node['href']}"
         for node in doc(src=self._re_self_link):
-            node["src"] = f'{SITE_URL}{node["src"]}'
+            node["src"] = f"{SITE_URL}{node['src']}"
 
 
 # Debug

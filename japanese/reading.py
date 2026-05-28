@@ -99,7 +99,6 @@ def format_pronunciations(
     sep_multi: str = "、",
     expr_sep: Optional[str] = None,
 ) -> str:
-
     ordered_dict: dict[str, str] = OrderedDict()
     for word, entries in pronunciations.items():
         if entries_html := entries_to_html(entries, output_format, max_results=max_results):

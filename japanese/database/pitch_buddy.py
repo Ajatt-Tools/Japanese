@@ -116,7 +116,7 @@ class PitchSqlite3Buddy(Sqlite3BuddyABC, abc.ABC):
         # Return relevant rows from the user's data if they can be found.
         # Otherwise, return all results for the target word.
         query = f"""
-        SELECT DISTINCT {', '.join(select_keys)} FROM (
+        SELECT DISTINCT {", ".join(select_keys)} FROM (
             WITH all_results AS (
                 SELECT * FROM pitch_accents_formatted
                 WHERE ( headword = ? OR katakana_reading = ? )
