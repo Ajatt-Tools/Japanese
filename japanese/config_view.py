@@ -504,5 +504,11 @@ class JapaneseConfig(AddonConfigManager):
                 print(f"removed deprecated config key: {key}")
 
 
+@functools.cache
+def get_global_config() -> JapaneseConfig:
+    assert mw, "anki must be running"
+    return JapaneseConfig()
+
+
 if mw:
-    config_view = JapaneseConfig()
+    config_view = get_global_config()
