@@ -28,7 +28,7 @@ def start_addon() -> None:
     from .helpers.webview_utils import anki_addon_set_web_exports
     from .note_type import note_type
 
-    # Ensure that css and other resources are loaded.
+    # Ensure that CSS and other resources are loaded.
     anki_addon_set_web_exports()
 
     tasks.init()
