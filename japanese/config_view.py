@@ -400,7 +400,9 @@ class SvgPitchGraphOptionsConfigView(ConfigSubViewBase):
     def devoiced_stroke_dasharray(self) -> str:
         return self["devoiced_stroke_dasharray"]
 
-    graph_font: str = "Noto Sans, Noto Sans CJK JP, IPAexGothic, IPAPGothic, IPAGothic, Yu Gothic, Sans, Sans-Serif"
+    @property
+    def graph_font_name(self) -> str:
+        return self["graph_font_name"]
 
 
 @final

@@ -227,8 +227,8 @@ class SvgPitchGraphMaker:
 
     def make_svg(self, contents: str, *, width: int, height: int, visible_height: int) -> str:
         return (
-            f'<svg class="ajt__pitch_svg" style="font-family: {self._opts.graph_font}" viewBox="0 0 {width} {height}" '
-            f'height="{visible_height}px" xmlns="http://www.w3.org/2000/svg">{contents}</svg>'
+            f'<svg class="ajt__pitch_svg" style="font-family: {self._opts.graph_font_name}" viewBox="0 0 {width}'
+            f' {height}" height="{visible_height}px" xmlns="http://www.w3.org/2000/svg">{contents}</svg>'
         )
 
     def calc_text_dx(self, mora: Mora) -> int:
