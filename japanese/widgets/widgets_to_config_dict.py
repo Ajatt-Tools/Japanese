@@ -19,7 +19,9 @@ def set_from_cfg(widget: QWidget, value: Union[bool, str, int, float]) -> None:
     elif isinstance(widget, QCheckBox) and isinstance(value, bool):
         widget.setChecked(value)
     else:
-        raise ValueError(f"Can't handle widget of type {type(widget).__name__} and value of type {type(value).__name__}")
+        raise ValueError(
+            f"Can't handle widget of type {type(widget).__name__} and value of type {type(value).__name__}"
+        )
 
 
 def change_event(widget: QWidget) -> pyqtSignal:

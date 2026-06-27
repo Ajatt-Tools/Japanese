@@ -94,6 +94,23 @@ class ReserveAndFormatResult(typing.NamedTuple):
     reserved_files: Sequence[ReservedFile]
 
 
+def make_desired_filename(file: BoundFile, file_info: FileInfo) -> str:
+    components: list[str] = [file.headword]
+
+    # Append either pitch pattern or kana reading, preferring pitch pattern.
+    reading = file_info["pitch_pattern"] or file_info["kana_reading"]
+    if reading:
+        components.append(to_katakana(reading))
+
+    # If pitch number is present, append it after reading.
+    pitch_number = file_info["pitch_number"]
+    if pitch_number != NO_ACCENT and pitch_number:
+        components.append(norm_pitch_numbers(pitch_number))
+
+    components.append(file.source_name)
+    return f"{normalize_filename('_'.join(components))}{file.ext()}"
+
+
 class AudioSourceManager:
     _config: JapaneseConfig
     _http_client: AudioManagerHttpClientABC
@@ -172,26 +189,11 @@ class AudioSourceManager:
         source.update_original_url()
 
     def _resolve_file(self, source: AudioSource, file: BoundFile) -> FileUrlData:
-        components: list[str] = []
+        assert source.name == file.source_name, f"file should belong to this source: {source.name}"
         file_info: FileInfo = self._db.get_file_info(source.name, file.file_name)
-
-        # Append either pitch pattern or kana reading, preferring pitch pattern.
-        components.append(to_katakana(file_info["pitch_pattern"] or file_info["kana_reading"] or "no_reading"))
-
-        # If pitch number is present, append it after reading.
-        pitch_number = file_info["pitch_number"]
-        if pitch_number != NO_ACCENT and pitch_number:
-            components.append(norm_pitch_numbers(pitch_number))
-
-        desired_filename = "_".join((
-            file.headword,
-            *components,
-            source.name,
-        ))
-        desired_filename = f"{normalize_filename(desired_filename)}{file.ext()}"
         return FileUrlData(
             url=source.join_media_path(source.media_dir, file.file_name),
-            desired_filename=desired_filename,
+            desired_filename=make_desired_filename(file, file_info),
             word=file.headword,
             source_name=source.name,
             reading=(file_info["kana_reading"] or ""),
