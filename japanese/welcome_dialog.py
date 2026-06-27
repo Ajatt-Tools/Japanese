@@ -19,7 +19,7 @@ from .ajt_common.restore_geom_dialog import AnkiSaveAndRestoreGeomDialog
 from .config_view import config_view as cfg
 from .gui import EXAMPLE_DECK_ANKIWEB_URL
 from .helpers.consts import ADDON_NAME
-from .helpers.webview_utils import anki_addon_web_relpath
+from .helpers.webview_utils import ajt_webview_css, anki_addon_web_relpath
 
 GUIDE_LINK = "https://tatsumoto.neocities.org/blog/table-of-contents.html"
 RESOURCES_LINK = "https://tatsumoto.neocities.org/blog/resources.html"
@@ -142,7 +142,7 @@ class ProjectButtons(QGroupBox):
 
 class AJTWelcomeDialog(AnkiSaveAndRestoreGeomDialog):
     name: str = "ajt__welcome_screen"
-    _css_relpath: str = f"{anki_addon_web_relpath()}/ajt_webview.css"
+    _css_relpath: str = ajt_webview_css()
     _web: AnkiWebView
 
     def __init__(self, parent: QWidget) -> None:

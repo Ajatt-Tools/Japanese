@@ -19,7 +19,7 @@ from .config_view import config_view as cfg
 from .database.sqlite3_buddy import Sqlite3Buddy
 from .helpers.consts import ADDON_NAME
 from .helpers.tokens import clean_furigana
-from .helpers.webview_utils import anki_addon_web_relpath
+from .helpers.webview_utils import ajt_webview_css, anki_addon_web_relpath
 from .pitch_accents.common import AccentDict, FormattedEntry, OrderedSet
 from .pitch_accents.styles import HTMLPitchPatternStyle
 from .reading import format_pronunciations, lookup, svg_graph_maker, update_html
@@ -62,7 +62,7 @@ def lookup_pronunciations(search: str) -> AccentDict:
 @final
 class ViewPitchAccentsDialog(AnkiSaveAndRestoreGeomDialog):
     name: str = "ajt__pitch_accent_lookup"
-    _css_relpath: str = f"{anki_addon_web_relpath()}/ajt_webview.css"
+    _css_relpath: str = ajt_webview_css()
     _pronunciations: AccentDict
     _web: AnkiWebView
 
