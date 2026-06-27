@@ -14,11 +14,12 @@ def set_from_cfg(widget: QWidget, value: Union[bool, str, int, float]) -> None:
     """Set a widget's value from a configuration value based on the widget type."""
     if isinstance(widget, QDoubleSpinBox) and isinstance(value, float):
         widget.setValue(value)
-    if isinstance(widget, QLineEdit) and isinstance(value, str):
+    elif isinstance(widget, QLineEdit) and isinstance(value, str):
         widget.setText(value)
-    if isinstance(widget, QCheckBox) and isinstance(value, bool):
+    elif isinstance(widget, QCheckBox) and isinstance(value, bool):
         widget.setChecked(value)
-    raise ValueError(f"Can't handle widget of type {type(widget).__name__} and value of type {type(value).__name__}")
+    else:
+        raise ValueError(f"Can't handle widget of type {type(widget).__name__} and value of type {type(value).__name__}")
 
 
 def change_event(widget: QWidget) -> pyqtSignal:
