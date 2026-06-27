@@ -5,6 +5,7 @@ import io
 import json
 import os
 import re
+import typing
 import zipfile
 from collections.abc import Iterable, Sequence
 from typing import Optional
@@ -26,6 +27,7 @@ from .basic_types import (
     NameUrlSet,
     TotalAudioStats,
 )
+from .download_results import ReservedFile, reserve_files
 
 RE_FILENAME_PROHIBITED = re.compile(r'[\\\n\t\r#%&\[\]{}<>^*?/$!\'":@+`|=]+', flags=re.MULTILINE | re.IGNORECASE)
 RE_UNDER = re.compile(r"_+", flags=re.MULTILINE | re.IGNORECASE)
@@ -87,6 +89,11 @@ def only_existing_stats(stats_list: Iterable[Optional[AudioStats]]) -> Sequence[
     return tuple(filter(bool, stats_list))
 
 
+class ReserveAndFormatResult(typing.NamedTuple):
+    anki_field_text: str
+    reserved_files: Sequence[ReservedFile]
+
+
 class AudioSourceManager:
     _config: JapaneseConfig
     _http_client: AudioManagerHttpClientABC
@@ -101,6 +108,21 @@ class AudioSourceManager:
         self._config = config
         self._http_client = http_client
         self._db = db
+
+    def get_source_names(self) -> Sequence[str]:
+        return self._db.source_names()
+
+    def _format_audio_tags_reserved(self, reserved: Sequence[ReservedFile]) -> str:
+        """Create [sound:filename.ext] tags using the actual (reserved) filenames."""
+        return self._config.audio_settings.tag_separator.join(f"[sound:{r.actual_filename}]" for r in reserved)
+
+    def reserve_and_format_tags(self, hits: Sequence[FileUrlData]) -> ReserveAndFormatResult:
+        """Reserve filenames and format audio tags in one call.
+
+        Returns ([sound:...] tags, reserved files) for use by callers that need both.
+        """
+        reserved = reserve_files(hits)
+        return ReserveAndFormatResult(self._format_audio_tags_reserved(reserved), reserved)
 
     def iter_enabled_audio_sources(self) -> Iterable[AudioSource]:
         """

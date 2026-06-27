@@ -48,11 +48,10 @@ class AudioSource(AudioSourceConfig):
         # then join("/path/to/taas", "media") = "/path/to/taas/media"
         return self.join_media_path(os.path.dirname(self.url), self.db.get_media_dir_rel(self.name))
 
-    def join_media_path(self, *args) -> Union[str, bytes]:
+    def join_media_path(self, *args) -> str:
         """Join multiple paths."""
         if self.is_local:
             # Local paths are platform-dependent.
-            # noinspection PyArgumentList
             return os.path.join(*args)
         else:
             # URLs are always joined with '/'.

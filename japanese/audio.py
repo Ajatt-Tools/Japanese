@@ -5,11 +5,10 @@ import collections
 import concurrent.futures
 import itertools
 import pathlib
-from collections.abc import Collection, Iterable, Sequence
+from collections.abc import Iterable, Sequence
 from concurrent.futures import Future
 from typing import Any, Callable, Optional
 
-import anki.collection
 from anki.utils import html_to_text_line
 from aqt import gui_hooks, mw
 from aqt.operations import QueryOp
@@ -18,7 +17,13 @@ from aqt.utils import show_warning, tooltip
 from .audio_manager.abstract import AnkiAudioSourceManagerABC
 from .audio_manager.audio_manager import AudioSourceManagerFactory
 from .audio_manager.basic_types import FileUrlData, NameUrl, NameUrlSet, TotalAudioStats
-from .audio_manager.download_results import DownloadedData, FileSaveResults, save_files
+from .audio_manager.download_results import (
+    DownloadedData,
+    FileSaveResults,
+    ReservedFile,
+    only_missing,
+    save_files,
+)
 from .audio_manager.source_manager import AudioSourceManager, InitResult
 from .config_view import JapaneseConfig
 from .config_view import config_view as cfg
@@ -33,11 +38,6 @@ from .mecab_controller.unify_readings import literal_pronunciation as pr
 from .reading import mecab
 
 
-def only_missing(col: anki.collection.Collection, files: Collection[FileUrlData]):
-    """Returns files that aren't present in the collection already."""
-    return (file for file in files if not col.media.have(file.desired_filename))
-
-
 def iter_tokens(src_text: str) -> Iterable[ParseableToken]:
     for token in tokenize(html_to_text_line(src_text)):
         if isinstance(token, ParseableToken):
@@ -49,13 +49,6 @@ def iter_mecab_variants(token: MecabParsedToken) -> Iterable[str]:
     if token.katakana_reading:
         yield token.katakana_reading
         yield to_hiragana(token.katakana_reading)
-
-
-def format_audio_tags(hits: Collection[FileUrlData]):
-    """
-    Create [sound:filename.ext] tags that Anki understands.
-    """
-    return cfg.audio_settings.tag_separator.join(f"[sound:{hit.desired_filename}]" for hit in hits)
 
 
 def sorted_files(hits: Iterable[FileUrlData]):
@@ -126,25 +119,25 @@ class AnkiAudioSourceManager(AudioSourceManager, AnkiAudioSourceManagerABC):
 
         return sorted_files(ensure_unique_files(itertools.chain(*hits.values())))
 
-    def download_and_save_tags(
+    def download_reserved(
         self,
-        hits: Sequence[FileUrlData],
+        reserved: Sequence[ReservedFile],
         *,
         on_finish: Optional[Callable[[FileSaveResults], Any]] = None,
     ) -> None:
         """
-        Download and save audio files using QueryOp.
+        Download and save audio files whose filenames have been pre-reserved.
         This method must be called from the main thread or by using mw.taskman.run_on_main().
         """
 
-        if len(hits) < 1:
+        if len(reserved) < 1:
             # Sequence is empty. Nothing to do.
             return
 
         assert mw, "Anki should be running."
-        return QueryOp(
+        QueryOp(
             parent=mw,
-            op=lambda col: self._download_tags(only_missing(col, hits)),
+            op=lambda col: self._download_tags(reserved),
             success=lambda futures: save_files(
                 futures,
                 on_finish=on_finish,
@@ -170,22 +163,24 @@ class AnkiAudioSourceManager(AudioSourceManager, AnkiAudioSourceManagerABC):
                     break
         return hits
 
-    def _download_tags(self, hits: Iterable[FileUrlData]) -> list[Future[DownloadedData]]:
-        """Download audio files from a remote."""
+    def _download_tags(self, reserved: Sequence[ReservedFile]) -> list[Future[DownloadedData]]:
+        """Download audio files from a remote, skipping files that already exist."""
 
         futures, results = [], []
 
         with concurrent.futures.ThreadPoolExecutor() as executor:
-            for audio_file in hits:
-                futures.append(executor.submit(self._download_tag, audio_file=audio_file))
+            # Submit files to download.
+            for reserved_file in only_missing(reserved):
+                futures.append(executor.submit(self._download_tag, reserved_file=reserved_file))
+            # Collect results.
             for future in concurrent.futures.as_completed(futures):
                 results.append(future)
         return results
 
-    def _download_tag(self, audio_file: FileUrlData) -> DownloadedData:
+    def _download_tag(self, reserved_file: ReservedFile) -> DownloadedData:
         return DownloadedData(
-            desired_filename=audio_file.desired_filename,
-            data=self._get_file(audio_file),
+            reserved=reserved_file,
+            data=self._get_file(reserved_file.source),
         )
 
     def remove_unused_audio_data(self) -> None:
@@ -198,7 +193,7 @@ class AnkiAudioSourceManager(AudioSourceManager, AnkiAudioSourceManagerABC):
             return frozenset(source.name for source in self._config.iter_audio_sources())
 
         def sources_in_db() -> frozenset[str]:
-            return frozenset(self._db.source_names())
+            return frozenset(self.get_source_names())
 
         for to_remove in sources_in_db() - sources_in_config():
             print(f"Removing unused cache data for audio source: {to_remove}")

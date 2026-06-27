@@ -15,7 +15,7 @@ from aqt import mw
 from aqt.utils import tooltip
 
 from .ajt_common.model_utils import AnkiNoteTypeDict
-from .audio import aud_src_mgr, format_audio_tags
+from .audio import aud_src_mgr
 from .audio_manager.download_results import (
     FileSaveResults,
     calc_tooltip_offset,
@@ -126,25 +126,27 @@ class AddAudio(DoTask, task_type=ProfileAudio):
             ignore_inflections=cfg.audio_settings.ignore_inflections,
             stop_if_one_source_has_results=cfg.audio_settings.stop_if_one_source_has_results,
         )[: cfg.audio_settings.maximum_results]
-        # "Download and save tags" has to run on main as it will launch a new QueryOp.
-        assert mw
+        # Pre-reserve filenames so that [sound:...] tags use the actual (normalized) names.
+        audio_tags, reserved = session.reserve_and_format_tags(search_results)
+        # "Download and save" has to run on main as it will launch a new QueryOp.
+        assert mw, "Anki should be running."
         mw.taskman.run_on_main(
             functools.partial(
-                session.download_and_save_tags,
-                search_results,
+                session.download_reserved,
+                reserved,
                 on_finish=self._report_results,
             )
         )
-        return format_audio_tags(search_results)
+        return audio_tags
 
-    def _report_results(self, r: FileSaveResults):
+    def _report_results(self, r: FileSaveResults) -> None:
         """
         Show a tooltip with audio download results.
         """
         if not self._caller.cfg.audio_download_report:
             return
         if txt := format_report_results_msg(r):
-            return tooltip(txt, period=7000, y_offset=calc_tooltip_offset(len(r.successes) + len(r.fails)))
+            tooltip(txt, period=7000, y_offset=calc_tooltip_offset(len(r.successes) + len(r.fails)))
 
 
 def html_to_media_line(txt: str) -> str:

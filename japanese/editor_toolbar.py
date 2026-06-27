@@ -13,7 +13,7 @@ from aqt.editor import Editor
 from aqt.operations import CollectionOp
 
 from .ajt_common.consts import ADDON_SERIES
-from .audio import aud_src_mgr, format_audio_tags
+from .audio import aud_src_mgr
 from .audio_manager.forvo_client import ForvoClient
 from .config_view import ToolbarButtonConfig
 from .config_view import config_view as cfg
@@ -135,12 +135,14 @@ def search_audio(editor: Editor) -> None:
         if not results:
             return
 
+        # Pre-reserve filenames so that [sound:...] tags use the actual (normalized) names.
+        audio_tags, reserved = session.reserve_and_format_tags(results)
         editor.note[dialog.destination_field_name] = (
             editor.note[dialog.destination_field_name]
             + (cfg.audio_settings.tag_separator if editor.note[dialog.destination_field_name] else "")
-            + format_audio_tags(results)
+            + audio_tags
         )
-        session.download_and_save_tags(results)
+        session.download_reserved(reserved)
 
 
 def query_buttons() -> Iterable[ToolbarButton]:

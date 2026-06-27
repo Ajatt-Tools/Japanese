@@ -22,6 +22,7 @@ from ..audio_manager.download_results import (
     FileSaveResults,
     calc_tooltip_offset,
     format_report_errors_msg,
+    reserve_files,
 )
 from ..audio_manager.forvo_client import ForvoClient, FullForvoResult
 from ..helpers.consts import ADDON_NAME
@@ -310,26 +311,27 @@ class AnkiAudioSearchDialog(AudioSearchDialog, AnkiSaveAndRestoreGeomDialog):
         else:
             # file is not located on this computer and needs to be downloaded first.
             self._search_result_label.set_downloading(file.desired_filename)
-            return self._audio_manager.download_and_save_tags(
-                hits=[file],
+            reserved = reserve_files([file])
+            return self._audio_manager.download_reserved(
+                reserved=reserved,
                 on_finish=self._handle_and_play_download_result,
             )
 
     def _handle_and_play_download_result(self, results: FileSaveResults) -> None:
         self._search_result_label.hide_count()
-        sound.av_player.play_tags([SoundOrVideoTag(filename=result.desired_filename) for result in results.successes])
+        sound.av_player.play_tags([SoundOrVideoTag(filename=result.actual_filename) for result in results.successes])
         if results.fails and (txt := format_report_errors_msg(results.fails)):
             tooltip(msg=txt, parent=self, period=7000, y_offset=calc_tooltip_offset(len(results.fails)))
 
     def _open_audio_file(self, file: FileUrlData) -> None:
         tooltip(tr.qt_misc_loading(), period=1000)
-
+        assert mw and mw.col, "Collection must be opened."
         if os.path.isfile(file.url):
-            return open_file(file.url)
+            open_file(file.url)
         elif mw.col.media.have(file.desired_filename):
-            return open_file(os.path.join(mw.col.media.dir(), file.desired_filename))
+            open_file(os.path.join(mw.col.media.dir(), file.desired_filename))
         with no_bundled_libs():
-            return QDesktopServices.openUrl(QUrl(file.url))
+            QDesktopServices.openUrl(QUrl(file.url))
 
     def _search_forvo(self, search_text: str) -> None:
         """

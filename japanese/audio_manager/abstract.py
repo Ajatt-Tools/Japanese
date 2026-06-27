@@ -2,9 +2,11 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import abc
+from collections.abc import Sequence
 
 from ..database.sqlite3_buddy import Sqlite3Buddy
 from .basic_types import FileUrlData
+from .download_results import ReservedFile
 
 
 class AnkiAudioSourceManagerABC(abc.ABC):
@@ -20,7 +22,7 @@ class AnkiAudioSourceManagerABC(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def download_and_save_tags(self, hits, *, on_finish) -> None:
+    def download_reserved(self, reserved: Sequence[ReservedFile], *, on_finish) -> None:
         raise NotImplementedError()
 
 
