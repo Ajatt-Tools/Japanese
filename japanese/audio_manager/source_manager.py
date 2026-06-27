@@ -154,10 +154,7 @@ class AudioSourceManager:
         file_info: FileInfo = self._db.get_file_info(source.name, file.file_name)
 
         # Append either pitch pattern or kana reading, preferring pitch pattern.
-        if file_info["pitch_pattern"]:
-            components.append(to_katakana(file_info["pitch_pattern"]))
-        elif file_info["kana_reading"]:
-            components.append(to_katakana(file_info["kana_reading"]))
+        components.append(to_katakana(file_info["pitch_pattern"] or file_info["kana_reading"] or "no_reading"))
 
         # If pitch number is present, append it after reading.
         if file_info["pitch_number"] and file_info["pitch_number"] != NO_ACCENT:
