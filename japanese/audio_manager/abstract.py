@@ -3,10 +3,11 @@
 
 import abc
 from collections.abc import Sequence
+from typing import Any, Callable, Optional
 
 from ..database.sqlite3_buddy import Sqlite3Buddy
 from .basic_types import FileUrlData
-from .download_results import ReservedFile
+from .download_results import FileSaveResults, ReservedFile
 
 
 class AnkiAudioSourceManagerABC(abc.ABC):
@@ -22,7 +23,12 @@ class AnkiAudioSourceManagerABC(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def download_reserved(self, reserved: Sequence[ReservedFile], *, on_finish) -> None:
+    def download_reserved(
+        self,
+        reserved: Sequence[ReservedFile],
+        *,
+        on_finish: Optional[Callable[[FileSaveResults], Any]],
+    ) -> None:
         raise NotImplementedError()
 
 

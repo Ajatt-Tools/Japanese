@@ -28,11 +28,12 @@ def change_event(widget: QWidget) -> pyqtSignal:
     """Return the appropriate change signal for a widget based on its type."""
     if isinstance(widget, QDoubleSpinBox):
         return widget.valueChanged
-    if isinstance(widget, QLineEdit):
+    elif isinstance(widget, QLineEdit):
         return widget.textChanged
-    if isinstance(widget, QCheckBox):
+    elif isinstance(widget, QCheckBox):
         return widget.stateChanged
-    raise ValueError("unknown type")
+    else:
+        raise ValueError("unknown type")
 
 
 def get_from_widget(widget: QWidget) -> Union[bool, str, int, float]:
