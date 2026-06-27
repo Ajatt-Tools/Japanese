@@ -404,6 +404,10 @@ class SvgPitchGraphOptionsConfigView(ConfigSubViewBase):
     def graph_font_name(self) -> str:
         return self["graph_font_name"]
 
+    @graph_font_name.setter
+    def graph_font_name(self, graph_font_name: str) -> None:
+        self["graph_font_name"] = graph_font_name
+
 
 @final
 class PitchColorCodesConfigView(ConfigSubViewBase):

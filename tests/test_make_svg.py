@@ -74,6 +74,7 @@ TEST_ENTRIES = (
 )
 def test_make_svg(no_anki_config: NoAnkiConfigView, formatted_entry: FormattedEntry, svg_file_name: str) -> None:
     svg_config = SvgPitchGraphOptionsConfigView(no_anki_config)
+    svg_config.graph_font_name = "Noto Sans CJK JP"  # simplify
     maker = SvgPitchGraphMaker(options=svg_config)
 
     with open(DATA_DIR / svg_file_name, encoding="utf-8") as f:
