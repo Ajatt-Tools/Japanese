@@ -90,6 +90,20 @@ profile = "black"
 [tool.basedpyright]
 reportUnusedCallResult = false
 
+[tool.hatch.envs.hatch-test]
+# https://hatch.pypa.io/latest/config/internal/testing/
+# https://hatch.pypa.io/latest/tutorials/testing/overview/
+dependencies = [
+    "mypy>=1.0.0",
+    "pytest",
+    "pytest-asyncio",
+    "pytest-xdist",
+    "aqt", # needed to run Anki addon tests
+]
+system-packages = true
+parallel = true
+randomize = true
+
 [tool.hatch.envs.hatch-static-analysis]
 # https://hatch.pypa.io/latest/how-to/static-analysis/behavior/
 dependencies = [
