@@ -8,7 +8,6 @@ from math import sqrt
 from typing import Optional
 
 from ..config_view import SvgPitchGraphOptionsConfigView
-from .basic_types import pitch_type_from_pitch_num
 from .common import FormattedEntry
 from .entry_to_moras import (
     Mora,
@@ -153,6 +152,12 @@ class Path:
         return "".join(drawn)
 
 
+def attrs_circle(is_trailing: bool) -> str:
+    if is_trailing:
+        return f'class="{SvgColor.trail.name}" fill="none" stroke="{SvgColor.trail.value}"'
+    return f'fill="{SvgColor.word.value}" stroke="{SvgColor.word.value}"'
+
+
 class SvgPitchGraphMaker:
     def __init__(self, options: SvgPitchGraphOptionsConfigView) -> None:
         self._opts = options
@@ -161,14 +166,8 @@ class SvgPitchGraphMaker:
         """
         Create a circle that is positioned where two lines touch.
         """
-
-        def attrs_circle() -> str:
-            if is_trailing:
-                return f'class="{SvgColor.trail.name}" fill="none" stroke="{SvgColor.trail.value}"'
-            return f'fill="{SvgColor.word.value}" stroke="{SvgColor.word.value}"'
-
         return (
-            f'<circle {attrs_circle()} stroke-width="{self._opts.stroke_width:.2f}" '
+            f'<circle {attrs_circle(is_trailing)} stroke-width="{self._opts.stroke_width:.2f}" '
             f'cx="{pos.x:.3f}" cy="{pos.y:.3f}" r="{self._opts.circle_radius:.2f}" />'
         )
 
