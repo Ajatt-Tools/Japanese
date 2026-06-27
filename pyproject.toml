@@ -10,7 +10,7 @@ name = "japanese"
 dynamic = ["version"]
 description = 'Automatically generate furigana and other data on Anki cards.'
 readme = "README.md"
-requires-python = "~=3.9" # anki officially only runs on 3.9
+requires-python = "~=3.10" # anki officially only runs on 3.10
 license = { file = "LICENSE" }
 keywords = ["ajatt"]
 authors = [
@@ -19,7 +19,7 @@ authors = [
 ]
 classifiers = [
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
 ]
 dependencies = []
 
@@ -42,21 +42,19 @@ dependencies = [
   "mypy>=1.0.0",
   "isort",
   "pytest",
-  "aqt",
+  "aqt>=26.5",
   "pyupgrade",
   "beartype",
 ]
-python = "3.9"
+python = "3.10"
 
 [[tool.hatch.envs.dev.matrix]]
 # https://hatch.pypa.io/latest/tutorials/testing/overview/#testing-projects
-python = ["3.9", ]
+python = ["3.10", ]
 
 [tool.hatch.envs.dev.scripts]
 # run as `hatch run dev:scriptname`
 check = "mypy --install-types --non-interactive {args:japanese tests}"
-test = "pytest {args}"
-testv = "pytest -vvv -s"
 format = "$(git rev-parse --show-toplevel)/scripts/format.sh"
 package = "$(git rev-parse --show-toplevel)/scripts/package.sh"
 
@@ -81,7 +79,7 @@ exclude_lines = [
 
 [tool.black]
 line-length = 120
-target-version = ['py39']
+target-version = ['py310']
 unstable = true
 
 [tool.isort]
@@ -90,19 +88,24 @@ profile = "black"
 [tool.basedpyright]
 reportUnusedCallResult = false
 
-[tool.hatch.envs.hatch-test]
 # https://hatch.pypa.io/latest/config/internal/testing/
 # https://hatch.pypa.io/latest/tutorials/testing/overview/
+[tool.hatch.envs.hatch-test]
 dependencies = [
     "mypy>=1.0.0",
     "pytest",
     "pytest-asyncio",
     "pytest-xdist",
-    "aqt", # needed to run Anki addon tests
+    "aqt>=26.5", # needed to run Anki addon tests
 ]
 system-packages = true
 parallel = true
 randomize = true
+
+# https://hatch.pypa.io/latest/tutorials/testing/overview/#testing-projects
+# NOTE: Anki is still stuck on python 3.10. Ensure the add-on works on Python 3.10.
+[[tool.hatch.envs.hatch-test.matrix]]
+python = ["3.10", ]
 
 [tool.hatch.envs.hatch-static-analysis]
 # https://hatch.pypa.io/latest/how-to/static-analysis/behavior/
