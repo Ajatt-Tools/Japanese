@@ -89,7 +89,12 @@ class TestAccDictLookup:
         [("聞かせて戻って", ("聞く", "戻る")), ("経緯と国境", ("経緯", "国境"))],
     )
     def test_accent_lookup(
-        self, tmp_db_connection: Sqlite3Buddy, lookup: AccentLookup, test_input: str, expected: Sequence[str]
+        self,
+        tmp_db_connection: Sqlite3Buddy,
+        lookup: AccentLookup,
+        acc_dict_mgr: AccentDictManager2,
+        test_input: str,
+        expected: Sequence[str],
     ) -> None:
         result = lookup.with_new_buddy(tmp_db_connection).get_pronunciations(test_input)
         for item in expected:
@@ -136,7 +141,12 @@ class TestAccDictLookup:
         ],
     )
     def test_attach_rules(
-        self, tmp_db_connection: Sqlite3Buddy, fgen: FuriganaGen, sentence: str, expected: Sequence[str]
+        self,
+        tmp_db_connection: Sqlite3Buddy,
+        fgen: FuriganaGen,
+        acc_dict_mgr: AccentDictManager2,
+        sentence: str,
+        expected: Sequence[str],
     ) -> None:
         text = fgen.with_new_buddy(tmp_db_connection).generate_furigana(
             sentence,
@@ -155,7 +165,14 @@ class TestAccDictLookup:
             ),
         ],
     )
-    def test_furigana(self, tmp_db_connection: Sqlite3Buddy, fgen: FuriganaGen, sentence: str, expected: str) -> None:
+    def test_furigana(
+        self,
+        tmp_db_connection: Sqlite3Buddy,
+        fgen: FuriganaGen,
+        acc_dict_mgr: AccentDictManager2,
+        sentence: str,
+        expected: str,
+    ) -> None:
         text = fgen.with_new_buddy(tmp_db_connection).generate_furigana(
             sentence,
             output_format=ColorCodePitchFormat(0),

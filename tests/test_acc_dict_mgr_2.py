@@ -20,26 +20,25 @@ def test_iter_bundled_pitch_accent_files() -> None:
     assert names == ["pitch_accents_formatted.1.csv", "pitch_accents_formatted.2.csv", "pitch_accents_formatted.3.csv"]
 
 
-class TestAccDictManager:
+class TestAccDictEmpty:
+    """Tests that verify behavior on a fresh, unpopulated table."""
+
     @pytest.fixture(scope="class")
     def faux_writer(
         self, tmp_db_connection: Sqlite3Buddy, tmp_upd_file: pathlib.Path, tmp_user_accents_file: pathlib.Path
-    ):
+    ) -> SqliteAccDictWriter:
         writer = SqliteAccDictWriter(tmp_db_connection, tmp_upd_file, tmp_user_accents_file)
         yield writer
 
-    @pytest.fixture(scope="class")
-    def faux_reader(self, tmp_db_connection):
-        reader = SqliteAccDictReader(tmp_db_connection)
-        yield reader
-
     def test_empty(self, faux_writer: SqliteAccDictWriter) -> None:
         w = faux_writer
+        w.clear_table()
         assert w.is_table_filled() is False
         assert w.is_table_up_to_date() is False
 
     def test_table_recreate(self, faux_writer: SqliteAccDictWriter) -> None:
         w = faux_writer
+        w.clear_table()
         assert w.is_table_filled() is False
         assert w.is_table_up_to_date() is False
         w.recreate_table()
@@ -48,11 +47,29 @@ class TestAccDictManager:
 
     def test_table_ensure(self, faux_writer: SqliteAccDictWriter) -> None:
         w = faux_writer
+        w.clear_table()
         assert w.is_table_filled() is False
         assert w.is_table_up_to_date() is False
         w.ensure_sqlite_populated()
         assert w.is_table_filled() is True
         assert w.is_table_up_to_date() is True
+
+
+class TestAccDictPopulated:
+    """Tests that verify behavior on a pre-populated table."""
+
+    @pytest.fixture(scope="class")
+    def faux_writer(
+        self, tmp_db_connection: Sqlite3Buddy, tmp_upd_file: pathlib.Path, tmp_user_accents_file: pathlib.Path
+    ) -> SqliteAccDictWriter:
+        writer = SqliteAccDictWriter(tmp_db_connection, tmp_upd_file, tmp_user_accents_file)
+        writer.ensure_sqlite_populated()
+        yield writer
+
+    @pytest.fixture(scope="class")
+    def faux_reader(self, tmp_db_connection: Sqlite3Buddy, faux_writer: SqliteAccDictWriter) -> SqliteAccDictReader:
+        reader = SqliteAccDictReader(tmp_db_connection)
+        yield reader
 
     def test_table_filled(self, faux_writer: SqliteAccDictWriter) -> None:
         w = faux_writer
@@ -182,10 +199,20 @@ class TestAccDictManager:
             ),
         ]
 
-    def test_table_clear(self, faux_writer: SqliteAccDictWriter) -> None:
-        w = faux_writer
-        assert w.is_table_filled() is True
-        assert w.is_table_up_to_date() is True
-        w.clear_table()
-        assert w.is_table_filled() is False
-        assert w.is_table_up_to_date() is False
+
+class TestAccDictClear:
+    """Self-contained test for table clearing."""
+
+    def test_table_clear(
+        self,
+        tmp_db_connection: Sqlite3Buddy,
+        tmp_upd_file: pathlib.Path,
+        tmp_user_accents_file: pathlib.Path,
+    ) -> None:
+        writer = SqliteAccDictWriter(tmp_db_connection, tmp_upd_file, tmp_user_accents_file)
+        writer.ensure_sqlite_populated()
+        assert writer.is_table_filled() is True
+        assert writer.is_table_up_to_date() is True
+        writer.clear_table()
+        assert writer.is_table_filled() is False
+        assert writer.is_table_up_to_date() is False
