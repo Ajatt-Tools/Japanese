@@ -50,7 +50,8 @@ def normalize_filename(text: str, suffix_size: int = 4) -> str:
     text = re.sub(RE_FILENAME_PROHIBITED, "_", text)
     text = re.sub(RE_UNDER, "_", text).strip("_")
     text = cut_to_anki_size(text, max_len_bytes=MAX_LEN_BYTES - suffix_size)
-    return text.strip()
+    # Anki will force the name to be lowercase, so convert it in advance.
+    return text.strip().lower()
 
 
 def norm_pitch_numbers(s: str) -> str:
@@ -108,7 +109,8 @@ def make_desired_filename(file: BoundFile, file_info: FileInfo) -> str:
         components.append(norm_pitch_numbers(pitch_number))
 
     components.append(file.source_name)
-    return f"{normalize_filename('_'.join(components))}{file.ext()}"
+    # Anki will force the name to be lowercase, so convert it in advance.
+    return f"{normalize_filename('_'.join(components))}{file.ext()}".lower()
 
 
 class AudioSourceManager:
