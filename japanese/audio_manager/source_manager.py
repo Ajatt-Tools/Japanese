@@ -6,7 +6,8 @@ import json
 import os
 import re
 import zipfile
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
+from typing import Optional
 
 from ..config_view import JapaneseConfig
 from ..database.audio_buddy import BoundFile
@@ -19,6 +20,7 @@ from ..pitch_accents.consts import NO_ACCENT
 from .audio_source import AudioSource
 from .basic_types import (
     AudioManagerException,
+    AudioStats,
     FileUrlData,
     NameUrl,
     NameUrlSet,
@@ -81,6 +83,10 @@ def read_zip(zip_in: zipfile.ZipFile, audio_source: AudioSource) -> bytes:
         )
 
 
+def only_existing_stats(stats_list: Iterable[Optional[AudioStats]]) -> Sequence[AudioStats]:
+    return tuple(filter(bool, stats_list))
+
+
 class AudioSourceManager:
     _config: JapaneseConfig
     _http_client: AudioManagerHttpClientABC
@@ -118,11 +124,10 @@ class AudioSourceManager:
         return TotalAudioStats(
             unique_files=self.distinct_file_count(),
             unique_headwords=self.distinct_headword_count(),
-            sources=[
-                stats
+            sources=only_existing_stats(
+                self._db.get_stats_by_name(NameUrl(source.name, source.url))
                 for source in self._config.iter_audio_sources()
-                if (stats := self._db.get_stats_by_name(NameUrl(source.name, source.url)))
-            ],
+            ),
         )
 
     def search_word(self, word: str) -> Iterable[FileUrlData]:

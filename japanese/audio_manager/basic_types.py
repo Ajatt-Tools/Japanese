@@ -3,6 +3,7 @@
 
 import dataclasses
 import typing
+from collections.abc import Sequence
 from typing import Optional, Union
 
 import requests
@@ -70,4 +71,4 @@ class AudioStats:
 class TotalAudioStats:
     unique_headwords: int
     unique_files: int
-    sources: list[AudioStats]
+    sources: Sequence[AudioStats]
