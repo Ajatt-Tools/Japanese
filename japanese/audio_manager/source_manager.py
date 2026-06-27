@@ -157,8 +157,9 @@ class AudioSourceManager:
         components.append(to_katakana(file_info["pitch_pattern"] or file_info["kana_reading"] or "no_reading"))
 
         # If pitch number is present, append it after reading.
-        if file_info["pitch_number"] and file_info["pitch_number"] != NO_ACCENT:
-            components.append(norm_pitch_numbers(file_info["pitch_number"]))
+        pitch_number = file_info["pitch_number"]
+        if pitch_number != NO_ACCENT and pitch_number:
+            components.append(norm_pitch_numbers(pitch_number))
 
         desired_filename = "_".join((
             file.headword,
