@@ -10,27 +10,53 @@ from ..widgets.addon_opts import WordsEdit
 from .enum_selector import FlagSelectCombo
 
 
-def as_config_dict(widgets: dict[str, QWidget]) -> dict[str, Union[bool, str, int]]:
-    d = {}
-    for key, widget in widgets.items():
-        if isinstance(widget, ColorEditPicker):
-            d[key] = widget.color_hex()
-        elif isinstance(widget, FlagSelectCombo):
-            d[key] = widget.comma_separated_flags()
-        elif isinstance(widget, EnumSelectCombo):
-            d[key] = widget.currentName()
-        elif isinstance(widget, QComboBox):
-            d[key] = widget.currentText()
-        elif isinstance(widget, QLineEdit):
-            d[key] = widget.text()
-        elif isinstance(widget, QCheckBox):
-            d[key] = widget.isChecked()
-        elif isinstance(widget, ShortCutGrabButton):
-            d[key] = widget.value()
-        elif isinstance(widget, WordsEdit):
-            d[key] = widget.as_text()
-        elif isinstance(widget, QAbstractSpinBox):
-            d[key] = widget.value()
-        else:
-            raise RuntimeError(f"Don't know how to handle widget of type {type(widget).__name__}.")
-    return d
+def set_from_cfg(widget: QWidget, value: Union[bool, str, int, float]) -> None:
+    """Set a widget's value from a configuration value based on the widget type."""
+    if isinstance(widget, QDoubleSpinBox) and isinstance(value, float):
+        widget.setValue(value)
+    if isinstance(widget, QLineEdit) and isinstance(value, str):
+        widget.setText(value)
+    if isinstance(widget, QCheckBox) and isinstance(value, bool):
+        widget.setChecked(value)
+    raise ValueError(f"Can't handle widget of type {type(widget).__name__} and value of type {type(value).__name__}")
+
+
+def change_event(widget: QWidget) -> pyqtSignal:
+    """Return the appropriate change signal for a widget based on its type."""
+    if isinstance(widget, QDoubleSpinBox):
+        return widget.valueChanged
+    if isinstance(widget, QLineEdit):
+        return widget.textChanged
+    if isinstance(widget, QCheckBox):
+        return widget.stateChanged
+    raise ValueError("unknown type")
+
+
+def get_from_widget(widget: QWidget) -> Union[bool, str, int, float]:
+    """Extract the current value from a widget based on its type."""
+    if isinstance(widget, QDoubleSpinBox):
+        return widget.value()
+    elif isinstance(widget, ColorEditPicker):
+        return widget.color_hex()
+    elif isinstance(widget, FlagSelectCombo):
+        return widget.comma_separated_flags()
+    elif isinstance(widget, EnumSelectCombo):
+        return widget.currentName()
+    elif isinstance(widget, QComboBox):
+        return widget.currentText()
+    elif isinstance(widget, QLineEdit):
+        return widget.text()
+    elif isinstance(widget, QCheckBox):
+        return widget.isChecked()
+    elif isinstance(widget, ShortCutGrabButton):
+        return widget.value()
+    elif isinstance(widget, WordsEdit):
+        return widget.as_text()
+    elif isinstance(widget, QAbstractSpinBox):
+        return widget.value()
+    else:
+        raise ValueError(f"Don't know how to handle widget of type {type(widget).__name__}.")
+
+
+def as_config_dict(widgets: dict[str, QWidget]) -> dict[str, Union[bool, str, int, float]]:
+    return {key: get_from_widget(widget) for key, widget in widgets.items()}
