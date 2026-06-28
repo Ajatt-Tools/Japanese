@@ -4,7 +4,6 @@
 import functools
 import json
 from collections.abc import Iterable
-from typing import Any
 
 import anki.collection
 from anki import hooks

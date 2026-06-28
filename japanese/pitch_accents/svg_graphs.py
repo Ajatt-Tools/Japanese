@@ -177,11 +177,12 @@ class SvgPitchGraphMaker:
             f'cx="{pos.x:.3f}" cy="{pos.y:.3f}" r="{self._opts.circle_radius:.2f}" />'
         )
 
-    def make_devoiced_circle(self, mora: Mora, pos: Point) -> str:
+    def make_devoiced_circle(self, pos: Point, extend: bool) -> str:
         """
         Make a circle around the mora text to show that it's devoiced.
+        If extend is true, widen the circle. This is needed if the mora consists of two characters.
         """
-        if len(mora.txt) == 1:
+        if not extend:
             pos = pos.shift_by(
                 x=self._opts.font_size / 2 + self._opts.text_dx,
                 y=-self._opts.font_size / 2 + self._opts.devoiced_circle_dy,
@@ -259,7 +260,7 @@ class SvgPitchGraphMaker:
 
             if MoraFlag.devoiced in mora.flags:
                 # circle around text
-                text_moras.append(self.make_devoiced_circle(mora, pos.replace(y=height_kana)))
+                text_moras.append(self.make_devoiced_circle(pos.replace(y=height_kana), extend=mora.is_extended()))
 
             if not mora.is_trailing():
                 text_moras.append(self.make_text(mora, pos.replace(y=height_kana), dx=self.calc_text_dx(mora)))
