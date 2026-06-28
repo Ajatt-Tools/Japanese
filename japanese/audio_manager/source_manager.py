@@ -70,7 +70,7 @@ class InitResult:
     did_run: bool = True
 
     @classmethod
-    def did_not_run(cls):
+    def did_not_run(cls) -> "InitResult":
         # indicates that the init operation didn't start (it wasn't necessary)
         return cls([], [], did_run=False)
 
@@ -86,7 +86,7 @@ def read_zip(zip_in: zipfile.ZipFile, audio_source: AudioSource) -> bytes:
         )
 
 
-def only_existing_stats(stats_list: Iterable[Optional[AudioStats]]) -> Sequence[AudioStats]:
+def only_existing_stats(stats_list: Iterable[AudioStats | None]) -> Sequence[AudioStats]:
     return tuple(filter(bool, stats_list))
 
 

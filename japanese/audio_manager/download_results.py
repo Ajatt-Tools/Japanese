@@ -107,7 +107,7 @@ def reserve_files(hits: Sequence[FileUrlData]) -> list[ReservedFile]:
 
 def save_files(
     futures: Collection[Future[DownloadedData]],
-    on_finish: Optional[Callable[[FileSaveResults], Any]],
+    on_finish: Callable[[FileSaveResults], Any] | None,
 ) -> FileSaveResults:
     """Overwrite pre-reserved dummy files with the downloaded audio data.
 

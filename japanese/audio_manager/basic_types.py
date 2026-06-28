@@ -32,8 +32,8 @@ class AudioSourceConfig(SourceConfig):
 
 
 class AudioManagerExceptionBase(OSError):
-    response: Optional[requests.Response]
-    exception: Optional[Exception]
+    response: requests.Response | None
+    exception: Exception | None
 
     def describe_short(self) -> str:
         if self.exception is None and self.response is None:
@@ -43,10 +43,10 @@ class AudioManagerExceptionBase(OSError):
 
 @dataclasses.dataclass
 class AudioManagerException(AudioManagerExceptionBase):
-    file: Union[AudioSourceConfig, FileUrlData]
+    file: AudioSourceConfig | FileUrlData
     explanation: str
-    response: Optional[requests.Response] = None
-    exception: Optional[Exception] = None
+    response: requests.Response | None = None
+    exception: Exception | None = None
 
 
 class NameUrl(typing.NamedTuple):

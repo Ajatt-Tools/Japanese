@@ -62,8 +62,8 @@ class ForvoPronunciation:
     word: str
     username: str
     audio_url: str
-    gender: Optional[ForvoGender] = None
-    country: Optional[str] = None
+    gender: ForvoGender | None = None
+    country: str | None = None
 
 
 @dataclasses.dataclass
@@ -101,14 +101,14 @@ def find_username(result: PageElement) -> str:
     return "Unknown"
 
 
-def find_gender(result: PageElement) -> Optional[ForvoGender]:
+def find_gender(result: PageElement) -> ForvoGender | None:
     if match := re.search(RE_FIND_GENDER, result.get_text(strip=True)):
         # noinspection PyTypeChecker
         return ForvoGender[match.group("gender").strip().lower()]
     return None
 
 
-def find_country(result: PageElement) -> Optional[str]:
+def find_country(result: PageElement) -> str | None:
     if match := re.search(RE_FIND_COUNTRY, result.get_text(strip=True)):
         return match.group("country").strip()
     return None
@@ -130,8 +130,8 @@ def make_search_result_filename(audio_url: str, word: str, lang: str) -> str:
 class ForvoClientException(AudioManagerExceptionBase):
     word: str
     explanation: str
-    response: Optional[requests.Response] = None
-    exception: Optional[Exception] = None
+    response: requests.Response | None = None
+    exception: Exception | None = None
 
     def __str__(self) -> str:
         return self.explanation
@@ -143,8 +143,8 @@ class FullForvoResult:
     Used to retrieve all results when using Anki's QueryOp
     """
 
-    error_word: Optional[Exception] = None
-    error_search: Optional[Exception] = None
+    error_word: Exception | None = None
+    error_search: Exception | None = None
     files: list[FileUrlData] = dataclasses.field(default_factory=list)
 
 
@@ -155,10 +155,10 @@ class ForvoClient:
 
     _server_host: str = "https://forvo.com"
     _audio_http_host: str = "https://audio12.forvo.com"
-    _config: Union[ForvoConfig, ForvoSettingsConfigView]
+    _config: ForvoConfig | ForvoSettingsConfigView
     _session: requests.Session
 
-    def __init__(self, config: Union[ForvoConfig, ForvoSettingsConfigView]) -> None:
+    def __init__(self, config: ForvoConfig | ForvoSettingsConfigView) -> None:
         self._config = config
         self._session = create_session(self._config.retry_attempts)
 

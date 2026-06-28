@@ -2,7 +2,7 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 import dataclasses
 import os
-from typing import Optional, Union
+from typing import Any, Optional, Union
 
 from ..database.sqlite3_buddy import Sqlite3Buddy
 from ..helpers.file_ops import file_exists
@@ -16,9 +16,9 @@ class AudioSourceError(RuntimeError):
 @dataclasses.dataclass
 class AudioSource(AudioSourceConfig):
     # current schema has three fields: "meta", "headwords", "files"
-    db: Optional[Sqlite3Buddy]
+    db: Sqlite3Buddy | None
 
-    def with_db(self, db: Optional[Sqlite3Buddy]):
+    def with_db(self, db: Sqlite3Buddy | None) -> "AudioSource":
         return dataclasses.replace(self, db=db)
 
     @classmethod
@@ -31,7 +31,7 @@ class AudioSource(AudioSourceConfig):
             raise AudioSourceError("db is none")
         return self.db.is_source_cached(self.name)
 
-    def raise_if_not_ready(self):
+    def raise_if_not_ready(self) -> None:
         if not self.is_cached():
             raise AudioSourceError("Attempt to access property of an uninitialized source.")
 
@@ -62,12 +62,12 @@ class AudioSource(AudioSourceConfig):
         return file_exists(self.url)
 
     @property
-    def original_url(self):
+    def original_url(self) -> str | None:
         self.raise_if_not_ready()
         assert self.db
         return self.db.get_original_url(self.name)
 
-    def update_original_url(self):
+    def update_original_url(self) -> None:
         # Remember where the file was downloaded from.
         self.raise_if_not_ready()
         assert self.db

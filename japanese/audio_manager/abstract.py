@@ -2,8 +2,8 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import abc
-from collections.abc import Sequence
-from typing import Any, Callable, Optional
+from collections.abc import Callable, Sequence
+from typing import Any, Optional
 
 from ..database.sqlite3_buddy import Sqlite3Buddy
 from .basic_types import FileUrlData
@@ -27,7 +27,7 @@ class AnkiAudioSourceManagerABC(abc.ABC):
         self,
         reserved: Sequence[ReservedFile],
         *,
-        on_finish: Optional[Callable[[FileSaveResults], Any]],
+        on_finish: Callable[[FileSaveResults], Any] | None,
     ) -> None:
         raise NotImplementedError()
 

@@ -5,9 +5,9 @@ import collections
 import concurrent.futures
 import itertools
 import pathlib
-from collections.abc import Iterable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from concurrent.futures import Future
-from typing import Any, Callable, Optional
+from typing import Any, Optional
 
 from anki.utils import html_to_text_line
 from aqt import gui_hooks, mw
@@ -51,7 +51,7 @@ def iter_mecab_variants(token: MecabParsedToken) -> Iterable[str]:
         yield to_hiragana(token.katakana_reading)
 
 
-def sorted_files(hits: Iterable[FileUrlData]):
+def sorted_files(hits: Iterable[FileUrlData]) -> list[FileUrlData]:
     """
     Sort the audio search results according to reading and pitch number
     to ensure determined order of entries.
@@ -59,12 +59,12 @@ def sorted_files(hits: Iterable[FileUrlData]):
     return sorted(hits, key=lambda info: (pr(info.reading), info.pitch_number))
 
 
-def exclude_inflections(hits: dict[str, list[FileUrlData]]):
+def exclude_inflections(hits: dict[str, list[FileUrlData]]) -> None:
     for word, word_hits in hits.items():
         hits[word] = [hit for hit in word_hits if not is_inflected(hit.word, hit.reading)]
 
 
-def take_first_source(hits: dict[str, list[FileUrlData]]):
+def take_first_source(hits: dict[str, list[FileUrlData]]) -> None:
     for word, word_hits in hits.items():
         if len(word_hits) > 1:
             hits[word] = [hit for hit in word_hits if hit.source_name == word_hits[0].source_name]
@@ -123,7 +123,7 @@ class AnkiAudioSourceManager(AudioSourceManager, AnkiAudioSourceManagerABC):
         self,
         reserved: Sequence[ReservedFile],
         *,
-        on_finish: Optional[Callable[[FileSaveResults], Any]] = None,
+        on_finish: Callable[[FileSaveResults], Any] | None = None,
     ) -> None:
         """
         Download and save audio files whose filenames have been pre-reserved.
@@ -228,7 +228,7 @@ def report_audio_init_errors(result: InitResult) -> None:
 
 class AnkiAudioSourceManagerFactory(AudioSourceManagerFactory):
     _config: JapaneseConfig
-    _db_path: Optional[pathlib.Path] = None
+    _db_path: pathlib.Path | None = None
 
     def __init__(self, config: JapaneseConfig) -> None:
         super().__init__(config)
@@ -294,7 +294,7 @@ class AnkiAudioSourceManagerFactory(AudioSourceManagerFactory):
     def init_sources_anki(
         self,
         *,
-        on_finish: Optional[Callable[[InitResult], Any]] = None,
+        on_finish: Callable[[InitResult], Any] | None = None,
     ) -> None:
         assert mw, "Anki should be running."
         QueryOp(
@@ -339,7 +339,7 @@ class AnkiAudioSourceManagerFactory(AudioSourceManagerFactory):
     def _after_init(
         self,
         result: InitResult,
-        on_finish: Optional[Callable[[InitResult], Any]] = None,
+        on_finish: Callable[[InitResult], Any] | None = None,
     ) -> None:
         if result.did_run:
             report_audio_init_errors(result)
