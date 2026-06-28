@@ -14,7 +14,12 @@ from .ajt_common.addon_config import AddonConfigManager, ConfigSubViewBase
 from .audio_manager.abstract import AudioSettingsConfigViewABC
 from .audio_manager.basic_types import AudioSourceConfig, AudioSourceConfigDict
 from .helpers.profiles import Profile
-from .helpers.sakura_client import AddDefBehavior, DictName, SearchType
+from .helpers.sakura_client import (
+    AddDefBehavior,
+    DictName,
+    SakuraParisConfig,
+    SearchType,
+)
 from .helpers.tokens import RE_FLAGS
 from .mecab_controller.kana_conv import to_katakana
 from .pitch_accents.basic_types import PitchType
@@ -328,14 +333,42 @@ class DefinitionsConfigView(ConfigSubViewBase):
     def behavior(self) -> AddDefBehavior:
         return AddDefBehavior[self["behavior"]]
 
+    def as_sakura_config(self) -> SakuraParisConfig:
+        """Copy config values into an immutable NamedTuple for SakuraParisClient."""
+        return SakuraParisConfig(
+            timeout=self.timeout,
+            remove_marks=self.remove_marks,
+            dict_name=self.dict_name,
+            search_type=self.search_type,
+            source=self.source,
+            destination=self.destination,
+            behavior=self.behavior,
+        )
+
+
+class SvgGraphReadingFormat(enum.Enum):
+    hiragana = enum.auto()
+    katakana = enum.auto()
+
 
 @final
 class SvgPitchGraphOptionsConfigView(ConfigSubViewBase):
     _view_key: str = "svg_graphs"
 
     @property
+    def reading_format(self) -> SvgGraphReadingFormat:
+        try:
+            return SvgGraphReadingFormat[self["reading_format"]]
+        except KeyError:
+            return SvgGraphReadingFormat.katakana
+
+    @property
     def include_text(self) -> bool:
         return self["include_text"] is True
+
+    @property
+    def inject_css_into_files(self) -> bool:
+        return self["inject_css_into_files"] is True
 
     @property
     def graph_horizontal_padding(self) -> int:
@@ -402,12 +435,47 @@ class SvgPitchGraphOptionsConfigView(ConfigSubViewBase):
         return self["devoiced_stroke_dasharray"]
 
     @property
+    def stroke_dasharray(self) -> str:
+        # Dash pattern for tape connector lines (dotted lines between welded words).
+        # Separate from devoiced_stroke_dasharray which controls devoiced mora circles.
+        return self["stroke_dasharray"]
+
+    @property
     def graph_font_name(self) -> str:
         return self["graph_font_name"]
 
     @graph_font_name.setter
     def graph_font_name(self, graph_font_name: str) -> None:
         self["graph_font_name"] = graph_font_name
+
+
+@final
+class PitchArtistOptionsConfigView(ConfigSubViewBase):
+    _view_key: str = "pitch_artist"
+
+    @property
+    def separator_sentences(self) -> str:
+        return self["separator_sentences"]
+
+    @property
+    def separator_expression_graphs(self) -> str:
+        return self["separator_expression_graphs"]
+
+    @property
+    def last_inserted_text(self) -> str:
+        return self["last_inserted_text"]
+
+    @last_inserted_text.setter
+    def last_inserted_text(self, last_inserted_text: str) -> None:
+        self["last_inserted_text"] = last_inserted_text
+
+    @property
+    def last_save_location(self) -> pathlib.Path:
+        return pathlib.Path(self["last_save_location"])
+
+    @last_save_location.setter
+    def last_save_location(self, last_save_location: pathlib.Path) -> None:
+        self["last_save_location"] = str(last_save_location)
 
 
 @final
@@ -436,8 +504,8 @@ class PitchColorCodesConfigView(ConfigSubViewBase):
 
 
 class JapaneseConfig(AddonConfigManager):
-    def __init__(self, default: bool = False) -> None:
-        super().__init__(default)
+    def __init__(self, default: bool = False, *, allow_disk_writes: bool = True) -> None:
+        super().__init__(default, allow_disk_writes=allow_disk_writes)
         self._furigana = FuriganaConfigView(self)
         self._pitch_color_codes = PitchColorCodesConfigView(self)
         self._pitch = PitchConfigView(self)
@@ -446,6 +514,7 @@ class JapaneseConfig(AddonConfigManager):
         self._audio_settings = AudioSettingsConfigView(self)
         self._forvo_settings = ForvoSettingsConfigView(self)
         self._svg_graphs = SvgPitchGraphOptionsConfigView(self)
+        self._pitch_artist = PitchArtistOptionsConfigView(self)
 
     def iter_profiles(self) -> Iterable[Profile]:
         for profile_dict in self["profiles"]:
@@ -458,6 +527,10 @@ class JapaneseConfig(AddonConfigManager):
     @property
     def audio_settings(self) -> AudioSettingsConfigView:
         return self._audio_settings
+
+    @property
+    def pitch_artist(self) -> PitchArtistOptionsConfigView:
+        return self._pitch_artist
 
     @property
     def forvo(self) -> ForvoSettingsConfigView:

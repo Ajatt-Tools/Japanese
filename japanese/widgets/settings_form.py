@@ -21,6 +21,7 @@ from ..config_view import (
     FuriganaConfigView,
     PitchColorCodesConfigView,
     PitchConfigView,
+    SvgGraphReadingFormat,
     SvgPitchGraphOptionsConfigView,
 )
 from ..helpers.misc import split_list
@@ -35,7 +36,7 @@ from .addon_opts import (
     StrokeDisarrayLineEdit,
     WordsEdit,
 )
-from .widgets_to_config_dict import as_config_dict
+from .widgets_to_config_dict import as_config_dict, change_event
 
 
 class SettingsForm(QWidget):
