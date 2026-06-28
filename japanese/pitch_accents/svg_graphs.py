@@ -5,9 +5,10 @@ import enum
 import typing
 from collections.abc import Iterable
 from math import sqrt
-from typing import Optional
 
-from ..config_view import SvgPitchGraphOptionsConfigView
+from ..config_view import SvgGraphReadingFormat, SvgPitchGraphOptionsConfigView
+from ..mecab_controller import to_katakana
+from ..mecab_controller.kana_conv import to_hiragana
 from .common import FormattedEntry
 from .entry_to_moras import (
     Mora,
@@ -40,13 +41,13 @@ class Point(typing.NamedTuple):
     y: float
 
     @classmethod
-    def new(cls, x: int | float, y: int | float) -> "Pos":
+    def new(cls, x: int | float, y: int | float) -> "Point":
         return cls(x=float(x), y=float(y))
 
-    def shift_by(self, *, x: int | float = 0.0, y: int | float = 0.0) -> "Pos":
+    def shift_by(self, *, x: int | float = 0.0, y: int | float = 0.0) -> "Point":
         return Point.new(x=self.x + x, y=self.y + y)
 
-    def replace(self, *, x: int | float | None = None, y: int | float | None = None) -> "Pos":
+    def replace(self, *, x: int | float | None = None, y: int | float | None = None) -> "Point":
         return Point.new(x=x if x is not None else self.x, y=y if y is not None else self.y)
 
 

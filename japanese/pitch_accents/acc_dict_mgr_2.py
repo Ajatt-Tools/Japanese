@@ -5,6 +5,7 @@ import itertools
 import os
 import pathlib
 import typing
+from collections.abc import Iterable, Sequence
 
 from aqt import mw
 from aqt.operations import QueryOp
@@ -63,10 +64,10 @@ class SqliteAccDictWriter:
     def is_table_filled(self) -> bool:
         return self.get_headword_count() > 0
 
-    def write_rows(self, rows: typing.Iterable[AccDictRawTSVEntry]) -> None:
+    def write_rows(self, rows: Iterable[AccDictRawTSVEntry]) -> None:
         return self._db.insert_pitch_accent_data(rows, AccDictProvider.bundled)
 
-    def write_user_rows(self, rows: typing.Iterable[AccDictRawTSVEntry]) -> None:
+    def write_user_rows(self, rows: Iterable[AccDictRawTSVEntry]) -> None:
         return self._db.insert_pitch_accent_data(rows, AccDictProvider.user)
 
     def fill_bundled_data(self) -> None:
@@ -108,7 +109,7 @@ class SqliteAccDictWriter:
         self.mark_table_updated()
 
 
-def iter_bundled_pitch_accent_files(tsv_file_path_pattern: pathlib.Path) -> typing.Iterable[pathlib.Path]:
+def iter_bundled_pitch_accent_files(tsv_file_path_pattern: pathlib.Path) -> Iterable[pathlib.Path]:
     for part_n in itertools.count(start=1):
         file_path = tsv_file_path_pattern.with_suffix(f".{part_n}.csv")
         if not file_path.is_file():
@@ -116,7 +117,7 @@ def iter_bundled_pitch_accent_files(tsv_file_path_pattern: pathlib.Path) -> typi
         yield file_path
 
 
-def iter_formatted_rows(tsv_file_path: pathlib.Path) -> typing.Iterable[AccDictRawTSVEntry]:
+def iter_formatted_rows(tsv_file_path: pathlib.Path) -> Iterable[AccDictRawTSVEntry]:
     """
     Read the formatted pitch accents file to memory.
 
@@ -135,7 +136,7 @@ def iter_formatted_rows(tsv_file_path: pathlib.Path) -> typing.Iterable[AccDictR
             break
 
 
-def filter_entries(entries: typing.Sequence[FormattedEntry], kana_reading: str) -> typing.Iterable[FormattedEntry]:
+def filter_entries(entries: Sequence[FormattedEntry], kana_reading: str) -> Iterable[FormattedEntry]:
     return (
         entry
         for entry in entries
@@ -147,7 +148,7 @@ def filter_entries(entries: typing.Sequence[FormattedEntry], kana_reading: str) 
 def extend_acc_dict(
     ret: AccentDict,
     headword: str,
-    entries: typing.Sequence[FormattedEntry],
+    entries: Sequence[FormattedEntry],
     expr_reading: str,
 ) -> None:
     ret.setdefault(headword, []).extend(filter_entries(entries, expr_reading))
@@ -230,7 +231,7 @@ class AccentDictManager2:
     def mk_writer(self, db: Sqlite3Buddy) -> SqliteAccDictWriter:
         return SqliteAccDictWriter(db, upd_file=self._upd_file, user_accents_file=self._user_accents_file)
 
-    def lookup(self, expr: str) -> typing.Sequence[FormattedEntry] | None:
+    def lookup(self, expr: str) -> Sequence[FormattedEntry] | None:
         """
         Look up expr in accent db, always as katakana.
         Return None if there's no pitch accent for expr.

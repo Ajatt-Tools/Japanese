@@ -3,9 +3,8 @@
 
 import functools
 import json
-import typing
 from collections.abc import Iterable
-from typing import Any, Optional
+from typing import Any
 
 import anki.collection
 from anki import hooks
@@ -38,6 +37,7 @@ from .reading import fgen, format_pronunciations, lookup, pronunciations_to_json
 
 
 def note_type_matches(note_type: AnkiNoteTypeDict, profile: Profile) -> bool:
+    """Return True if the profile's note type name matches the given note type."""
     return profile.note_type.lower() in note_type["name"].lower()
 
 
@@ -69,9 +69,11 @@ class DoTask:
         self._db = db
 
     def _generate_text(self, src_text: str) -> str:
+        """Generate output text from the source text. Subclasses must implement this."""
         raise NotImplementedError()
 
     def run(self, src_text: str, dest_text: str) -> str:
+        """Generate text and return it if it differs from both src and dest."""
         if src_text:
             out_text = self._generate_text(src_text)
             if out_text and (not dest_text or out_text != src_text):
@@ -80,13 +82,17 @@ class DoTask:
 
 
 class AddFurigana(DoTask, task_type=ProfileFurigana):
+    """Add furigana readings to the source text."""
+
     _fgen: FuriganaGen
 
     def __init__(self, task: Profile, caller: TaskCaller, db: Sqlite3Buddy) -> None:
         super().__init__(task, caller, db)
         self._fgen = fgen.with_new_buddy(db)
+        assert isinstance(self._task, ProfileFurigana), "AddFurigana task should be initialized with ProfileFurigana"
 
     def _generate_text(self, src_text: str) -> str:
+        """Generate furigana using MeCab for morpheme splitting and the configured color format."""
         return self._fgen.generate_furigana(
             src_text,
             split_morphemes=self._task.split_morphemes,
@@ -95,13 +101,17 @@ class AddFurigana(DoTask, task_type=ProfileFurigana):
 
 
 class AddPitch(DoTask, task_type=ProfilePitch):
+    """Add pitch accent data (HTML, JSON, or SVG graphs) to the source text."""
+
     _lookup: AccentLookup
 
     def __init__(self, task: Profile, caller: TaskCaller, db: Sqlite3Buddy) -> None:
         super().__init__(task, caller, db)
         self._lookup = lookup.with_new_buddy(db)
+        assert isinstance(self._task, ProfilePitch), "AddPitch task should be initialized with ProfilePitch"
 
     def _generate_text(self, src_text: str) -> str:
+        """Generate pitch accent output in the format specified by the profile."""
         output_format = PitchOutputFormat[self._task.output_format]
         pronunciations = self._lookup.get_pronunciations(src_text, use_mecab=self._task.split_morphemes)
         max_results = cfg.pitch_accent.maximum_results
@@ -119,7 +129,10 @@ class AddPitch(DoTask, task_type=ProfilePitch):
 
 
 class AddAudio(DoTask, task_type=ProfileAudio):
+    """Search, download, and add audio [sound:...] tags to the source text."""
+
     def _generate_text(self, src_text: str) -> str:
+        """Search audio sources, reserve filenames, and kick off background download."""
         session = aud_src_mgr.request_new_session(self._db)
         search_results = session.search_audio(
             src_text,
@@ -163,6 +176,8 @@ def html_to_media_line(txt: str) -> str:
 
 
 class DoTasks:
+    """Orchestrates running all applicable profiles against a single note."""
+
     _note: Note
     _caller: TaskCaller
     _src_field: str | None
@@ -176,12 +191,14 @@ class DoTasks:
         src_field: str | None = None,
         overwrite: bool = False,
     ) -> None:
+        """Initialize with the note, config, caller context, and optional source field filter."""
         self._note = note
         self._caller = caller
         self._src_field = src_field
         self._overwrite = overwrite
 
     def run(self, changed: bool = False) -> bool:
+        """Execute all applicable tasks for the note and return whether any field changed."""
         with Sqlite3Buddy() as db:
             for task in iter_tasks(self._note, self._src_field):
                 if task.should_answer_to(self._caller) and task.applies_to_note(self._note):
@@ -189,6 +206,7 @@ class DoTasks:
             return changed
 
     def _do_task(self, task: Profile, db: Sqlite3Buddy) -> bool:
+        """Execute a single task: clear garbage, generate text, and write to the destination field."""
         changed = False
 
         if self._field_contains_garbage(task.destination):
@@ -262,6 +280,7 @@ def on_add_note(_col: anki.collection.Collection, note: Note, _deck_id: DeckId) 
 
 
 def init() -> None:
+    """Register Anki hooks for furigana, pitch, and audio generation."""
     from aqt import gui_hooks
 
     # Generate when editing a note

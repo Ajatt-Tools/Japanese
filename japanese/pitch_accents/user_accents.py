@@ -4,7 +4,7 @@
 import csv
 import pathlib
 import typing
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 
 from ..mecab_controller.kana_conv import kana_to_moras, to_katakana
 from .basic_types import SEP_PITCH_TYPES
@@ -24,7 +24,7 @@ class UserAccDictRawTSVEntry(typing.TypedDict):
 
 
 def get_user_tsv_reader(
-    f: typing.Iterable[str], field_names: typing.Sequence[str] = tuple(UserAccDictRawTSVEntry.__annotations__)
+    f: Iterable[str], field_names: Sequence[str] = tuple(UserAccDictRawTSVEntry.__annotations__)
 ) -> csv.DictReader:
     """
     Prepare a reader to load the accent dictionary.
@@ -39,9 +39,7 @@ def get_user_tsv_reader(
     )
 
 
-def get_tsv_writer(
-    of, field_names: typing.Sequence[str] = tuple(UserAccDictRawTSVEntry.__annotations__)
-) -> csv.DictWriter:
+def get_tsv_writer(of, field_names: Sequence[str] = tuple(UserAccDictRawTSVEntry.__annotations__)) -> csv.DictWriter:
     """
     Make a tsv writer that will be used to save the user's override table to disk.
     """
@@ -75,7 +73,7 @@ def split_pitch_numbers(pitch_nums_as_str: str) -> Iterable[str | int]:
     return dict.fromkeys(parse_pitch_number(pos) for pos in pitch_nums_as_str.split(SEP_PITCH_TYPES))
 
 
-def formatted_from_tsv_row(row_dict: UserAccDictRawTSVEntry) -> typing.Sequence[FormattedEntry]:
+def formatted_from_tsv_row(row_dict: UserAccDictRawTSVEntry) -> Sequence[FormattedEntry]:
     row_dict["katakana_reading"] = to_katakana(row_dict["katakana_reading"])
     return tuple(
         dict.fromkeys(
@@ -90,7 +88,7 @@ def formatted_from_tsv_row(row_dict: UserAccDictRawTSVEntry) -> typing.Sequence[
     )
 
 
-def iter_user_formatted_rows(tsv_file_path: pathlib.Path) -> typing.Iterable[AccDictRawTSVEntry]:
+def iter_user_formatted_rows(tsv_file_path: pathlib.Path) -> Iterable[AccDictRawTSVEntry]:
     formatted: FormattedEntry
     for row_dict in read_user_tsv_entries(tsv_file_path):
         for formatted in formatted_from_tsv_row(row_dict):

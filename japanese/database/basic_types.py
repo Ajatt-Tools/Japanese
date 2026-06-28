@@ -2,7 +2,7 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 import abc
 import sqlite3
-from contextlib import contextmanager
+from contextlib import AbstractContextManager, contextmanager
 
 
 class Sqlite3BuddyABC(abc.ABC):
@@ -30,7 +30,7 @@ class Sqlite3BuddyVersionError(Sqlite3BuddyError):
 
 
 @contextmanager
-def cursor_buddy(connection: sqlite3.Connection) -> sqlite3.Cursor:
+def cursor_buddy(connection: sqlite3.Connection) -> AbstractContextManager[sqlite3.Cursor]:
     """
     Create, use, then clean up a temporary cursor.
     """

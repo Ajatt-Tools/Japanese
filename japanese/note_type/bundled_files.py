@@ -102,7 +102,7 @@ def version_str_to_tuple(version_str: str) -> FileVersionTuple:
     return FileVersionTuple(*(int(value) for value in version_str.split(".")))
 
 
-def parse_version_str(file_content: str) -> int:
+def parse_version_str(file_content: str) -> FileVersionTuple:
     m = re.search(RE_VERSION_STR, file_content)
     if not m:
         return UNK_VERSION

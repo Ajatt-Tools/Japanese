@@ -17,7 +17,7 @@ class FileInCollection(typing.NamedTuple):
     version: FileVersionTuple
 
     @classmethod
-    def new(cls, file_name: str) -> "FileInColMedia":
+    def new(cls, file_name: str) -> "FileInCollection":
         m = re.fullmatch(RE_AJT_CSS_IN_COL_FILENAME, file_name)
         if m:
             return cls(file_name, version_str_to_tuple(m.group("version")))

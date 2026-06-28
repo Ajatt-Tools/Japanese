@@ -6,7 +6,7 @@ import os
 import pathlib
 import re
 import typing
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from typing import NamedTuple
 
 from .consts import NO_ACCENT
@@ -51,7 +51,7 @@ class FormattedEntry(NamedTuple):
 AccentDict = dict[str, list[FormattedEntry]]
 
 
-class OrderedSet(collections.OrderedDict, typing.Sequence[Stored]):
+class OrderedSet(collections.OrderedDict, Sequence[Stored]):
     def __init__(self, iterable: Iterable[Stored] | None = None) -> None:
         super().__init__()
         if iterable is not None:
@@ -108,7 +108,7 @@ def split_html_notation(html_notation: str) -> Iterable[str]:
     return filter(bool, map(str.strip, re.split(RE_PITCH_TAG, html_notation)))
 
 
-def get_tsv_reader(f: typing.Iterable[str]) -> csv.DictReader:
+def get_tsv_reader(f: Iterable[str]) -> csv.DictReader:
     """
     Prepare a reader to load the accent dictionary.
     Keys are already included in the csv file.

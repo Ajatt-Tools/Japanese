@@ -4,7 +4,8 @@
 import dataclasses
 import enum
 import typing
-from typing import Any
+
+from anki.notes import Note
 
 from .consts import CFG_WORD_SEP
 
@@ -51,10 +52,6 @@ class TaskCaller(enum.Flag):
         return flag
 
 
-class AnkiNoteProtocol(typing.Protocol):
-    def __contains__(self, key: str) -> bool: ...
-
-
 class ProfileBase:
     _subclasses_map: dict[str, type["Profile"]] = {}  # "furigana" (str) -> ProfileFurigana
 
@@ -92,7 +89,7 @@ class Profile(ProfileBase):
         """
         return caller in self.triggered_by
 
-    def applies_to_note(self, note: AnkiNoteProtocol) -> bool:
+    def applies_to_note(self, note: Note) -> bool:
         """
         Field names must not be empty or None. The note must have fields with these names.
         """
@@ -103,7 +100,7 @@ class Profile(ProfileBase):
         return cls._subclasses_map[mode]
 
     @classmethod
-    def new(cls, **kwargs):
+    def new(cls, **kwargs) -> "Profile":
         return cls(
             mode=cls.mode,
             name="New profile",
@@ -151,8 +148,9 @@ class Profile(ProfileBase):
 
 def flag_as_comma_separated_list(flag: enum.Flag) -> str:
     assert isinstance(flag, enum.Enum)
+    # note: `item.name for item in flag` won't work on the official Anki builds that use python 3.10
+    # newer Anki versions use python 3.10
     return CFG_WORD_SEP.join(str(item.name) for item in type(flag) if item in flag)
-    # note: `item.name for item in flag` won't work on the official Anki build that is still on python 3.9
 
 
 def flag_from_comma_separated_list(flag_type: enum.EnumMeta, comma_separated_flags: str) -> enum.Flag:

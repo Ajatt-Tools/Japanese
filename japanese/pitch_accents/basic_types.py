@@ -107,9 +107,7 @@ class PitchParam(NamedTuple):
             return self.type.name
 
     @classmethod
-    def from_symbol(
-        cls, katakana_reading: str, pitch_num_as_str: str, part_of_speech: PartOfSpeech
-    ) -> "AccDbParsedToken":
+    def from_symbol(cls, katakana_reading: str, pitch_num_as_str: str, part_of_speech: PartOfSpeech) -> "PitchParam":
         n_moras = count_moras(katakana_reading)
         return cls(
             type=adjust_if_kifuku(part_of_speech, pitch_type_from_pitch_num(pitch_num_as_str, n_moras=n_moras)),

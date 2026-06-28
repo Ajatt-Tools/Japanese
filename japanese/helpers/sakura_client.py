@@ -4,7 +4,7 @@
 import enum
 import re
 import typing
-from types import SimpleNamespace
+from collections.abc import Iterable
 
 import anki.httpclient
 import bs4
@@ -46,7 +46,7 @@ def format_get_url(headword: str, dict_name: DictName, search_type: SearchType) 
     return f"{SITE_URL}/dict/{dict_name.value}/{search_type.name}/{headword}"
 
 
-class SakuraParisConfig(typing.Protocol):
+class SakuraParisConfig(typing.NamedTuple):
     timeout: int
     remove_marks: bool
     dict_name: DictName
@@ -76,7 +76,7 @@ class SakuraParisClient(anki.httpclient.HttpClient):
                 return ""
             return DEF_SEP.join(self._parse_result(r.text))
 
-    def _parse_result(self, html_page: str) -> typing.Iterable[str]:
+    def _parse_result(self, html_page: str) -> Iterable[str]:
         soup = BeautifulSoup(html_page, "html.parser")
         for node in soup.find_all("div", class_="content"):
             del node["class"]
@@ -100,13 +100,16 @@ class SakuraParisClient(anki.httpclient.HttpClient):
 
 
 def main() -> None:
-    config = SimpleNamespace(
+    config = SakuraParisConfig(
         timeout=10,
         remove_marks=False,
         dict_name=DictName.meikyou,
         search_type=SearchType.exact,
+        source="VocabKanji",
+        destination="VocabDef",
+        behavior=AddDefBehavior.append,
     )
-    client = SakuraParisClient(typing.cast(SakuraParisConfig, config))
+    client = SakuraParisClient(config)
     print(client.fetch_def("故郷"))
 
 

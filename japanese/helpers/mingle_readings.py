@@ -103,7 +103,7 @@ def word_reading(text: str) -> WordReading:
     return WordReading(word, reading) if (reading and word != reading) else WordReading(text, "")
 
 
-def pairs(seq: list[str]) -> Iterable[tuple[str, str]]:
+def pairs(seq: list[list[str]]) -> Iterable[tuple[list[str], list[str]]]:
     yield from zip(seq, seq[1:])
 
 

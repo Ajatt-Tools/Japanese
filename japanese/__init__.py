@@ -7,6 +7,7 @@ try:
 
     beartype_this_package()
 except ImportError:
+    print("Note: beartype is disabled in this session.")
     pass
 
 import sys

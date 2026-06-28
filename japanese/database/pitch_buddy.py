@@ -4,7 +4,7 @@ import abc
 import pathlib
 import sqlite3
 import typing
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from typing import Optional
 
 from ..pitch_accents.common import AccDictRawTSVEntry
@@ -91,7 +91,7 @@ class PitchSqlite3Buddy(Sqlite3BuddyABC, abc.ABC):
             assert len(result) == 1
             return int(result[0])
 
-    def insert_pitch_accent_data(self, rows: typing.Iterable[AccDictRawTSVEntry], provider_name: str) -> None:
+    def insert_pitch_accent_data(self, rows: Iterable[AccDictRawTSVEntry], provider_name: str) -> None:
         query = """
         INSERT INTO pitch_accents_formatted
         ( headword, raw_headword, katakana_reading, html_notation, pitch_number, frequency, source )

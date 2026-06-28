@@ -2,14 +2,11 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import dataclasses
-from collections.abc import Callable
-from typing import Any, Optional
 
 import requests
 from aqt.editor import Editor
 from aqt.qt import *
 
-from .config_view import config_view as cfg
 from .helpers.consts import ADDON_NAME
 from .helpers.sakura_client import SakuraParisClient
 
@@ -101,4 +98,5 @@ class SakuraParisAnkiClient(SakuraParisClient):
 # Entry point
 ##########################################################################
 
-sakura_client = SakuraParisAnkiClient(cfg.definitions)
+# NOTE: https://sakura-paris.org/dict is down.
+# sakura_client = SakuraParisAnkiClient(cfg.definitions.as_sakura_config())
