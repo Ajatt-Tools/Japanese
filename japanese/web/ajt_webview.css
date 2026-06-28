@@ -6,7 +6,15 @@
     margin: 0;
 }
 
+:root {
+    --text-color: #2a1b0a;
+    --background-color: #fffaf0;
+}
+
 body {
+    background-color: var(--background-color);
+    color: var(--text-color);
+    box-sizing: border-box;
     margin: 0;
     padding: 0 2px;
     font-size: 1rem;
@@ -23,8 +31,8 @@ a {
 /* Pitch accent lookup */
 
 .ajt__pitch_lookup {
-    background-color: #fffaf0;
-    color: #2a1b0a;
+    background-color: var(--background-color);
+    color: var(--text-color);
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(75px, max-content) minmax(250px, 1fr));
     row-gap: 0.2rem;
@@ -144,4 +152,34 @@ img {
     color: #ccc;
     background-color: #444;
     outline: 1px solid #4f4f4f;
+}
+
+/* Key-value */
+
+.key {
+    color: #582020;
+}
+
+.key,
+.value {
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+
+/* SVG wrap */
+
+.svg_wrap {
+    display: flex;
+    flex-flow: column nowrap;
+    margin: 4px;
+    position: relative;
+    border: 1px dotted firebrick;
+}
+.svg_wrap button[type="button"] {
+    position: absolute;
+    inset: auto 2px 2px auto;
+    font-size: 1rem;
+    margin: 0;
+    padding: 3px 6px;
+    border-radius: 3px;
 }
