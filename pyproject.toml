@@ -88,6 +88,10 @@ profile = "black"
 [tool.basedpyright]
 reportUnusedCallResult = false
 
+[tool.pytest.ini_options]
+# Only collect tests from the tests/ directory, not from source files.
+testpaths = ["tests"]
+
 # https://hatch.pypa.io/latest/config/internal/testing/
 # https://hatch.pypa.io/latest/tutorials/testing/overview/
 [tool.hatch.envs.hatch-test]
