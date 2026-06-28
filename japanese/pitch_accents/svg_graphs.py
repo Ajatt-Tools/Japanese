@@ -40,21 +40,23 @@ class Point(typing.NamedTuple):
     y: float
 
     @classmethod
-    def new(cls, x: typing.Union[int, float], y: typing.Union[int, float]):
+    def new(cls, x: int | float, y: int | float) -> "Pos":
         return cls(x=float(x), y=float(y))
 
-    def shift_by(self, *, x: typing.Union[int, float] = 0.0, y: typing.Union[int, float] = 0.0):
+    def shift_by(self, *, x: int | float = 0.0, y: int | float = 0.0) -> "Pos":
         return Point.new(x=self.x + x, y=self.y + y)
 
-    def replace(self, *, x: typing.Union[int, float, None] = None, y: typing.Union[int, float, None] = None):
+    def replace(self, *, x: int | float | None = None, y: int | float | None = None) -> "Pos":
         return Point.new(x=x if x is not None else self.x, y=y if y is not None else self.y)
 
 
 class Line:
+    """An SVG line segment between two points, optionally rendered as a dashed (tape) line."""
+
     _opts: SvgPitchGraphOptionsConfigView
     is_trailing: bool
-    start: Optional[Point]
-    end: Optional[Point]
+    start: Point | None
+    end: Point | None
 
     def __init__(self, options: SvgPitchGraphOptionsConfigView) -> None:
         self._opts = options
@@ -71,6 +73,7 @@ class Line:
         return self
 
     def is_completed(self) -> bool:
+        """Return True if the line has both start and end points."""
         return self.start is not None and self.end is not None
 
     def draw(self) -> str:
@@ -124,10 +127,12 @@ class Path:
         return self._lines[-1]
 
     def start_at(self, pos: Point) -> "Path":
+        """Begin a new line segment at the given coordinates."""
         self._lines.append(Line(self._opts).start_at(pos))
         return self
 
     def go_to(self, pos: Point) -> "Path":
+        """Set the end point of the current (last) line segment."""
         self.last.end_at(pos)
         return self
 
@@ -206,7 +211,7 @@ class SvgPitchGraphMaker:
             f'dx="{self._opts.tspan_dx:.0f}">{quark.txt}</tspan>'
         )
 
-    def assemble_txt_content(self, mora_txt: list[typing.Union[Quark, str]]) -> str:
+    def assemble_txt_content(self, mora_txt: list[Quark | str]) -> str:
         return "".join(txt if isinstance(txt, str) else self.quark_to_tspan(txt) for txt in mora_txt)
 
     def make_text(self, mora: Mora, pos: Point, dx: int) -> str:

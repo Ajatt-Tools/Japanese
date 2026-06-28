@@ -9,8 +9,8 @@ FileList = NewType("FileList", list[str])
 
 class FileInfo(TypedDict):
     kana_reading: str
-    pitch_pattern: Optional[str]
-    pitch_number: Optional[str]
+    pitch_pattern: str | None
+    pitch_number: str | None
 
 
 class SourceMeta(TypedDict):

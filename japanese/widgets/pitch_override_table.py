@@ -74,7 +74,7 @@ class PitchOverrideTable(ExpandingTableWidget):
             if all(row_cells):
                 yield PitchAccentTableRow(*(cell.text() for cell in row_cells))
 
-    def update_from_tsv(self, file_path: pathlib.Path, reset_table: bool = True):
+    def update_from_tsv(self, file_path: pathlib.Path, reset_table: bool = True) -> None:
         table_rows_combined: dict[PitchAccentTableRow, None] = {}
         if not reset_table:
             table_rows_combined.update(dict.fromkeys(self.iterateRowTexts()))
@@ -92,7 +92,7 @@ class PitchOverrideTable(ExpandingTableWidget):
             if all(row_cells) and is_allowed_accent_notation(row_cells.pitch_numbers)
         )
 
-    def dump(self, file_path: Union[pathlib.Path, str]) -> None:
+    def dump(self, file_path: pathlib.Path | str) -> None:
         try:
             with open(file_path, "w", newline="", encoding="utf-8") as of:
                 write_user_tsv_file(of, self._as_tsv_rows())

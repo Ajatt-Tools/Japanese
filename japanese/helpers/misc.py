@@ -1,12 +1,11 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 import math
-from collections.abc import Iterable, Sequence
-from typing import Callable, TypeVar, Union
+from collections.abc import Callable, Iterable, Sequence
+from typing import TypeVar, Union
 
 from anki.utils import html_to_text_line
 from aqt import mw
-from aqt.qt import pyqtBoundSignal, pyqtSignal
 
 T = TypeVar("T")
 

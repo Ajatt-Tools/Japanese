@@ -38,7 +38,7 @@ def field_names_from_model_dict(model_dict: AnkiNoteTypeDict) -> frozenset[str]:
     return frozenset(get_model_field_names(model_dict))
 
 
-def is_relevant_model(model_dict: Optional[AnkiNoteTypeDict]) -> bool:
+def is_relevant_model(model_dict: AnkiNoteTypeDict | None) -> bool:
     assert model_dict, "model dict must not be None"
     all_field_names = field_names_from_model_dict(model_dict)
     return any(

@@ -29,14 +29,14 @@ class PitchOverrideWidget(QWidget):
         fix_default_anki_style(self._table)
         self._table.update_from_tsv(self._file_path)
 
-    def init_UI(self):
+    def init_UI(self) -> None:
         self.setLayout(layout := QGridLayout())
         layout.addWidget(self._table, 0, 0, 1, 2)
         layout.addWidget(self._import_button, 1, 0, 1, 1)
         layout.addWidget(self._export_button, 1, 1, 1, 1)
 
-    def connect_buttons(self):
-        def write_tsv_file():
+    def connect_buttons(self) -> None:
+        def write_tsv_file() -> None:
             # noinspection PyArgumentList
             name, mime = QFileDialog.getSaveFileName(
                 parent=cast(QWidget, self),
@@ -49,7 +49,7 @@ class PitchOverrideWidget(QWidget):
             self._table.dump(name)
             cfg["last_file_save_location"] = name  # may or may not be lost
 
-        def read_tsv_file():
+        def read_tsv_file() -> None:
             # noinspection PyArgumentList
             name, mime = QFileDialog.getOpenFileName(
                 parent=cast(QWidget, self),

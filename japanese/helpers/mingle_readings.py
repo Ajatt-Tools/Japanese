@@ -19,7 +19,7 @@ class SplitFurigana(NamedTuple):
 
 class NoFurigana(str):
     @property
-    def head(self):
+    def head(self) -> str:
         return self
 
     reading = head
@@ -35,7 +35,7 @@ def strip_non_jp_furigana(expr: str) -> str:
     return re.sub(r"\[[^ぁ-ゖァ-ヺｧ-ﾝ]+]", "", expr)
 
 
-def find_head_reading_suffix(text: str) -> Union[SplitFurigana, NoFurigana]:
+def find_head_reading_suffix(text: str) -> SplitFurigana | NoFurigana:
     """
     Locate where furigana starts and ends, return the three parts.
     Return text back if it doesn't contain furigana.
@@ -53,7 +53,7 @@ def find_head_reading_suffix(text: str) -> Union[SplitFurigana, NoFurigana]:
         return NoFurigana(text)
 
 
-def iter_split_parts(text: str) -> Iterable[Union[SplitFurigana, NoFurigana]]:
+def iter_split_parts(text: str) -> Iterable[SplitFurigana | NoFurigana]:
     while text and (part := find_head_reading_suffix(text)):
         yield part
         if isinstance(part, NoFurigana):
@@ -78,7 +78,7 @@ def decompose_word(text: str) -> SplitFurigana:
 
 
 def tie_inside_furigana(s: str) -> str:
-    def fixup(m: re.Match):
+    def fixup(m: re.Match) -> str:
         return m.group().replace(" ", MULTIPLE_READING_SEP)
 
     return re.sub(r"\[[^\[\]]+?]", fixup, s)
@@ -103,7 +103,7 @@ def word_reading(text: str) -> WordReading:
     return WordReading(word, reading) if (reading and word != reading) else WordReading(text, "")
 
 
-def pairs(seq: list):
+def pairs(seq: list[str]) -> Iterable[tuple[str, str]]:
     yield from zip(seq, seq[1:])
 
 

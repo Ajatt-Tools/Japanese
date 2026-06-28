@@ -37,7 +37,7 @@ class Range(typing.NamedTuple):
     end_idx: int
 
 
-def find_block_in_text(text: str, cursor_idx: int, *, start_token: str, end_token: str) -> Optional[Range]:
+def find_block_in_text(text: str, cursor_idx: int, *, start_token: str, end_token: str) -> Range | None:
     # try to find the start token (e.g. an opening script tag)
     block_start_idx = text.find(start_token, cursor_idx)
     if block_start_idx < 0:

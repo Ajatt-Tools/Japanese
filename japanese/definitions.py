@@ -2,7 +2,8 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import dataclasses
-from typing import Optional
+from collections.abc import Callable
+from typing import Any, Optional
 
 import requests
 from aqt.editor import Editor
@@ -15,8 +16,8 @@ from .helpers.sakura_client import SakuraParisClient
 
 @dataclasses.dataclass(frozen=True)
 class WorkerResult:
-    text: Optional[str] = None
-    exception: Optional[Exception] = None
+    text: str | None = None
+    exception: Exception | None = None
 
 
 class WorkerSignals(QObject):
@@ -24,18 +25,18 @@ class WorkerSignals(QObject):
 
 
 class Worker(QRunnable):
-    def __init__(self, fn, *args, **kwargs) -> None:
+    def __init__(self, fn: Callable[..., str], *args, **kwargs) -> None:
         super().__init__()
         self._fn = fn
         self._fn_args = args
         self._fn_kwargs = kwargs
         self.signals = WorkerSignals()
 
-    def _emit_result(self, result: WorkerResult):
+    def _emit_result(self, result: WorkerResult) -> None:
         self.signals.result.emit(result)  # type: ignore
 
     @pyqtSlot()
-    def run(self):
+    def run(self) -> None:
         try:
             result = self._fn(*self._fn_args, **self._fn_kwargs)
         except requests.exceptions.ConnectionError:
@@ -46,7 +47,7 @@ class Worker(QRunnable):
             self._emit_result(WorkerResult(text=result))
 
 
-def create_progress_dialog(parent: QWidget):
+def create_progress_dialog(parent: QWidget) -> "ProgressDialog":
     from aqt.progress import ProgressDialog
 
     dialog = ProgressDialog(parent)
@@ -75,7 +76,7 @@ class SakuraParisAnkiClient(SakuraParisClient):
 
         progress = create_progress_dialog(editor.parentWindow)
 
-        def handle_result(result: WorkerResult):
+        def handle_result(result: WorkerResult) -> None:
             progress.accept()
             if result.exception:
                 return tooltip(str(result.exception))

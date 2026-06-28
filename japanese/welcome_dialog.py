@@ -84,7 +84,7 @@ class NoteTypeNagBar(QGroupBox):
         else:
             self._setup_ui()
 
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         self.setLayout(layout := QHBoxLayout())
         layout.addWidget(label := QLabel("Note Type is not installed!"))
         label.setStyleSheet("QLabel { color: brown; font-weight: bold; }")
@@ -100,7 +100,7 @@ class LearnJapaneseButtons(QGroupBox):
         self.setCheckable(False)
         self._setup_ui()
 
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         self.setLayout(layout := QVBoxLayout())
         layout.addWidget(b := QPushButton("Japanese guide"))
         qconnect(b.clicked, lambda: openLink(GUIDE_LINK))
@@ -117,7 +117,7 @@ class CommunityButtons(QGroupBox):
         self.setCheckable(False)
         self._setup_ui()
 
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         self.setLayout(layout := QVBoxLayout())
         layout.addWidget(b := QPushButton("Join chat"))
         qconnect(b.clicked, lambda: openLink(COMMUNITY_LINK))
@@ -132,7 +132,7 @@ class ProjectButtons(QGroupBox):
         self.setCheckable(False)
         self._setup_ui()
 
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         self.setLayout(layout := QVBoxLayout())
         layout.addWidget(b := QPushButton("Gen involved"))
         qconnect(b.clicked, lambda: openLink(GITHUB_LINK))
@@ -163,7 +163,7 @@ class AJTWelcomeDialog(AnkiSaveAndRestoreGeomDialog):
         tweak_window(self)
         self.setFocus()
 
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         self.setWindowTitle(ACTION_NAME)
         self.setMinimumSize(800, 600)
         self.setWindowModality(Qt.WindowModality.NonModal)
@@ -177,7 +177,7 @@ class AJTWelcomeDialog(AnkiSaveAndRestoreGeomDialog):
         layout.addWidget(self._project_buttons, 2, 2, 1, 1)
         layout.addLayout(self._make_bottom_layout(), 3, 0, 1, 3)
 
-    def _make_bottom_layout(self):
+    def _make_bottom_layout(self) -> None:
         layout = QHBoxLayout()
         layout.addWidget(self._show_at_start_checkbox)
         layout.addStretch(1)

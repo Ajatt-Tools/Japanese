@@ -3,6 +3,7 @@
 
 import enum
 import functools
+import pathlib
 import re
 from collections.abc import Iterable, MutableSequence, Sequence
 from typing import NamedTuple, final
@@ -162,7 +163,7 @@ class ToolbarButtonConfig(NamedTuple):
 class ToolbarConfigView(ConfigSubViewBase):
     _view_key: str = "toolbar"
 
-    def __getitem__(self, item) -> ToolbarButtonConfig:
+    def __getitem__(self, item: str) -> ToolbarButtonConfig:
         try:
             return ToolbarButtonConfig(**super().__getitem__(item))
         except TypeError:

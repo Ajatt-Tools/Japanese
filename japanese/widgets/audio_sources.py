@@ -5,7 +5,7 @@ import dataclasses
 import io
 import re
 from collections.abc import Iterable
-from typing import Optional
+from typing import Any, Optional
 
 from aqt.qt import *
 
@@ -52,7 +52,7 @@ class AudioSourcesTable(ExpandingTableWidget):
 
     remove_requested = pyqtSignal(NameUrlSet)
 
-    def __init__(self, parent=None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.addMoveRowContextActions()
         self.addClearCacheContextAction()
@@ -80,7 +80,7 @@ class AudioSourcesTable(ExpandingTableWidget):
     def addMoveRowContextActions(self) -> None:
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.ActionsContextMenu)
 
-        def move_current_row(offset: int):
+        def move_current_row(offset: int) -> None:
             current_row = self.currentRow()
             current_source_copy = pack_back(self.getRowCellContents(current_row))
             self.removeRow(current_row)
@@ -110,7 +110,7 @@ class AudioSourcesTable(ExpandingTableWidget):
         # so the user has to uncheck it to trigger an automatic row deletion.
         return isinstance(cell, QCheckBox) and cell.isChecked() or super().isCellFilled(cell)
 
-    def addSource(self, source: AudioSourceConfig, index: Optional[int] = None) -> None:
+    def addSource(self, source: AudioSourceConfig, index: int | None = None) -> None:
         self.addRow((checkbox := SourceEnableCheckbox(), source.name, source.url), row_idx=index)
         # The checkbox widget has to notify the table widget when its state changes.
         # Otherwise, the table will not automatically add/remove rows.
@@ -159,7 +159,7 @@ class AudioSourcesTable(ExpandingTableWidget):
 
 
 def pack_back(row: TableRow) -> AudioSourceConfig:
-    def to_json_compatible(item: CellContent):
+    def to_json_compatible(item: CellContent) -> bool | str:
         if isinstance(item, QCheckBox):
             return item.isChecked()
         return item.text()

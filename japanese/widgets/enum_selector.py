@@ -2,6 +2,9 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import enum
+from typing import Optional
+
+from aqt.qt import QWidget
 
 from ..ajt_common.checkable_combobox import CheckableComboBox
 from ..ajt_common.utils import ui_translate
@@ -9,7 +12,7 @@ from ..helpers.consts import CFG_WORD_SEP
 
 
 class FlagSelectCombo(CheckableComboBox):
-    def __init__(self, enum_type: enum.EnumMeta, parent=None) -> None:
+    def __init__(self, enum_type: enum.EnumMeta, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._enum_type = enum_type
         self._populate_options()

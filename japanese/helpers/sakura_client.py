@@ -38,11 +38,11 @@ class AddDefBehavior(enum.Enum):
     prepend = enum.auto(), lambda field_value, fetched_value: f"{fetched_value}{DEF_SEP}{field_value}"
     replace = enum.auto(), lambda field_value, fetched_value: fetched_value
 
-    def format(self, field_value: str, fetched_value: str):
+    def format(self, field_value: str, fetched_value: str) -> str:
         return self.value[-1](field_value, fetched_value).removeprefix(DEF_SEP).removesuffix(DEF_SEP)
 
 
-def format_get_url(headword: str, dict_name: DictName, search_type: SearchType):
+def format_get_url(headword: str, dict_name: DictName, search_type: SearchType) -> str:
     return f"{SITE_URL}/dict/{dict_name.value}/{search_type.name}/{headword}"
 
 
@@ -83,7 +83,7 @@ class SakuraParisClient(anki.httpclient.HttpClient):
             self._trim_node(node)
             yield str(node).strip().replace("\n", DEF_SEP)
 
-    def _trim_node(self, doc: bs4.Tag):
+    def _trim_node(self, doc: bs4.Tag) -> None:
         if self._config.remove_marks:
             for node in doc("mark"):
                 node.decompose()
@@ -99,7 +99,7 @@ class SakuraParisClient(anki.httpclient.HttpClient):
 ##########################################################################
 
 
-def main():
+def main() -> None:
     config = SimpleNamespace(
         timeout=10,
         remove_marks=False,

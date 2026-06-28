@@ -30,7 +30,7 @@ class Sqlite3BuddyVersionError(Sqlite3BuddyError):
 
 
 @contextmanager
-def cursor_buddy(connection: sqlite3.Connection):
+def cursor_buddy(connection: sqlite3.Connection) -> sqlite3.Cursor:
     """
     Create, use, then clean up a temporary cursor.
     """

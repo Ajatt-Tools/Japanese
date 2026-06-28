@@ -38,8 +38,8 @@ class SqliteAccDictWriter:
     def __init__(
         self,
         db: Sqlite3Buddy,
-        upd_file: typing.Optional[pathlib.Path] = None,
-        user_accents_file: typing.Optional[pathlib.Path] = None,
+        upd_file: pathlib.Path | None = None,
+        user_accents_file: pathlib.Path | None = None,
     ) -> None:
         self._db = db
         self._upd_file = upd_file or self._upd_file
@@ -213,24 +213,24 @@ class AccentDictManager2:
     It ensures that pitch accents are correctly stored and modified in the sqlite3 database.
     """
 
-    _db_path: typing.Optional[pathlib.Path] = None
-    _upd_file: typing.Optional[pathlib.Path] = None
-    _user_accents_file: typing.Optional[pathlib.Path] = None
+    _db_path: pathlib.Path | None = None
+    _upd_file: pathlib.Path | None = None
+    _user_accents_file: pathlib.Path | None = None
 
     def __init__(
         self,
-        db_path: typing.Optional[pathlib.Path] = None,
-        upd_file_path: typing.Optional[pathlib.Path] = None,
-        user_accents_path: typing.Optional[pathlib.Path] = None,
+        db_path: pathlib.Path | None = None,
+        upd_file_path: pathlib.Path | None = None,
+        user_accents_path: pathlib.Path | None = None,
     ) -> None:
         self._db_path = db_path or self._db_path
         self._upd_file = upd_file_path or self._upd_file
         self._user_accents_file = user_accents_path or self._user_accents_file
 
-    def mk_writer(self, db: Sqlite3Buddy):
+    def mk_writer(self, db: Sqlite3Buddy) -> SqliteAccDictWriter:
         return SqliteAccDictWriter(db, upd_file=self._upd_file, user_accents_file=self._user_accents_file)
 
-    def lookup(self, expr: str) -> typing.Optional[typing.Sequence[FormattedEntry]]:
+    def lookup(self, expr: str) -> typing.Sequence[FormattedEntry] | None:
         """
         Look up expr in accent db, always as katakana.
         Return None if there's no pitch accent for expr.

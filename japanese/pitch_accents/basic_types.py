@@ -94,7 +94,7 @@ class PitchParam(NamedTuple):
     number: str
     n_moras: int
 
-    def describe(self):
+    def describe(self) -> str:
         """
         Returns pattern name if not nakadaka: unknown, heiban, atamadaka, odaka, kifuku.
         Otherwise, returns pattern + pitch number: nakadaka-2, nakadaka-3, etc.
@@ -107,7 +107,9 @@ class PitchParam(NamedTuple):
             return self.type.name
 
     @classmethod
-    def from_symbol(cls, katakana_reading: str, pitch_num_as_str: str, part_of_speech: PartOfSpeech):
+    def from_symbol(
+        cls, katakana_reading: str, pitch_num_as_str: str, part_of_speech: PartOfSpeech
+    ) -> "AccDbParsedToken":
         n_moras = count_moras(katakana_reading)
         return cls(
             type=adjust_if_kifuku(part_of_speech, pitch_type_from_pitch_num(pitch_num_as_str, n_moras=n_moras)),

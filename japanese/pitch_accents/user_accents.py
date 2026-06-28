@@ -67,11 +67,11 @@ def read_user_tsv_entries(tsv_file_path: pathlib.Path) -> Iterable[UserAccDictRa
         pass
 
 
-def parse_pitch_number(pos: str) -> typing.Union[str, int]:
+def parse_pitch_number(pos: str) -> str | int:
     return int(pos) if pos != NO_ACCENT else NO_ACCENT
 
 
-def split_pitch_numbers(pitch_nums_as_str: str) -> Iterable[typing.Union[str, int]]:
+def split_pitch_numbers(pitch_nums_as_str: str) -> Iterable[str | int]:
     return dict.fromkeys(parse_pitch_number(pos) for pos in pitch_nums_as_str.split(SEP_PITCH_TYPES))
 
 

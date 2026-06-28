@@ -37,10 +37,10 @@ class LookupKeyTuple(typing.NamedTuple):
 class AccentLookup:
     _cfg: JapaneseConfig
     _mecab: MecabController
-    _db: Optional[Sqlite3Buddy]
+    _db: Sqlite3Buddy | None
     _cache: LRUCache[LookupKeyTuple, AccentDict] = LRUCache()
 
-    def __init__(self, cfg: JapaneseConfig, mecab: MecabController, db: Optional[Sqlite3Buddy] = None) -> None:
+    def __init__(self, cfg: JapaneseConfig, mecab: MecabController, db: Sqlite3Buddy | None = None) -> None:
         self._db = db
         self._cfg = cfg
         self._mecab = mecab
@@ -56,7 +56,7 @@ class AccentLookup:
             return self._db
         raise ValueError("db is None")
 
-    def with_new_buddy(self, db: Sqlite3Buddy):
+    def with_new_buddy(self, db: Sqlite3Buddy) -> "AccentLookup":
         return type(self)(
             cfg=self._cfg,
             mecab=self._mecab,

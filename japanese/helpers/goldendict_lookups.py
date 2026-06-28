@@ -17,7 +17,7 @@ GD_MACOS_PATH = (
 )
 
 
-def find_goldendict_fallback() -> Optional[str]:
+def find_goldendict_fallback() -> str | None:
     if not is_mac:
         return None
     for path in GD_MACOS_PATH:
@@ -27,7 +27,7 @@ def find_goldendict_fallback() -> Optional[str]:
 
 
 @functools.cache
-def find_goldendict() -> Optional[str]:
+def find_goldendict() -> str | None:
     return find_executable("goldendict") or find_goldendict_fallback()
 
 

@@ -1,8 +1,8 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 import dataclasses
-from collections.abc import Hashable, Iterable, Sequence
-from typing import Callable, Optional, TypeVar
+from collections.abc import Callable, Hashable, Iterable, Sequence
+from typing import Optional, TypeVar
 
 from ..config_view import FuriganaConfigView, JapaneseConfig
 from ..database.sqlite3_buddy import Sqlite3Buddy
@@ -24,7 +24,7 @@ from .furigana_list import FuriganaList
 T = TypeVar("T")
 
 
-def as_self(val):
+def as_self(val: str) -> str:
     return val
 
 
@@ -34,13 +34,13 @@ class FuriganaGen:
     _mecab: MecabController
     _lookup: AccentLookup
 
-    def __init__(self, cfg: JapaneseConfig, lookup: AccentLookup, mecab: Optional[MecabController] = None) -> None:
+    def __init__(self, cfg: JapaneseConfig, lookup: AccentLookup, mecab: MecabController | None = None) -> None:
         self._cfg = cfg
         self._fcfg = cfg.furigana
         self._lookup = lookup
         self._mecab = mecab or self._lookup.mecab
 
-    def with_new_buddy(self, db: Sqlite3Buddy):
+    def with_new_buddy(self, db: Sqlite3Buddy) -> "FuriganaGen":
         return type(self)(
             cfg=self._cfg,
             mecab=self._mecab,
@@ -84,7 +84,7 @@ class FuriganaGen:
             )
         ).strip()
 
-    def mecab_single_word(self, token: str) -> Optional[MecabParsedToken]:
+    def mecab_single_word(self, token: str) -> MecabParsedToken | None:
         if (out := self._mecab.translate(token)) and out[0].word == token:
             return out[0]
         return None

@@ -43,15 +43,15 @@ def prev_token(attach_to: AccDbParsedToken) -> str:
     return attach_to.attached_tokens[-1] if attach_to.attached_tokens else longest_kana_suffix(attach_to.word)
 
 
-def is_taped_pair(attach_to: AccDbParsedToken, token: AnyToken):
+def is_taped_pair(attach_to: AccDbParsedToken, token: AnyToken) -> bool:
     return (prev_token(attach_to), token.word) in TAPE_PAIRS
 
 
-def is_detached_pair(attach_to: AccDbParsedToken, token: AnyToken):
+def is_detached_pair(attach_to: AccDbParsedToken, token: AnyToken) -> bool:
     return (prev_token(attach_to), token.word) in DETACH_PAIRS
 
 
-def should_attach_token(attach_to: AccDbParsedToken, token: AnyToken):
+def should_attach_token(attach_to: AccDbParsedToken, token: AnyToken) -> bool:
     if len(attach_to.attached_tokens) >= MAX_ATTACHED:
         return False
     if not is_attaching_inflection(attach_to.inflection_type):
@@ -105,5 +105,5 @@ class FuriganaList:
             raise TokenAccessError("List is empty.")
         return self._list[-1]
 
-    def __iter__(self):
+    def __iter__(self) -> Iterable[AnyToken]:
         return iter(self._list)

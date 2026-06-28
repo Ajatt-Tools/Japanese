@@ -3,7 +3,7 @@
 import os.path
 from collections.abc import Iterable
 from types import SimpleNamespace
-from typing import Optional, TypedDict, cast, final
+from typing import Any, Optional, TypedDict, cast, final
 
 from aqt import mw
 from aqt.addons import AddonsDialog, ConfigEditor
@@ -96,7 +96,7 @@ class ControlPanel(QHBoxLayout):
 
 
 class NoteTypeSelector(EditableSelector):
-    def repopulate(self, current_text: Optional[str]) -> None:
+    def repopulate(self, current_text: str | None) -> None:
         self.clear()
         self.addItems([n.name for n in mw.col.models.all_names_and_ids()])
         if current_text:
@@ -118,7 +118,7 @@ class ProfileList(QGroupBox):
         self._setup_signals()
         adjust_to_contents(self._list_widget)
 
-    def current_item(self) -> Optional[QListWidgetItem]:
+    def current_item(self) -> QListWidgetItem | None:
         return self._list_widget.currentItem()
 
     def profiles(self) -> Iterable[Profile]:
@@ -134,7 +134,7 @@ class ProfileList(QGroupBox):
     def add_profile(self) -> None:
         self.add_and_select(self._store_type.new())
 
-    def remove_current(self) -> Optional[int]:
+    def remove_current(self) -> int | None:
         if (current := self.current_item()) and current.isSelected():
             self._list_widget.takeItem(row := self._list_widget.currentRow())
             return row
@@ -169,7 +169,7 @@ class ProfileList(QGroupBox):
 class ProfileEditForm(QGroupBox):
     # e.g. ProfileFurigana => FuriganaProfileEditForm
     _subclasses_map: dict[type[Profile], type["ProfileEditForm"]] = {}
-    _last_used_profile: Optional[Profile]
+    _last_used_profile: Profile | None
 
     def __init_subclass__(cls, **kwargs) -> None:
         profile_class: type[Profile] = kwargs.pop("profile_class")  # suppresses ide warning
@@ -245,7 +245,7 @@ class ProfileEditForm(QGroupBox):
             layout.addRow(ui_translate(key), widget)
         return layout
 
-    def _repopulate_fields(self, profile: Optional[Profile] = None) -> None:
+    def _repopulate_fields(self, profile: Profile | None = None) -> None:
         for key in ("source", "destination"):
             widget: QComboBox = self._form.__dict__[key]
             current_text = profile.as_config_dict()[key] if profile else widget.currentText()
@@ -330,7 +330,7 @@ class ProfileEdit(QWidget):
         else:
             self._edit_form.setEnabled(False)
 
-    def _apply_profile(self, item: Optional[QListWidgetItem]) -> None:
+    def _apply_profile(self, item: QListWidgetItem | None) -> None:
         if item:
             profile = self._edit_form.as_profile()
             item.setData(Qt.ItemDataRole.UserRole, profile)
@@ -443,10 +443,10 @@ class AudioSourcesEditTable(QWidget):
     The stats are shown at the bottom.
     """
 
-    _audio_stats: Optional[TotalAudioStats]
+    _audio_stats: TotalAudioStats | None
     _filename_filter: str = "JSON Files (*.json);; All Files (*.*)"
 
-    def __init__(self, parent=None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._audio_sources_table = AudioSourcesTable().populate(cfg.iter_audio_sources())
         self._bottom_label = QLabel()

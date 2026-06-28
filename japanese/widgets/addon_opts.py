@@ -2,7 +2,7 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 from collections.abc import Sequence
-from typing import Optional
+from typing import Any, Optional
 
 from aqt.qt import *
 
@@ -24,12 +24,12 @@ class WordsEdit(QTextEdit):
         self._adjust_font_size()
         self.setPlaceholderText("Comma-separated list of words...")
 
-    def _adjust_font_size(self):
+    def _adjust_font_size(self) -> None:
         font = self.font()
         font.setPixelSize(self._font_size)
         self.setFont(font)
 
-    def set_values(self, values: Sequence[str]):
+    def set_values(self, values: Sequence[str]) -> None:
         if values:
             self.setPlainText(CFG_WORD_SEP.join(dict.fromkeys(values)))
 
@@ -51,8 +51,8 @@ class NarrowSpinBox(QSpinBox):
 
     def __init__(
         self,
-        initial_value: Optional[int] = None,
-        allowed_range: Optional[tuple[int, int]] = None,
+        initial_value: int | None = None,
+        allowed_range: tuple[int, int] | None = None,
         *args,
     ) -> None:
         super().__init__(*args)
@@ -66,8 +66,8 @@ class NarrowSpinBox(QSpinBox):
 class PxNarrowSpinBox(NarrowSpinBox):
     def __init__(
         self,
-        initial_value: Optional[int] = None,
-        allowed_range: Optional[tuple[int, int]] = None,
+        initial_value: int | None = None,
+        allowed_range: tuple[int, int] | None = None,
         *args,
     ) -> None:
         super().__init__(initial_value, allowed_range, *args)
@@ -81,8 +81,8 @@ class PxDoubleNarrowSpinBox(QDoubleSpinBox):
 
     def __init__(
         self,
-        initial_value: Optional[float] = None,
-        allowed_range: Optional[tuple[float, float]] = None,
+        initial_value: float | None = None,
+        allowed_range: tuple[float, float] | None = None,
         *args,
     ) -> None:
         super().__init__(*args)

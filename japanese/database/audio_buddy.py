@@ -38,7 +38,7 @@ def build_or_clause(repeated_field_name: str, count: int) -> str:
     return " OR ".join(f"{repeated_field_name} = ?" for _idx in range(count))
 
 
-def raise_if_invalid_json(data: SourceIndex):
+def raise_if_invalid_json(data: SourceIndex) -> None:
     """
     Validate index schema.
     Raise if format is not supported.
@@ -95,7 +95,7 @@ AUDIO_TABLES_SCHEMA_NAME: typing.Final[str] = "audio"
 
 class AudioSqlite3Buddy(Sqlite3BuddyABC, abc.ABC):
     _db_path: pathlib.Path
-    _con: Optional[sqlite3.Connection]
+    _con: sqlite3.Connection | None
 
     def prepare_audio_tables(self, is_new_file: bool) -> None:
         """
@@ -229,7 +229,7 @@ class AudioSqlite3Buddy(Sqlite3BuddyABC, abc.ABC):
             assert len(result) == 1
             return result[0]
 
-    def get_stats_by_name(self, source: NameUrl) -> Optional[AudioStats]:
+    def get_stats_by_name(self, source: NameUrl) -> AudioStats | None:
         query = """
         SELECT
             (SELECT COUNT(DISTINCT headword)  FROM headwords WHERE source_name = m.source_name) AS num_headwords,
@@ -280,7 +280,7 @@ class AudioSqlite3Buddy(Sqlite3BuddyABC, abc.ABC):
             cur.executescript(queries)
             self.con.commit()
 
-    def get_media_dir_abs(self, source_name: str) -> Optional[str]:
+    def get_media_dir_abs(self, source_name: str) -> str | None:
         with cursor_buddy(self.con) as cur:
             query = """ SELECT media_dir_abs FROM meta WHERE source_name = ? LIMIT 1; """
             result = cur.execute(query, (source_name,)).fetchone()
@@ -294,7 +294,7 @@ class AudioSqlite3Buddy(Sqlite3BuddyABC, abc.ABC):
             assert len(result) == 1 and type(result["media_dir"]) is str
             return result["media_dir"]
 
-    def get_original_url(self, source_name: str) -> Optional[str]:
+    def get_original_url(self, source_name: str) -> str | None:
         with cursor_buddy(self.con) as cur:
             query = """ SELECT original_url FROM meta WHERE source_name = ? LIMIT 1; """
             result = cur.execute(query, (source_name,)).fetchone()
@@ -318,7 +318,7 @@ class AudioSqlite3Buddy(Sqlite3BuddyABC, abc.ABC):
             results = [cur.execute(query, (source_name,)).fetchone() for query in queries]
             return all(result is not None for result in results)
 
-    def get_source_by_name(self, source_name: str) -> Optional[NameUrl]:
+    def get_source_by_name(self, source_name: str) -> NameUrl | None:
         query = """
         SELECT m.source_name, m.original_url
         FROM meta m
@@ -339,7 +339,7 @@ class AudioSqlite3Buddy(Sqlite3BuddyABC, abc.ABC):
             assert result is None or type(result["source_name"]) is str
             return NameUrl(result["source_name"], result["original_url"]) if result else None
 
-    def insert_data(self, source_name: str, data: SourceIndex):
+    def insert_data(self, source_name: str, data: SourceIndex) -> None:
         raise_if_invalid_json(data)
         with cursor_buddy(self.con) as cur:
             query = """

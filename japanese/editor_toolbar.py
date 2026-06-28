@@ -2,21 +2,20 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import functools
-from collections.abc import Iterable
-from typing import Callable, NamedTuple, Optional
+from collections.abc import Callable, Iterable
+from typing import NamedTuple, Optional
 
 import anki.collection
 from anki.collection import OpChanges
 from anki.notes import Note
-from aqt import gui_hooks
+from aqt import gui_hooks, mw
 from aqt.editor import Editor
 from aqt.operations import CollectionOp
 
 from .ajt_common.consts import ADDON_SERIES
 from .audio import aud_src_mgr
 from .audio_manager.forvo_client import ForvoClient
-from .config_view import ToolbarButtonConfig
-from .config_view import config_view as cfg
+from .config_view import JapaneseConfig, ToolbarButtonConfig, get_global_config
 from .database.sqlite3_buddy import Sqlite3Buddy
 from .helpers.profiles import TaskCaller
 from .helpers.tokens import clean_furigana
@@ -70,8 +69,11 @@ def modify_note(func: Callable[[Editor], object]) -> Callable[[Editor], None]:
     Used to (re)generate all target fields of the current note.
     """
 
-    def note_reload(editor: Editor):
-        return editor.loadNote(focusTo=0) if editor.currentField is None else editor.loadNoteKeepingFocus()
+    def note_reload(editor: Editor) -> None:
+        if editor.currentField is None:
+            editor.loadNote(focusTo=0)
+        else:
+            editor.loadNoteKeepingFocus()
 
     @functools.wraps(func)
     def decorator(editor: Editor) -> None:
@@ -88,7 +90,7 @@ def modify_note(func: Callable[[Editor], object]) -> Callable[[Editor], None]:
     return decorator
 
 
-def get_note_value(note: Note, field_name: str) -> Optional[str]:
+def get_note_value(note: Note, field_name: str) -> str | None:
     """
     Try to access field with name field_name.
     Suppress KeyError and return None if the field with this name doesn't exist.

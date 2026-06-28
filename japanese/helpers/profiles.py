@@ -4,6 +4,7 @@
 import dataclasses
 import enum
 import typing
+from typing import Any
 
 from .consts import CFG_WORD_SEP
 
@@ -43,7 +44,7 @@ class TaskCaller(enum.Flag):
         return TaskCallerOpts()
 
     @classmethod
-    def all_enabled(cls):
+    def all_enabled(cls) -> "TaskCaller":
         flag = cls(0)
         for add in cls:
             flag |= add
@@ -58,7 +59,7 @@ class ProfileBase:
     _subclasses_map: dict[str, type["Profile"]] = {}  # "furigana" (str) -> ProfileFurigana
 
 
-def get_common_keys(d1: dict, d2: dict):
+def get_common_keys(d1: dict[str, typing.Any], d2: dict[str, typing.Any]) -> set[str]:
     return d1.keys() & d2.keys()
 
 
@@ -114,25 +115,25 @@ class Profile(ProfileBase):
         )
 
     @classmethod
-    def get_default(cls, mode: str):
+    def get_default(cls, mode: str) -> "Profile":
         return cls.class_by_mode(mode).new()
 
     @classmethod
-    def clone(cls, profile: "Profile"):
+    def clone(cls, profile: "Profile") -> "Profile":
         return cls(**dataclasses.asdict(profile))
 
-    def as_config_dict(self) -> dict[str, typing.Union[str, bool]]:
+    def as_config_dict(self) -> dict[str, str | bool]:
         d = dataclasses.asdict(self)
         d["triggered_by"] = flag_as_comma_separated_list(self.triggered_by)
         return d
 
     @classmethod
-    def from_config_dict(cls, profile_dict: dict):
+    def from_config_dict(cls, profile_dict: dict[str, typing.Any]) -> "Profile":
         # In case new options are added or removed in the future,
         # load default settings first, then overwrite them.
         return cls.get_default(mode=profile_dict["mode"]).replace_from_config_dict(profile_dict)
 
-    def replace_from_config_dict(self, profile_dict):
+    def replace_from_config_dict(self, profile_dict: dict[str, typing.Any]) -> "Profile":
         if "triggered_by" in profile_dict:
             profile_dict = dict(
                 profile_dict,
@@ -148,7 +149,7 @@ class Profile(ProfileBase):
         )
 
 
-def flag_as_comma_separated_list(flag: enum.Flag):
+def flag_as_comma_separated_list(flag: enum.Flag) -> str:
     assert isinstance(flag, enum.Enum)
     return CFG_WORD_SEP.join(str(item.name) for item in type(flag) if item in flag)
     # note: `item.name for item in flag` won't work on the official Anki build that is still on python 3.9
@@ -171,7 +172,7 @@ class ProfilePitch(Profile, mode="pitch"):
     output_format: str
 
     @classmethod
-    def new(cls):
+    def new(cls) -> "ProfilePitch":
         return super().new(
             source="VocabKanji",
             destination="VocabPitchPattern",
@@ -185,7 +186,7 @@ class ProfileFurigana(Profile, mode="furigana"):
     insert_addon_scripts: bool  # see the "note_type" module.
 
     @classmethod
-    def new(cls):
+    def new(cls) -> "ProfileFurigana":
         return super().new(
             source="VocabKanji",
             destination="VocabFurigana",
@@ -193,12 +194,12 @@ class ProfileFurigana(Profile, mode="furigana"):
             insert_addon_scripts=True,
         )
 
-    def as_config_dict(self) -> dict[str, typing.Union[str, bool]]:
+    def as_config_dict(self) -> dict[str, str | bool]:
         d = super().as_config_dict()
         d["color_code_pitch"] = flag_as_comma_separated_list(self.color_code_pitch)
         return d
 
-    def replace_from_config_dict(self, profile_dict):
+    def replace_from_config_dict(self, profile_dict: dict[str, typing.Any]) -> "ProfileFurigana":
         if "color_code_pitch" in profile_dict:
             profile_dict = dict(
                 profile_dict,
@@ -214,7 +215,7 @@ class ProfileFurigana(Profile, mode="furigana"):
 @dataclasses.dataclass(frozen=True)
 class ProfileAudio(Profile, mode="audio"):
     @classmethod
-    def new(cls):
+    def new(cls) -> "ProfileAudio":
         return super().new(
             source="VocabKanji",
             destination="VocabAudio",

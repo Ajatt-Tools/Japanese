@@ -23,9 +23,9 @@ class Sqlite3Buddy(VersionSqlite3Buddy, AudioSqlite3Buddy, PitchSqlite3Buddy):
     """
 
     _db_path: pathlib.Path = pathlib.Path(user_files_dir()) / CURRENT_DB.name
-    _con: Optional[sqlite3.Connection]
+    _con: sqlite3.Connection | None
 
-    def __init__(self, db_path: Optional[pathlib.Path] = None) -> None:
+    def __init__(self, db_path: pathlib.Path | None = None) -> None:
         if mw is None:
             # if running tests
             assert db_path, "db path should be set"
@@ -49,7 +49,7 @@ class Sqlite3Buddy(VersionSqlite3Buddy, AudioSqlite3Buddy, PitchSqlite3Buddy):
         self._con.row_factory = sqlite3.Row
         self._prepare_tables(is_new_file)
 
-    def _prepare_tables(self, is_new_file: bool):
+    def _prepare_tables(self, is_new_file: bool) -> None:
         self.prepare_version_table()
         self.prepare_audio_tables(is_new_file)
         self.prepare_pitch_accents_table(is_new_file)
@@ -61,7 +61,7 @@ class Sqlite3Buddy(VersionSqlite3Buddy, AudioSqlite3Buddy, PitchSqlite3Buddy):
         self.con.close()
         self._con = None
 
-    def __enter__(self):
+    def __enter__(self) -> "Sqlite3Buddy":
         """
         Create a temporary connection.
         Use when working in a different thread since the same connection can't be reused in another thread.

@@ -12,7 +12,7 @@ from .enum_selector import FlagSelectCombo
 
 def set_from_cfg(widget: QWidget, value: Union[bool, str, int, float]) -> None:
     """Set a widget's value from a configuration value based on the widget type."""
-    if isinstance(widget, QDoubleSpinBox) and isinstance(value, float):
+    if isinstance(widget, QDoubleSpinBox) and isinstance(value, (int, float)):
         widget.setValue(value)
     elif isinstance(widget, QLineEdit) and isinstance(value, str):
         widget.setText(value)

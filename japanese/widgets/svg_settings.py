@@ -89,7 +89,7 @@ class SvgSettingsWidget(QWidget):
         self.update_view()
         qconnect(self._form.opts_changed, self.update_view)
 
-    def initUI(self):
+    def initUI(self) -> None:
         layout = QHBoxLayout()
         layout.addWidget(self._form)
         layout.addWidget(self._web_view)

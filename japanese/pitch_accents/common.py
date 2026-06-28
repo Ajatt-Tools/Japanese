@@ -44,7 +44,7 @@ class FormattedEntry(NamedTuple):
         return self.pitch_number != NO_ACCENT
 
     @property
-    def pitch_number_html(self):
+    def pitch_number_html(self) -> str:
         return f'<span class="pitch_number">{self.pitch_number}</span>'
 
 
@@ -52,12 +52,12 @@ AccentDict = dict[str, list[FormattedEntry]]
 
 
 class OrderedSet(collections.OrderedDict, typing.Sequence[Stored]):
-    def __init__(self, iterable: typing.Optional[Iterable[Stored]] = None) -> None:
+    def __init__(self, iterable: Iterable[Stored] | None = None) -> None:
         super().__init__()
         if iterable is not None:
             self.update(self.fromkeys(iterable))
 
-    def add(self, value: Stored):
+    def add(self, value: Stored) -> None:
         self[value] = None
 
 

@@ -135,7 +135,7 @@ class ViewPitchAccentsDialog(AnkiSaveAndRestoreGeomDialog):
         html.write("</main>")
         return html.getvalue()
 
-    def _set_html_result(self):
+    def _set_html_result(self) -> None:
         """Format pronunciations as an HTML list."""
         self._web.stdHtml(
             body=self._format_html_result(),

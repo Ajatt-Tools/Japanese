@@ -64,7 +64,7 @@ def get_notation(entry: FormattedEntry, mode: PitchOutputFormat) -> str:
         return f"{update_html(entry, pitch_accent_style=cfg.pitch_accent.html_style)} {entry.pitch_number_html}"
     elif mode == PitchOutputFormat.svg:
         return svg_graph_maker.make_graph(entry)
-    raise RuntimeError("Unreachable.")
+    raise RuntimeError(f"Unsupported output format: {mode.name}")
 
 
 def sort_entries(entries: Sequence[FormattedEntry]) -> Sequence[FormattedEntry]:
@@ -97,7 +97,7 @@ def format_pronunciations(
     max_results: int,
     sep_single: str = "・",
     sep_multi: str = "、",
-    expr_sep: Optional[str] = None,
+    expr_sep: str | None = None,
 ) -> str:
     ordered_dict: dict[str, str] = OrderedDict()
     for word, entries in pronunciations.items():

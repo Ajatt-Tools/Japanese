@@ -102,7 +102,7 @@ def version_str_to_tuple(version_str: str) -> FileVersionTuple:
     return FileVersionTuple(*(int(value) for value in version_str.split(".")))
 
 
-def parse_version_str(file_content: str):
+def parse_version_str(file_content: str) -> int:
     m = re.search(RE_VERSION_STR, file_content)
     if not m:
         return UNK_VERSION
@@ -132,7 +132,7 @@ class BundledCodeFile:
 @dataclasses.dataclass(frozen=True)
 class BundledJSFile(BundledCodeFile):
     @classmethod
-    def new(cls, bundled_file_path: str):
+    def new(cls, bundled_file_path: str) -> "BundledJSFile":
         vf = get_file_version(bundled_file_path)
         return cls(
             file_path=bundled_file_path,
@@ -146,7 +146,7 @@ class BundledCSSFile(BundledCodeFile):
     name_in_col: str  # legacy
 
     @classmethod
-    def new(cls, bundled_file_path: str):
+    def new(cls, bundled_file_path: str) -> "BundledCSSFile":
         vf = get_file_version(bundled_file_path)
         name, ext = os.path.splitext(os.path.basename(bundled_file_path))
         name_in_col = f"{name}_{vf.version_as_str()}{ext}"

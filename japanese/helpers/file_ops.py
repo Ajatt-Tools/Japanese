@@ -15,7 +15,7 @@ from ..ajt_common.utils import find_executable
 THIS_ADDON_MODULE = __name__.split(".")[0]
 
 
-def walk_parents(dir_or_file_path: Union[str, pathlib.Path]) -> Iterable[pathlib.Path]:
+def walk_parents(dir_or_file_path: str | pathlib.Path) -> Iterable[pathlib.Path]:
     current_dir = pathlib.Path(dir_or_file_path)
     if current_dir.is_dir():
         yield current_dir
@@ -24,12 +24,12 @@ def walk_parents(dir_or_file_path: Union[str, pathlib.Path]) -> Iterable[pathlib
         current_dir = parent_dir
 
 
-def touch(path: Union[str, pathlib.Path]) -> None:
+def touch(path: str | pathlib.Path) -> None:
     with open(path, "a"):
         os.utime(path, None)
 
 
-def rm_file(path: Union[str, pathlib.Path]) -> None:
+def rm_file(path: str | pathlib.Path) -> None:
     try:
         os.unlink(path)
     except FileNotFoundError:
@@ -49,7 +49,7 @@ def find_config_json() -> pathlib.Path:
     return find_file_in_parents("config.json")
 
 
-def get_anki_japanese_user_dir() -> Optional[pathlib.Path]:
+def get_anki_japanese_user_dir() -> pathlib.Path | None:
     # https://github.com/Ajatt-Tools/Japanese/issues/28#issuecomment-3788159617
     if anki_jp_user_dir := os.getenv("ANKI_JAPANESE_DIR"):
         return pathlib.Path(anki_jp_user_dir)

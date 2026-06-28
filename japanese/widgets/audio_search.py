@@ -5,7 +5,7 @@ import enum
 import functools
 import subprocess
 import typing
-from typing import cast
+from typing import Optional, cast
 
 from anki.sound import SoundOrVideoTag
 from anki.utils import no_bundled_libs
@@ -46,7 +46,7 @@ class SearchBar(QWidget):
     Combines a line edit and a search button.
     """
 
-    def __init__(self, parent=None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._search_line = QLineEdit()
         self._search_button = QPushButton("Search")
@@ -99,7 +99,7 @@ class SearchResultsTable(QTableWidget):
     play_requested = pyqtSignal(FileUrlData)
     open_requested = pyqtSignal(FileUrlData)
 
-    def __init__(self, parent=None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._last_results: list[FileUrlData] = []
         self.verticalHeader().setVisible(False)
@@ -170,10 +170,10 @@ class SearchLock:
 
 class AudioSearchDialog(QDialog):
     _audio_manager: AnkiAudioSourceManagerABC
-    _forvo_client: typing.Optional[ForvoClient]
+    _forvo_client: ForvoClient | None
 
     def __init__(
-        self, audio_manager: AnkiAudioSourceManagerABC, forvo_client: typing.Optional[ForvoClient], parent=None
+        self, audio_manager: AnkiAudioSourceManagerABC, forvo_client: ForvoClient | None, parent: QWidget | None = None
     ) -> None:
         super().__init__(parent)
         self.setMinimumSize(600, 400)
@@ -208,7 +208,7 @@ class AudioSearchDialog(QDialog):
         qconnect(self._table_widget.play_requested, self._play_audio_file)
         qconnect(self._table_widget.open_requested, self._open_audio_file)
 
-    def _play_audio_file(self, file: FileUrlData):
+    def _play_audio_file(self, file: FileUrlData) -> None:
         """
         This method requires Anki to be running.
         """
@@ -247,7 +247,7 @@ class AudioSearchDialog(QDialog):
     def files_to_add(self) -> list[FileUrlData]:
         return self._table_widget.files_to_add()
 
-    def search(self, search_text: typing.Optional[str] = None) -> None:
+    def search(self, search_text: str | None = None) -> None:
         if self._search_lock.is_searching():
             return
         self._table_widget.clear()

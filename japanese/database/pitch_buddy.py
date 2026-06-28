@@ -37,7 +37,7 @@ PITCH_TABLES_SCHEMA_NAME: typing.Final[str] = "pitch"
 
 class PitchSqlite3Buddy(Sqlite3BuddyABC, abc.ABC):
     _db_path: pathlib.Path
-    _con: Optional[sqlite3.Connection]
+    _con: sqlite3.Connection | None
 
     def prepare_pitch_accents_table(self, is_new_file: bool) -> None:
         """
@@ -108,7 +108,7 @@ class PitchSqlite3Buddy(Sqlite3BuddyABC, abc.ABC):
 
     def search_pitch_accents(
         self,
-        word: Optional[str],
+        word: str | None,
         prefer_provider_name: str,
         select_keys: Sequence[str] = PITCH_RETRIEVE_KEYS,
     ) -> list[sqlite3.Row]:

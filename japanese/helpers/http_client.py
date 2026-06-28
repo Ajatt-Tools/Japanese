@@ -82,12 +82,10 @@ class AjtHttpClient:
 
     verify: bool = True
     # args are (upload_bytes_in_chunk, download_bytes_in_chunk)
-    progress_hook: Optional[anki.httpclient.ProgressCallback] = None
+    progress_hook: anki.httpclient.ProgressCallback | None = None
     session: requests.Session
 
-    def __init__(
-        self, retry_attempts: int = 5, progress_hook: Optional[anki.httpclient.ProgressCallback] = None
-    ) -> None:
+    def __init__(self, retry_attempts: int = 5, progress_hook: anki.httpclient.ProgressCallback | None = None) -> None:
         self.progress_hook = progress_hook
         self.session = create_session(retry_attempts)
         if os.environ.get("ANKI_NOVERIFYSSL"):
@@ -101,7 +99,7 @@ class AjtHttpClient:
     def __enter__(self) -> "AjtHttpClient":
         return self
 
-    def __exit__(self, *args: Any) -> None:
+    def __exit__(self, *args) -> None:
         self.close()
 
     def close(self) -> None:
@@ -112,7 +110,7 @@ class AjtHttpClient:
     def __del__(self) -> None:
         self.close()
 
-    def post(self, url: str, data: bytes, timeout: Optional[int] = None) -> requests.Response:
+    def post(self, url: str, data: bytes, timeout: int | None = None) -> requests.Response:
         return self.session.post(
             url,
             data=data,
@@ -122,7 +120,7 @@ class AjtHttpClient:
             verify=self.verify,
         )
 
-    def get_with_timeout(self, url: str, timeout: Optional[int] = None) -> requests.Response:
+    def get_with_timeout(self, url: str, timeout: int | None = None) -> requests.Response:
         return self.session.get(
             url,
             stream=True,
@@ -149,12 +147,12 @@ class AudioManagerHttpClient(AudioManagerHttpClientABC):
     def __init__(
         self,
         audio_settings: AudioSettingsConfigViewABC,
-        progress_hook: Optional[anki.httpclient.ProgressCallback] = None,
+        progress_hook: anki.httpclient.ProgressCallback | None = None,
     ) -> None:
         self._audio_settings = audio_settings
         self._client = AjtHttpClient(audio_settings.attempts, progress_hook)
 
-    def download(self, file: Union[AudioSourceConfig, FileUrlData]) -> bytes:
+    def download(self, file: AudioSourceConfig | FileUrlData) -> bytes:
         """
         Get an audio source or audio file.
         """

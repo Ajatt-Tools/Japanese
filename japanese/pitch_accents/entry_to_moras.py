@@ -33,7 +33,7 @@ class Quark:
 
 @dataclasses.dataclass
 class Mora:
-    txt: list[typing.Union[Quark, str]]
+    txt: list[Quark | str]
     level: PitchLevel
     flags: MoraFlag
 
@@ -102,5 +102,5 @@ def entry_to_moras(entry: FormattedEntry, enable_trailing_mora: bool = True) -> 
     return MoraSequence(moras=moras, pitch_type=pitch_type, entry=entry)
 
 
-def mora_flags2class_name(flags: MoraFlag):
+def mora_flags2class_name(flags: MoraFlag) -> str:
     return " ".join(flag.name for flag in MoraFlag if flag.name and flag in flags)

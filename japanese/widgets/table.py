@@ -21,7 +21,7 @@ class ExpandingTableWidget(QTableWidget):
     _columns: Collection[str]
     _sep_regex: re.Pattern
 
-    def __init__(self, parent=None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setColumnCount(len(self._columns))
         self.setHorizontalHeaderLabels(self._columns)
@@ -107,7 +107,7 @@ class ExpandingTableWidget(QTableWidget):
         elif is_empty_not_last_row(row_cells):
             self.removeRow(row_n)
 
-    def addRow(self, cells: Iterable[Union[str, QWidget]], row_idx: Optional[int] = None) -> None:
+    def addRow(self, cells: Iterable[Union[str, QWidget]], row_idx: int | None = None) -> None:
         if row_idx is None:
             # Insert before the last row, since the last row is always an empty row for new data.
             row_idx = self.rowCount() - 1
@@ -129,7 +129,7 @@ class ExpandingTableWidget(QTableWidget):
     def addEmptyLastRow(self) -> None:
         return self.addRow(cells=("" for _column in self._columns), row_idx=self.rowCount())
 
-    def getCellContent(self, row_n: int, col_n: int) -> Optional[CellContent]:
+    def getCellContent(self, row_n: int, col_n: int) -> CellContent | None:
         """
         Return an item inside the cell if there is an item, or a widget if it has been set.
         """
@@ -152,10 +152,10 @@ class ExpandingTableWidget(QTableWidget):
         then maps each part to a cell in the current row.
         """
 
-        def text_parts():
+        def text_parts() -> Iterable[str]:
             return filter(bool, map(str.strip, re.split(self._sep_regex, QApplication.clipboard().text())))
 
-        def column_iter():
+        def column_iter() -> range:
             return range(self.currentColumn(), self.columnCount())
 
         for col_n, text in zip(column_iter(), text_parts()):

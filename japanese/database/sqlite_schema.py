@@ -44,7 +44,7 @@ CURRENT_DB = DbFileSchema(
 )
 
 
-def main():
+def main() -> None:
     CURRENT_DB.remove_deprecated_files()
 
 

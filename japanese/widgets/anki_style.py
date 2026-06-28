@@ -4,7 +4,7 @@
 from aqt.qt import *
 
 
-def fix_default_anki_style(self: QTableWidget):
+def fix_default_anki_style(self: QTableWidget) -> None:
     from aqt import mw
 
     try:

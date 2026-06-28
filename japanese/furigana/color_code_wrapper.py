@@ -24,7 +24,7 @@ def should_skip_coloring(token: AccDbParsedToken) -> bool:
     return token.part_of_speech in SKIP_COLORING or not token.has_pitch()
 
 
-def guess_main_pitch_type(token: AccDbParsedToken) -> Union[PitchType, PitchUnknown]:
+def guess_main_pitch_type(token: AccDbParsedToken) -> PitchType | PitchUnknown:
     pitch_types = collections.Counter(accent.type for entry in token.headword_accents for accent in entry.pitches)
     if len(pitch_types) == 1:
         # return the most common pitch (the first).
@@ -74,7 +74,7 @@ class ColorCodeWrapper(io.StringIO):
             self._end_wrap()
         return super().getvalue()
 
-    def _get_main_pitch_color(self, token: AccDbParsedToken) -> Optional[str]:
+    def _get_main_pitch_color(self, token: AccDbParsedToken) -> str | None:
         """
         Determine pitch color based on available accents.
         If the word has many different accents (e.g. heiban and atamadaka),

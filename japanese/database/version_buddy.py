@@ -23,7 +23,7 @@ class VersionSqlite3Buddy(Sqlite3BuddyABC, abc.ABC):
             cur.executescript(VERSION_TABLES_SCHEMA)
             self.con.commit()
 
-    def get_db_version(self, schema_name: str) -> Optional[int]:
+    def get_db_version(self, schema_name: str) -> int | None:
         query = """
         SELECT number FROM version
         WHERE schema_name = ?

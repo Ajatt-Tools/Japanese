@@ -39,10 +39,10 @@ from .widgets_to_config_dict import as_config_dict
 
 
 class SettingsForm(QWidget):
-    _config: Optional[ConfigSubViewBase] = None
-    _title: Optional[str] = None
+    _config: ConfigSubViewBase | None = None
+    _title: str | None = None
 
-    def __init__(self, config: Optional[ConfigSubViewBase] = None, title: Optional[str] = None):
+    def __init__(self, config: ConfigSubViewBase | None = None, title: str | None = None) -> None:
         super().__init__()
         self._title = title or self._title
         self._config = config or self._config
@@ -172,7 +172,7 @@ class ContextMenuSettingsForm(MultiColumnSettingsForm):
     _config: ContextMenuConfigView
     _title: str = "Context menu"
 
-    def _add_tooltips(self):
+    def _add_tooltips(self) -> None:
         super()._add_tooltips()
         for action in self._widgets.__dict__.values():
             action.setToolTip("Show this action in the context menu.")

@@ -3,8 +3,9 @@
 
 import functools
 import json
+import typing
 from collections.abc import Iterable
-from typing import Optional
+from typing import Any, Optional
 
 import anki.collection
 from anki import hooks
@@ -21,7 +22,7 @@ from .audio_manager.download_results import (
     calc_tooltip_offset,
     format_report_results_msg,
 )
-from .config_view import config_view as cfg
+from .config_view import JapaneseConfig, get_global_config
 from .database.sqlite3_buddy import Sqlite3Buddy
 from .furigana.gen_furigana import FuriganaGen
 from .helpers.profiles import (
@@ -58,7 +59,7 @@ class DoTask:
         super().__init_subclass__(**kwargs)
         cls._subclasses_map[task_type] = cls
 
-    def __new__(cls, task: Profile, *args, **kwargs):
+    def __new__(cls, task: Profile, *args, **kwargs) -> "DoTask":
         subclass = cls._subclasses_map[type(task)]
         return object.__new__(subclass)
 
@@ -164,7 +165,7 @@ def html_to_media_line(txt: str) -> str:
 class DoTasks:
     _note: Note
     _caller: TaskCaller
-    _src_field: Optional[str]
+    _src_field: str | None
     _overwrite: bool
 
     def __init__(
@@ -172,7 +173,7 @@ class DoTasks:
         note: Note,
         *,
         caller: TaskCaller,
-        src_field: Optional[str] = None,
+        src_field: str | None = None,
         overwrite: bool = False,
     ) -> None:
         self._note = note
@@ -223,7 +224,7 @@ class DoTasks:
         """
         Return source text with sound and image tags removed.
         """
-        assert mw
+        assert mw and mw.col, "Collection must be open."
         return mw.col.media.strip(self._note[task.source]).strip()
 
     def _field_contains_garbage(self, field_name: str) -> bool:
@@ -260,7 +261,7 @@ def on_add_note(_col: anki.collection.Collection, note: Note, _deck_id: DeckId) 
 ##########################################################################
 
 
-def init():
+def init() -> None:
     from aqt import gui_hooks
 
     # Generate when editing a note

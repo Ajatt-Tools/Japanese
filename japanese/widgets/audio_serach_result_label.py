@@ -2,7 +2,7 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 import enum
 import io
-from typing import Optional
+from typing import Any, Optional
 
 import requests
 from aqt.qt import *
@@ -33,7 +33,7 @@ def is_not_found(ex: Exception) -> bool:
     )
 
 
-def is_serious_error(ex: Optional[Exception]) -> bool:
+def is_serious_error(ex: Exception | None) -> bool:
     return ex is not None and not is_not_found(ex)
 
 
@@ -48,7 +48,7 @@ class AudioSearchResultLabel(QLabel):
         self.setStyleSheet("")
         self.hide()
 
-    def _set_status_text(self, text: str, status: ForvoSearchResult):
+    def _set_status_text(self, text: str, status: ForvoSearchResult) -> None:
         self.setText(text)
         self.setStyleSheet("QLabel { color: %s; }" % status.value)
         if self.isHidden():

@@ -3,7 +3,7 @@
 
 import abc
 import re
-from typing import Optional
+from typing import Any, Optional
 
 import aqt
 from aqt import gui_hooks
@@ -28,7 +28,7 @@ class ContextMenuAction(abc.ABC):
         super().__init_subclass__(**kwargs)
         cls.subclasses.append(cls)
 
-    def __init__(self, editor: Optional[Editor] = None, webview: Optional[AnkiWebView] = None) -> None:
+    def __init__(self, editor: Editor | None = None, webview: AnkiWebView | None = None) -> None:
         self.editor = editor
         self.webview = webview or editor.web
 
@@ -54,7 +54,7 @@ class ContextMenuAction(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def action(self, text: str) -> Optional[str]:
+    def action(self, text: str) -> str | None:
         """
         When None is returned,
         it is a sign that nothing should be modified in the Editor's field.
@@ -62,7 +62,7 @@ class ContextMenuAction(abc.ABC):
         """
         pass
 
-    def get_selected_text(self) -> Optional[str]:
+    def get_selected_text(self) -> str | None:
         if self.editor is not None and self.editor.currentField is None:
             return None
         if len(sel_text := self.webview.selectedText()) > 0:
@@ -164,6 +164,6 @@ def add_webview_context_menu_items(webview: AnkiWebView, menu: QMenu) -> None:
             qconnect(action.triggered, Action(webview=webview))
 
 
-def init():
+def init() -> None:
     gui_hooks.editor_will_show_context_menu.append(add_editor_context_menu_items)
     gui_hooks.webview_will_show_context_menu.append(add_webview_context_menu_items)
