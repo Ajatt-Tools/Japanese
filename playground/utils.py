@@ -46,5 +46,10 @@ class NoAnkiConfigView(JapaneseConfig):
 
     def _set_underlying_dicts(self) -> None:
         assert mw is None, "Anki shouldn't be running"
-        with open(default_config_json_path()) as f:
+        with open(default_config_json_path(), encoding="utf-8") as f:
             self._default_config = self._config = json.load(f)
+
+    def write_config(self) -> None:
+        """Ignore writes during tests."""
+        print("write requested. doing nothing. config contents:")
+        print(json.dumps(self._config, indent=4, ensure_ascii=False))
