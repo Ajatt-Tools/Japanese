@@ -5,10 +5,7 @@ import pathlib
 
 DATA_DIR = pathlib.Path(__file__).parent / "data"
 
-try:
-    # https://github.com/beartype/beartype
-    from beartype.claw import beartype_this_package
+# https://github.com/beartype/beartype
+from beartype.claw import beartype_this_package
 
-    beartype_this_package()
-except ImportError:
-    pass
+beartype_this_package()
