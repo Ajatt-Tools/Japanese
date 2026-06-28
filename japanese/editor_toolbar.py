@@ -3,7 +3,7 @@
 
 import functools
 from collections.abc import Callable, Iterable
-from typing import NamedTuple, Optional
+from typing import NamedTuple
 
 import anki.collection
 from anki.collection import OpChanges
@@ -26,6 +26,8 @@ from .widgets.audio_search import AnkiAudioSearchDialog
 
 
 class ToolbarButton(NamedTuple):
+    """Describes a single editor toolbar button: its action, tooltip, and config."""
+
     id: str
     on_press: Callable[[Editor], None]
     tip: str
@@ -33,6 +35,7 @@ class ToolbarButton(NamedTuple):
 
 
 def carefully_update_note(col: anki.collection.Collection, note: Note) -> OpChanges:
+    """Update a note in the collection, skipping if the note has not been saved yet (Add window)."""
     if note.id > 0:
         # Anki can't update notes in the "Add" window.
         # It can only update notes in the "Browser" and "Edit" windows.
@@ -41,8 +44,10 @@ def carefully_update_note(col: anki.collection.Collection, note: Note) -> OpChan
 
 
 def modify_field(func: Callable[[str], str]) -> Callable[[Editor], None]:
-    """
-    Used to generate or clean furigana in the current field.
+    """Decorator that applies a string-transforming function to the current editor field.
+
+    The wrapped function receives the current field's text and returns the modified text.
+    The update is performed as a single undoable CollectionOp.
     """
 
     def collection_op(col: anki.collection.Collection, note: Note, field_n: int) -> OpChanges:
@@ -65,8 +70,10 @@ def modify_field(func: Callable[[str], str]) -> Callable[[Editor], None]:
 
 
 def modify_note(func: Callable[[Editor], object]) -> Callable[[Editor], None]:
-    """
-    Used to (re)generate all target fields of the current note.
+    """Decorator that runs a note-modifying function and persists the result.
+
+    The wrapped function receives the Editor and may mutate editor.note in place.
+    After it returns, the note is saved via a CollectionOp and the editor is reloaded.
     """
 
     def note_reload(editor: Editor) -> None:
@@ -101,119 +108,136 @@ def get_note_value(note: Note, field_name: str) -> str | None:
         return None
 
 
-def search_audio(editor: Editor) -> None:
-    # the caller should have ensured that editor.note is not None.
+class EditorMenus:
+    """Manages AJT Japanese toolbar buttons in the Anki editor."""
 
-    assert editor.note is not None
+    _cfg: JapaneseConfig
 
-    with Sqlite3Buddy() as db:
-        session = aud_src_mgr.request_new_session(db)
-        forvo_client = ForvoClient(config=cfg.forvo) if cfg.forvo.enable_forvo_search else None
-        dialog = AnkiAudioSearchDialog(session, forvo_client)
-        fix_default_anki_style(dialog.table)
-        dialog.set_note_fields(
-            editor.note.keys(),
-            selected_src_field_name=cfg.audio_settings.search_dialog_src_field_name,
-            selected_dest_field_name=cfg.audio_settings.search_dialog_dest_field_name,
-        )
-        dialog.search(
-            editor.web.selectedText()
-            or get_note_value(note=editor.note, field_name=cfg.audio_settings.search_dialog_src_field_name)
-        )
-        # Show the dialog.
-        is_accepted = dialog.exec()
+    def __init__(self, cfg: JapaneseConfig) -> None:
+        self._cfg = cfg
 
-        # remember field names for later calls
-        cfg.audio_settings.search_dialog_src_field_name = dialog.source_field_name
-        cfg.audio_settings.search_dialog_dest_field_name = dialog.destination_field_name
-        cfg.write_config()
+    def _search_audio(self, editor: Editor) -> None:
+        """Open the audio search dialog, insert selected audio tags, and trigger download."""
+        # the caller should have ensured that editor.note is not None.
 
-        if not is_accepted:
-            # The user pressed "Cancel". Nothing to do.
-            return
+        assert editor.note, "Note must be present."
 
-        # process results
-        results = dialog.files_to_add()
-        if not results:
-            return
+        with Sqlite3Buddy() as db:
+            session = aud_src_mgr.request_new_session(db)
+            forvo_client = ForvoClient(config=self._cfg.forvo) if self._cfg.forvo.enable_forvo_search else None
+            dialog = AnkiAudioSearchDialog(session, forvo_client)
+            fix_default_anki_style(dialog.table)
+            dialog.set_note_fields(
+                editor.note.keys(),
+                selected_src_field_name=self._cfg.audio_settings.search_dialog_src_field_name,
+                selected_dest_field_name=self._cfg.audio_settings.search_dialog_dest_field_name,
+            )
+            dialog.search(
+                editor.web.selectedText()
+                or get_note_value(note=editor.note, field_name=self._cfg.audio_settings.search_dialog_src_field_name)
+            )
+            # Show the dialog.
+            is_accepted = dialog.exec()
 
-        # Pre-reserve filenames so that [sound:...] tags use the actual (normalized) names.
-        audio_tags, reserved = session.reserve_and_format_tags(results)
-        editor.note[dialog.destination_field_name] = (
-            editor.note[dialog.destination_field_name]
-            + (cfg.audio_settings.tag_separator if editor.note[dialog.destination_field_name] else "")
-            + audio_tags
-        )
-        session.download_reserved(reserved)
+            # remember field names for later calls
+            self._cfg.audio_settings.search_dialog_src_field_name = dialog.source_field_name
+            self._cfg.audio_settings.search_dialog_dest_field_name = dialog.destination_field_name
+            self._cfg.write_config()
 
+            if not is_accepted:
+                # The user pressed "Cancel". Nothing to do.
+                return
 
-def query_buttons() -> Iterable[ToolbarButton]:
-    return (
-        ToolbarButton(
-            id="generate_all_button",
-            on_press=modify_note(
-                lambda editor: DoTasks(
-                    editor.note,
-                    caller=TaskCaller.toolbar_button,
-                    overwrite=False,
-                ).run()
+            # process results
+            results = dialog.files_to_add()
+            if not results:
+                return
+
+            # Pre-reserve filenames so that [sound:...] tags use the actual (normalized) names.
+            audio_tags, reserved = session.reserve_and_format_tags(results)
+            editor.note[dialog.destination_field_name] = (
+                editor.note[dialog.destination_field_name]
+                + (self._cfg.audio_settings.tag_separator if editor.note[dialog.destination_field_name] else "")
+                + audio_tags
+            )
+            session.download_reserved(reserved)
+
+    def _query_buttons(self) -> Iterable[ToolbarButton]:
+        """Yield all configured toolbar buttons with their actions and tooltips."""
+        return (
+            ToolbarButton(
+                id="generate_all_button",
+                on_press=modify_note(
+                    lambda editor: editor.note
+                    and DoTasks(
+                        editor.note,
+                        cfg=self._cfg,
+                        caller=TaskCaller.toolbar_button,
+                        overwrite=False,
+                    ).run()
+                ),
+                tip="Generate all fields",
+                conf=self._cfg.toolbar.generate_all_button,
             ),
-            tip="Generate all fields",
-            conf=cfg.toolbar.generate_all_button,
-        ),
-        ToolbarButton(
-            id="regenerate_all_button",
-            on_press=modify_note(
-                lambda editor: DoTasks(
-                    editor.note,
-                    caller=TaskCaller.toolbar_button,
-                    overwrite=True,
-                ).run()
+            ToolbarButton(
+                id="regenerate_all_button",
+                on_press=modify_note(
+                    lambda editor: editor.note
+                    and DoTasks(
+                        editor.note,
+                        cfg=self._cfg,
+                        caller=TaskCaller.toolbar_button,
+                        overwrite=True,
+                    ).run()
+                ),
+                tip="Regenerate all fields (overwrite existing data)",
+                conf=self._cfg.toolbar.regenerate_all_button,
             ),
-            tip="Regenerate all fields (overwrite existing data)",
-            conf=cfg.toolbar.regenerate_all_button,
-        ),
-        ToolbarButton(
-            id="furigana_button",
-            on_press=modify_field(generate_furigana),
-            tip="Generate furigana in the field",
-            conf=cfg.toolbar.furigana_button,
-        ),
-        ToolbarButton(
-            id="hiragana_button",
-            on_press=modify_field(functools.partial(generate_furigana, full_hiragana=True)),
-            tip="Reconvert the field as hiragana",
-            conf=cfg.toolbar.hiragana_button,
-        ),
-        ToolbarButton(
-            id="clean_furigana_button",
-            on_press=modify_field(clean_furigana),
-            tip="Clean furigana in the field",
-            conf=cfg.toolbar.clean_furigana_button,
-        ),
-        ToolbarButton(
-            id="audio_search_button",
-            on_press=modify_note(search_audio),
-            tip="Search audio files to add to note",
-            conf=cfg.toolbar.audio_search_button,
-        ),
-    )
-
-
-def add_toolbar_buttons(html_buttons: list[str], editor: Editor) -> None:
-    html_buttons.extend(
-        editor.addButton(
-            icon=None,
-            cmd=f"ajt__{b.id}",
-            func=b.on_press,
-            tip=f"{b.tip} ({b.conf.shortcut})" if b.conf.shortcut else b.tip,
-            keys=b.conf.shortcut or None,
-            label=b.conf.text,
+            ToolbarButton(
+                id="furigana_button",
+                on_press=modify_field(generate_furigana),
+                tip="Generate furigana in the field",
+                conf=self._cfg.toolbar.furigana_button,
+            ),
+            ToolbarButton(
+                id="hiragana_button",
+                on_press=modify_field(functools.partial(generate_furigana, full_hiragana=True)),
+                tip="Reconvert the field as hiragana",
+                conf=self._cfg.toolbar.hiragana_button,
+            ),
+            ToolbarButton(
+                id="clean_furigana_button",
+                on_press=modify_field(clean_furigana),
+                tip="Clean furigana in the field",
+                conf=self._cfg.toolbar.clean_furigana_button,
+            ),
+            ToolbarButton(
+                id="audio_search_button",
+                on_press=modify_note(self._search_audio),
+                tip="Search audio files to add to note",
+                conf=self._cfg.toolbar.audio_search_button,
+            ),
         )
-        for b in query_buttons()
-        if b.conf.enabled
-    )
+
+    def add_toolbar_buttons(self, html_buttons: list[str], editor: Editor) -> None:
+        """Register enabled toolbar buttons with the Anki editor."""
+        html_buttons.extend(
+            editor.addButton(
+                icon=None,
+                cmd=f"{ADDON_SERIES}__{b.id}".lower(),
+                func=b.on_press,
+                tip=f"{b.tip} ({b.conf.shortcut})" if b.conf.shortcut else b.tip,
+                keys=b.conf.shortcut or None,
+                label=b.conf.text,
+            )
+            for b in self._query_buttons()
+            if b.conf.enabled
+        )
 
 
-def init():
-    gui_hooks.editor_did_init_buttons.append(add_toolbar_buttons)
+def init() -> None:
+    """Create the EditorMenus instance and register it with Anki's editor hook."""
+    assert mw, "Anki should be open."
+    cfg = get_global_config()
+    mw._ajt__japanese_editor_menus = menus = EditorMenus(cfg)
+    gui_hooks.editor_did_init_buttons.append(menus.add_toolbar_buttons)
