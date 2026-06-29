@@ -11,7 +11,7 @@ from ..widgets.addon_opts import WordsEdit
 from .enum_selector import FlagSelectCombo
 
 
-def set_from_cfg(widget: QWidget, value: Union[bool, str, int, float]) -> None:
+def set_from_cfg(widget: QWidget, value: Union[bool, str, int, float, enum.Enum]) -> None:
     """Set a widget's value from a configuration value based on the widget type."""
     if isinstance(widget, QDoubleSpinBox) and isinstance(value, (int, float)):
         widget.setValue(value)
@@ -19,20 +19,27 @@ def set_from_cfg(widget: QWidget, value: Union[bool, str, int, float]) -> None:
         widget.setText(value)
     elif isinstance(widget, QCheckBox) and isinstance(value, bool):
         widget.setChecked(value)
+    elif isinstance(widget, EnumSelectCombo) and isinstance(value, (str, enum.Enum)):
+        widget.setCurrentName(value)
+    elif isinstance(widget, QComboBox) and isinstance(value, str):
+        widget.setCurrentText(value)
     else:
         raise ValueError(
             f"Can't handle widget of type {type(widget).__name__} and value of type {type(value).__name__}"
         )
 
 
-def change_event(widget: QWidget) -> pyqtSignal:
+def change_event(widget: QWidget) -> pyqtBoundSignal:
     """Return the appropriate change signal for a widget based on its type."""
-    if isinstance(widget, QDoubleSpinBox):
+    if isinstance(widget, (QDoubleSpinBox, QAbstractSpinBox)):
         return widget.valueChanged
     elif isinstance(widget, QLineEdit):
         return widget.textChanged
     elif isinstance(widget, QCheckBox):
+        # checkStateChanged in pyqt 6.7+
         return widget.stateChanged
+    elif isinstance(widget, QComboBox):
+        return widget.currentIndexChanged
     else:
         raise ValueError("unknown type")
 

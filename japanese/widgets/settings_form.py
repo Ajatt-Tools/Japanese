@@ -435,15 +435,7 @@ class SvgSettingsForm(MultiColumnSettingsForm):
 
     def _connect_widgets(self) -> None:
         for widget in self._widgets.__dict__.values():
-            if isinstance(widget, QCheckBox):
-                # checkStateChanged in pyqt 6.7+
-                qconnect(widget.stateChanged, lambda: q_emit(self.opts_changed))
-            elif isinstance(widget, QAbstractSpinBox):
-                qconnect(widget.valueChanged, lambda: q_emit(self.opts_changed))
-            elif isinstance(widget, QLineEdit):
-                qconnect(widget.textChanged, lambda: q_emit(self.opts_changed))
-            else:
-                raise ValueError(f"Unhandled widget type: {type(widget)}")
+            qconnect(change_event(widget), lambda: q_emit(self.opts_changed))
 
     def _add_tooltips(self) -> None:
         super()._add_tooltips()
