@@ -21,7 +21,6 @@ from ..config_view import (
     FuriganaConfigView,
     PitchColorCodesConfigView,
     PitchConfigView,
-    SvgGraphReadingFormat,
     SvgPitchGraphOptionsConfigView,
 )
 from ..helpers.misc import split_list
@@ -434,6 +433,7 @@ class SvgSettingsForm(MultiColumnSettingsForm):
             initial_value=self._config.devoiced_rectangle_padding, allowed_range=AllowedRangeDouble(-999, 999)
         )
         self._widgets.devoiced_stroke_dasharray = StrokeDisarrayLineEdit(self._config.devoiced_stroke_dasharray)
+        self._widgets.stroke_dasharray = StrokeDisarrayLineEdit(self._config.stroke_dasharray)
         self._connect_widgets()
 
     def _connect_widgets(self) -> None:
@@ -445,4 +445,7 @@ class SvgSettingsForm(MultiColumnSettingsForm):
         self._widgets.graph_horizontal_padding.setToolTip("Padding to the left and right of the image.")
         self._widgets.devoiced_stroke_dasharray.setToolTip(
             "Pattern of dashes and gaps used to paint\nthe outline of the devoiced circle."
+        )
+        self._widgets.stroke_dasharray.setToolTip(
+            "Pattern of dashes and gaps used to paint\ntape connector lines between words."
         )
