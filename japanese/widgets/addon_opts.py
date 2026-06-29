@@ -45,14 +45,19 @@ class NarrowLineEdit(QLineEdit):
         self.setMaximumWidth(self._max_width)
 
 
+class AllowedRange(typing.NamedTuple):
+    min: int
+    max: int
+
+
 class NarrowSpinBox(QSpinBox):
-    _allowed_range: tuple[int, int] = (1, 99)
+    _allowed_range: AllowedRange = AllowedRange(1, 99)
     _max_width: int = NARROW_WIDGET_MAX_WIDTH
 
     def __init__(
         self,
         initial_value: int | None = None,
-        allowed_range: tuple[int, int] | None = None,
+        allowed_range: AllowedRange | None = None,
         *args,
     ) -> None:
         super().__init__(*args)
@@ -67,22 +72,27 @@ class PxNarrowSpinBox(NarrowSpinBox):
     def __init__(
         self,
         initial_value: int | None = None,
-        allowed_range: tuple[int, int] | None = None,
+        allowed_range: AllowedRange | None = None,
         *args,
     ) -> None:
         super().__init__(initial_value, allowed_range, *args)
         self.setSuffix(" px")
 
 
+class AllowedRangeDouble(typing.NamedTuple):
+    min: int | float
+    max: int | float
+
+
 class PxDoubleNarrowSpinBox(QDoubleSpinBox):
-    _allowed_range: tuple[float, float] = (1, 99)
+    _allowed_range: AllowedRangeDouble = AllowedRangeDouble(1, 99)
     _max_width: int = NARROW_WIDGET_MAX_WIDTH
     _decimals: int = 2
 
     def __init__(
         self,
         initial_value: float | None = None,
-        allowed_range: tuple[float, float] | None = None,
+        allowed_range: AllowedRangeDouble | None = None,
         *args,
     ) -> None:
         super().__init__(*args)

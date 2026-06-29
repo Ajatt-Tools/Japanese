@@ -29,6 +29,8 @@ from ..helpers.sakura_client import AddDefBehavior, DictName, SearchType
 from ..pitch_accents.basic_types import PitchType
 from ..pitch_accents.styles import HTMLPitchPatternStyle
 from .addon_opts import (
+    AllowedRange,
+    AllowedRangeDouble,
     NarrowLineEdit,
     NarrowSpinBox,
     PxDoubleNarrowSpinBox,
@@ -373,19 +375,23 @@ SvgOptValueType = type[Union[int, float]]
 SvgOptSpinbox = Union[PxNarrowSpinBox, PxDoubleNarrowSpinBox]
 
 
+def make_px_spin_box(initial_value: float | int) -> SvgOptSpinbox:
+    match initial_value:
+        case int():
+            return PxNarrowSpinBox(initial_value, allowed_range=AllowedRange(0, 999))
+        case float():
+            return PxDoubleNarrowSpinBox(initial_value, allowed_range=AllowedRangeDouble(0, 999))
+    raise ValueError(f"can't handle value type: {type(initial_value).__name__}")
+
+
 class SvgSettingsForm(MultiColumnSettingsForm):
     _columns: int = 2
     _title: str = "SVG settings"
     _config: SvgPitchGraphOptionsConfigView
-    _value_type_to_widget_type: dict[SvgOptValueType, type[SvgOptSpinbox]] = {
-        int: PxNarrowSpinBox,
-        float: PxDoubleNarrowSpinBox,
-    }
     opts_changed = pyqtSignal()
 
     def _create_spinboxes(self) -> Iterable[tuple[str, SvgOptSpinbox]]:
         assert self._config
-        spinbox: SvgOptSpinbox
         # skipped options have different defaults and will be handled separately
         skip_keys = (
             "text_dx",
@@ -396,36 +402,33 @@ class SvgSettingsForm(MultiColumnSettingsForm):
             "letter_spacing",
         )
         for key, value in self._config.items():
-            if key in skip_keys:
+            if key in skip_keys or not isinstance(value, (float, int)):
                 continue
-            try:
-                spinbox = self._value_type_to_widget_type[type(value)](
-                    initial_value=value,
-                    allowed_range=(0, 999),
-                )
-                yield key, spinbox
-            except KeyError:
-                pass
+            yield key, make_px_spin_box(initial_value=value)
 
     def _add_widgets(self) -> None:
         super()._add_widgets()
 
         # dy/dx are allowed to be negative.
-        self._widgets.text_dx = PxNarrowSpinBox(initial_value=self._config.text_dx, allowed_range=(-999, 999))
-        self._widgets.letter_spacing = PxDoubleNarrowSpinBox(
-            initial_value=self._config.letter_spacing, allowed_range=(-999, 999)
+        self._widgets.text_dx = PxNarrowSpinBox(
+            initial_value=self._config.text_dx, allowed_range=AllowedRange(-999, 999)
         )
-        self._widgets.tspan_dx = PxNarrowSpinBox(initial_value=self._config.tspan_dx, allowed_range=(-999, 999))
+        self._widgets.letter_spacing = PxDoubleNarrowSpinBox(
+            initial_value=self._config.letter_spacing, allowed_range=AllowedRangeDouble(-999, 999)
+        )
+        self._widgets.tspan_dx = PxNarrowSpinBox(
+            initial_value=self._config.tspan_dx, allowed_range=AllowedRange(-999, 999)
+        )
 
         # x step can't be 0 because it will cause division by zero.
-        self._widgets.x_step = PxNarrowSpinBox(initial_value=self._config.x_step, allowed_range=(1, 999))
+        self._widgets.x_step = PxNarrowSpinBox(initial_value=self._config.x_step, allowed_range=AllowedRange(1, 999))
 
         self._widgets.__dict__.update(self._create_spinboxes())
         self._widgets.devoiced_circle_dy = PxNarrowSpinBox(
-            initial_value=self._config.devoiced_circle_dy, allowed_range=(-999, 999)
+            initial_value=self._config.devoiced_circle_dy, allowed_range=AllowedRange(-999, 999)
         )
         self._widgets.devoiced_rectangle_padding = PxDoubleNarrowSpinBox(
-            initial_value=self._config.devoiced_rectangle_padding, allowed_range=(-999, 999)
+            initial_value=self._config.devoiced_rectangle_padding, allowed_range=AllowedRangeDouble(-999, 999)
         )
         self._widgets.devoiced_stroke_dasharray = StrokeDisarrayLineEdit(self._config.devoiced_stroke_dasharray)
         self._connect_widgets()
