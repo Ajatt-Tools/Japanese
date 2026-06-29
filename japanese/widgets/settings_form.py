@@ -442,6 +442,27 @@ class SvgSettingsForm(MultiColumnSettingsForm):
 
     def _add_tooltips(self) -> None:
         super()._add_tooltips()
+        self._widgets.include_text.setToolTip("Show kana labels below the pitch contour circles.")
+        self._widgets.inject_css_into_files.setToolTip(
+            "Embed CSS styles directly inside saved SVG files for standalone viewing."
+        )
+        self._widgets.reading_format.setToolTip("Reading format for kana labels: hiragana or katakana.")
+        self._widgets.size_unit.setToolTip("Base unit (in pixels) for graph sizing.")
+        self._widgets.x_step.setToolTip("Horizontal spacing between mora circles in pixels.")
+        self._widgets.graph_height.setToolTip("Vertical distance between high and low pitch positions.")
+        self._widgets.graph_visible_height.setToolTip("Visible height of the SVG in pixels.")
+        self._widgets.stroke_width.setToolTip("Width of the pitch contour lines.")
+        self._widgets.circle_radius.setToolTip("Radius of the mora circles.")
+        self._widgets.font_size.setToolTip("Font size of the kana labels in pixels.")
+        self._widgets.letter_spacing.setToolTip("Letter spacing between characters in kana labels.")
+        self._widgets.text_dx.setToolTip("Horizontal offset for kana text labels.")
+        self._widgets.tspan_dx.setToolTip("Horizontal offset for nasal dakuten tspans.")
+        self._widgets.devoiced_circle_width.setToolTip("Stroke width of the devoiced circle outline.")
+        self._widgets.devoiced_circle_radius.setToolTip("Radius of the circle drawn around devoiced mora.")
+        self._widgets.devoiced_circle_dy.setToolTip("Vertical offset for the devoiced circle position.")
+        self._widgets.devoiced_rectangle_padding.setToolTip(
+            "Padding inside the devoiced rectangle for multi-character mora."
+        )
         self._widgets.graph_horizontal_padding.setToolTip("Padding to the left and right of the image.")
         self._widgets.devoiced_stroke_dasharray.setToolTip(
             "Pattern of dashes and gaps used to paint\nthe outline of the devoiced circle."
