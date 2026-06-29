@@ -391,7 +391,7 @@ class SvgSettingsForm(MultiColumnSettingsForm):
     opts_changed = pyqtSignal()
 
     def _create_spinboxes(self) -> Iterable[tuple[str, SvgOptSpinbox]]:
-        assert self._config
+        assert self._config, "Config must be set."
         # skipped options have different defaults and will be handled separately
         skip_keys = (
             "text_dx",
@@ -401,10 +401,10 @@ class SvgSettingsForm(MultiColumnSettingsForm):
             "devoiced_rectangle_padding",
             "letter_spacing",
         )
-        for key, value in self._config.items():
-            if key in skip_keys or not isinstance(value, (float, int)):
+        for item in self._config.numerics():
+            if item.cfg_key in skip_keys:
                 continue
-            yield key, make_px_spin_box(initial_value=value)
+            yield item.cfg_key, make_px_spin_box(initial_value=item.value)
 
     def _add_widgets(self) -> None:
         super()._add_widgets()
