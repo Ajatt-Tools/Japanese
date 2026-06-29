@@ -216,15 +216,26 @@ class SvgPitchGraphMaker:
                 f'stroke-dasharray="{self._opts.devoiced_stroke_dasharray}" />'
             )
 
-    def quark_to_tspan(self, quark: Quark) -> str:
+    def _quark_to_tspan(self, quark: Quark) -> str:
         assert isinstance(quark, Quark)
         return (
             f'<tspan{append_class_name(quark.flags)} fill="{SvgColor.nasal.value}" '
             f'dx="{self._opts.tspan_dx:.0f}">{quark.txt}</tspan>'
         )
 
+    def _convert_kana(self, text: Quark | str, reading_format: SvgGraphReadingFormat) -> str:
+        """Convert a kana string according to the configured reading format."""
+        if not isinstance(text, str):
+            return self._quark_to_tspan(text)
+        assert isinstance(text, str)
+        match reading_format:
+            case SvgGraphReadingFormat.hiragana:
+                return to_hiragana(text)
+            case SvgGraphReadingFormat.katakana:
+                return to_katakana(text)
+
     def assemble_txt_content(self, mora_txt: list[Quark | str]) -> str:
-        return "".join(txt if isinstance(txt, str) else self.quark_to_tspan(txt) for txt in mora_txt)
+        return "".join(self._convert_kana(txt, self._opts.reading_format) for txt in mora_txt)
 
     def make_text(self, mora: Mora, pos: Point, dx: int) -> str:
         """
