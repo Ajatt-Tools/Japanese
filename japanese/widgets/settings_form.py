@@ -409,6 +409,9 @@ class SvgSettingsForm(MultiColumnSettingsForm):
     def _add_widgets(self) -> None:
         super()._add_widgets()
 
+        # Reading format selector.
+        self._widgets.reading_format = EnumSelectCombo(initial_value=self._config.reading_format)
+
         # dy/dx are allowed to be negative.
         self._widgets.text_dx = PxNarrowSpinBox(
             initial_value=self._config.text_dx, allowed_range=AllowedRange(-999, 999)
