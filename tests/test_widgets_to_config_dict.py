@@ -4,8 +4,8 @@
 import pytest
 from aqt.qt import *
 
-from japanese.config_view import SvgGraphReadingFormat
 from japanese.ajt_common.enum_select_combo import EnumSelectCombo
+from japanese.config_view import SvgGraphReadingFormat
 from japanese.widgets.widgets_to_config_dict import (
     as_config_dict,
     change_event,
@@ -25,10 +25,21 @@ class TestSetFromCfg:
             (QCheckBox, False),
         ],
     )
-    def test_set_value(self, widget_factory: type[QWidget], value: float | str | bool) -> None:
+    def test_set_value(self, widget_factory: type[QWidget], value: float | int | str | bool) -> None:
         widget = widget_factory()
         set_from_cfg(widget, value)
         assert get_from_widget(widget) == value
+
+    def test_set_enum_select_combo(self) -> None:
+        widget = EnumSelectCombo(enum_type=SvgGraphReadingFormat)
+        set_from_cfg(widget, SvgGraphReadingFormat.hiragana)
+        assert get_from_widget(widget) == SvgGraphReadingFormat.hiragana.name
+
+    def test_set_qcombobox(self) -> None:
+        widget = QComboBox()
+        widget.addItems(["a", "b", "c"])
+        set_from_cfg(widget, "b")
+        assert get_from_widget(widget) == "b"
 
     def test_unknown_type_raises(self) -> None:
         widget = QWidget()
@@ -50,12 +61,22 @@ class TestGetFromWidget:
     def test_get_value(
         self,
         widget_factory: type[QWidget],
-        expected_value: float | str | bool,
+        expected_value: float | int | str | bool,
         setup: Callable[[QWidget], None],
     ) -> None:
         widget = widget_factory()
         setup(widget)
         assert get_from_widget(widget) == expected_value
+
+    def test_get_enum_select_combo(self) -> None:
+        widget = EnumSelectCombo(enum_type=SvgGraphReadingFormat, initial_value=SvgGraphReadingFormat.katakana)
+        assert get_from_widget(widget) == SvgGraphReadingFormat.katakana.name
+
+    def test_get_qcombobox(self) -> None:
+        widget = QComboBox()
+        widget.addItems(["x", "y", "z"])
+        widget.setCurrentIndex(2)
+        assert get_from_widget(widget) == "z"
 
     def test_unknown_type_raises(self) -> None:
         with pytest.raises(ValueError, match="Don't know how to handle"):
@@ -65,7 +86,14 @@ class TestGetFromWidget:
 class TestChangeEvent:
     @pytest.mark.parametrize(
         "widget_factory",
-        [QDoubleSpinBox, QSpinBox, QLineEdit, QCheckBox, QComboBox, lambda: EnumSelectCombo(enum_type=SvgGraphReadingFormat)],
+        [
+            QDoubleSpinBox,
+            QSpinBox,
+            QLineEdit,
+            QCheckBox,
+            QComboBox,
+            lambda: EnumSelectCombo(enum_type=SvgGraphReadingFormat),
+        ],
     )
     def test_returns_signal(self, widget_factory: type[QWidget]) -> None:
         widget = widget_factory()

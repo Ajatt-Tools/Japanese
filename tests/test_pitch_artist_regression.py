@@ -11,6 +11,7 @@ from japanese.pitch_artist.pitch_graph import (
     Role,
     SvgPitchArtistGraphMaker,
     adjust_ha_wa,
+    apply_kanji_colors,
     guess_role_from_pitch_num,
     is_empty_particle,
     make_section,
@@ -430,6 +431,19 @@ class TestClassName:
         assert section.class_name == expected
 
 
+class TestNumericsExcludesBooleans:
+    """Verify that numerics() does not return boolean config keys.
+
+    bool is a subclass of int in Python, so a naive isinstance(value, (int, float))
+    check would incorrectly include booleans. This test guards against that regression.
+    """
+
+    def test_bool_keys_not_in_numerics(self, no_anki_config: NoAnkiConfigView) -> None:
+        numeric_keys = {item.cfg_key for item in no_anki_config.svg_graphs.numerics()}
+        bool_keys = set(no_anki_config.svg_graphs.bool_keys())
+        assert numeric_keys.isdisjoint(bool_keys), f"Boolean keys found in numerics: {numeric_keys & bool_keys}"
+
+
 # ======================================================================
 # Integration tests
 # ======================================================================
@@ -515,3 +529,32 @@ class TestSvgRegression:
         assert len(re.findall(r"<line", svg)) == expected.num_lines
         assert len(re.findall(r"<text", svg)) == expected.num_texts
         assert re.findall(r'<g class="([^"]+)"', svg) == expected.css_classes
+
+
+class TestApplyKanjiColors:
+    """Test apply_kanji_colors generates correct HTML spans with role-based CSS classes."""
+
+    @pytest.mark.parametrize(
+        "notation, expected",
+        [
+            ("ねこ;1", ['<span class="atamadaka">ねこ</span>']),
+            ("がっこう;0 まで;1", ['<span class="heiban">がっこう</span><span class="atamadaka">まで</span>']),
+            (
+                "がっこう;1. つくった;2.",
+                ['<span class="atamadaka">がっこう</span>', '<span class="nakadaka">つくった</span>'],
+            ),
+            (
+                "がっこう;1 | つくった;2",
+                ['<span class="atamadaka">がっこう</span><span class="nakadaka">つくった</span>'],
+            ),
+        ],
+    )
+    def test_apply_kanji_colors(
+        self,
+        no_anki_config: NoAnkiConfigView,
+        notation: str,
+        expected: list[str],
+    ) -> None:
+        gen = SvgPitchArtistGraphMaker(no_anki_config)
+        sequences = gen.make_sequences(notation)
+        assert apply_kanji_colors(sequences) == expected

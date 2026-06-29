@@ -5,9 +5,9 @@
 import re
 
 import pytest
-from playground.utils import NoAnkiConfigView
 
 from japanese.pitch_artist.pitch_graph import SvgPitchArtistGraphMaker
+from playground.utils import NoAnkiConfigView
 
 # Circle Y-coordinates derived from default config:
 #   height_high = size_unit = 25   → y=25 means "high"
