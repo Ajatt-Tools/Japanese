@@ -1,17 +1,30 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
+import enum
+
 import pytest
 from aqt.qt import *
 
+from japanese.ajt_common.color_picker import ColorEditPicker
 from japanese.ajt_common.enum_select_combo import EnumSelectCombo
+from japanese.ajt_common.grab_key import ShortCutGrabButton
 from japanese.config_view import SvgGraphReadingFormat
+from japanese.widgets.addon_opts import WordsEdit
+from japanese.widgets.enum_selector import FlagSelectCombo
 from japanese.widgets.widgets_to_config_dict import (
     as_config_dict,
     change_event,
     get_from_widget,
     set_from_cfg,
 )
+
+
+@enum.unique
+class _TestFlags(enum.Flag):
+    none = enum.auto()
+    foo = enum.auto()
+    bar = enum.auto()
 
 
 class TestSetFromCfg:
@@ -82,6 +95,25 @@ class TestGetFromWidget:
         with pytest.raises(ValueError, match="Don't know how to handle"):
             get_from_widget(QWidget())
 
+    def test_color_edit_picker(self) -> None:
+        widget = ColorEditPicker()
+        widget.set_color("#FF0000")
+        assert get_from_widget(widget) == "#FF0000"
+
+    def test_flag_select_combo(self) -> None:
+        widget = FlagSelectCombo(enum_type=_TestFlags)
+        widget.set_checked_flags(_TestFlags.foo | _TestFlags.bar)
+        result = get_from_widget(widget)
+        assert frozenset(result.split(",")) == {"foo", "bar"}
+
+    def test_shortcut_grab_button(self) -> None:
+        widget = ShortCutGrabButton(initial_value="Ctrl+G")
+        assert get_from_widget(widget) == "Ctrl+G"
+
+    def test_words_edit(self) -> None:
+        widget = WordsEdit(initial_values=["word1", "word2"])
+        assert get_from_widget(widget) == "word1,word2"
+
 
 class TestChangeEvent:
     @pytest.mark.parametrize(
@@ -111,9 +143,26 @@ class TestAsConfigDict:
             "check": QCheckBox(),
             "text": QLineEdit(),
             "spin": QDoubleSpinBox(),
+            "int_spin": QSpinBox(),
+            "combo": QComboBox(),
+            "color": ColorEditPicker(),
+            "words": WordsEdit(initial_values=["a", "b"]),
         }
+        widgets["combo"].addItems(["x", "y"])
+        widgets["combo"].setCurrentIndex(1)
         set_from_cfg(widgets["check"], True)
         set_from_cfg(widgets["text"], "hello")
         set_from_cfg(widgets["spin"], 3.0)
+        set_from_cfg(widgets["int_spin"], 7)
+        widgets["color"].set_color("#00FF00")
 
-        assert as_config_dict(widgets) == {"check": True, "text": "hello", "spin": 3.0}
+        result = as_config_dict(widgets)
+        assert result == {
+            "check": True,
+            "text": "hello",
+            "spin": 3.0,
+            "int_spin": 7,
+            "combo": "y",
+            "color": "#00FF00",
+            "words": "a,b",
+        }
