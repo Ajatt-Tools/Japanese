@@ -1,11 +1,11 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
-from collections.abc import Callable
-
 import pytest
-from aqt.qt import QCheckBox, QDoubleSpinBox, QLineEdit, QWidget
+from aqt.qt import *
 
+from japanese.config_view import SvgGraphReadingFormat
+from japanese.ajt_common.enum_select_combo import EnumSelectCombo
 from japanese.widgets.widgets_to_config_dict import (
     as_config_dict,
     change_event,
@@ -19,6 +19,7 @@ class TestSetFromCfg:
         "widget_factory, value",
         [
             (QDoubleSpinBox, 42.0),
+            (QSpinBox, 13),
             (QLineEdit, "hello"),
             (QCheckBox, True),
             (QCheckBox, False),
@@ -40,6 +41,7 @@ class TestGetFromWidget:
         "widget_factory, expected_value, setup",
         [
             (QDoubleSpinBox, 5.0, lambda w: w.setValue(5.0)),
+            (QSpinBox, 13, lambda w: w.setValue(13)),
             (QLineEdit, "text", lambda w: w.setText("text")),
             (QCheckBox, True, lambda w: w.setChecked(True)),
             (QCheckBox, False, lambda w: w.setChecked(False)),
@@ -63,11 +65,12 @@ class TestGetFromWidget:
 class TestChangeEvent:
     @pytest.mark.parametrize(
         "widget_factory",
-        [QDoubleSpinBox, QLineEdit, QCheckBox],
+        [QDoubleSpinBox, QSpinBox, QLineEdit, QCheckBox, QComboBox, lambda: EnumSelectCombo(enum_type=SvgGraphReadingFormat)],
     )
     def test_returns_signal(self, widget_factory: type[QWidget]) -> None:
         widget = widget_factory()
-        assert change_event(widget) is not None
+        event = change_event(widget)
+        assert event is not None and isinstance(event, pyqtBoundSignal)
 
     def test_unknown_type_raises(self) -> None:
         with pytest.raises(ValueError, match="unknown type"):

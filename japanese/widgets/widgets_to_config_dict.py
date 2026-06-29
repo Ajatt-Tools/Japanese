@@ -15,6 +15,8 @@ def set_from_cfg(widget: QWidget, value: Union[bool, str, int, float, enum.Enum]
     """Set a widget's value from a configuration value based on the widget type."""
     if isinstance(widget, QDoubleSpinBox) and isinstance(value, (int, float)):
         widget.setValue(value)
+    elif isinstance(widget, QSpinBox) and isinstance(value, int):
+        widget.setValue(value)
     elif isinstance(widget, QLineEdit) and isinstance(value, str):
         widget.setText(value)
     elif isinstance(widget, QCheckBox) and isinstance(value, bool):
@@ -31,7 +33,7 @@ def set_from_cfg(widget: QWidget, value: Union[bool, str, int, float, enum.Enum]
 
 def change_event(widget: QWidget) -> pyqtBoundSignal:
     """Return the appropriate change signal for a widget based on its type."""
-    if isinstance(widget, (QDoubleSpinBox, QAbstractSpinBox)):
+    if isinstance(widget, (QDoubleSpinBox, QSpinBox)):
         return widget.valueChanged
     elif isinstance(widget, QLineEdit):
         return widget.textChanged
@@ -46,7 +48,7 @@ def change_event(widget: QWidget) -> pyqtBoundSignal:
 
 def get_from_widget(widget: QWidget) -> Union[bool, str, int, float]:
     """Extract the current value from a widget based on its type."""
-    if isinstance(widget, QDoubleSpinBox):
+    if isinstance(widget, (QDoubleSpinBox, QSpinBox)):
         return widget.value()
     elif isinstance(widget, ColorEditPicker):
         return widget.color_hex()
@@ -64,8 +66,6 @@ def get_from_widget(widget: QWidget) -> Union[bool, str, int, float]:
         return widget.value()
     elif isinstance(widget, WordsEdit):
         return widget.as_text()
-    elif isinstance(widget, QAbstractSpinBox):
-        return widget.value()
     else:
         raise ValueError(f"Don't know how to handle widget of type {type(widget).__name__}.")
 
