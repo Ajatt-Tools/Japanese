@@ -7,7 +7,7 @@ from typing import Optional
 
 from aqt.qt import *
 
-from ..ajt_common.addon_config import ConfigSubViewBase
+from ..ajt_common.addon_config import ConfigSubViewBase, NumericValue
 from ..ajt_common.anki_field_selector import AnkiFieldSelector
 from ..ajt_common.color_picker import ColorEditPicker
 from ..ajt_common.enum_select_combo import EnumSelectCombo
@@ -375,12 +375,12 @@ SvgOptValueType = type[Union[int, float]]
 SvgOptSpinbox = Union[PxNarrowSpinBox, PxDoubleNarrowSpinBox]
 
 
-def make_px_spin_box(initial_value: float | int) -> SvgOptSpinbox:
-    match initial_value:
+def make_px_spin_box(initial_value: NumericValue) -> SvgOptSpinbox:
+    match initial_value.default:
         case int():
-            return PxNarrowSpinBox(initial_value, allowed_range=AllowedRange(0, 999))
+            return PxNarrowSpinBox(int(initial_value.value), allowed_range=AllowedRange(0, 999))
         case float():
-            return PxDoubleNarrowSpinBox(initial_value, allowed_range=AllowedRangeDouble(0, 999))
+            return PxDoubleNarrowSpinBox(float(initial_value.value), allowed_range=AllowedRangeDouble(0, 999))
     raise ValueError(f"can't handle value type: {type(initial_value).__name__}")
 
 
@@ -404,7 +404,7 @@ class SvgSettingsForm(MultiColumnSettingsForm):
         for item in self._config.numerics():
             if item.cfg_key in skip_keys:
                 continue
-            yield item.cfg_key, make_px_spin_box(initial_value=item.value)
+            yield item.cfg_key, make_px_spin_box(initial_value=item)
 
     def _add_widgets(self) -> None:
         super()._add_widgets()
