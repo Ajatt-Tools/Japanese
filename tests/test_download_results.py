@@ -51,22 +51,27 @@ class TestOnlyMissing:
             ([], 0),
         ],
     )
-    def test_filter(self, reserved, expected_count):
+    def test_filter(self, reserved: list[ReservedFile], expected_count: int) -> None:
         assert len(list(only_missing(reserved))) == expected_count
 
 
 class TestCalcTooltipOffset:
     @pytest.mark.parametrize(
         "n_lines, expected",
-        [(0, 80), (1, 98), (5, 170), (10, 260)],
+        [
+            (0, 80),
+            (1, 98),
+            (5, 170),
+            (10, 260),
+        ],
     )
-    def test_offset(self, n_lines, expected):
+    def test_offset(self, n_lines: int, expected: int) -> None:
         assert calc_tooltip_offset(n_lines) == expected
 
 
 class TestBloopFile:
-    def test_bloop_exists(self):
+    def test_bloop_exists(self) -> None:
         assert BLOOP_FILE.is_file()
 
-    def test_bloop_nonempty(self):
+    def test_bloop_nonempty(self) -> None:
         assert BLOOP_FILE.stat().st_size > 0

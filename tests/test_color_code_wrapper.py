@@ -15,7 +15,6 @@ from japanese.pitch_accents.basic_types import (
     PitchUnknown,
 )
 from playground.utils import NoAnkiConfigView
-from tests.no_anki_config import no_anki_config
 
 
 @pytest.mark.parametrize(

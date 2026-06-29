@@ -2,7 +2,7 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 import pathlib
 import re
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 
 import pytest
 
@@ -20,13 +20,12 @@ from tests.conftest import (
     tmp_upd_file,
     tmp_user_accents_file,
 )
-from tests.no_anki_config import no_anki_config
 
 try:
     from itertools import pairwise
 except ImportError:
     # python 3.9 doesn't have pairwise
-    def pairwise(iterable):
+    def pairwise(iterable: Iterable[str]) -> Iterable[tuple[str, str]]:
         # https://docs.python.org/3/library/itertools.html#itertools.pairwise
         iterator = iter(iterable)
         a = next(iterator, None)
@@ -41,16 +40,18 @@ def furigana_to_word_seq(furigana_output: str) -> list[str]:
 
 class TestAccDictLookup:
     @pytest.fixture(scope="class")
+    @classmethod
     def acc_dict_mgr(
-        self, tmp_sqlite3_db_path: pathlib.Path, tmp_upd_file: pathlib.Path, tmp_user_accents_file: pathlib.Path
+        cls, tmp_sqlite3_db_path: pathlib.Path, tmp_upd_file: pathlib.Path, tmp_user_accents_file: pathlib.Path
     ) -> AccentDictManager2:
         acc_dict = AccentDictManager2(tmp_sqlite3_db_path, tmp_upd_file, tmp_user_accents_file)
         acc_dict.ensure_dict_ready_on_main()
         return acc_dict
 
     @pytest.fixture(scope="class")
+    @classmethod
     def lookup(
-        self,
+        cls,
         no_anki_config: NoAnkiConfigView,
     ) -> AccentLookup:
         cfg = no_anki_config
@@ -59,7 +60,8 @@ class TestAccDictLookup:
         return lookup
 
     @pytest.fixture(scope="class")
-    def fgen(self, no_anki_config: NoAnkiConfigView, lookup: AccentLookup) -> FuriganaGen:
+    @classmethod
+    def fgen(cls, no_anki_config: NoAnkiConfigView, lookup: AccentLookup) -> FuriganaGen:
         cfg = no_anki_config
         fgen = FuriganaGen(cfg, lookup)
         return fgen

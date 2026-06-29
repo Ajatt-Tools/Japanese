@@ -14,7 +14,7 @@ from japanese.helpers.profiles import (
     flag_as_comma_separated_list,
     flag_from_comma_separated_list,
 )
-from tests.no_anki_config import no_anki_config
+from playground.utils import NoAnkiConfigView
 
 
 @pytest.fixture(scope="session")
@@ -62,12 +62,12 @@ def audio_dict() -> dict[str, object]:
     }
 
 
-def test_read_profiles(no_anki_config) -> None:
+def test_read_profiles(no_anki_config: NoAnkiConfigView) -> None:
     profiles = [*no_anki_config.iter_profiles()]
     assert len(profiles) > 0
 
 
-def test_create_profile_furigana(furigana_dict) -> None:
+def test_create_profile_furigana(furigana_dict: dict[str, object]) -> None:
     for idx in range(2):
         profile = Profile.from_config_dict(furigana_dict)
         assert isinstance(profile, ProfileFurigana)
@@ -79,7 +79,7 @@ def test_create_profile_furigana(furigana_dict) -> None:
         assert profile.insert_addon_scripts is False
 
 
-def test_create_profile_pitch(pitch_dict) -> None:
+def test_create_profile_pitch(pitch_dict: dict[str, object]) -> None:
     profile = Profile.from_config_dict(pitch_dict)
     assert isinstance(profile, ProfilePitch)
     assert profile.mode == "pitch"
@@ -88,7 +88,7 @@ def test_create_profile_pitch(pitch_dict) -> None:
     assert profile.triggered_by == TaskCaller.all_enabled()
 
 
-def test_create_profile_audio(audio_dict) -> None:
+def test_create_profile_audio(audio_dict: dict[str, object]) -> None:
     profile = Profile.from_config_dict(audio_dict)
     assert isinstance(profile, ProfileAudio)
     assert profile.mode == "audio"

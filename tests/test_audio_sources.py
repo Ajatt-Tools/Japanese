@@ -1,16 +1,21 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
+import pathlib
+
+import pytest
+
 from japanese.audio_manager.audio_source import AudioSource
 from japanese.database.sqlite3_buddy import Sqlite3Buddy
 from playground.utils import NoAnkiConfigView
-from tests.no_anki_config import no_anki_config
 
 
 def some_media_dir() -> str:
     return "https://raw.githubusercontent.com/Ajatt-Tools/nhk_2016_pronunciations_index/main/media"
 
 
-def test_source_join_remote(no_anki_config: NoAnkiConfigView, monkeypatch, tmp_sqlite3_db_path) -> None:
+def test_source_join_remote(
+    no_anki_config: NoAnkiConfigView, monkeypatch: pytest.MonkeyPatch, tmp_sqlite3_db_path: pathlib.Path
+) -> None:
     monkeypatch.setattr(AudioSource, "is_cached", lambda _self: True)
     monkeypatch.setattr(AudioSource, "is_local", False)
     monkeypatch.setattr(Sqlite3Buddy, "get_media_dir_abs", lambda _self, _name: some_media_dir())
@@ -20,7 +25,9 @@ def test_source_join_remote(no_anki_config: NoAnkiConfigView, monkeypatch, tmp_s
         assert source.join_media_path(source.media_dir, "filename.ogg") == f"{some_media_dir()}/filename.ogg"
 
 
-def test_source_join_local(no_anki_config: NoAnkiConfigView, monkeypatch, tmp_sqlite3_db_path) -> None:
+def test_source_join_local(
+    no_anki_config: NoAnkiConfigView, monkeypatch: pytest.MonkeyPatch, tmp_sqlite3_db_path: pathlib.Path
+) -> None:
     monkeypatch.setattr(AudioSource, "is_cached", lambda _self: True)
     monkeypatch.setattr(AudioSource, "is_local", True)
     monkeypatch.setattr(Sqlite3Buddy, "get_media_dir_abs", lambda _self, _name: None)

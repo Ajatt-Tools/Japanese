@@ -1,6 +1,8 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
+from collections.abc import Callable
+
 import pytest
 from aqt.qt import QCheckBox, QDoubleSpinBox, QLineEdit, QWidget
 
@@ -22,7 +24,7 @@ class TestSetFromCfg:
             (QCheckBox, False),
         ],
     )
-    def test_set_value(self, widget_factory, value) -> None:
+    def test_set_value(self, widget_factory: type[QWidget], value: float | str | bool) -> None:
         widget = widget_factory()
         set_from_cfg(widget, value)
         assert get_from_widget(widget) == value
@@ -43,7 +45,12 @@ class TestGetFromWidget:
             (QCheckBox, False, lambda w: w.setChecked(False)),
         ],
     )
-    def test_get_value(self, widget_factory, expected_value, setup) -> None:
+    def test_get_value(
+        self,
+        widget_factory: type[QWidget],
+        expected_value: float | str | bool,
+        setup: Callable[[QWidget], None],
+    ) -> None:
         widget = widget_factory()
         setup(widget)
         assert get_from_widget(widget) == expected_value
@@ -58,7 +65,7 @@ class TestChangeEvent:
         "widget_factory",
         [QDoubleSpinBox, QLineEdit, QCheckBox],
     )
-    def test_returns_signal(self, widget_factory) -> None:
+    def test_returns_signal(self, widget_factory: type[QWidget]) -> None:
         widget = widget_factory()
         assert change_event(widget) is not None
 

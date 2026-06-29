@@ -1,0 +1,201 @@
+# Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
+# License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
+# Tests for SvgPitchArtistGraphMaker.make_graph(), verifying exact SVG output.
+
+import re
+
+import pytest
+from playground.utils import NoAnkiConfigView
+
+from japanese.pitch_artist.pitch_graph import SvgPitchArtistGraphMaker
+
+# Circle Y-coordinates derived from default config:
+#   height_high = size_unit = 25   → y=25 means "high"
+#   height_low  = 25 + graph_height = 25 + 40 = 65  → y=65 means "low"
+# Circle X-coordinates:
+#   first = size_unit + graph_horizontal_padding = 25 + 6 = 31
+#   step  = x_step = 50  →  31, 81, 131, 181, ...
+
+HIGH = 25
+LOW = 65
+
+
+def extract_circles(svg: str) -> list[tuple[int, int]]:
+    """Extract (x, y) integer pairs from all <circle> elements in the SVG."""
+    return [(int(float(cx)), int(float(cy))) for cx, cy in re.findall(r'cx="([0-9.]+)" cy="([0-9.]+)"', svg)]
+
+
+def extract_text_labels(svg: str) -> list[str]:
+    """Extract text content from all <text> elements in the SVG."""
+    return re.findall(r"<text[^>]*>([^<]*)</text>", svg)
+
+
+def extract_visible_height(svg: str) -> int:
+    """Extract the visible height (in pixels) from the SVG root element."""
+    m = re.search(r'height="(\d+)px"', svg)
+    assert m is not None, "height attribute not found in SVG"
+    return int(m.group(1))
+
+
+class TestCirclePositions:
+    """Verify exact circle positions for each pitch pattern."""
+
+    @pytest.mark.parametrize(
+        "notation, expected_positions",
+        [
+            # heiban: low, low (ッ inherits low from j==1 rule), high, high
+            ("がっこう;0", [(31, LOW), (81, LOW), (131, HIGH), (181, HIGH)]),
+            # atamadaka: high, low, low, low
+            ("がっこう;1", [(31, HIGH), (81, LOW), (131, LOW), (181, LOW)]),
+            # nakadaka: low, high, low, low
+            ("つくった;2", [(31, LOW), (81, HIGH), (131, LOW), (181, LOW)]),
+            # odaka (3 moras, pitch 3): low, high, high
+            ("ひとり;3", [(31, LOW), (81, HIGH), (131, HIGH)]),
+        ],
+    )
+    def test_circle_positions(
+        self,
+        no_anki_config: NoAnkiConfigView,
+        notation: str,
+        expected_positions: list[tuple[int, int]],
+    ) -> None:
+        gen = SvgPitchArtistGraphMaker(no_anki_config)
+        sequences = gen.make_sequences(notation)
+        graphs = list(gen.make_graphs(sequences))
+        assert len(graphs) == 1
+        assert extract_circles(graphs[0]) == expected_positions
+
+
+class TestSmallTsuSpecialCase:
+    """ッ at j=1 inherits the low level from the previous mora."""
+
+    def test_small_tsu_inherits_low(self, no_anki_config: NoAnkiConfigView) -> None:
+        # がっこう;0: moras are ガ, ッ, コ, ウ.
+        # ッ is at j=1 and section.levels[0] is low → ッ inherits low.
+        # Without this rule, ッ would be high (heiban pitch 0).
+        gen = SvgPitchArtistGraphMaker(no_anki_config)
+        sequences = gen.make_sequences("がっこう;0")
+        svg = list(gen.make_graphs(sequences))[0]
+        circles = extract_circles(svg)
+        # Circle for ッ (index 1) must be low, not high.
+        assert circles[1] == (81, LOW)
+
+
+class TestTextLabels:
+    """Verify the correct kana labels appear in <text> elements."""
+
+    @pytest.mark.parametrize(
+        "notation, expected_labels",
+        [
+            ("がっこう;0", ["ガ", "ッ", "コ", "ウ"]),
+            ("がっこう;1", ["ガ", "ッ", "コ", "ウ"]),
+            ("つくった;2", ["ツ", "ク", "ッ", "タ"]),
+            ("ひとり;1", ["ヒ", "ト", "リ"]),
+        ],
+    )
+    def test_text_labels(
+        self,
+        no_anki_config: NoAnkiConfigView,
+        notation: str,
+        expected_labels: list[str],
+    ) -> None:
+        gen = SvgPitchArtistGraphMaker(no_anki_config)
+        sequences = gen.make_sequences(notation)
+        svg = list(gen.make_graphs(sequences))[0]
+        assert extract_text_labels(svg) == expected_labels
+
+
+class TestGhostParticle:
+    """Ghost particle (-) draws an empty circle but produces no text element."""
+
+    def test_ghost_has_circle_but_no_text(self, no_anki_config: NoAnkiConfigView) -> None:
+        gen = SvgPitchArtistGraphMaker(no_anki_config)
+        sequences = gen.make_sequences("ひとり;1-")
+        svg = list(gen.make_graphs(sequences))[0]
+        # 3 moras + 1 ghost = 4 circles.
+        assert len(extract_circles(svg)) == 4
+        # Ghost particle has no text.
+        assert len(extract_text_labels(svg)) == 3
+
+
+class TestDevoicedMora:
+    """Devoiced mora text elements have class='devoiced' and get devoiced circle markers."""
+
+    def test_devoiced_has_class_and_circle(self, no_anki_config: NoAnkiConfigView) -> None:
+        gen = SvgPitchArtistGraphMaker(no_anki_config)
+        sequences = gen.make_sequences("君[dきdみ];1")
+        svg = list(gen.make_graphs(sequences))[0]
+        # Devoiced text elements have class="devoiced".
+        assert 'class="devoiced"' in svg
+        # Devoiced circle markers use stroke-dasharray (dashed circles/rects).
+        dasharray_count = len(re.findall(r'stroke-dasharray="', svg))
+        assert dasharray_count >= 2  # one for each devoiced mora (き and み)
+
+
+class TestTapeConnector:
+    """Tape connector lines have stroke-dasharray='4'."""
+
+    def test_tape_has_dasharray(self, no_anki_config: NoAnkiConfigView) -> None:
+        gen = SvgPitchArtistGraphMaker(no_anki_config)
+        sequences = gen.make_sequences("大物[おおもの];2 ; まで;1")
+        svg = list(gen.make_graphs(sequences))[0]
+        # Tape connector line should use stroke-dasharray="4".
+        assert 'stroke-dasharray="4"' in svg
+
+
+class TestIncludeText:
+    """When include_text is False, no <text> elements appear and height shrinks."""
+
+    def test_no_text_when_disabled(self) -> None:
+        # Create a fresh config to avoid mutating the shared session fixture.
+        cfg = NoAnkiConfigView()
+        cfg.svg_graphs["include_text"] = False
+        gen = SvgPitchArtistGraphMaker(cfg)
+        sequences = gen.make_sequences("がっこう;0")
+        svg = list(gen.make_graphs(sequences))[0]
+        # No text elements.
+        assert len(extract_text_labels(svg)) == 0
+        # Circles and lines still present.
+        assert len(extract_circles(svg)) == 4
+        assert len(re.findall(r"<line", svg)) == 3
+        # Visible height shrinks (64 instead of 100).
+        assert extract_visible_height(svg) == 64
+
+    def test_text_present_when_enabled(self, no_anki_config: NoAnkiConfigView) -> None:
+        gen = SvgPitchArtistGraphMaker(no_anki_config)
+        sequences = gen.make_sequences("がっこう;0")
+        svg = list(gen.make_graphs(sequences))[0]
+        assert len(extract_text_labels(svg)) == 4
+        assert extract_visible_height(svg) == 100
+
+
+class TestEmptyInput:
+    """Edge cases where make_graph returns None."""
+
+    def test_empty_sequence_returns_none(self, no_anki_config: NoAnkiConfigView) -> None:
+        gen = SvgPitchArtistGraphMaker(no_anki_config)
+        assert gen.make_graph([]) is None
+
+    def test_pipe_only_produces_no_graphs(self, no_anki_config: NoAnkiConfigView) -> None:
+        gen = SvgPitchArtistGraphMaker(no_anki_config)
+        sequences = gen.make_sequences("|")
+        graphs = list(gen.make_graphs(sequences))
+        assert len(graphs) == 0
+
+
+class TestMultiWordConnector:
+    """Connected words have a connector line group between them."""
+
+    def test_connector_present(self, no_anki_config: NoAnkiConfigView) -> None:
+        gen = SvgPitchArtistGraphMaker(no_anki_config)
+        sequences = gen.make_sequences("がっこう;1 つくった;2")
+        svg = list(gen.make_graphs(sequences))[0]
+        # A "connector" CSS class group should exist.
+        assert "connector" in svg
+
+    def test_disconnected_words_have_no_connector(self, no_anki_config: NoAnkiConfigView) -> None:
+        gen = SvgPitchArtistGraphMaker(no_anki_config)
+        sequences = gen.make_sequences("がっこう;1 | つくった;2")
+        svg = list(gen.make_graphs(sequences))[0]
+        # Pipe disconnects → no connector group.
+        assert "connector" not in svg

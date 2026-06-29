@@ -3,6 +3,8 @@
 
 import pathlib
 
+import pytest
+
 from japanese.helpers.file_ops import (
     find_config_json,
     rm_file,
@@ -26,7 +28,7 @@ def test_user_files_dir() -> None:
     assert user_files_dir().is_dir()
 
 
-def test_file_touch_rm(tmp_path_factory) -> None:
+def test_file_touch_rm(tmp_path_factory: pytest.TempPathFactory) -> None:
     some_file = tmp_path_factory.mktemp("file_ops") / "file.txt"
     assert not some_file.is_file()
     touch(some_file)

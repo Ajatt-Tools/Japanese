@@ -21,8 +21,8 @@ def make_bound_file(
 
 def make_file_info(
     kana_reading: str = "",
-    pitch_pattern: Optional[str] = None,
-    pitch_number: Optional[str] = None,
+    pitch_pattern: str | None = None,
+    pitch_number: str | None = None,
 ) -> FileInfo:
     return FileInfo(kana_reading=kana_reading, pitch_pattern=pitch_pattern, pitch_number=pitch_number)
 

@@ -28,7 +28,7 @@ from japanese.pitch_accents.basic_types import (
         ([0, 0], PitchType.heiban),
     ],
 )
-def test_guess_main_pitch_type_verb(accents: list[int], expected_pitch: Union[PitchUnknown, PitchType]) -> None:
+def test_guess_main_pitch_type_verb(accents: list[int], expected_pitch: PitchUnknown | PitchType) -> None:
     """Test that guess_main_pitch_type returns PitchUnknown.many for multiple different accents."""
     token = AccDbParsedToken(
         word="食べる",

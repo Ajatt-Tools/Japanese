@@ -65,7 +65,7 @@ def test_pitch_type_from_pitch_num(pitch_num_str: str, n_moras: int, expected_ty
         ("44", 3),
     ],
 )
-def test_pitch_type_from_pitch_num_value_error(pitch_num_str: str, n_moras: int):
+def test_pitch_type_from_pitch_num_value_error(pitch_num_str: str, n_moras: int) -> None:
     with pytest.raises(ValueError):
         pitch_type_from_pitch_num(pitch_num_str, n_moras)
 

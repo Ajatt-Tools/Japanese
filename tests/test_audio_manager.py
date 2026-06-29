@@ -15,11 +15,12 @@ from playground.run_audio_manager import NoAnkiAudioSourceManagerFactory
 from playground.utils import NoAnkiConfigView
 from tests import DATA_DIR
 from tests.conftest import tmp_sqlite3_db_path
-from tests.no_anki_config import no_anki_config
 
 
 @pytest.fixture()
-def init_factory(no_anki_config: NoAnkiConfigView, tmp_sqlite3_db_path: pathlib.Path):
+def init_factory(
+    no_anki_config: NoAnkiConfigView, tmp_sqlite3_db_path: pathlib.Path
+) -> NoAnkiAudioSourceManagerFactory:
     factory = NoAnkiAudioSourceManagerFactory(config=no_anki_config, db_path=tmp_sqlite3_db_path)
     factory.init_sources()
     return factory

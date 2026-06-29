@@ -24,8 +24,9 @@ class TestAccDictEmpty:
     """Tests that verify behavior on a fresh, unpopulated table."""
 
     @pytest.fixture(scope="class")
+    @classmethod
     def faux_writer(
-        self, tmp_db_connection: Sqlite3Buddy, tmp_upd_file: pathlib.Path, tmp_user_accents_file: pathlib.Path
+        cls, tmp_db_connection: Sqlite3Buddy, tmp_upd_file: pathlib.Path, tmp_user_accents_file: pathlib.Path
     ) -> SqliteAccDictWriter:
         writer = SqliteAccDictWriter(tmp_db_connection, tmp_upd_file, tmp_user_accents_file)
         yield writer
@@ -59,15 +60,17 @@ class TestAccDictPopulated:
     """Tests that verify behavior on a pre-populated table."""
 
     @pytest.fixture(scope="class")
+    @classmethod
     def faux_writer(
-        self, tmp_db_connection: Sqlite3Buddy, tmp_upd_file: pathlib.Path, tmp_user_accents_file: pathlib.Path
+        cls, tmp_db_connection: Sqlite3Buddy, tmp_upd_file: pathlib.Path, tmp_user_accents_file: pathlib.Path
     ) -> SqliteAccDictWriter:
         writer = SqliteAccDictWriter(tmp_db_connection, tmp_upd_file, tmp_user_accents_file)
         writer.ensure_sqlite_populated()
         yield writer
 
     @pytest.fixture(scope="class")
-    def faux_reader(self, tmp_db_connection: Sqlite3Buddy, faux_writer: SqliteAccDictWriter) -> SqliteAccDictReader:
+    @classmethod
+    def faux_reader(cls, tmp_db_connection: Sqlite3Buddy, faux_writer: SqliteAccDictWriter) -> SqliteAccDictReader:
         reader = SqliteAccDictReader(tmp_db_connection)
         yield reader
 

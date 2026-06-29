@@ -20,11 +20,11 @@ from japanese.pitch_accents.styles import SpecialSymbols
 CIRCLE = SpecialSymbols.nasal_dakuten
 
 
-def filter_by_level(moras, level: PitchLevel) -> Sequence[str]:
+def filter_by_level(moras: Sequence[MoraFlag], level: PitchLevel) -> Sequence[str]:
     return list(map(lambda mora: mora.txt, filter(lambda mora: mora.level == level and not mora.is_trailing(), moras)))
 
 
-def mora_char_to_str(char: typing.Union[Quark, str]) -> str:
+def mora_char_to_str(char: Quark | str) -> str:
     return char if isinstance(char, str) else CIRCLE
 
 
@@ -195,7 +195,7 @@ def test_html_notation_to_moras(html_notation: str, expected: list[str]) -> None
 def test_entry_to_moras(
     entry: FormattedEntry, expected_hl: list[str], pitch_type: PitchType, devoiced_pos: list[int], nasal_pos: list[int]
 ) -> None:
-    def mora_text_to_str(mora_txt: list[typing.Union[str, Quark]]) -> str:
+    def mora_text_to_str(mora_txt: list[str | Quark]) -> str:
         return "".join(mora_char_to_str(char) for char in mora_txt)
 
     moras = entry_to_moras(entry)

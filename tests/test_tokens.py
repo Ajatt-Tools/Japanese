@@ -1,7 +1,9 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
-from japanese.helpers.tokens import clean_furigana, tokenize
+from collections.abc import Sequence
+
+from japanese.helpers.tokens import Token, clean_furigana, tokenize
 
 
 def test_clean_furigana() -> None:
@@ -15,7 +17,7 @@ def test_clean_furigana() -> None:
     )
 
 
-def _describe_result(tokens):
+def _describe_result(tokens: Sequence[Token]) -> list[str]:
     return list(f"{token.__class__.__name__}({token})" for token in tokens)
 
 

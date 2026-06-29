@@ -108,7 +108,7 @@ def test_parse_version() -> None:
     ],
 )
 def test_css_imports(
-    css_styling: str, is_added: bool, added_css: Optional[str], is_removed: bool, removed_css: Optional[str]
+    css_styling: str, is_added: bool, added_css: str | None, is_removed: bool, removed_css: str | None
 ) -> None:
     def make_model_dict() -> AnkiNoteTypeDict:
         return {"css": css_styling, "name": "pytest", "tmpls": [], "flds": []}
@@ -243,7 +243,7 @@ OLD_VER = """\
     ],
 )
 def test_js_imports(
-    template_html: str, is_added: bool, added_html: Optional[str], is_removed: bool, removed_html: Optional[str]
+    template_html: str, is_added: bool, added_html: str | None, is_removed: bool, removed_html: str | None
 ) -> None:
     side: AnkiCardSide = "qfmt"
 
@@ -327,7 +327,7 @@ def test_find_block_in_text(
     cursor_idx: int,
     start_token: str,
     end_token: str,
-    expected: Optional[Range],
+    expected: Range | None,
 ) -> None:
     result = find_block_in_text(text, cursor_idx, start_token=start_token, end_token=end_token)
     assert result == expected

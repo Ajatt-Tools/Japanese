@@ -1,6 +1,8 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
+import pathlib
 from collections.abc import Sequence
+from typing import Any
 
 import pytest
 
@@ -22,14 +24,14 @@ def test_user_tsv_entry() -> None:
 
 
 @pytest.fixture(scope="session")
-def fake_tsv():
+def fake_tsv() -> Sequence[str]:
     return [
         "A\tB\tC",
         "X\tY\tZ",
     ]
 
 
-def szip(*args):
+def szip(*args) -> zip:
     try:
         return zip(*args, strict=True)
     except TypeError:
@@ -37,7 +39,7 @@ def szip(*args):
         return zip(*args)
 
 
-def test_user_tsv_reader(fake_tsv) -> None:
+def test_user_tsv_reader(fake_tsv: Sequence[str]) -> None:
     for row, expected in szip(get_user_tsv_reader(fake_tsv), fake_tsv):
         assert tuple(row.keys()) == tuple(UserAccDictRawTSVEntry.__annotations__)
         assert list(row.values()) == expected.split("\t")
@@ -81,25 +83,25 @@ def test_formatted_from_tsv_row(test_input: UserAccDictRawTSVEntry, expected_out
         assert formatted == expected
 
 
-def test_read_user_tsv_file(fake_tsv) -> None:
+def test_read_user_tsv_file(fake_tsv: Sequence[str]) -> None:
     for row, expected in szip(read_user_tsv_file(fake_tsv), fake_tsv):
         assert expected.split("\t") == list(row)
 
 
 @pytest.fixture(scope="session")
-def bad_fake_tsv():
+def bad_fake_tsv() -> Sequence[str]:
     return [
         "A,B,C",
         "X,Y,Z",
     ]
 
 
-def test_read_bad_user_tsv_file(bad_fake_tsv) -> None:
+def test_read_bad_user_tsv_file(bad_fake_tsv: Sequence[str]) -> None:
     for row, expected in szip(read_user_tsv_file(bad_fake_tsv), bad_fake_tsv):
         assert [expected, "", ""] == list(row)
 
 
-def test_read_user_tsv_file_from_disk(tmp_user_accents_file) -> None:
+def test_read_user_tsv_file_from_disk(tmp_user_accents_file: pathlib.Path) -> None:
     expected_rows = [
         PitchAccentTableRow("言葉", "ソウシツ", "0"),
         PitchAccentTableRow("言葉", "ソゴ", "0"),
