@@ -40,32 +40,33 @@ def note_type_matches(note_type: AnkiNoteTypeDict, profile: Profile) -> bool:
     return profile.note_type.lower() in note_type["name"].lower()
 
 
-def iter_tasks(note: Note, src_field: Optional[str] = None) -> Iterable[Profile]:
-    note_type = note.note_type()
-    assert note_type
-    for profile in cfg.iter_profiles():
-        if note_type_matches(note_type, profile) and (src_field is None or profile.source == src_field):
-            yield profile
-
-
 class DoTask:
+    """Base class for profile-driven tasks (add furigana, pitch, audio).
+
+    Subclasses are registered automatically via ``__init_subclass__`` and dispatched
+    by profile type using ``__new__``.
+    """
+
     _subclasses_map: dict[type[Profile], type["DoTask"]] = {}  # e.g. ProfileFurigana -> AddFurigana
     _key_class_param: str = "task_type"
     _db: Sqlite3Buddy
 
     def __init_subclass__(cls, **kwargs) -> None:
+        """Register each subclass keyed by its profile type."""
         task_type: type[Profile] = kwargs.pop(cls._key_class_param)  # suppresses ide warning
         super().__init_subclass__(**kwargs)
         cls._subclasses_map[task_type] = cls
 
     def __new__(cls, task: Profile, *args, **kwargs) -> "DoTask":
+        """Dispatch to the subclass matching the profile type."""
         subclass = cls._subclasses_map[type(task)]
         return object.__new__(subclass)
 
-    def __init__(self, task, caller: TaskCaller, db: Sqlite3Buddy) -> None:
+    def __init__(self, task: Profile, caller: TaskCaller, db: Sqlite3Buddy, cfg: JapaneseConfig) -> None:
         self._task = task
         self._caller = caller
         self._db = db
+        self._cfg = cfg
 
     def _generate_text(self, src_text: str) -> str:
         """Generate output text from the source text. Subclasses must implement this."""
@@ -84,9 +85,10 @@ class AddFurigana(DoTask, task_type=ProfileFurigana):
     """Add furigana readings to the source text."""
 
     _fgen: FuriganaGen
+    _task: ProfileFurigana
 
-    def __init__(self, task: Profile, caller: TaskCaller, db: Sqlite3Buddy) -> None:
-        super().__init__(task, caller, db)
+    def __init__(self, task: Profile, caller: TaskCaller, db: Sqlite3Buddy, cfg: JapaneseConfig) -> None:
+        super().__init__(task, caller, db, cfg)
         self._fgen = fgen.with_new_buddy(db)
         assert isinstance(self._task, ProfileFurigana), "AddFurigana task should be initialized with ProfileFurigana"
 
@@ -104,8 +106,8 @@ class AddPitch(DoTask, task_type=ProfilePitch):
 
     _lookup: AccentLookup
 
-    def __init__(self, task: Profile, caller: TaskCaller, db: Sqlite3Buddy) -> None:
-        super().__init__(task, caller, db)
+    def __init__(self, task: Profile, caller: TaskCaller, db: Sqlite3Buddy, cfg: JapaneseConfig) -> None:
+        super().__init__(task, caller, db, cfg)
         self._lookup = lookup.with_new_buddy(db)
         assert isinstance(self._task, ProfilePitch), "AddPitch task should be initialized with ProfilePitch"
 
@@ -113,7 +115,7 @@ class AddPitch(DoTask, task_type=ProfilePitch):
         """Generate pitch accent output in the format specified by the profile."""
         output_format = PitchOutputFormat[self._task.output_format]
         pronunciations = self._lookup.get_pronunciations(src_text, use_mecab=self._task.split_morphemes)
-        max_results = cfg.pitch_accent.maximum_results
+        max_results = self._cfg.pitch_accent.maximum_results
 
         if output_format == PitchOutputFormat.json:
             return json.dumps(pronunciations_to_json(pronunciations, max_results=max_results), ensure_ascii=False)
@@ -121,8 +123,8 @@ class AddPitch(DoTask, task_type=ProfilePitch):
         return format_pronunciations(
             pronunciations=pronunciations,
             output_format=output_format,
-            sep_single=cfg.pitch_accent.reading_separator,
-            sep_multi=cfg.pitch_accent.word_separator,
+            sep_single=self._cfg.pitch_accent.reading_separator,
+            sep_multi=self._cfg.pitch_accent.word_separator,
             max_results=max_results,
         )
 
@@ -136,9 +138,9 @@ class AddAudio(DoTask, task_type=ProfileAudio):
         search_results = session.search_audio(
             src_text,
             split_morphemes=self._task.split_morphemes,
-            ignore_inflections=cfg.audio_settings.ignore_inflections,
-            stop_if_one_source_has_results=cfg.audio_settings.stop_if_one_source_has_results,
-        )[: cfg.audio_settings.maximum_results]
+            ignore_inflections=self._cfg.audio_settings.ignore_inflections,
+            stop_if_one_source_has_results=self._cfg.audio_settings.stop_if_one_source_has_results,
+        )[: self._cfg.audio_settings.maximum_results]
         # Pre-reserve filenames so that [sound:...] tags use the actual (normalized) names.
         audio_tags, reserved = session.reserve_and_format_tags(search_results)
         # "Download and save" has to run on main as it will launch a new QueryOp.
@@ -153,9 +155,7 @@ class AddAudio(DoTask, task_type=ProfileAudio):
         return audio_tags
 
     def _report_results(self, r: FileSaveResults) -> None:
-        """
-        Show a tooltip with audio download results.
-        """
+        """Show a tooltip with audio download results."""
         if not self._caller.cfg.audio_download_report:
             return
         if txt := format_report_results_msg(r):
@@ -186,20 +186,30 @@ class DoTasks:
         self,
         note: Note,
         *,
+        cfg: JapaneseConfig,
         caller: TaskCaller,
         src_field: str | None = None,
         overwrite: bool = False,
     ) -> None:
         """Initialize with the note, config, caller context, and optional source field filter."""
         self._note = note
+        self._cfg = cfg
         self._caller = caller
         self._src_field = src_field
         self._overwrite = overwrite
 
+    def iter_tasks(self, note: Note, src_field: str | None = None) -> Iterable[Profile]:
+        """Yield profiles whose note type matches and whose source field matches (if specified)."""
+        note_type = note.note_type()
+        assert note_type
+        for profile in self._cfg.iter_profiles():
+            if note_type_matches(note_type, profile) and (src_field is None or profile.source == src_field):
+                yield profile
+
     def run(self, changed: bool = False) -> bool:
         """Execute all applicable tasks for the note and return whether any field changed."""
         with Sqlite3Buddy() as db:
-            for task in iter_tasks(self._note, self._src_field):
+            for task in self.iter_tasks(self._note, self._src_field):
                 if task.should_answer_to(self._caller) and task.applies_to_note(self._note):
                     changed = self._do_task(task, db) or changed
             return changed
@@ -217,6 +227,7 @@ class DoTasks:
                 task,
                 self._caller,
                 db,
+                self._cfg,
             ).run(
                 src_text,
                 self._note[task.destination],
@@ -252,26 +263,38 @@ class DoTasks:
         return "No pitch accent data".lower() in self._note[field_name].lower()
 
 
-def on_focus_lost(changed: bool, note: Note, field_idx: int) -> bool:
-    return DoTasks(
-        note=note,
-        caller=TaskCaller.focus_lost,
-        src_field=note.keys()[field_idx],
-    ).run(changed=changed)
-
-
 def should_generate(note: Note) -> bool:
     """Generate when a new note is added by Rikaitan or Mpvacious."""
     assert mw
     return mw.app.activeWindow() is None and note.id == 0
 
 
-def on_add_note(_col: anki.collection.Collection, note: Note, _deck_id: DeckId) -> None:
-    if should_generate(note):
-        DoTasks(
+class Tasks:
+    """Registers Anki hooks for automatic generation on focus loss and note addition."""
+
+    _cfg: JapaneseConfig
+
+    def __init__(self, cfg: JapaneseConfig) -> None:
+        """Store config for hook callbacks."""
+        self._cfg = cfg
+
+    def on_add_note(self, _col: anki.collection.Collection, note: Note, _deck_id: DeckId) -> None:
+        """Hook callback: generate fields when a new note is added by AnkiConnect."""
+        if should_generate(note):
+            DoTasks(
+                note=note,
+                cfg=self._cfg,
+                caller=TaskCaller.note_added,
+            ).run()
+
+    def on_focus_lost(self, changed: bool, note: Note, field_idx: int) -> bool:
+        """Hook callback: generate fields when the editor loses focus on a field."""
+        return DoTasks(
             note=note,
-            caller=TaskCaller.note_added,
-        ).run()
+            cfg=self._cfg,
+            caller=TaskCaller.focus_lost,
+            src_field=note.keys()[field_idx],
+        ).run(changed=changed)
 
 
 # Entry point
@@ -282,8 +305,11 @@ def init() -> None:
     """Register Anki hooks for furigana, pitch, and audio generation."""
     from aqt import gui_hooks
 
+    cfg = get_global_config()
+    mw._ajt__japanese_tasks = tasks = Tasks(cfg)
+
     # Generate when editing a note
-    gui_hooks.editor_did_unfocus_field.append(on_focus_lost)
+    gui_hooks.editor_did_unfocus_field.append(tasks.on_focus_lost)
 
     # Generate when AnkiConnect (Rikaitan, Mpvacious) adds a new note.
-    hooks.note_will_be_added.append(on_add_note)
+    hooks.note_will_be_added.append(tasks.on_add_note)
