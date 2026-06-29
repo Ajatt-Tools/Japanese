@@ -58,20 +58,27 @@ class Line:
     is_trailing: bool
     start: Point | None
     end: Point | None
+    _tape: bool
 
     def __init__(self, options: SvgPitchGraphOptionsConfigView) -> None:
         self._opts = options
         self.is_trailing = False
         self.start = None
         self.end = None
+        self._tape = False
 
-    def start_at(self, pos: Point) -> "Line":
+    def start_at(self, pos: Point, tape: bool = False) -> "Line":
         self.start = pos
+        self._tape = tape
         return self
 
     def end_at(self, pos: Point) -> "Line":
         self.end = pos
         return self
+
+    def is_unfinished(self) -> bool:
+        """Return True if the line has a start point but no end point."""
+        return self.start is not None and self.end is None
 
     def is_completed(self) -> bool:
         """Return True if the line has both start and end points."""
@@ -79,17 +86,20 @@ class Line:
 
     def draw(self) -> str:
         assert self.start is not None and self.end is not None
-
-        def attrs_line() -> str:
-            if self.is_trailing:
-                return f'class="{SvgColor.trail.name}" stroke="{SvgColor.trail.value}"'
-            return f'stroke="{SvgColor.word.value}"'
-
-        return (
-            f'<line {attrs_line()} stroke-width="{self._opts.stroke_width:.2f}" '
-            f'x1="{self.start.x:.3f}" y1="{self.start.y:.3f}" '
-            f'x2="{self.end.x:.3f}" y2="{self.end.y:.3f}" />'
-        )
+        attrs = []
+        if self._tape:
+            attrs.append(f'stroke-dasharray="{self._opts.stroke_dasharray}"')
+        if self.is_trailing:
+            attrs.append(f'class="{SvgColor.trail.name}"')
+            attrs.append(f'stroke="{SvgColor.trail.value}"')
+        else:
+            attrs.append(f'stroke="{SvgColor.word.value}"')
+        attrs.append(f'stroke-width="{self._opts.stroke_width:.2f}"')
+        attrs.append(f'x1="{self.start.x:.3f}"')
+        attrs.append(f'y1="{self.start.y:.3f}"')
+        attrs.append(f'x2="{self.end.x:.3f}"')
+        attrs.append(f'y2="{self.end.y:.3f}"')
+        return f'<line {" ".join(attrs)} />'
 
     def adjust_to_radius(self, r: float) -> "Line":
         assert self.start is not None and self.end is not None
