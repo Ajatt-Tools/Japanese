@@ -14,8 +14,8 @@ from .split import (
     GHOST_PARTICLE,
     PITCH_BREAKS,
     RE_FLAGS,
-    SEPARATORS,
     SENT_HIDDEN,
+    SEPARATORS,
     DevoicedMora,
     SectionParts,
     SplitAccent,
@@ -403,7 +403,7 @@ class SvgPitchArtistGraphMaker:
         height_low = height_high + self._cfg.svg_graphs.graph_height
         height_kana = height_low + x_step
 
-        pos = Point.new(x=height_high+hor_pad, y=height_high)
+        pos = Point.new(x=height_high + hor_pad, y=height_high)
 
         circles, paths, text = [], [], []
 
@@ -441,9 +441,7 @@ class SvgPitchArtistGraphMaker:
                             self._mk.make_devoiced_circle(pos.replace(y=height_kana), extend=len(mora) > 1)
                         )
                     text_moras.append(
-                        self.make_text(
-                            mora, pos.replace(y=height_kana), int(self._cfg.svg_graphs.text_dx) * len(mora)
-                        )
+                        self.make_text(mora, pos.replace(y=height_kana), int(self._cfg.svg_graphs.text_dx) * len(mora))
                     )
 
                 pos = pos.shift_by(x=x_step)

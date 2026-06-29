@@ -8,7 +8,6 @@ import re
 import typing
 import zipfile
 from collections.abc import Iterable, Sequence
-from typing import Optional
 
 from ..config_view import JapaneseConfig
 from ..database.audio_buddy import BoundFile

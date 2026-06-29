@@ -7,7 +7,7 @@ import itertools
 import pathlib
 from collections.abc import Callable, Iterable, Sequence
 from concurrent.futures import Future
-from typing import Any, Optional
+from typing import Any
 
 from anki.utils import html_to_text_line
 from aqt import gui_hooks, mw
@@ -229,9 +229,6 @@ def report_audio_init_errors(result: InitResult) -> None:
 class AnkiAudioSourceManagerFactory(AudioSourceManagerFactory):
     _config: JapaneseConfig
     _db_path: pathlib.Path | None = None
-
-    def __init__(self, config: JapaneseConfig) -> None:
-        super().__init__(config)
 
     def request_new_session(self, db: Sqlite3Buddy) -> AnkiAudioSourceManager:
         """

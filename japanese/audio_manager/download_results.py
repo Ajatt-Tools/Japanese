@@ -5,7 +5,7 @@ import os
 import pathlib
 from collections.abc import Callable, Collection, Iterable, Sequence
 from concurrent.futures import Future
-from typing import Any, NamedTuple, Optional
+from typing import Any, NamedTuple
 
 from aqt import mw
 

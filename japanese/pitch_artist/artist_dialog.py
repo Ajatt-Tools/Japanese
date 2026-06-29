@@ -165,7 +165,7 @@ def ajt_pitch_graph_css() -> str:
 
 
 def format_graph_as_html(graph: str, index: int) -> str:
-    """Format a list of SVG graph strings as HTML with save buttons."""
+    """Format a single SVG graph string as HTML with a save button."""
     html = io.StringIO()
     html.write('<div class="svg_wrap">')
     html.write(f'<div class="svg_graph">{graph}</div>')
@@ -289,25 +289,30 @@ class PitchArtistDialog(AnkiSaveAndRestoreGeomDialog):
 
     def handle_save_button(self, bridge_cmd: str) -> None:
         """Handle the save button bridge command to export a graph as an SVG file."""
-        if bridge_cmd.startswith("ajt__save_graph:"):
+        if not bridge_cmd.startswith("ajt__save_graph:"):
+            return
+        try:
             index = int(bridge_cmd.split(":", maxsplit=1)[-1])
-            name, mime = QFileDialog.getSaveFileName(
-                parent=cast(QWidget, self),
-                caption="Save pitch graph as SVG File",
-                directory=str(self._cfg.pitch_artist.last_save_location),
-            )
-            if not name:
-                tooltip("Aborted.")
-                return
-            contents = (
-                self._graphs_list[index].replace("</svg>", inline_css_code(graphs_inline_css_style_tag()) + "</svg>")
-                if self._graph_settings_dialog.inject_css_into_files
-                else self._graphs_list[index]
-            )
-            with open(name, "w", encoding="utf8") as of:
-                of.write(contents)
-            self._cfg.pitch_artist.last_save_location = pathlib.Path(name).resolve()
-            self._cfg.write_config()
+            graph = self._graphs_list[index]
+        except (ValueError, IndexError, TypeError):
+            return
+        name, mime = QFileDialog.getSaveFileName(
+            parent=cast(QWidget, self),
+            caption="Save pitch graph as SVG File",
+            directory=str(self._cfg.pitch_artist.last_save_location),
+        )
+        if not name:
+            tooltip("Aborted.")
+            return
+        contents = (
+            graph.replace("</svg>", inline_css_code(graphs_inline_css_style_tag()) + "</svg>")
+            if self._graph_settings_dialog.inject_css_into_files
+            else graph
+        )
+        with open(name, "w", encoding="utf8") as of:
+            of.write(contents)
+        self._cfg.pitch_artist.last_save_location = pathlib.Path(name).resolve()
+        self._cfg.write_config()
 
     def copy_graphs_as_simple_str(self) -> None:
         """Copy all generated SVG graphs to the system clipboard as a joined string."""
