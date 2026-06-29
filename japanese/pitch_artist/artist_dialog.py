@@ -37,7 +37,7 @@ PITCH_GRAPH_CSS_FILE_NAME = "ajt_pitch_graph.css"
 @functools.cache
 def graphs_inline_css_style_tag() -> str:
     """Return the CSS stylesheet for styling pitch accent SVG graphs."""
-    css = find_file_in_parents(f"web/{PITCH_GRAPH_CSS_FILE_NAME}").read_text()
+    css = find_file_in_parents(f"web/{PITCH_GRAPH_CSS_FILE_NAME}").read_text(encoding="utf-8")
     return f"<style>\n{css}\n</style>"
 
 

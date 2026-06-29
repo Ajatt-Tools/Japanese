@@ -3,8 +3,8 @@
 
 from aqt.qt import *
 
-from helpers.file_ops import find_file_in_parents
 from japanese.pitch_artist.pitch_graph import SvgPitchArtistGraphMaker
+from pitch_artist.artist_dialog import graphs_inline_css_style_tag
 from playground.utils import NoAnkiConfigView
 
 CSS_INLINE = """
@@ -34,7 +34,7 @@ svg {
     display: block;
 }
 """
-CSS_INLINE_GRAPHS = find_file_in_parents("web/ajt_pitch_graph.css").read_text(encoding="utf-8")
+CSS_INLINE_GRAPHS = graphs_inline_css_style_tag()
 
 def html_page(body_content: str) -> str:
     """Wrap body content in a full HTML page with pitch graph CSS styles."""
