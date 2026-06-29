@@ -148,7 +148,7 @@ class SplitAccent(NamedTuple):
 
 
 RE_SPLIT_ACCENT = re.compile(r"^(?P<is_particle>p)?(?P<role>[a-zA-Z])?(?P<pitch>-?\d)?$", flags=RE_FLAGS)
-RE_SPLIT_ACCENT_KEIHAN = re.compile(r"^(?P<is_particle>p)?(?P<role>[a-zA-Z])?(?P<pitch>-?\d)?$", flags=RE_FLAGS)
+RE_SPLIT_ACCENT_KEIHAN = re.compile(r"^(?P<role>[a-zA-Z]{1,2})[；;](?P<levels>[hlHL]+)$", flags=RE_FLAGS)
 
 
 def split_accent(raw_accent: str) -> SplitAccent:
@@ -169,7 +169,7 @@ def split_accent(raw_accent: str) -> SplitAccent:
             levels=None,
         )
 
-    m = re.match(r"^(?P<role>[a-zA-Z]{1,2})[；;](?P<levels>[hlHL]+)$", raw_accent, flags=RE_FLAGS)
+    m = re.match(RE_SPLIT_ACCENT_KEIHAN, raw_accent)
     if m:
         return SplitAccent(
             is_particle=None,
