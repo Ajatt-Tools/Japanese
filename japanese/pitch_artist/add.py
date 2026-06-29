@@ -14,7 +14,7 @@ class PitchArtist:
         self._gen = SvgPitchArtistGraphMaker(self._cfg)
 
     def generate(self, src_text: str, output_format: PitchOutputFormat) -> str:
-        """Generate pitch graphs and colored text from the source field and write them to the note."""
+        """Generate pitch graphs or colored text from the source field and return the result."""
         assert mw and mw.col, "Collection must be open."
         src_text = mw.col.media.strip(src_text).strip()
         if not src_text:
