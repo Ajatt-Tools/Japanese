@@ -28,6 +28,7 @@ def start_addon() -> None:
     )
     from .helpers.webview_utils import anki_addon_set_web_exports
     from .note_type import note_type
+    from .pitch_artist import artist_dialog
 
     # Ensure that CSS and other resources are loaded.
     anki_addon_set_web_exports()
@@ -41,6 +42,7 @@ def start_addon() -> None:
     welcome_dialog.init()
     note_type.init()
     kanjigrid_addon.init()
+    artist_dialog.init()
 
 
 if mw and "pytest" not in sys.modules:

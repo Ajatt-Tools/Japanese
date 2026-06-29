@@ -32,6 +32,7 @@ from .helpers.profiles import (
     TaskCaller,
 )
 from .pitch_accents.accent_lookup import AccentLookup
+from .pitch_artist.add import PitchArtist
 from .reading import fgen, format_pronunciations, lookup, pronunciations_to_json
 
 
@@ -105,15 +106,21 @@ class AddPitch(DoTask, task_type=ProfilePitch):
     """Add pitch accent data (HTML, JSON, or SVG graphs) to the source text."""
 
     _lookup: AccentLookup
+    _artist: PitchArtist
+    _task: ProfilePitch
 
     def __init__(self, task: Profile, caller: TaskCaller, db: Sqlite3Buddy, cfg: JapaneseConfig) -> None:
         super().__init__(task, caller, db, cfg)
         self._lookup = lookup.with_new_buddy(db)
+        self._artist = PitchArtist(self._cfg)
         assert isinstance(self._task, ProfilePitch), "AddPitch task should be initialized with ProfilePitch"
 
     def _generate_text(self, src_text: str) -> str:
         """Generate pitch accent output in the format specified by the profile."""
         output_format = PitchOutputFormat[self._task.output_format]
+        if output_format in (PitchOutputFormat.artist_svg, PitchOutputFormat.artist_colors):
+            return self._artist.generate(src_text, output_format=output_format)
+
         pronunciations = self._lookup.get_pronunciations(src_text, use_mecab=self._task.split_morphemes)
         max_results = self._cfg.pitch_accent.maximum_results
 
