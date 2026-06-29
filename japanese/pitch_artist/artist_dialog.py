@@ -88,7 +88,7 @@ class FormWidgets(SimpleNamespace):
     include_text: QCheckBox
 
 
-class GraphSettingsDialog(QWidget):
+class GraphSettingsWidget(QWidget):
     """A settings panel with controls for graph rendering parameters."""
 
     settings_changed = pyqtSignal()
@@ -187,7 +187,7 @@ def make_graphs_list(text: str, gen: SvgPitchArtistGraphMaker) -> list[str]:
 class PitchArtistDialog(AnkiSaveAndRestoreGeomDialog):
     """A dialog for previewing, editing, and saving pitch accent graphs."""
 
-    name: str = "ajt__view_pitch_graph_dialog"
+    name: str = "ajt__pitch_artist_dialog"
 
     _graphs_list: list[str]
     _css_relpath: str = ajt_webview_css()
@@ -199,7 +199,7 @@ class PitchArtistDialog(AnkiSaveAndRestoreGeomDialog):
         self._cfg = cfg
         self._graphs_list = []
         self._splitter = QSplitter(Qt.Orientation.Vertical)
-        self._graph_settings_dialog = GraphSettingsDialog(self, self._cfg)
+        self._graph_settings_dialog = GraphSettingsWidget(self, self._cfg)
         self._text_edit = GraphCodeEdit()
         self._webview = PitchAccentsWebView(parent=self, title=ACTION_NAME)
         self._webview.set_bridge_command(self.handle_save_button, self)
@@ -222,11 +222,12 @@ class PitchArtistDialog(AnkiSaveAndRestoreGeomDialog):
         """Initialize the dialog layout with splitter, web view, and buttons."""
         self.setWindowModality(Qt.WindowModality.NonModal)
         self.setWindowTitle(ACTION_NAME)
+        self._splitter.addWidget(self.make_top_widget())
+        self._splitter.addWidget(self._webview)
+        # Main layout
         layout = QVBoxLayout()
         layout.addWidget(self._splitter)
         layout.addLayout(self.make_buttons())
-        self._splitter.addWidget(self.make_top_widget())
-        self._splitter.addWidget(self._webview)
         self.setLayout(layout)
 
     def make_top_widget(self) -> QSplitter:
