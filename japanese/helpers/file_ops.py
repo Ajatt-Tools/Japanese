@@ -4,13 +4,7 @@
 import functools
 import os
 import pathlib
-import subprocess
 from collections.abc import Iterable
-from typing import Optional, Union
-
-from anki.utils import no_bundled_libs
-
-from ..ajt_common.utils import find_executable
 
 THIS_ADDON_MODULE = __name__.split(".")[0]
 
