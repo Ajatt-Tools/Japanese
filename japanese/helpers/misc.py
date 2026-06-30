@@ -7,7 +7,7 @@ from typing import TypeVar
 
 from anki.utils import html_to_text_line
 from aqt import mw
-from helpers.tokens import RE_FLAGS
+from .tokens import RE_FLAGS
 
 T = TypeVar("T")
 
@@ -35,4 +35,4 @@ def media_strip(text: str) -> str:
         # Anki isn't running.
         return MEDIA_REGEX.sub("", text)
     assert mw and mw.col, "Collection must be open."
-    return mw.col.media.strip()
+    return mw.col.media.strip(text)
