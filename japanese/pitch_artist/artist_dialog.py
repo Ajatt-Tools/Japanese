@@ -14,6 +14,7 @@ from aqt.qt import *
 from aqt.utils import disable_help_button, showInfo, tooltip
 from aqt.webview import AnkiWebView
 
+from ..helpers.consts import ADDON_NAME
 from ..ajt_common.about_menu import menu_root_entry
 from ..ajt_common.enum_select_combo import EnumSelectCombo
 from ..ajt_common.monospace_line_edit import MONO_FONT_FAMILIES
@@ -221,7 +222,7 @@ class PitchArtistDialog(AnkiSaveAndRestoreGeomDialog):
     def _setup_ui(self) -> None:
         """Initialize the dialog layout with splitter, web view, and buttons."""
         self.setWindowModality(Qt.WindowModality.NonModal)
-        self.setWindowTitle(ACTION_NAME)
+        self.setWindowTitle(f"{ADDON_NAME} - {ACTION_NAME}")
         self._splitter.addWidget(self.make_top_widget())
         self._splitter.addWidget(self._webview)
         # Main layout
