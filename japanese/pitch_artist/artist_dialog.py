@@ -14,13 +14,13 @@ from aqt.qt import *
 from aqt.utils import disable_help_button, showInfo, tooltip
 from aqt.webview import AnkiWebView
 
-from ..helpers.consts import ADDON_NAME
 from ..ajt_common.about_menu import menu_root_entry
 from ..ajt_common.enum_select_combo import EnumSelectCombo
 from ..ajt_common.monospace_line_edit import MONO_FONT_FAMILIES
 from ..ajt_common.restore_geom_dialog import AnkiSaveAndRestoreGeomDialog
 from ..ajt_common.utils import ui_translate
 from ..config_view import JapaneseConfig, SvgGraphReadingFormat, get_global_config
+from ..helpers.consts import ADDON_NAME
 from ..helpers.file_ops import find_file_in_parents
 from ..helpers.webview_utils import ajt_webview_css, anki_addon_web_relpath
 from ..widgets.widgets_to_config_dict import (
