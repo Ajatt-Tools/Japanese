@@ -22,9 +22,9 @@ from ..ajt_common.utils import ui_translate
 from ..config_view import JapaneseConfig, SvgGraphReadingFormat, get_global_config
 from ..helpers.consts import ADDON_NAME
 from ..helpers.file_ops import find_file_in_parents
+from ..helpers.misc import media_strip
 from ..helpers.webview_utils import (
-    ajt_pitch_graph_css,
-    ajt_webview_css,
+    PITCH_GRAPH_CSS_FILE_NAME,
 )
 from ..widgets.addon_opts import (
     AllowedRange,
@@ -37,6 +37,11 @@ from ..widgets.widgets_to_config_dict import (
     change_event,
     get_from_widget,
     set_from_cfg,
+)
+from .pitch_accents_web_view import (
+    AnkiPitchAccentsWebView,
+    NoAnkiPitchAccentsWebView,
+    PitchAccentsWebView,
 )
 from .pitch_graph import SvgPitchArtistGraphMaker
 
@@ -142,23 +147,6 @@ def inline_css_code(code: str) -> str:
     return re.sub(r" +", " ", code.replace("\n", " ").strip())
 
 
-class PitchAccentsWebView(AnkiWebView):
-    """An Anki web view with zoom in/out support for pitch graph previews."""
-
-    def __init__(self, parent: QWidget, title: str) -> None:
-        super().__init__(parent=parent, title=title)
-
-    def zoom_in(self) -> None:
-        """Increase the zoom factor by 0.1."""
-        self.setZoomFactor(self.zoomFactor() + 0.1)
-
-    def zoom_out(self) -> None:
-        """Decrease the zoom factor by 0.1."""
-        self.setZoomFactor(self.zoomFactor() - 0.1)
-
-
-
-
 def format_graph_as_html(graph: str, index: int) -> str:
     """Format a single SVG graph string as HTML with a save button."""
     html = io.StringIO()
@@ -171,12 +159,18 @@ def format_graph_as_html(graph: str, index: int) -> str:
 
 def make_graphs_list(text: str, gen: SvgPitchArtistGraphMaker) -> list[str]:
     """Parse text into pitch accent sequences and return a list of SVG graphs, or None."""
-    assert mw and mw.col, "Collection must be open."
-    if text := mw.col.media.strip(text.replace("\n", "<br>")).strip():
+    if text := media_strip(text.replace("\n", "<br>")).strip():
         seq_sequences = gen.make_sequences(text)
         graphs = list(gen.make_graphs(seq_sequences))
         return graphs
     return []
+
+
+def get_webview(parent: QWidget) -> PitchAccentsWebView:
+    if not mw:
+        # Anki isn't running.
+        return NoAnkiPitchAccentsWebView(parent=parent)
+    return AnkiPitchAccentsWebView(parent=parent, title=ACTION_NAME)
 
 
 class PitchArtistDialog(AnkiSaveAndRestoreGeomDialog):
@@ -185,8 +179,6 @@ class PitchArtistDialog(AnkiSaveAndRestoreGeomDialog):
     name: str = "ajt__pitch_artist_dialog"
 
     _graphs_list: list[str]
-    _css_relpath: str = ajt_webview_css()
-    _graph_css_relpath: str = ajt_pitch_graph_css()
 
     def __init__(self, cfg: JapaneseConfig, *, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -196,7 +188,7 @@ class PitchArtistDialog(AnkiSaveAndRestoreGeomDialog):
         self._splitter = QSplitter(Qt.Orientation.Vertical)
         self._graph_settings_dialog = GraphSettingsWidget(self, self._cfg)
         self._text_edit = GraphCodeEdit()
-        self._webview = PitchAccentsWebView(parent=self, title=ACTION_NAME)
+        self._webview = get_webview(self)
         self._webview.set_bridge_command(self.handle_save_button, self)
         self._setup_ui()
         self._set_initial_values()
@@ -277,11 +269,7 @@ class PitchArtistDialog(AnkiSaveAndRestoreGeomDialog):
         gen = SvgPitchArtistGraphMaker(cfg)
         text = self._text_edit.toPlainText()
         self._graphs_list = make_graphs_list(text, gen)
-        self._webview.stdHtml(
-            head=head_content(),
-            body=self._format_graphs_as_html(self._graphs_list),
-            css=[self._css_relpath, self._graph_css_relpath],
-        )
+        self._webview.set_svg_graphs(self._format_graphs_as_html(self._graphs_list))
 
     def handle_save_button(self, bridge_cmd: str) -> None:
         """Handle the save button bridge command to export a graph as an SVG file."""
@@ -312,9 +300,11 @@ class PitchArtistDialog(AnkiSaveAndRestoreGeomDialog):
 
     def copy_graphs_as_simple_str(self) -> None:
         """Copy all generated SVG graphs to the system clipboard as a joined string."""
-        if self._graphs_list:
-            sep = self._cfg.pitch_artist.separator_expression_graphs
-            QApplication.clipboard().setText(sep.join(self._graphs_list))
+        if not self._graphs_list:
+            return
+        sep = self._cfg.pitch_artist.separator_expression_graphs
+        if clip := QApplication.clipboard():
+            clip.setText(sep.join(self._graphs_list))
 
     def show(self) -> None:
         """Show the dialog, restore saved geometry, and render initial graphs."""
@@ -330,15 +320,20 @@ class PitchArtistDialog(AnkiSaveAndRestoreGeomDialog):
     def make_buttons(self) -> QLayout:
         """Create the bottom button row with Update, Ok, and Copy buttons."""
         buttons = (
-            ("Update", self.update_graphs, "Ctrl+Enter to update"),
-            ("Ok", self.accept, "Accept and close the dialog"),
-            ("Copy HTML to Clipboard", self.copy_graphs_as_simple_str, "Copy the graphs to the system clipboard"),
+            # lambda throws away passed args
+            ("Update", lambda checked: self.update_graphs(), "Ctrl+Enter to update"),
+            ("Ok", lambda checked: self.accept(), "Accept and close the dialog"),
+            (
+                "Copy HTML to Clipboard",
+                lambda checked: self.copy_graphs_as_simple_str(),
+                "Copy the graphs to the system clipboard",
+            ),
         )
         hbox = QHBoxLayout()
         for label, action, tooltip_text in buttons:
             button = QPushButton(label)
             button.setToolTip(tooltip_text)
-            qconnect(button.clicked, action)  # lambda throws away passed args
+            qconnect(button.clicked, action)
             hbox.addWidget(button)
         hbox.addStretch()
         return hbox
