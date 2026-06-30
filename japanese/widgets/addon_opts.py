@@ -2,7 +2,6 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 import typing
 from collections.abc import Sequence
-from typing import Any, Optional
 
 from aqt.qt import *
 
@@ -64,6 +63,7 @@ class NarrowSpinBox(QSpinBox):
         self._allowed_range = allowed_range or self._allowed_range
         self.setRange(*self._allowed_range)
         self.setMaximumWidth(self._max_width)
+        self.setSingleStep(1)
         if initial_value:
             self.setValue(initial_value)
 
@@ -93,14 +93,15 @@ class PxDoubleNarrowSpinBox(QDoubleSpinBox):
         self,
         initial_value: float | None = None,
         allowed_range: AllowedRangeDouble | None = None,
-        *args,
+        parent: QWidget | None = None,
     ) -> None:
-        super().__init__(*args)
+        super().__init__(parent)
         self._allowed_range = allowed_range or self._allowed_range
         self.setRange(*self._allowed_range)
         self.setMaximumWidth(self._max_width)
         self.setDecimals(self._decimals)
         self.setSuffix(" px")
+        self.setSingleStep(1)
         if initial_value:
             self.setValue(initial_value)
 
