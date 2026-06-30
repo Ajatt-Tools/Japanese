@@ -4,6 +4,9 @@ import functools
 
 from aqt import mw
 
+AJT_WEBVIEW_CSS_FILE_NAME = "ajt_webview.css"
+PITCH_GRAPH_CSS_FILE_NAME = "ajt_pitch_graph.css"
+
 
 @functools.cache
 def anki_addon_set_web_exports() -> None:
@@ -19,4 +22,9 @@ def anki_addon_web_relpath() -> str:
 
 @functools.cache
 def ajt_webview_css() -> str:
-    return f"{anki_addon_web_relpath()}/ajt_webview.css"
+    return f"{anki_addon_web_relpath()}/{AJT_WEBVIEW_CSS_FILE_NAME}"
+
+
+@functools.cache
+def ajt_pitch_graph_css() -> str:
+    return f"{anki_addon_web_relpath()}/{PITCH_GRAPH_CSS_FILE_NAME}"

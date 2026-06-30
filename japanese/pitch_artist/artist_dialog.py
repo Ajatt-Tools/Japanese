@@ -22,7 +22,10 @@ from ..ajt_common.utils import ui_translate
 from ..config_view import JapaneseConfig, SvgGraphReadingFormat, get_global_config
 from ..helpers.consts import ADDON_NAME
 from ..helpers.file_ops import find_file_in_parents
-from ..helpers.webview_utils import ajt_webview_css, anki_addon_web_relpath
+from ..helpers.webview_utils import (
+    ajt_pitch_graph_css,
+    ajt_webview_css,
+)
 from ..widgets.widgets_to_config_dict import (
     as_config_dict,
     change_event,
@@ -32,7 +35,6 @@ from ..widgets.widgets_to_config_dict import (
 from .pitch_graph import SvgPitchArtistGraphMaker
 
 ACTION_NAME = "Pitch artist"
-PITCH_GRAPH_CSS_FILE_NAME = "ajt_pitch_graph.css"
 
 
 @functools.cache
@@ -160,9 +162,6 @@ class PitchAccentsWebView(AnkiWebView):
         self.setZoomFactor(self.zoomFactor() - 0.1)
 
 
-@functools.cache
-def ajt_pitch_graph_css() -> str:
-    return f"{anki_addon_web_relpath()}/{PITCH_GRAPH_CSS_FILE_NAME}"
 
 
 def format_graph_as_html(graph: str, index: int) -> str:
