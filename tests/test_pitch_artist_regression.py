@@ -507,7 +507,7 @@ class TestHeadlessExamples:
             assert actual.is_particle == exp.is_particle, f"is_particle mismatch in seq {index}"
             assert len(actual.moras) == exp.mora_count, f"mora count mismatch in seq {index}"
             if exp.level_names:
-                actual_levels = [l.name for l in actual.levels]
+                actual_levels = [level.name for level in actual.levels]
                 assert actual_levels == exp.level_names, f"levels mismatch in seq {index}"
 
 

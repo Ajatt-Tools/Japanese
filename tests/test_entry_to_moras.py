@@ -1,6 +1,5 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
-import typing
 from collections.abc import Sequence
 
 import pytest
@@ -8,6 +7,7 @@ import pytest
 from japanese.pitch_accents.basic_types import PitchType
 from japanese.pitch_accents.common import FormattedEntry, split_html_notation
 from japanese.pitch_accents.entry_to_moras import (
+    Mora,
     MoraFlag,
     PitchLevel,
     Quark,
@@ -122,7 +122,8 @@ def test_html_notation_to_moras(html_notation: str, expected: list[str]) -> None
             FormattedEntry(
                 "人生哲学",
                 "ジンセイテツガク",
-                "<low_rise>ジ</low_rise><high_drop>ンセイテツ</high_drop><low><nasal>カ<handakuten>&#176;</handakuten></nasal>ク</low>",
+                "<low_rise>ジ</low_rise><high_drop>ンセイテツ</high_drop>"
+                "<low><nasal>カ<handakuten>&#176;</handakuten></nasal>ク</low>",
                 "6",
             ),
             ["ジ:L", "ン:H", "セ:H", "イ:H", "テ:H", "ツ:H", f"カ{CIRCLE}:L", "ク:L"],
@@ -134,7 +135,8 @@ def test_html_notation_to_moras(html_notation: str, expected: list[str]) -> None
             FormattedEntry(
                 "人生哲学",
                 "ジンセイテツガク",
-                "<low_rise>ジ</low_rise><high_drop>ンセイテ</high_drop><low>ツ<nasal>カ<handakuten>&#176;</handakuten></nasal>ク</low>",
+                "<low_rise>ジ</low_rise><high_drop>ンセイテ</high_drop>"
+                "<low>ツ<nasal>カ<handakuten>&#176;</handakuten></nasal>ク</low>",
                 "5",
             ),
             ["ジ:L", "ン:H", "セ:H", "イ:H", "テ:H", "ツ:L", f"カ{CIRCLE}:L", "ク:L"],
@@ -210,3 +212,15 @@ def test_mora_flags2class_name() -> None:
     assert mora_flags2class_name(MoraFlag.nasal | MoraFlag.devoiced) == "nasal devoiced"
     assert mora_flags2class_name(MoraFlag.nasal) == "nasal"
     assert mora_flags2class_name(MoraFlag.devoiced) == "devoiced"
+
+
+@pytest.mark.parametrize(
+    "mora, expected",
+    [
+        (Mora(txt=["シ"], level=PitchLevel.high, flags=MoraFlag(0)), False),
+        (Mora(txt=["シ", "ュ"], level=PitchLevel.high, flags=MoraFlag(0)), True),
+        (Mora(txt=["カ", Quark(txt="゜", flags=MoraFlag.nasal)], level=PitchLevel.high, flags=MoraFlag.nasal), False),
+    ],
+)
+def test_mora_is_multi_char(mora: Mora, expected: bool) -> None:
+    assert mora.is_multi_char() is expected
