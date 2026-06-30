@@ -3,7 +3,7 @@
 
 import pathlib
 from collections.abc import Callable
-from typing import Any
+from typing import Any, TypeAlias
 
 from aqt.webview import AnkiWebView
 from PyQt6.QtWidgets import QWidget
@@ -74,4 +74,4 @@ class NoAnkiPitchAccentsWebView(NoAnkiWebView):
         self.setZoomFactor(self.zoomFactor() - 0.1)
 
 
-PitchAccentsWebView = AnkiPitchAccentsWebView | NoAnkiPitchAccentsWebView
+PitchAccentsWebView: TypeAlias = AnkiPitchAccentsWebView | NoAnkiPitchAccentsWebView
