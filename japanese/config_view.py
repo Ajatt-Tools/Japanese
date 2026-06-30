@@ -392,11 +392,11 @@ class SvgPitchGraphOptionsConfigView(ConfigSubViewBase):
 
     @property
     def graph_height(self) -> int:
-        return self["graph_height"]
+        return int(self["graph_height"])
 
     @property
     def graph_visible_height(self) -> int:
-        return self["graph_visible_height"]
+        return int(self["graph_visible_height"])
 
     @property
     def stroke_width(self) -> float:
@@ -408,7 +408,7 @@ class SvgPitchGraphOptionsConfigView(ConfigSubViewBase):
 
     @property
     def font_size(self) -> float:
-        return self["font_size"]
+        return float(self["font_size"])
 
     @property
     def letter_spacing(self) -> float:
