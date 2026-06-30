@@ -2,7 +2,6 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 import dataclasses
 import enum
-import re
 from collections.abc import Iterable
 from enum import Enum
 
@@ -13,7 +12,6 @@ from .split import (
     DEVOICED_PREFIX,
     GHOST_PARTICLE,
     PITCH_BREAKS,
-    RE_FLAGS,
     SENT_HIDDEN,
     SEPARATORS,
     DevoicedMora,
@@ -377,16 +375,10 @@ class SvgPitchArtistGraphMaker:
             + self._cfg.svg_graphs.graph_horizontal_padding * 2
         )
 
-    def make_text(self, text: str, pos: Point, dx: int) -> str:
+    def _make_text(self, text: str, pos: Point, dx: int) -> str:
         """Generate an SVG <text> element for a mora label."""
         class_name = ' class="devoiced"' if isinstance(text, DevoicedMora) else ""
-        fs = self._cfg.svg_graphs.font_size
-        letter_spacing = self._cfg.svg_graphs.letter_spacing
-        return (
-            f'<text{class_name} font-size="{fs:.1f}px" fill="black" '
-            f'letter-spacing="{letter_spacing:.1f}px" '
-            f'x="{pos.x:.0f}" y="{pos.y:.0f}" dx="{dx:.0f}">{text}</text>'
-        )
+        return self._mk.make_text_element(text, pos, class_name, dx)
 
     def make_graph(self, sequence: list[Section]) -> str | None:
         """Render a sequence of sections as a complete SVG pitch accent graph.
@@ -441,7 +433,7 @@ class SvgPitchArtistGraphMaker:
                             self._mk.make_devoiced_circle(pos.replace(y=height_kana), extend=len(mora) > 1)
                         )
                     text_moras.append(
-                        self.make_text(mora, pos.replace(y=height_kana), int(self._cfg.svg_graphs.text_dx) * len(mora))
+                        self._make_text(mora, pos.replace(y=height_kana), int(self._cfg.svg_graphs.text_dx) * len(mora))
                     )
 
                 pos = pos.shift_by(x=x_step)
