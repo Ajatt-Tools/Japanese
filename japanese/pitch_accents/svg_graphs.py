@@ -285,7 +285,7 @@ class SvgPitchGraphMaker:
 
             if MoraFlag.devoiced in mora.flags:
                 # circle around text
-                text_moras.append(self.make_devoiced_circle(pos.replace(y=height_kana), extend=mora.is_extended()))
+                text_moras.append(self.make_devoiced_circle(pos.replace(y=height_kana), extend=mora.is_multi_char()))
 
             if not mora.is_trailing():
                 text_moras.append(self.make_text(mora, pos.replace(y=height_kana), dx=self.calc_text_dx(mora)))

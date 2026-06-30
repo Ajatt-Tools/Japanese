@@ -43,9 +43,9 @@ class Mora:
             return True
         return False
 
-    def is_extended(self) -> bool:
+    def is_multi_char(self) -> bool:
         """
-        Extended means the mora has more than one character. しゃ, しゅ, etc.
+        Return True if the mora has more than one base character. しゃ, しゅ, etc.
         """
         return sum(1 for char in self.txt if not isinstance(char, Quark)) > 1
 
