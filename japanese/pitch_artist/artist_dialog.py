@@ -194,7 +194,7 @@ class PitchArtistDialog(AnkiSaveAndRestoreGeomDialog):
     _css_relpath: str = ajt_webview_css()
     _graph_css_relpath: str = ajt_pitch_graph_css()
 
-    def __init__(self, parent: QWidget, cfg: JapaneseConfig) -> None:
+    def __init__(self, cfg: JapaneseConfig, *, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         disable_help_button(self)
         self._cfg = cfg
@@ -374,7 +374,7 @@ def init() -> None:
     # Get config
     cfg = get_global_config()
     # init dialog
-    mw._ajt__pitch_artist_dialog = dialog = PitchArtistDialog(mw, cfg)
+    mw._ajt__pitch_artist_dialog = dialog = PitchArtistDialog(cfg, parent=mw)
     # get AJT menu
     root_menu = menu_root_entry()
     # create a new menu item
