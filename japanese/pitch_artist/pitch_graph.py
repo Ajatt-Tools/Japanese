@@ -7,6 +7,7 @@ from enum import Enum
 
 from ..config_view import JapaneseConfig, SvgGraphReadingFormat
 from ..mecab_controller import to_hiragana, to_katakana
+from ..pitch_accents.entry_to_moras import PitchLevel
 from ..pitch_accents.svg_graphs import Line, Path, Point, SvgPitchGraphMaker, make_group
 from .split import (
     DEVOICED_PREFIX,
@@ -54,14 +55,6 @@ class Role(Enum):
     keihan_kifuku = "K"
 
 
-@enum.unique
-class Level(Enum):
-    """Pitch level of a single mora: high or low."""
-
-    high = "h"
-    low = "l"
-
-
 def is_empty_particle(word: str) -> bool:
     """Return True if the word is a separator character with no pitch content.
 
@@ -83,14 +76,14 @@ def determine_role_keihan(raw_role: str | None) -> Role:
         return Role(role.lower())
 
 
-def determine_levels_keihan(accent: SplitAccent, moras: list[str]) -> list[Level]:
+def determine_levels_keihan(accent: SplitAccent, moras: list[str]) -> list[PitchLevel]:
     """Build a list of high/low levels for each mora in the Keihan dialect."""
     if not accent.keihan:
         return []
     assert isinstance(accent.levels, str), "levels should be str"
     levels_list = list(str(accent.levels).lower())
     levels_list += [levels_list[-1]] * (len(moras) - len(levels_list))
-    return [Level(c) for c in levels_list]
+    return [PitchLevel(c) for c in levels_list]
 
 
 def guess_role_from_pitch_num(moras: list[str], pitch_n: str | None) -> Role:
@@ -186,7 +179,7 @@ class Section:
     raw: str
     is_keihan: bool
     role: Role
-    levels: list[Level]
+    levels: list[PitchLevel]
     pitch: int | None
     moras: list[str]
     word: str
@@ -255,18 +248,18 @@ def set_pitch(section: Section, last_word_ended_low: bool) -> Section:
 def build_levels_tokyo(section: Section, last_word_ended_low: bool) -> Section:
     """Build a list of high/low pitch levels for a Tokyo dialect section."""
     section = set_pitch(section, last_word_ended_low)
-    result: list[Level]
+    result: list[PitchLevel]
 
     if section.pitch == -1:
-        result = [Level.low] * len(section.moras)
+        result = [PitchLevel.low] * len(section.moras)
     elif section.pitch == -2:
-        result = [Level.high] * len(section.moras)
+        result = [PitchLevel.high] * len(section.moras)
     elif section.pitch == 1:
-        result = [Level.high, *(Level.low for _ in section.moras[1:])]
+        result = [PitchLevel.high, *(PitchLevel.low for _ in section.moras[1:])]
     else:
-        result = [Level.low if last_word_ended_low else Level.high]
+        result = [PitchLevel.low if last_word_ended_low else PitchLevel.high]
         for index, mora in enumerate(section.moras[1:], start=1):
-            result.append(Level.high if index < section.pitch or section.pitch == 0 else Level.low)
+            result.append(PitchLevel.high if index < section.pitch or section.pitch == 0 else PitchLevel.low)
 
     return dataclasses.replace(section, levels=result)
 
@@ -290,7 +283,7 @@ def build_high_low(sequence: list[Section]) -> Iterable[Section]:
     last_word_ended_low = True
     for section in sequence:
         if section.is_keihan:
-            last_word_ended_low = section.levels[-1] == Level.low
+            last_word_ended_low = section.levels[-1] == PitchLevel.low
         else:
             section = build_levels_tokyo(section, last_word_ended_low)
             last_word_ended_low = calc_last_word_ended_low(section, last_word_ended_low)
@@ -414,10 +407,10 @@ class SvgPitchArtistGraphMaker:
             for j, mora in enumerate(section.moras):
                 mora_level = (
                     section.levels[j - 1]
-                    if mora in ("っ", "ッ") and j == 1 and section.levels[j - 1] == Level.low
+                    if mora in ("っ", "ッ") and j == 1 and section.levels[j - 1] == PitchLevel.low
                     else section.levels[j]
                 )
-                pos = pos.replace(y=height_high if mora_level == Level.high else height_low)
+                pos = pos.replace(y=height_high if mora_level == PitchLevel.high else height_low)
                 word_circles.append(self._mk.make_circle(pos.replace()))
                 path.push(pos.replace(), is_trailing=False)
 
