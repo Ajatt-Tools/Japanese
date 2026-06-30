@@ -128,9 +128,12 @@ svg {
     color: #00802b;
 }
 
-.particle circle,
-.keihan_particle circle {
-    fill: none;
+.white line,
+.white circle,
+.white text {
+    color: #eeeeee;
+    fill: #eeeeee;
+    stroke: #eeeeee;
 }
 
 .black line,
@@ -139,6 +142,11 @@ svg {
     color: #4f4b4b;
     fill: #4f4b4b;
     stroke: #4f4b4b;
+}
+
+.particle circle,
+.keihan_particle circle {
+    fill: none;
 }
 
 .atamadaka text,
@@ -156,6 +164,7 @@ svg {
 .keihan_particle text,
 .keihan_setsubigo text,
 .black text,
+.white text,
 .particle text,
 .setsubigo text {
     stroke: none;
