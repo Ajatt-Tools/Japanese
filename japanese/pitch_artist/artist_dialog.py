@@ -26,6 +26,12 @@ from ..helpers.webview_utils import (
     ajt_pitch_graph_css,
     ajt_webview_css,
 )
+from ..widgets.addon_opts import (
+    AllowedRange,
+    AllowedRangeDouble,
+    PxDoubleNarrowSpinBox,
+    PxNarrowSpinBox,
+)
 from ..widgets.widgets_to_config_dict import (
     as_config_dict,
     change_event,
@@ -70,21 +76,10 @@ class GraphCodeEdit(QTextEdit):
         return super().keyPressEvent(event)
 
 
-class NumSpin(QDoubleSpinBox):
-    """A numeric spin box pre-configured with a range of 0-9999 and 2 decimal places."""
-
-    def __init__(self, parent: QWidget | None = None) -> None:
-        super().__init__(parent)
-        self.setRange(0, 9999)
-        self.setSingleStep(1)
-        self.setDecimals(2)
-        self.setValue(0)
-
-
 class FormWidgets(SimpleNamespace):
-    circle_radius: NumSpin
-    stroke_width: NumSpin
-    graph_height: NumSpin
+    circle_radius: PxDoubleNarrowSpinBox
+    stroke_width: PxDoubleNarrowSpinBox
+    graph_height: PxNarrowSpinBox
     graph_font_name: QLineEdit
     reading_format: EnumSelectCombo
     inject_css_into_files: QCheckBox
@@ -103,9 +98,9 @@ class GraphSettingsWidget(QWidget):
 
         # Create widgets.
         self._widgets = FormWidgets()
-        self._widgets.circle_radius = NumSpin()
-        self._widgets.stroke_width = NumSpin()
-        self._widgets.graph_height = NumSpin()
+        self._widgets.circle_radius = PxDoubleNarrowSpinBox(allowed_range=AllowedRangeDouble(0, 999))
+        self._widgets.stroke_width = PxDoubleNarrowSpinBox(allowed_range=AllowedRangeDouble(0, 999))
+        self._widgets.graph_height = PxNarrowSpinBox(allowed_range=AllowedRange(0, 999))
         self._widgets.graph_font_name = QLineEdit()
         self._widgets.reading_format = EnumSelectCombo(enum_type=SvgGraphReadingFormat)
         self._widgets.inject_css_into_files = QCheckBox("Inject CSS into SVG markup")
