@@ -14,8 +14,8 @@ from .styles import SpecialSymbols, XmlTags
 
 @enum.unique
 class PitchLevel(enum.Enum):
-    low = "low"
-    high = "high"
+    low = "l"
+    high = "h"
 
 
 @enum.unique

@@ -83,7 +83,7 @@ def determine_levels_keihan(accent: SplitAccent, moras: list[str]) -> list[Pitch
     assert isinstance(accent.levels, str), "levels should be str"
     levels_list = list(str(accent.levels).lower())
     levels_list += [levels_list[-1]] * (len(moras) - len(levels_list))
-    return [PitchLevel(c) for c in levels_list]
+    return [PitchLevel(c.lower()) for c in levels_list]  # construct pitch level from its value.
 
 
 def guess_role_from_pitch_num(moras: list[str], pitch_n: str | None) -> Role:
@@ -127,25 +127,33 @@ def determine_role_tokyo(sdict: SectionParts, moras: list[str], accent: SplitAcc
     return Role(str(accent.role).lower())
 
 
+class SpecialPitch(enum.Enum):
+    always_high = -2
+    always_low = -1
+    atamadaka = 1
+    heiban = 0
+    drop_inside = 2
+
+
 def determine_pitch_tokyo(sdict: SectionParts, moras: list[str], accent: SplitAccent, role: Role) -> int | None:
     """Determine the numeric pitch value for a Tokyo dialect section."""
     if sdict.sep and accent.pitch:
         return int(accent.pitch)
 
     if role == Role.heiban or role == Role.setsubigo:
-        return 0
+        return SpecialPitch.heiban.value
     if role == Role.atamadaka:
-        return 1
+        return SpecialPitch.atamadaka.value
     if role == Role.nakadaka or role == Role.kifuku:
-        return 2
+        return SpecialPitch.drop_inside.value
     if role == Role.odaka:
         return len(moras)
     if role == Role.particle:
         return None
     if role == Role.empty:
-        return -1
+        return SpecialPitch.always_low.value
 
-    return 0
+    return SpecialPitch.heiban.value
 
 
 def adjust_kana(text: str, cfg: JapaneseConfig) -> str:
@@ -241,8 +249,17 @@ def make_section(raw_section: str, cfg: JapaneseConfig) -> Section:
 
 def set_pitch(section: Section, last_word_ended_low: bool) -> Section:
     if section.pitch is None:
-        return dataclasses.replace(section, pitch=-1 if last_word_ended_low else -2)
+        return dataclasses.replace(
+            section, pitch=SpecialPitch.always_low.value if last_word_ended_low else SpecialPitch.always_high.value
+        )
     return section
+
+
+def calc_level(pitch_num: int, pos: int) -> PitchLevel:
+    if pos < pitch_num or pitch_num == SpecialPitch.heiban.value:
+        return PitchLevel.high
+    else:
+        return PitchLevel.low
 
 
 def build_levels_tokyo(section: Section, last_word_ended_low: bool) -> Section:
@@ -250,17 +267,16 @@ def build_levels_tokyo(section: Section, last_word_ended_low: bool) -> Section:
     section = set_pitch(section, last_word_ended_low)
     result: list[PitchLevel]
 
-    if section.pitch == -1:
+    if section.pitch == SpecialPitch.always_low.value:
         result = [PitchLevel.low] * len(section.moras)
-    elif section.pitch == -2:
+    elif section.pitch == SpecialPitch.always_high.value:
         result = [PitchLevel.high] * len(section.moras)
-    elif section.pitch == 1:
+    elif section.pitch == SpecialPitch.atamadaka.value:
         result = [PitchLevel.high, *(PitchLevel.low for _ in section.moras[1:])]
     else:
         result = [PitchLevel.low if last_word_ended_low else PitchLevel.high]
-        for index, mora in enumerate(section.moras[1:], start=1):
-            result.append(PitchLevel.high if index < section.pitch or section.pitch == 0 else PitchLevel.low)
-
+        assert section.pitch is not None
+        result.extend(calc_level(section.pitch, index) for index, mora in enumerate(section.moras[1:], start=1))
     return dataclasses.replace(section, levels=result)
 
 
@@ -269,10 +285,10 @@ def calc_last_word_ended_low(section: Section, last_word_ended_low: bool) -> boo
     if section.role == Role.empty and section.word not in PITCH_BREAKS:
         return last_word_ended_low
 
-    if section.pitch == 1:
+    if section.pitch == SpecialPitch.atamadaka.value:
         return True
 
-    if section.pitch == 0 or section.pitch == -2:
+    if section.pitch == SpecialPitch.heiban.value or section.pitch == SpecialPitch.always_high.value:
         return False
 
     return len(section.moras) >= section.pitch
