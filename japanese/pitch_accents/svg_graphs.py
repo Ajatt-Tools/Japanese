@@ -26,35 +26,6 @@ class SvgPitchGraphMaker:
         self._opts = options
         self._renderer = SvgGraphRenderer(options)
 
-    def make_devoiced_circle(self, pos: Point, extend: bool) -> str:
-        """
-        Make a circle around the mora text to show that it's devoiced.
-        If extend is true, widen the circle. This is needed if the mora consists of two characters.
-        """
-        if not extend:
-            pos = pos.shift_by(
-                x=self._opts.font_size / 2 + self._opts.text_dx,
-                y=-self._opts.font_size / 2 + self._opts.devoiced_circle_dy,
-            )
-            return (
-                f'<circle class="devoiced" fill="none" stroke="black" cx="{pos.x:.0f}" cy="{pos.y:.0f}" '
-                f'stroke-width="{self._opts.devoiced_circle_width:.2f}" r="{self._opts.devoiced_circle_radius:.2f}" '
-                f'stroke-dasharray="{self._opts.devoiced_stroke_dasharray}" />'
-            )
-        else:
-            pos = pos.shift_by(
-                x=-self._opts.font_size / 2 - self._opts.devoiced_rectangle_padding + self._opts.text_dx,
-                y=-self._opts.font_size / 2 - self._opts.devoiced_circle_radius + self._opts.devoiced_circle_dy,
-            )
-            width = self._opts.font_size * 2 + self._opts.devoiced_rectangle_padding * 2
-            height = self._opts.devoiced_circle_radius * 2
-            return (
-                f'<rect class="devoiced" fill="none" stroke="black" x="{pos.x:.0f}" y="{pos.y:.0f}" '
-                f'width="{width:.0f}" height="{height:.0f}" '
-                f'stroke-width="{self._opts.devoiced_circle_width:.2f}" rx="{self._opts.devoiced_circle_radius:.2f}" '
-                f'stroke-dasharray="{self._opts.devoiced_stroke_dasharray}" />'
-            )
-
     def _quark_to_tspan(self, quark: Quark) -> str:
         assert isinstance(quark, Quark)
         return (
@@ -124,7 +95,7 @@ class SvgPitchGraphMaker:
 
             if MoraFlag.devoiced in mora.flags:
                 # circle around text
-                text_moras.append(self.make_devoiced_circle(pos.replace(y=height_kana), extend=mora.is_multi_char()))
+                text_moras.append(self._renderer.make_devoiced_circle(pos.replace(y=height_kana), extend=mora.is_multi_char()))
 
             if not mora.is_trailing():
                 text_moras.append(self.make_text(mora, pos.replace(y=height_kana), dx=self.calc_text_dx(mora)))
