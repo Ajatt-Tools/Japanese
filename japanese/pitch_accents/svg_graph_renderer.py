@@ -58,3 +58,11 @@ class SvgGraphRenderer:
             f'letter-spacing="{self._opts.letter_spacing:.1f}px" '
             f'x="{pos.x:.0f}" y="{pos.y:.0f}" dx="{dx:.0f}">{text}</text>'
         )
+
+    def make_svg(self, contents: str, *, width: int, height: int, visible_height: int) -> str:
+        """Wrap SVG child markup in the pitch graph SVG element."""
+        return (
+            f'<svg class="ajt__pitch_svg" style="font-family: {self._opts.graph_font_name}" '
+            f'viewBox="0 0 {width} {height}" height="{visible_height}px" '
+            f'xmlns="http://www.w3.org/2000/svg">{contents}</svg>'
+        )

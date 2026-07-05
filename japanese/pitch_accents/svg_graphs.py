@@ -57,12 +57,6 @@ class SvgPitchGraphMaker:
     def calc_svg_width(self, moras: list[Mora]) -> int:
         return len(moras) * self._opts.x_step + self._opts.graph_horizontal_padding * 2
 
-    def make_svg(self, contents: str, *, width: int, height: int, visible_height: int) -> str:
-        return (
-            f'<svg class="ajt__pitch_svg" style="font-family: {self._opts.graph_font_name}" viewBox="0 0 {width}'
-            f' {height}" height="{visible_height}px" xmlns="http://www.w3.org/2000/svg">{contents}</svg>'
-        )
-
     def calc_text_dx(self, mora: Mora) -> int:
         return int(self._opts.text_dx) * sum(1 for char in mora.txt if isinstance(char, str))
 
