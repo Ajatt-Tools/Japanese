@@ -25,9 +25,11 @@ def append_class_name(mora_flag: MoraFlag) -> str:
     return f' class="{class_name}"' if class_name else ""
 
 
-def attrs_circle(is_trailing: bool) -> str:
+def attrs_circle(is_trailing: bool, is_particle: bool) -> str:
     if is_trailing:
         return f'class="{SvgColor.trail.name}" fill="none" stroke="{SvgColor.trail.value}"'
+    if is_particle:
+        return f'fill="none" stroke="{SvgColor.word.value}"'
     return f'fill="{SvgColor.word.value}" stroke="{SvgColor.word.value}"'
 
 
