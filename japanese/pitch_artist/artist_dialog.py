@@ -46,6 +46,14 @@ from .pitch_accents_web_view import (
 from .pitch_graph import SvgPitchArtistGraphMaker
 
 ACTION_NAME = "Pitch artist"
+EXAMPLES = """
+わたし; は;p にほんご; を べんきょう; して; います;k2
+ぼく;1 は;p せんせい;3 を して;0 います;k2
+くるま;0 が すき;2 です か
+わたし;0 は だいがく;0 の せんせい;3 です
+きょう;1 は;p | てんき;1 が いい;1 です
+でんわ;0 を かける;k2
+""".strip()
 
 
 @functools.cache
@@ -214,7 +222,7 @@ class PitchArtistDialog(AnkiSaveAndRestoreGeomDialog):
         # Main layout
         layout = QVBoxLayout()
         layout.addWidget(self._splitter)
-        layout.addLayout(self.make_buttons())
+        layout.addLayout(self._make_bottom_buttons())
         self.setLayout(layout)
 
     def make_top_widget(self) -> QSplitter:
@@ -317,7 +325,7 @@ class PitchArtistDialog(AnkiSaveAndRestoreGeomDialog):
         self._cfg.write_config()
         super().done(result)
 
-    def make_buttons(self) -> QLayout:
+    def _make_bottom_buttons(self) -> QLayout:
         """Create the bottom button row with Update, Ok, and Copy buttons."""
         buttons = (
             # lambda throws away passed args
@@ -328,6 +336,7 @@ class PitchArtistDialog(AnkiSaveAndRestoreGeomDialog):
                 lambda checked: self.copy_graphs_as_simple_str(),
                 "Copy the graphs to the system clipboard",
             ),
+            ("Examples", lambda checked: self._present_examples(), "Show examples"),
         )
         hbox = QHBoxLayout()
         for label, action, tooltip_text in buttons:
@@ -348,6 +357,10 @@ class PitchArtistDialog(AnkiSaveAndRestoreGeomDialog):
     def add_context_menu_item(self, webview: AnkiWebView, menu: QMenu) -> None:
         """Add a 'Preview pitch graphs' entry to the editor context menu."""
         menu.addAction(ACTION_NAME, functools.partial(self._on_lookup_pronunciation, webview.selectedText()))
+
+    def _present_examples(self) -> None:
+        self.set_text(EXAMPLES + "\n" + self._text_edit.toPlainText())
+        self.update_graphs()
 
 
 def add_settings_action(root_menu: QMenu, dialog: PitchArtistDialog) -> None:
