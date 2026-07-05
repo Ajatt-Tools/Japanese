@@ -25,6 +25,8 @@ def set_from_cfg(widget: QWidget, value: Union[bool, str, int, float, enum.Enum]
         widget.setCurrentName(value)
     elif isinstance(widget, QComboBox) and isinstance(value, str):
         widget.setCurrentText(value)
+    elif isinstance(widget, QPlainTextEdit) and isinstance(value, str):
+        widget.setPlainText(value)
     else:
         raise ValueError(
             f"Can't handle widget of type {type(widget).__name__} and value of type {type(value).__name__}"
