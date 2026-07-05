@@ -11,7 +11,7 @@ from typing import Any, cast
 
 from aqt import gui_hooks, mw
 from aqt.qt import *
-from aqt.utils import disable_help_button, showInfo, tooltip, show_critical
+from aqt.utils import disable_help_button, show_critical, showInfo, tooltip
 from aqt.webview import AnkiWebView
 
 from ..ajt_common.about_menu import menu_root_entry
@@ -288,7 +288,7 @@ class PitchArtistDialog(AnkiSaveAndRestoreGeomDialog):
         except (ValueError, IndexError, TypeError):
             return
         name, mime = QFileDialog.getSaveFileName(
-            parent=cast(QWidget, self),
+            parent=self,
             caption="Save pitch graph as SVG File",
             directory=str(self._cfg.pitch_artist.last_save_location),
         )
@@ -296,10 +296,14 @@ class PitchArtistDialog(AnkiSaveAndRestoreGeomDialog):
             tooltip("Aborted.")
             return
         graph = inject_css_into_svg(graph) if self._graph_settings_dialog.inject_css_into_files else graph
-        with open(name, "w", encoding="utf8") as of:
-            of.write(graph)
-        self._cfg.pitch_artist.last_save_location = pathlib.Path(name).resolve()
-        self._cfg.write_config()
+        try:
+            with open(name, "w", encoding="utf8") as of:
+                of.write(graph)
+        except OSError as ex:
+            show_critical(f"Failed to save file to '{name}': {ex}", parent=self)
+        else:
+            self._cfg.pitch_artist.last_save_location = pathlib.Path(name).resolve()
+            self._cfg.write_config()
 
     def copy_graphs_as_simple_str(self) -> None:
         """Copy all generated SVG graphs to the system clipboard as a joined string."""
