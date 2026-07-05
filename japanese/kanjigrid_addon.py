@@ -10,7 +10,7 @@ from .ajt_common.addon_config import AddonConfigManager
 from .config_view import config_view as cfg
 from .helpers.file_ops import find_file_in_parents
 from .kanjigrid.config_util import KanjiGridConfigProxy
-from .kanjigrid.kanjigrid import KanjiGrid
+from .kanjigrid.kanjigrid import KanjiGrid, ACTION_NAME
 
 
 class AJTKanjiGridConfigProxy(KanjiGridConfigProxy):
@@ -34,6 +34,6 @@ class AJTKanjiGridConfigProxy(KanjiGridConfigProxy):
 
 def init() -> None:
     root_menu = menu_root_entry()
-    gen_grid_action = QAction("Analyze known kanji...", root_menu)
+    gen_grid_action = QAction(f"🈷️ {ACTION_NAME}...", root_menu)
     root_menu.addAction(gen_grid_action)
     mw.kanjigrid = KanjiGrid(cfg=AJTKanjiGridConfigProxy(mw, cfg), menu_action=gen_grid_action)
