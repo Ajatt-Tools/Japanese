@@ -410,6 +410,7 @@ class SvgSettingsForm(MultiColumnSettingsForm):
 
         # Reading format selector.
         self._widgets.reading_format = EnumSelectCombo(initial_value=self._config.reading_format)
+        self._widgets.graph_font_name = NarrowLineEdit(self._config.graph_font_name)
 
         # dy/dx are allowed to be negative.
         self._widgets.text_dx = PxNarrowSpinBox(
@@ -447,6 +448,7 @@ class SvgSettingsForm(MultiColumnSettingsForm):
             "Embed CSS styles directly inside saved SVG files for standalone viewing."
         )
         self._widgets.reading_format.setToolTip("Reading format for kana labels: hiragana or katakana.")
+        self._widgets.graph_font_name.setToolTip("CSS font-family value used to render kana labels in SVG graphs.")
         self._widgets.size_unit.setToolTip("Base unit (in pixels) for graph sizing.")
         self._widgets.x_step.setToolTip("Horizontal spacing between mora circles in pixels.")
         self._widgets.graph_height.setToolTip("Vertical distance between high and low pitch positions.")
