@@ -33,6 +33,7 @@ class SvgGraphSection(typing.NamedTuple):
 
     class_name: str
     moras: Sequence[SvgGraphMora]
+    is_particle: bool
     connect_to_previous: bool = False
     tape_connector: bool = False
 
