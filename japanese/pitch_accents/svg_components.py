@@ -17,7 +17,8 @@ class SvgColor(enum.Enum):
 
 
 def make_group(elements: Iterable[str], class_name: str) -> str:
-    return f'<g class="{class_name}">{"".join(elements)}</g>'
+    attrs = f' class="{class_name}"' if class_name else ""
+    return f'<g{attrs}>{"".join(elements)}</g>'
 
 
 def append_class_name(mora_flag: MoraFlag) -> str:
