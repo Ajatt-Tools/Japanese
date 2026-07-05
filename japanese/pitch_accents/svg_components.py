@@ -155,9 +155,6 @@ class Path:
         return self
 
     def draw(self) -> str:
-        opts = self._opts
-        drawn: list[str] = []
-        line: Line
-        for line in filter(lambda _line: _line.is_completed(), self._lines):
-            drawn.append(line.adjust_to_radius(opts.circle_radius).draw())
-        return "".join(drawn)
+        return "".join(
+            line.adjust_to_radius(self._opts.circle_radius).draw() for line in self._lines if line.is_completed()
+        )
