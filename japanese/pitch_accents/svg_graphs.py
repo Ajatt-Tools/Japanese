@@ -1,6 +1,5 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
-
 from ..config_view import SvgGraphReadingFormat, SvgPitchGraphOptionsConfigView
 from ..mecab_controller import to_katakana
 from ..mecab_controller.kana_conv import to_hiragana
@@ -17,23 +16,15 @@ from .svg_components import (
     Point,
     SvgColor,
     append_class_name,
-    attrs_circle,
     make_group,
 )
+from .svg_graph_renderer import SvgGraphRenderer
 
 
 class SvgPitchGraphMaker:
     def __init__(self, options: SvgPitchGraphOptionsConfigView) -> None:
         self._opts = options
-
-    def make_circle(self, pos: Point, is_trailing: bool = False) -> str:
-        """
-        Create a circle that is positioned where two lines touch.
-        """
-        return (
-            f'<circle {attrs_circle(is_trailing)} stroke-width="{self._opts.stroke_width:.2f}" '
-            f'cx="{pos.x:.3f}" cy="{pos.y:.3f}" r="{self._opts.circle_radius:.2f}" />'
-        )
+        self._renderer = SvgGraphRenderer(options)
 
     def make_devoiced_circle(self, pos: Point, extend: bool) -> str:
         """
@@ -128,7 +119,7 @@ class SvgPitchGraphMaker:
 
         for idx, mora in enumerate(seq.moras):
             pos = pos.replace(y=height_high if mora.level == PitchLevel.high else height_low)
-            word_circles.append(self.make_circle(pos, is_trailing=mora.is_trailing()))
+            word_circles.append(self._renderer.make_circle(pos, is_trailing=mora.is_trailing()))
             path.push(pos, is_trailing=mora.is_trailing())
 
             if MoraFlag.devoiced in mora.flags:
