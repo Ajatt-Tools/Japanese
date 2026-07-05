@@ -214,7 +214,7 @@
     "graph_font_name": "Noto Sans, Noto Sans CJK JP, IPAexGothic, IPAPGothic, IPAGothic, Yu Gothic, Sans"
   },
   "pitch_artist": {
-    "last_inserted_text": "きょう;1 は | てんき;1 が | いい;1 です",
+    "last_inserted_text": "きょう;1 は | てんき;1 が いい;1 です",
     "last_save_location": "graph.svg",
     "separator_sentences": "<br>",
     "separator_expression_graphs": "\n\n"
