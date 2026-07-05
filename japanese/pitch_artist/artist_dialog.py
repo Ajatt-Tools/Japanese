@@ -27,6 +27,7 @@ from ..helpers.webview_utils import (
     PITCH_GRAPH_CSS_FILE_NAME,
 )
 from ..widgets.addon_opts import (
+    AJTPlainTextEdit,
     AllowedRange,
     AllowedRangeDouble,
     PxDoubleNarrowSpinBox,
@@ -68,19 +69,14 @@ def head_content() -> str:
     return '<meta charset="UTF-8" />'
 
 
-class GraphCodeEdit(QTextEdit):
+class GraphCodeEdit(AJTPlainTextEdit):
     """A text editor that triggers graph updates on Ctrl+Enter."""
 
     settings_changed = pyqtSignal()
-    font_size: int = 16
+    _font_size: int = 16
 
     def __init__(self) -> None:
         super().__init__()
-        font = self.font()
-        font.setStyleHint(QFont.StyleHint.Monospace)
-        font.setFamilies(MONO_FONT_FAMILIES)
-        font.setPixelSize(self.font_size)
-        self.setFont(font)
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
         """Handle Ctrl+Enter to trigger graph update."""
@@ -244,7 +240,6 @@ class PitchArtistDialog(AnkiSaveAndRestoreGeomDialog):
         self._text_edit.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum)
         self._text_edit.setMaximumHeight(400)
         self._text_edit.setMinimumHeight(50)
-        self._text_edit.setAcceptRichText(False)
         self._text_edit.adjustSize()
         self._text_edit.setPlainText(self._cfg.pitch_artist.last_inserted_text)
 

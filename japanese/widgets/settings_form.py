@@ -28,6 +28,7 @@ from ..helpers.sakura_client import AddDefBehavior, DictName, SearchType
 from ..pitch_accents.basic_types import PitchType
 from ..pitch_accents.styles import HTMLPitchPatternStyle
 from .addon_opts import (
+    AJTPlainTextEdit,
     AllowedRange,
     AllowedRangeDouble,
     NarrowLineEdit,
@@ -410,7 +411,7 @@ class SvgSettingsForm(MultiColumnSettingsForm):
 
         # Reading format selector.
         self._widgets.reading_format = EnumSelectCombo(initial_value=self._config.reading_format)
-        self._widgets.graph_font_name = NarrowLineEdit(self._config.graph_font_name)
+        self._widgets.graph_font_name = AJTPlainTextEdit(initial_value=self._config.graph_font_name)
 
         # dy/dx are allowed to be negative.
         self._widgets.text_dx = PxNarrowSpinBox(

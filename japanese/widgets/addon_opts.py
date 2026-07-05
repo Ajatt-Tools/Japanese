@@ -12,15 +12,15 @@ from ..helpers.consts import CFG_WORD_SEP
 NARROW_WIDGET_MAX_WIDTH = 96
 
 
-class PlainTextEdit(QTextEdit):
-    _min_height = 32
-    _font_size = 16
+class AJTPlainTextEdit(QPlainTextEdit):
+    _min_height: int = 32
+    _font_size: int = 14
 
-    def __init__(self, parent: QWidget | None = None) -> None:
+    def __init__(self, parent: QWidget | None = None, initial_value: str = "") -> None:
         super().__init__(parent)
-        self.setAcceptRichText(False)
         self.setMinimumHeight(self._min_height)
         self._adjust_font_size()
+        self.set_text(initial_value)
 
     def _adjust_font_size(self) -> None:
         font = self.font()
@@ -33,7 +33,7 @@ class PlainTextEdit(QTextEdit):
         self.setPlainText(text)
 
 
-class WordsEdit(PlainTextEdit):
+class WordsEdit(AJTPlainTextEdit):
     def __init__(self, initial_values: Sequence[str], parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setPlaceholderText("Comma-separated list of words...")

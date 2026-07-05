@@ -42,8 +42,11 @@ def change_event(widget: QWidget) -> pyqtBoundSignal:
         return widget.stateChanged
     elif isinstance(widget, QComboBox):
         return widget.currentIndexChanged
+    elif isinstance(widget, QPlainTextEdit):
+        # https://doc.qt.io/qt-6/qplaintextedit.html#textChanged
+        return widget.textChanged
     else:
-        raise ValueError("unknown type")
+        raise ValueError(f"unknown type: {type(widget).__name__}")
 
 
 def get_from_widget(widget: QWidget) -> Union[bool, str, int, float]:
@@ -66,6 +69,8 @@ def get_from_widget(widget: QWidget) -> Union[bool, str, int, float]:
         return widget.value()
     elif isinstance(widget, WordsEdit):
         return widget.as_text()
+    elif isinstance(widget, QPlainTextEdit):
+        return widget.toPlainText()
     else:
         raise ValueError(f"Don't know how to handle widget of type {type(widget).__name__}.")
 
