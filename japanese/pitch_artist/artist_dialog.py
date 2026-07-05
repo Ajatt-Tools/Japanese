@@ -11,10 +11,9 @@ from typing import Any, cast
 
 from aqt import gui_hooks, mw
 from aqt.qt import *
-from aqt.utils import disable_help_button, showInfo, tooltip
+from aqt.utils import disable_help_button, showInfo, tooltip, show_critical
 from aqt.webview import AnkiWebView
 
-from ..helpers.regex import RE_SPACES
 from ..ajt_common.about_menu import menu_root_entry
 from ..ajt_common.enum_select_combo import EnumSelectCombo
 from ..ajt_common.restore_geom_dialog import AnkiSaveAndRestoreGeomDialog
@@ -23,6 +22,7 @@ from ..config_view import JapaneseConfig, SvgGraphReadingFormat, get_global_conf
 from ..helpers.consts import ADDON_NAME
 from ..helpers.file_ops import find_file_in_parents
 from ..helpers.misc import media_strip
+from ..helpers.regex import RE_SPACES
 from ..helpers.webview_utils import (
     PITCH_GRAPH_CSS_FILE_NAME,
 )
@@ -146,7 +146,6 @@ class GraphSettingsWidget(QWidget):
         set_from_cfg(self._widgets.include_text, self._cfg.svg_graphs.include_text)
 
 
-
 def inline_css_code(code: str) -> str:
     """Collapse multi-line code into a single line with normalized whitespace."""
     return re.sub(RE_SPACES, " ", code.replace("\n", " ").strip())
@@ -176,6 +175,10 @@ def get_webview(parent: QWidget) -> PitchAccentsWebView:
         # Anki isn't running.
         return NoAnkiPitchAccentsWebView(parent=parent)
     return AnkiPitchAccentsWebView(parent=parent, title=ACTION_NAME)
+
+
+def inject_css_into_svg(graph: str) -> str:
+    return graph.replace("</svg>", inline_css_code(graphs_inline_css_style_tag()) + "</svg>")
 
 
 class PitchArtistDialog(AnkiSaveAndRestoreGeomDialog):
@@ -292,13 +295,9 @@ class PitchArtistDialog(AnkiSaveAndRestoreGeomDialog):
         if not name:
             tooltip("Aborted.")
             return
-        contents = (
-            graph.replace("</svg>", inline_css_code(graphs_inline_css_style_tag()) + "</svg>")
-            if self._graph_settings_dialog.inject_css_into_files
-            else graph
-        )
+        graph = inject_css_into_svg(graph) if self._graph_settings_dialog.inject_css_into_files else graph
         with open(name, "w", encoding="utf8") as of:
-            of.write(contents)
+            of.write(graph)
         self._cfg.pitch_artist.last_save_location = pathlib.Path(name).resolve()
         self._cfg.write_config()
 
@@ -307,8 +306,13 @@ class PitchArtistDialog(AnkiSaveAndRestoreGeomDialog):
         if not self._graphs_list:
             return
         sep = self._cfg.pitch_artist.separator_expression_graphs
+        graphs = (
+            [inject_css_into_svg(graph) for graph in self._graphs_list]
+            if self._graph_settings_dialog.inject_css_into_files
+            else self._graphs_list
+        )
         if clip := QApplication.clipboard():
-            clip.setText(sep.join(self._graphs_list))
+            clip.setText(sep.join(graphs))
 
     def show(self) -> None:
         """Show the dialog, restore saved geometry, and render initial graphs."""
@@ -328,7 +332,7 @@ class PitchArtistDialog(AnkiSaveAndRestoreGeomDialog):
             ("Update", lambda checked: self.update_graphs(), "Ctrl+Enter to update"),
             ("Ok", lambda checked: self.accept(), "Accept and close the dialog"),
             (
-                "Copy HTML to Clipboard",
+                "Copy SVG to Clipboard",
                 lambda checked: self.copy_graphs_as_simple_str(),
                 "Copy the graphs to the system clipboard",
             ),
