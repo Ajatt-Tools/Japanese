@@ -5,32 +5,44 @@ from collections.abc import Sequence
 
 from aqt.qt import *
 
+from ..ajt_common.monospace_line_edit import MONO_FONT_FAMILIES
 from ..config_view import split_cfg_words
 from ..helpers.consts import CFG_WORD_SEP
 
 NARROW_WIDGET_MAX_WIDTH = 96
 
 
-class WordsEdit(QTextEdit):
+class PlainTextEdit(QTextEdit):
     _min_height = 32
     _font_size = 16
 
-    def __init__(self, initial_values: Sequence[str]) -> None:
-        super().__init__()
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
         self.setAcceptRichText(False)
-        self.set_values(initial_values)
         self.setMinimumHeight(self._min_height)
         self._adjust_font_size()
-        self.setPlaceholderText("Comma-separated list of words...")
 
     def _adjust_font_size(self) -> None:
         font = self.font()
+        font.setStyleHint(QFont.StyleHint.Monospace)
+        font.setFamilies(MONO_FONT_FAMILIES)
         font.setPixelSize(self._font_size)
         self.setFont(font)
 
+    def set_text(self, text: str) -> None:
+        self.setPlainText(text)
+
+
+class WordsEdit(PlainTextEdit):
+    def __init__(self, initial_values: Sequence[str], parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.setPlaceholderText("Comma-separated list of words...")
+        self.set_values(initial_values)
+
     def set_values(self, values: Sequence[str]) -> None:
-        if values:
-            self.setPlainText(CFG_WORD_SEP.join(dict.fromkeys(values)))
+        if not values:
+            return
+        self.set_text(CFG_WORD_SEP.join(dict.fromkeys(values)))
 
     def as_text(self) -> str:
         return CFG_WORD_SEP.join(split_cfg_words(self.toPlainText().replace(" ", "").replace("\n", CFG_WORD_SEP)))
