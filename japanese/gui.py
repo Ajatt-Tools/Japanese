@@ -741,13 +741,13 @@ class SettingsDialog(AnkiSaveAndRestoreGeomDialog, MgrPropMixIn):
 
 
 def add_settings_action(root_menu: QMenu) -> None:
-    menu_action = QAction("Japanese Options...", root_menu)
+    menu_action = QAction("🇯🇵 Japanese Options...", root_menu)
     qconnect(menu_action.triggered, lambda: SettingsDialog(mw))
     root_menu.addAction(menu_action)
 
 
 def add_deck_download_action(root_menu: QMenu) -> None:
-    menu_action = QAction("Download example deck", root_menu)
+    menu_action = QAction("🗂️ Download example deck", root_menu)
     qconnect(menu_action.triggered, lambda: openLink(EXAMPLE_DECK_ANKIWEB_URL))
     root_menu.addAction(menu_action)
 

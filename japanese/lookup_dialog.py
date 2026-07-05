@@ -166,7 +166,7 @@ def on_lookup_pronunciation(parent: QWidget, text: str) -> None:
 def setup_mw_lookup_action(root_menu: QMenu) -> None:
     """Add a main window entry"""
     assert mw
-    action = QAction(ACTION_NAME, root_menu)
+    action = QAction(f"🔍 {ACTION_NAME}", root_menu)
     qconnect(action.triggered, lambda: on_lookup_pronunciation(mw, mw.web.selectedText()))
     if shortcut := cfg.pitch_accent.lookup_shortcut:
         action.setShortcut(shortcut)
