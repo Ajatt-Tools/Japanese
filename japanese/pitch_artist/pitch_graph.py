@@ -233,7 +233,7 @@ def make_section(raw_section: str, cfg: JapaneseConfig) -> Section:
     moras = prepare_moras(sdict.word, cfg)
     accent = split_accent(sdict.accent)
     role = determine_role(sdict, moras, accent)
-    is_particle = bool(accent.is_particle)
+    is_particle = bool(accent.is_particle) or role == Role.particle
     if is_particle:
         moras = adjust_ha_wa(moras)
     return Section(
