@@ -47,21 +47,12 @@ class SvgPitchGraphMaker:
     def assemble_txt_content(self, mora_txt: list[Quark | str]) -> str:
         return "".join(self._convert_kana(txt, self._opts.reading_format) for txt in mora_txt)
 
-    def make_text_element(self, text: str, pos: Point, class_name: str, dx: int) -> str:
-        """Create a text element from preformatted text content and CSS classes."""
-        return (
-            f'<text{class_name} fill="black" '
-            f'font-size="{self._opts.font_size:.1f}px" '
-            f'letter-spacing="{self._opts.letter_spacing:.1f}px" '
-            f'x="{pos.x:.0f}" y="{pos.y:.0f}" dx="{dx:.0f}">{text}</text>'
-        )
-
     def make_text(self, mora: Mora, pos: Point, dx: int) -> str:
         """
         Create a text element with the mora inside.
         """
         assert not mora.is_trailing()
-        return self.make_text_element(self.assemble_txt_content(mora.txt), pos, append_class_name(mora.flags), dx)
+        return self._renderer.make_text_element(self.assemble_txt_content(mora.txt), pos, append_class_name(mora.flags), dx)
 
     def calc_svg_width(self, moras: list[Mora]) -> int:
         return len(moras) * self._opts.x_step + self._opts.graph_horizontal_padding * 2

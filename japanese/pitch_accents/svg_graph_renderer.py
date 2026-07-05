@@ -49,3 +49,12 @@ class SvgGraphRenderer:
                 f'stroke-width="{self._opts.devoiced_circle_width:.2f}" rx="{self._opts.devoiced_circle_radius:.2f}" '
                 f'stroke-dasharray="{self._opts.devoiced_stroke_dasharray}" />'
             )
+
+    def make_text_element(self, text: str, pos: Point, class_attr: str, dx: int) -> str:
+        """Create an SVG text element from preformatted text content and class attributes."""
+        return (
+            f'<text{class_attr} fill="black" '
+            f'font-size="{self._opts.font_size:.1f}px" '
+            f'letter-spacing="{self._opts.letter_spacing:.1f}px" '
+            f'x="{pos.x:.0f}" y="{pos.y:.0f}" dx="{dx:.0f}">{text}</text>'
+        )
