@@ -7,6 +7,7 @@ from typing import TypeVar
 
 from anki.utils import html_to_text_line
 from aqt import mw
+
 from .tokens import RE_FLAGS
 
 T = TypeVar("T")

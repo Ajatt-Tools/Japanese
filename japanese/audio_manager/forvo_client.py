@@ -87,7 +87,6 @@ class ForvoFilenameBuilder:
 RE_FIND_USERNAME = re.compile(r"Pronunciation by(?P<username>[^()]+)")
 RE_FIND_GENDER = re.compile(r"\((?P<gender>Male|Female)")
 RE_FIND_COUNTRY = re.compile(r"\((?:Male|Female) from (?P<country>[^()]+)")
-RE_SPACES = re.compile(r"\s+")
 
 
 def find_username(result: PageElement) -> str:

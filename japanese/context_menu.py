@@ -3,7 +3,6 @@
 
 import abc
 import re
-from typing import Any, Optional
 
 import aqt
 from aqt import gui_hooks
@@ -12,6 +11,7 @@ from aqt.qt import *
 from aqt.utils import tooltip
 from aqt.webview import AnkiWebView
 
+from .helpers.regex import RE_SPACES
 from .config_view import config_view as cfg
 from .helpers.goldendict_lookups import GD_PROGRAM_NAME, lookup_goldendict
 from .helpers.half_kata import to_half_width_katakana
@@ -141,13 +141,12 @@ class BrowserSearch(ContextMenuAction):
 class RemoveSpaces(ContextMenuAction):
     key = "remove_spaces"
     label = "Remove all spaces"
-    _re_space = re.compile(r"\s+", flags=re.MULTILINE | re.IGNORECASE)
 
     def action(self, text: str) -> str:
         """
         Remove all spaces from the text.
         """
-        return re.sub(self._re_space, "", text)
+        return re.sub(RE_SPACES, "", text)
 
 
 def add_editor_context_menu_items(webview: EditorWebView, menu: QMenu) -> None:

@@ -14,9 +14,9 @@ from aqt.qt import *
 from aqt.utils import disable_help_button, showInfo, tooltip
 from aqt.webview import AnkiWebView
 
+from ..helpers.regex import RE_SPACES
 from ..ajt_common.about_menu import menu_root_entry
 from ..ajt_common.enum_select_combo import EnumSelectCombo
-from ..ajt_common.monospace_line_edit import MONO_FONT_FAMILIES
 from ..ajt_common.restore_geom_dialog import AnkiSaveAndRestoreGeomDialog
 from ..ajt_common.utils import ui_translate
 from ..config_view import JapaneseConfig, SvgGraphReadingFormat, get_global_config
@@ -146,9 +146,10 @@ class GraphSettingsWidget(QWidget):
         set_from_cfg(self._widgets.include_text, self._cfg.svg_graphs.include_text)
 
 
+
 def inline_css_code(code: str) -> str:
     """Collapse multi-line code into a single line with normalized whitespace."""
-    return re.sub(r" +", " ", code.replace("\n", " ").strip())
+    return re.sub(RE_SPACES, " ", code.replace("\n", " ").strip())
 
 
 def format_graph_as_html(graph: str, index: int) -> str:

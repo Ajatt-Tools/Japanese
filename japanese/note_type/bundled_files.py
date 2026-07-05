@@ -5,6 +5,7 @@ import os.path
 import re
 import typing
 
+from ..helpers.regex import RE_SPACES
 from ..helpers.consts import ADDON_NAME
 from .consts import (
     AJT_JAPANESE_CSS_PATH,
@@ -18,7 +19,6 @@ from .consts import (
 RE_VERSION_STR = re.compile(r"AJT Japanese (?P<type>JS|CSS) (?P<version>\d+\.\d+\.\d+\.\d+)\n")
 RE_JS_COMMENT = re.compile(r"\s*//.*?\n")
 RE_MULTILINE_JS_CSS_COMMENT = re.compile(r"/\*.*?\*/")
-RE_ANY_WHITESPACE = re.compile(r"\s+")
 
 
 # Matches double-quoted strings, single-quoted strings, or /* ... */ comments.
@@ -87,14 +87,14 @@ def inline_bundled_js(vf: VersionedFile) -> str:
     js_code = re.sub(RE_JS_COMMENT, " ", vf.text_content)
     js_code = js_code.replace("\n", " ")
     js_code = re.sub(RE_MULTILINE_JS_CSS_COMMENT, " ", js_code)
-    js_code = re.sub(RE_ANY_WHITESPACE, " ", js_code)
+    js_code = re.sub(RE_SPACES, " ", js_code)
     return wrap_bundled_js(js_code.strip(), vf.version_as_str())
 
 
 def inline_bundled_css(vf: VersionedFile) -> str:
     css_code = vf.text_content.replace("\n", " ")
     css_code = re.sub(RE_CSS_STRING_OR_COMMENT, replace_css_comments, css_code)
-    css_code = re.sub(RE_ANY_WHITESPACE, " ", css_code)
+    css_code = re.sub(RE_SPACES, " ", css_code)
     return wrap_bundled_css(css_code.strip(), vf.version_as_str())
 
 
