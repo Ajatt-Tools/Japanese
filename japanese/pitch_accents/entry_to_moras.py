@@ -55,6 +55,11 @@ class MoraSequence(typing.NamedTuple):
     pitch_type: PitchType
     entry: FormattedEntry
 
+    def class_name(self) -> str:
+        # Note: when a word is a compound with two accents, e.g. 二十四時間 with accents 二十(1) and 四時間(2),
+        # class name will be "unknown".
+        return self.pitch_type.name
+
 
 def html_notation_to_moras(html_notation: str) -> list[Mora]:
     moras: list[Mora] = []
