@@ -11,10 +11,10 @@ from aqt.qt import *
 from aqt.utils import tooltip
 from aqt.webview import AnkiWebView
 
-from .helpers.regex import RE_SPACES
 from .config_view import config_view as cfg
 from .helpers.goldendict_lookups import GD_PROGRAM_NAME, lookup_goldendict
 from .helpers.half_kata import to_half_width_katakana
+from .helpers.regex import RE_SPACES
 from .mecab_controller.kana_conv import to_hiragana, to_katakana
 from .mecab_controller.unify_readings import literal_pronunciation
 from .reading import generate_furigana

@@ -8,7 +8,8 @@ from enum import Enum
 from ..config_view import JapaneseConfig, SvgGraphReadingFormat
 from ..mecab_controller import to_hiragana, to_katakana
 from ..pitch_accents.entry_to_moras import PitchLevel
-from ..pitch_accents.svg_graphs import Line, Path, Point, SvgPitchGraphMaker, make_group
+from ..pitch_accents.svg_components import Line, Point, make_group
+from ..pitch_accents.svg_graphs import Path, SvgPitchGraphMaker
 from .split import (
     DEVOICED_PREFIX,
     GHOST_PARTICLE,

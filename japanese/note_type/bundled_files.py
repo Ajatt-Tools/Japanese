@@ -5,8 +5,8 @@ import os.path
 import re
 import typing
 
-from ..helpers.regex import RE_SPACES
 from ..helpers.consts import ADDON_NAME
+from ..helpers.regex import RE_SPACES
 from .consts import (
     AJT_JAPANESE_CSS_PATH,
     AJT_JAPANESE_JS_PATH,

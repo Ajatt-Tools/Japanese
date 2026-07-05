@@ -2,11 +2,12 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import pytest
+from pitch_accents.svg_components import Point
 
 from japanese.config_view import SvgPitchGraphOptionsConfigView
 from japanese.pitch_accents.common import FormattedEntry
 from japanese.pitch_accents.entry_to_moras import Mora, MoraFlag, PitchLevel
-from japanese.pitch_accents.svg_graphs import Point, SvgPitchGraphMaker
+from japanese.pitch_accents.svg_graphs import SvgPitchGraphMaker
 from playground.utils import NoAnkiConfigView
 from tests import DATA_DIR
 
