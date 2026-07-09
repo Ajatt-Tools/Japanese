@@ -42,5 +42,5 @@ class SvgGraph(typing.NamedTuple):
     """A normalized pitch graph independent of the source notation domain."""
 
     sections: Sequence[SvgGraphSection]
-    outer_class_name: str | None = None
+    outer_class_name: str = ""
     section_grouped: bool = False
