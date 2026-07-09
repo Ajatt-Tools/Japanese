@@ -84,7 +84,7 @@ EXPECTED_SEQUENCES: list[list[ExpectedSection]] = [
         ExpectedSection("つかう", "heiban", 0, False, 3, ["low", "high", "high"]),
         ExpectedSection(",", "empty", -1, False, 0, []),
         ExpectedSection("つかった", "heiban", 0, False, 4, ["low", "high", "high", "high"]),
-        ExpectedSection("-", "particle", -2, False, 1, ["high"]),
+        ExpectedSection("-", "particle", -2, True, 1, ["high"]),
     ],
     # seq 4: 稼[かせ]いで;k2
     [ExpectedSection("稼[かせ]いで", "kifuku", 2, False, 4, ["low", "high", "low", "low"])],
@@ -97,31 +97,31 @@ EXPECTED_SEQUENCES: list[list[ExpectedSection]] = [
     # seq 8: 君[dきdみ]; dの 嘘[dうdそ];1 dを.
     [
         ExpectedSection("君[きみ]", "heiban", 0, False, 2, ["low", "high"]),
-        ExpectedSection("の", "particle", -2, False, 1, ["high"]),
+        ExpectedSection("の", "particle", -2, True, 1, ["high"]),
         ExpectedSection("嘘[うそ]", "atamadaka", 1, False, 2, ["high", "low"]),
-        ExpectedSection("を", "particle", -1, False, 1, ["low"]),
+        ExpectedSection("を", "particle", -1, True, 1, ["low"]),
     ],
     # seq 9: 自分[じぶん]; じゃ | できない;k2.
     [
         ExpectedSection("自分[じぶん]", "heiban", 0, False, 3, ["low", "high", "high"]),
-        ExpectedSection("じゃ", "particle", -2, False, 1, ["high"]),
+        ExpectedSection("じゃ", "particle", -2, True, 1, ["high"]),
         ExpectedSection("|", "empty", -1, False, 0, []),
         ExpectedSection("できない", "kifuku", 2, False, 4, ["low", "high", "low", "low"]),
     ],
     # seq 10: ひとり;1-
     [
         ExpectedSection("ひとり", "atamadaka", 1, False, 3, ["high", "low", "low"]),
-        ExpectedSection("-", "particle", -1, False, 1, ["low"]),
+        ExpectedSection("-", "particle", -1, True, 1, ["low"]),
     ],
     # seq 11: ひとり;2-
     [
         ExpectedSection("ひとり", "nakadaka", 2, False, 3, ["low", "high", "low"]),
-        ExpectedSection("-", "particle", -1, False, 1, ["low"]),
+        ExpectedSection("-", "particle", -1, True, 1, ["low"]),
     ],
     # seq 12: ひとり;3-
     [
         ExpectedSection("ひとり", "odaka", 3, False, 3, ["low", "high", "high"]),
-        ExpectedSection("-", "particle", -1, False, 1, ["low"]),
+        ExpectedSection("-", "particle", -1, True, 1, ["low"]),
     ],
     # seq 13: よねん; ぐらい;pa
     [
@@ -142,7 +142,7 @@ EXPECTED_SVG_STRUCTURE: list[ExpectedSvgStructure] = [
         5,
         6,
         [
-            "paths",
+            "lines",
             "nakadaka",
             "atamadaka",
             "connector",
@@ -158,14 +158,14 @@ EXPECTED_SVG_STRUCTURE: list[ExpectedSvgStructure] = [
         6,
         4,
         6,
-        ["paths", "atamadaka", "atamadaka", "circles", "atamadaka", "atamadaka", "text", "atamadaka", "atamadaka"],
+        ["lines", "atamadaka", "atamadaka", "circles", "atamadaka", "atamadaka", "text", "atamadaka", "atamadaka"],
     ),
     ExpectedSvgStructure(
         6,
         5,
         6,
         [
-            "paths",
+            "lines",
             "atamadaka",
             "atamadaka",
             "connector",
@@ -182,7 +182,7 @@ EXPECTED_SVG_STRUCTURE: list[ExpectedSvgStructure] = [
         6,
         7,
         [
-            "paths",
+            "lines",
             "heiban",
             "heiban",
             "particle",
@@ -197,16 +197,16 @@ EXPECTED_SVG_STRUCTURE: list[ExpectedSvgStructure] = [
             "particle",
         ],
     ),
-    ExpectedSvgStructure(4, 3, 4, ["paths", "kifuku", "circles", "kifuku", "text", "kifuku"]),
-    ExpectedSvgStructure(4, 3, 4, ["paths", "heiban", "circles", "heiban", "text", "heiban"]),
-    ExpectedSvgStructure(4, 3, 4, ["paths", "atamadaka", "circles", "atamadaka", "text", "atamadaka"]),
-    ExpectedSvgStructure(4, 3, 4, ["paths", "nakadaka", "circles", "nakadaka", "text", "nakadaka"]),
+    ExpectedSvgStructure(4, 3, 4, ["lines", "kifuku", "circles", "kifuku", "text", "kifuku"]),
+    ExpectedSvgStructure(4, 3, 4, ["lines", "heiban", "circles", "heiban", "text", "heiban"]),
+    ExpectedSvgStructure(4, 3, 4, ["lines", "atamadaka", "circles", "atamadaka", "text", "atamadaka"]),
+    ExpectedSvgStructure(4, 3, 4, ["lines", "nakadaka", "circles", "nakadaka", "text", "nakadaka"]),
     ExpectedSvgStructure(
         12,
         5,
         6,
         [
-            "paths",
+            "lines",
             "heiban",
             "particle",
             "connector",
@@ -231,7 +231,7 @@ EXPECTED_SVG_STRUCTURE: list[ExpectedSvgStructure] = [
         6,
         8,
         [
-            "paths",
+            "lines",
             "heiban",
             "particle",
             "connector",
@@ -251,7 +251,7 @@ EXPECTED_SVG_STRUCTURE: list[ExpectedSvgStructure] = [
         3,
         3,
         [
-            "paths",
+            "lines",
             "atamadaka",
             "particle",
             "connector",
@@ -268,7 +268,7 @@ EXPECTED_SVG_STRUCTURE: list[ExpectedSvgStructure] = [
         3,
         3,
         [
-            "paths",
+            "lines",
             "nakadaka",
             "particle",
             "connector",
@@ -284,14 +284,14 @@ EXPECTED_SVG_STRUCTURE: list[ExpectedSvgStructure] = [
         4,
         3,
         3,
-        ["paths", "odaka", "particle", "connector", "circles", "odaka", "particle", "text", "odaka", "particle"],
+        ["lines", "odaka", "particle", "connector", "circles", "odaka", "particle", "text", "odaka", "particle"],
     ),
     ExpectedSvgStructure(
         6,
         5,
         6,
         [
-            "paths",
+            "lines",
             "heiban",
             "particle atamadaka",
             "connector",
@@ -308,7 +308,7 @@ EXPECTED_SVG_STRUCTURE: list[ExpectedSvgStructure] = [
         5,
         6,
         [
-            "paths",
+            "lines",
             "heiban",
             "particle odaka",
             "connector",

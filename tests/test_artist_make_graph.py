@@ -118,6 +118,28 @@ class TestGhostParticle:
         assert len(extract_text_labels(svg)) == 3
 
 
+class TestParticleCircleFallback:
+    """Particle circles use an inline fill="none" fallback when CSS is not injected."""
+
+    def test_particle_circles_have_fill_none(self, no_anki_config: NoAnkiConfigView) -> None:
+        gen = SvgPitchArtistGraphMaker(no_anki_config)
+        sequences = gen.make_sequences("よねん; ぐらい;pa")
+        svg = list(gen.make_graphs(sequences))[0]
+
+        particle_circles = re.findall(r'<g class="particle atamadaka"><circle[^>]+>', svg)
+        assert particle_circles
+        assert all('fill="none"' in circle for circle in particle_circles)
+
+    def test_normal_word_circles_remain_filled(self, no_anki_config: NoAnkiConfigView) -> None:
+        gen = SvgPitchArtistGraphMaker(no_anki_config)
+        sequences = gen.make_sequences("がっこう;0")
+        svg = list(gen.make_graphs(sequences))[0]
+
+        circles = re.findall(r"<circle[^>]+>", svg)
+        assert circles
+        assert all('fill="black"' in circle for circle in circles)
+
+
 class TestDevoicedMora:
     """Devoiced mora text elements have class='devoiced' and get devoiced circle markers."""
 

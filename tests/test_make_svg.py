@@ -2,11 +2,11 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import pytest
-from pitch_accents.svg_components import Point
 
 from japanese.config_view import SvgPitchGraphOptionsConfigView
 from japanese.pitch_accents.common import FormattedEntry
 from japanese.pitch_accents.entry_to_moras import Mora, MoraFlag, PitchLevel
+from japanese.pitch_accents.svg_components import Point
 from japanese.pitch_accents.svg_graphs import SvgPitchGraphMaker
 from playground.utils import NoAnkiConfigView
 from tests import DATA_DIR
@@ -100,3 +100,14 @@ def test_make_text_keeps_mora_api(no_anki_config: NoAnkiConfigView, mora: Mora, 
         == f'<text class="devoiced" fill="black" font-size="{svg_config.font_size:.1f}px" '
         f'letter-spacing="{svg_config.letter_spacing:.1f}px" x="1" y="2" dx="3">{expected_text}</text>'
     )
+
+
+def test_heiban_trailing_circle_has_fill_none(no_anki_config: NoAnkiConfigView) -> None:
+    """Heiban dictionary graphs add a trailing hollow circle for following particles."""
+    svg_config = SvgPitchGraphOptionsConfigView(no_anki_config)
+    svg_config.graph_font_name = "Noto Sans CJK JP"
+    maker = SvgPitchGraphMaker(options=svg_config)
+
+    svg = maker.make_graph(TEST_ENTRIES[0])
+
+    assert '<circle class="trail" fill="none" stroke="gray"' in svg
