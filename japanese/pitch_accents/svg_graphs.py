@@ -1,37 +1,20 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
-from ..config_view import SvgGraphReadingFormat, SvgPitchGraphOptionsConfigView
-from ..mecab_controller import to_katakana
-from ..mecab_controller.kana_conv import to_hiragana
+from ..config_view import SvgPitchGraphOptionsConfigView
 from .common import FormattedEntry
-from .entry_to_moras import (
-    Mora,
-    MoraFlag,
-    PitchLevel,
-    Quark,
-    entry_to_moras,
-)
+from .entry_to_moras import Mora, entry_to_moras
 from .svg_components import (
-    Path,
-    Point,
-    SvgColor,
     append_class_name,
-    make_group,
+    assemble_txt_content,
 )
 from .svg_graph_renderer import SvgGraphRenderer
+from .svg_graph_types import SvgGraph, SvgGraphMora, SvgGraphSection
 
 
 class SvgPitchGraphMaker:
     def __init__(self, options: SvgPitchGraphOptionsConfigView) -> None:
         self._opts = options
         self._renderer = SvgGraphRenderer(options)
-
-    def _quark_to_tspan(self, quark: Quark) -> str:
-        assert isinstance(quark, Quark)
-        return (
-            f'<tspan{append_class_name(quark.flags)} fill="{SvgColor.nasal.value}" '
-            f'dx="{self._opts.tspan_dx:.0f}">{quark.txt}</tspan>'
-        )
 
     def _convert_kana(self, text: Quark | str, reading_format: SvgGraphReadingFormat) -> str:
         """Convert a kana string according to the configured reading format."""

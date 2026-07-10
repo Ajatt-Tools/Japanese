@@ -5,8 +5,9 @@ import typing
 from collections.abc import Iterable
 from math import sqrt
 
-from ..config_view import SvgPitchGraphOptionsConfigView
-from .entry_to_moras import MoraFlag, mora_flags2class_name
+from ..config_view import SvgGraphReadingFormat, SvgPitchGraphOptionsConfigView
+from ..mecab_controller import to_hiragana, to_katakana
+from .entry_to_moras import Mora, MoraFlag, Quark, mora_flags2class_name
 
 
 @enum.unique
@@ -32,6 +33,13 @@ def attrs_circle(is_trailing: bool, is_particle: bool) -> str:
     if is_particle:
         return f'fill="none" stroke="{SvgColor.word.value}"'
     return f'fill="{SvgColor.word.value}" stroke="{SvgColor.word.value}"'
+
+
+def quark_to_tspan(quark: Quark, tspan_dx: int | float) -> str:
+    assert isinstance(quark, Quark)
+    return (
+        f'<tspan{append_class_name(quark.flags)} fill="{SvgColor.nasal.value}" dx="{tspan_dx:.0f}">{quark.txt}</tspan>'
+    )
 
 
 class Point(typing.NamedTuple):
