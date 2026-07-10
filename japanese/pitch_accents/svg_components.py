@@ -54,6 +54,10 @@ def mora_text_to_str(text: Quark | str, reading_format: SvgGraphReadingFormat, t
             return to_katakana(text)
 
 
+def assemble_txt_content(mora: Mora, reading_format: SvgGraphReadingFormat, tspan_dx: int | float) -> str:
+    return "".join(mora_text_to_str(txt, reading_format, tspan_dx) for txt in mora.txt)
+
+
 class Point(typing.NamedTuple):
     x: float
     y: float

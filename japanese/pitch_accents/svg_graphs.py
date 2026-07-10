@@ -16,9 +16,6 @@ class SvgPitchGraphMaker:
         self._opts = options
         self._renderer = SvgGraphRenderer(options)
 
-    def assemble_txt_content(self, mora_txt: list[Quark | str]) -> str:
-        return "".join(self._convert_kana(txt, self._opts.reading_format) for txt in mora_txt)
-
     def make_text(self, mora: Mora, pos: Point, dx: int) -> str:
         """
         Create a text element with the mora inside.
