@@ -32,6 +32,10 @@ class Mora:
     level: PitchLevel
     flags: MoraFlag
 
+    def dx_units(self) -> int:
+        # Note: Quark is a dataclass, not a subclass of str.
+        return sum(1 for char in self.txt if isinstance(char, str))
+
     def is_trailing(self) -> bool:
         if MoraFlag.trailing in self.flags:
             assert not self.txt
@@ -42,7 +46,7 @@ class Mora:
         """
         Return True if the mora has more than one base character. しゃ, しゅ, etc.
         """
-        return sum(1 for char in self.txt if not isinstance(char, Quark)) > 1
+        return self.dx_units() > 1
 
 
 class MoraSequence(typing.NamedTuple):
