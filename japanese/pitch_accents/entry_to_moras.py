@@ -36,6 +36,17 @@ class Mora:
         # Note: Quark is a dataclass, not a subclass of str.
         return sum(1 for char in self.txt if isinstance(char, str))
 
+    def svg_mora_flags(self) -> SvgMoraFlag:
+        flags = SvgMoraFlag(0)
+        if self.is_trailing():
+            flags |= SvgMoraFlag.trailing
+            flags |= SvgMoraFlag.text_hidden
+        if MoraFlag.devoiced in self.flags:
+            flags |= SvgMoraFlag.devoiced
+        if self.is_multi_char():
+            flags |= SvgMoraFlag.multi_char
+        return flags
+
     def is_trailing(self) -> bool:
         if MoraFlag.trailing in self.flags:
             assert not self.txt
