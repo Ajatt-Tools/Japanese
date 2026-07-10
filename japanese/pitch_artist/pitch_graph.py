@@ -2,14 +2,19 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 import dataclasses
 import enum
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from enum import Enum
 
 from ..config_view import JapaneseConfig, SvgGraphReadingFormat
 from ..mecab_controller import to_hiragana, to_katakana
-from ..pitch_accents.entry_to_moras import PitchLevel
-from ..pitch_accents.svg_components import Line, Point, make_group
-from ..pitch_accents.svg_graphs import Path, SvgPitchGraphMaker
+from ..pitch_accents.svg_graph_renderer import SvgGraphRenderer
+from ..pitch_accents.svg_graph_types import (
+    PitchLevel,
+    SvgGraph,
+    SvgGraphMora,
+    SvgGraphSection,
+    SvgMoraFlag,
+)
 from .split import (
     DEVOICED_PREFIX,
     GHOST_PARTICLE,

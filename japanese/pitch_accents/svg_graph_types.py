@@ -5,7 +5,11 @@ import enum
 import typing
 from collections.abc import Sequence
 
-from .entry_to_moras import PitchLevel
+
+@enum.unique
+class PitchLevel(enum.Enum):
+    low = "l"
+    high = "h"
 
 
 @enum.unique

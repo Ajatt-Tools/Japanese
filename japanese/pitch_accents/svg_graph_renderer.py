@@ -1,8 +1,12 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
-from config_view import SvgPitchGraphOptionsConfigView
 
-from .svg_components import Point, attrs_circle
+import typing
+from collections.abc import Sequence
+
+from ..config_view import SvgPitchGraphOptionsConfigView
+from .svg_components import Line, Path, Point, attrs_circle, make_group
+from .svg_graph_types import PitchLevel, SvgGraph, SvgGraphSection, SvgMoraFlag
 
 
 class SvgGraphRenderer:

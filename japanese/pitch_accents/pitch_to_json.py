@@ -9,10 +9,10 @@ from .entry_to_moras import (
     Mora,
     MoraFlag,
     MoraSequence,
-    PitchLevel,
     Quark,
     entry_to_moras,
 )
+from .svg_graph_types import PitchLevel
 
 
 class MoraOutputJson(typing.TypedDict):

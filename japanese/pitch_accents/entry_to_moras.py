@@ -10,12 +10,7 @@ from .basic_types import PitchType, pitch_type_from_pitch_num
 from .common import FormattedEntry, split_html_notation
 from .consts import SMALL_KANA_CHARS
 from .styles import SpecialSymbols, XmlTags
-
-
-@enum.unique
-class PitchLevel(enum.Enum):
-    low = "l"
-    high = "h"
+from .svg_graph_types import PitchLevel, SvgMoraFlag
 
 
 @enum.unique
