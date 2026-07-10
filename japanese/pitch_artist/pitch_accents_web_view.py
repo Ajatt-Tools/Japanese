@@ -62,7 +62,8 @@ class NoAnkiPitchAccentsWebView(NoAnkiWebView):
             body=graphs_as_html,
         )
 
-    def set_bridge_command(self, _func: Callable[[str], Any], _context: Any) -> None:
+    @staticmethod
+    def set_bridge_command(_func: Callable[[str], Any], _context: Any) -> None:
         print("set_bridge_command not implemented.")
 
     def zoom_in(self) -> None:
