@@ -42,6 +42,18 @@ def quark_to_tspan(quark: Quark, tspan_dx: int | float) -> str:
     )
 
 
+def mora_text_to_str(text: Quark | str, reading_format: SvgGraphReadingFormat, tspan_dx: int | float) -> str:
+    """Convert a kana string according to the configured reading format."""
+    if isinstance(text, Quark):
+        return quark_to_tspan(text, tspan_dx=tspan_dx)
+    assert isinstance(text, str), "text must be str"
+    match reading_format:
+        case SvgGraphReadingFormat.hiragana:
+            return to_hiragana(text)
+        case SvgGraphReadingFormat.katakana:
+            return to_katakana(text)
+
+
 class Point(typing.NamedTuple):
     x: float
     y: float
