@@ -7,7 +7,6 @@ from japanese.pitch_accents.common import FormattedEntry
 from japanese.pitch_accents.entry_to_moras import (
     Mora,
     MoraFlag,
-    PitchLevel,
     Quark,
     entry_to_moras,
 )
@@ -17,6 +16,7 @@ from japanese.pitch_accents.pitch_to_json import (
     mora_sequence_to_dict,
     mora_to_dict,
 )
+from japanese.pitch_accents.svg_graph_types import PitchLevel
 
 
 @pytest.mark.parametrize(

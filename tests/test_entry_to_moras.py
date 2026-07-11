@@ -9,13 +9,13 @@ from japanese.pitch_accents.common import FormattedEntry, split_html_notation
 from japanese.pitch_accents.entry_to_moras import (
     Mora,
     MoraFlag,
-    PitchLevel,
     Quark,
     entry_to_moras,
     html_notation_to_moras,
     mora_flags2class_name,
 )
 from japanese.pitch_accents.styles import SpecialSymbols
+from japanese.pitch_accents.svg_graph_types import PitchLevel
 
 CIRCLE = SpecialSymbols.nasal_dakuten
 

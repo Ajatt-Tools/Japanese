@@ -5,8 +5,14 @@ import pytest
 
 from japanese.config_view import SvgPitchGraphOptionsConfigView
 from japanese.pitch_accents.common import FormattedEntry
-from japanese.pitch_accents.entry_to_moras import Mora, MoraFlag, PitchLevel
-from japanese.pitch_accents.svg_components import Point
+from japanese.pitch_accents.entry_to_moras import Mora, MoraFlag
+from japanese.pitch_accents.svg_components import (
+    Point,
+    append_class_name,
+    assemble_txt_content,
+)
+from japanese.pitch_accents.svg_graph_renderer import SvgGraphRenderer
+from japanese.pitch_accents.svg_graph_types import PitchLevel
 from japanese.pitch_accents.svg_graphs import SvgPitchGraphMaker
 from playground.utils import NoAnkiConfigView
 from tests import DATA_DIR
@@ -93,10 +99,11 @@ def test_make_svg(no_anki_config: NoAnkiConfigView, formatted_entry: FormattedEn
 def test_make_text_keeps_mora_api(no_anki_config: NoAnkiConfigView, mora: Mora, expected_text: str) -> None:
     """Public text rendering still accepts a Mora, not pre-rendered text."""
     svg_config = SvgPitchGraphOptionsConfigView(no_anki_config)
-    maker = SvgPitchGraphMaker(options=svg_config)
-
+    maker = SvgGraphRenderer(options=svg_config)
+    text = assemble_txt_content(mora, reading_format=svg_config.reading_format, tspan_dx=svg_config.tspan_dx)
+    assert not mora.is_trailing()
     assert (
-        maker.make_text(mora, Point.new(x=1, y=2), dx=3)
+        maker.make_text_element(text, Point.new(x=1, y=2), class_attr=append_class_name(mora.flags), dx=3)
         == f'<text class="devoiced" fill="black" font-size="{svg_config.font_size:.1f}px" '
         f'letter-spacing="{svg_config.letter_spacing:.1f}px" x="1" y="2" dx="3">{expected_text}</text>'
     )
