@@ -401,7 +401,7 @@ class SvgPitchArtistGraphMaker:
         Returns None if the sequence contains no renderable sections.
         """
         sequence = filter_empty_moras(sequence)
-        if not any(s.moras for s in sequence):
+        if not any(section.moras for section in sequence):
             return None
 
         height_high = self._cfg.svg_graphs.size_unit
