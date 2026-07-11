@@ -10,14 +10,23 @@ from japanese.ajt_common.color_picker import ColorEditPicker
 from japanese.ajt_common.enum_select_combo import EnumSelectCombo
 from japanese.ajt_common.grab_key import ShortCutGrabButton
 from japanese.config_view import SvgGraphReadingFormat
-from japanese.widgets.addon_opts import WordsEdit
+from japanese.widgets.addon_opts import (
+    AJTPlainTextEdit,
+    NarrowLineEdit,
+    PxDoubleNarrowSpinBox,
+    PxNarrowSpinBox,
+    StrokeDisarrayLineEdit,
+    WordsEdit,
+)
 from japanese.widgets.enum_selector import FlagSelectCombo
+from japanese.widgets.settings_form import SvgSettingsForm
 from japanese.widgets.widgets_to_config_dict import (
     as_config_dict,
     change_event,
     get_from_widget,
     set_from_cfg,
 )
+from playground.utils import NoAnkiConfigView
 
 
 @enum.unique
@@ -53,6 +62,11 @@ class TestSetFromCfg:
         widget.addItems(["a", "b", "c"])
         set_from_cfg(widget, "b")
         assert get_from_widget(widget) == "b"
+
+    def test_set_plain_text_edit(self) -> None:
+        widget = QPlainTextEdit()
+        set_from_cfg(widget, "Noto Sans")
+        assert get_from_widget(widget) == "Noto Sans"
 
     def test_unknown_type_raises(self) -> None:
         widget = QWidget()
@@ -114,6 +128,11 @@ class TestGetFromWidget:
         widget = WordsEdit(initial_values=["word1", "word2"])
         assert get_from_widget(widget) == "word1,word2"
 
+    def test_plain_text_edit(self) -> None:
+        widget = QPlainTextEdit()
+        widget.setPlainText("hello world")
+        assert get_from_widget(widget) == "hello world"
+
 
 class TestChangeEvent:
     @pytest.mark.parametrize(
@@ -124,6 +143,7 @@ class TestChangeEvent:
             QLineEdit,
             QCheckBox,
             QComboBox,
+            QPlainTextEdit,
             lambda: EnumSelectCombo(enum_type=SvgGraphReadingFormat),
         ],
     )
@@ -166,3 +186,59 @@ class TestAsConfigDict:
             "color": "#00FF00",
             "words": "a,b",
         }
+
+
+class TestSvgGraphNumerics:
+    def test_numerics_exclude_boolean_keys(self, no_anki_config: NoAnkiConfigView) -> None:
+        numeric_keys = {item.cfg_key for item in no_anki_config.svg_graphs.numerics()}
+        bool_keys = set(no_anki_config.svg_graphs.bool_keys())
+        assert numeric_keys.isdisjoint(bool_keys)
+
+    def test_numerics_use_default_type_metadata(self, no_anki_config: NoAnkiConfigView) -> None:
+        numeric_values = {item.cfg_key: item for item in no_anki_config.svg_graphs.numerics()}
+        assert isinstance(numeric_values["graph_height"].default, int)
+        assert isinstance(numeric_values["graph_height"].value, int)
+        assert isinstance(numeric_values["circle_radius"].default, float)
+        assert isinstance(numeric_values["circle_radius"].value, float)
+
+
+class TestSvgSettingsForm:
+    def test_widget_types(self, no_anki_config: NoAnkiConfigView) -> None:
+        form = SvgSettingsForm(config=no_anki_config.svg_graphs)
+        widgets = form._widgets.__dict__
+
+        assert isinstance(widgets["include_text"], QCheckBox)
+        assert isinstance(widgets["inject_css_into_files"], QCheckBox)
+        assert isinstance(widgets["reading_format"], EnumSelectCombo)
+        assert isinstance(widgets["graph_font_name"], AJTPlainTextEdit)
+
+        for key in (
+            "graph_horizontal_padding",
+            "size_unit",
+            "x_step",
+            "text_dx",
+            "tspan_dx",
+            "graph_height",
+            "graph_visible_height",
+            "devoiced_circle_dy",
+        ):
+            assert isinstance(widgets[key], PxNarrowSpinBox)
+
+        for key in (
+            "stroke_width",
+            "circle_radius",
+            "font_size",
+            "letter_spacing",
+            "devoiced_circle_width",
+            "devoiced_circle_radius",
+            "devoiced_rectangle_padding",
+        ):
+            assert isinstance(widgets[key], PxDoubleNarrowSpinBox)
+
+        assert isinstance(widgets["devoiced_stroke_dasharray"], StrokeDisarrayLineEdit)
+        assert isinstance(widgets["stroke_dasharray"], StrokeDisarrayLineEdit)
+
+    def test_all_widgets_have_tooltips(self, no_anki_config: NoAnkiConfigView) -> None:
+        form = SvgSettingsForm(config=no_anki_config.svg_graphs)
+        missing_tooltips = [key for key, widget in form._widgets.__dict__.items() if not widget.toolTip()]
+        assert missing_tooltips == []
