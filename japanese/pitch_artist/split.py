@@ -17,6 +17,8 @@ SEPARATORS = ["|", ",", "、"]
 SENT_HIDDEN = ["|", GHOST_PARTICLE]
 # All characters that break the pitch contour: separators, ghost particle, and commas.
 PITCH_BREAKS = SENT_HIDDEN + [",", "、"]
+# Indicates that the previous mora and the next mora should be connected with a dotted line.
+TAPE_CONNECTOR = ";"
 
 
 def split_multiple_pitch_notations(sequences: list[list[str]]) -> list[list[str]]:

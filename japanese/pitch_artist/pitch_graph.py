@@ -21,6 +21,7 @@ from .split import (
     PITCH_BREAKS,
     SENT_HIDDEN,
     SEPARATORS,
+    TAPE_CONNECTOR,
     ArtistMora,
     SectionParts,
     SplitAccent,
@@ -248,7 +249,7 @@ def make_section(raw_section: str, cfg: JapaneseConfig) -> Section:
         is_particle=is_particle,
         moras=moras,
         word=clean_non_printable_chars(sdict.word),
-        is_tape=(raw_section == ";"),
+        is_tape=(raw_section == TAPE_CONNECTOR),
     )
 
 
