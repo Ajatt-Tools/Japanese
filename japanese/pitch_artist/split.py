@@ -5,20 +5,7 @@ import re
 from typing import NamedTuple
 
 from ..pitch_accents.svg_graph_types import SvgMoraFlag
-
-RE_FLAGS = re.MULTILINE | re.IGNORECASE
-GHOST_PARTICLE = "-"  # A special symbol reserved for drawing empty trailing circles.
-DEVOICED_PREFIX = "d"
-# Characters that disconnect adjacent words in a pitch expression.
-# All three are functionally identical: they produce Role.empty,
-# draw no visible elements, and prevent a connecting line between words.
-SEPARATORS = ["|", ",", "、"]
-# The ghost particle is similar to a separator but draws an empty trailing circle.
-SENT_HIDDEN = ["|", GHOST_PARTICLE]
-# All characters that break the pitch contour: separators, ghost particle, and commas.
-PITCH_BREAKS = SENT_HIDDEN + [",", "、"]
-# Indicates that the previous mora and the next mora should be connected with a dotted line.
-TAPE_CONNECTOR = ";"
+from .consts import DEVOICED_PREFIX, GHOST_PARTICLE, RE_FLAGS
 
 
 def split_multiple_pitch_notations(sequences: list[list[str]]) -> list[list[str]]:

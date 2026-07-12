@@ -9,19 +9,22 @@ from ..config_view import JapaneseConfig, SvgGraphReadingFormat
 from ..mecab_controller import to_hiragana, to_katakana
 from ..pitch_accents.svg_graph_renderer import SvgGraphRenderer
 from ..pitch_accents.svg_graph_types import (
+    ConnectToPrevious,
     PitchLevel,
     SvgGraph,
     SvgGraphMora,
     SvgGraphWord,
     SvgMoraFlag,
 )
-from .split import (
+from .consts import (
     DEVOICED_PREFIX,
     GHOST_PARTICLE,
     PITCH_BREAKS,
-    SENT_HIDDEN,
     SEPARATORS,
     TAPE_CONNECTOR,
+    TEXT_HIDDEN,
+)
+from .split import (
     ArtistMora,
     SectionParts,
     SplitAccent,
@@ -345,7 +348,7 @@ def _color_sentence(sentence: list[Section]) -> str:
     """Wrap each visible word in a sentence with an HTML span colored by its pitch role."""
     result = []
     for section in sentence:
-        if section.word in SENT_HIDDEN or section.is_tape:
+        if section.word in TEXT_HIDDEN or section.is_tape:
             continue
         result.append(f'<span class="{section.role.name}">{section.word}</span>')
     return "".join(result)
