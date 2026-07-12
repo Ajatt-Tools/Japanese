@@ -94,17 +94,29 @@ def kana_to_moras(kana: str) -> list[str]:
     return re.findall(rf"{DEVOICED_PREFIX}?.[ァィゥェォャュョぁぃぅぇぉゃゅょ]?", kana, flags=RE_FLAGS)
 
 
-class DevoicedMora(str):
-    """A string subclass that marks a mora as devoiced for rendering purposes."""
+@dataclasses.dataclass(frozen=True)
+class ArtistMora:
+    text: str
+    flags: SvgMoraFlag
+
+    @classmethod
+    def from_text(cls, text: str) -> "ArtistMora":
+        flags = SvgMoraFlag(0)
+        if text.startswith(DEVOICED_PREFIX):
+            flags |= SvgMoraFlag.devoiced
+            text = text[len(DEVOICED_PREFIX) :]
+        if len(text) > 1:
+            flags |= SvgMoraFlag.multi_char
+        if text == GHOST_PARTICLE:
+            flags |= SvgMoraFlag.text_hidden
+        return cls(text=text, flags=flags)
 
 
-def split_to_moras(reading: str) -> list[str]:
+def split_to_moras(reading: str) -> list[ArtistMora]:
     """Convert a reading string into a list of morae, wrapping devoiced morae in DevoicedMora."""
     kana = filter_kana(reading)
     moras = kana_to_moras(kana)
-    return [
-        mora if not mora.startswith(DEVOICED_PREFIX) else DevoicedMora(mora[len(DEVOICED_PREFIX) :]) for mora in moras
-    ]
+    return [ArtistMora.from_text(mora) for mora in moras]
 
 
 class SectionParts(NamedTuple):

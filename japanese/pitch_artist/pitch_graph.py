@@ -21,7 +21,7 @@ from .split import (
     PITCH_BREAKS,
     SENT_HIDDEN,
     SEPARATORS,
-    DevoicedMora,
+    ArtistMora,
     SectionParts,
     SplitAccent,
     detach_ghost_particle,
@@ -82,17 +82,17 @@ def determine_role_keihan(raw_role: str | None) -> Role:
         return Role(role.lower())
 
 
-def determine_levels_keihan(accent: SplitAccent, moras: list[str]) -> list[PitchLevel]:
+def determine_levels_keihan(accent: SplitAccent, n_moras: int) -> list[PitchLevel]:
     """Build a list of high/low levels for each mora in the Keihan dialect."""
     if not accent.keihan:
         return []
     assert isinstance(accent.levels, str), "levels should be str"
     levels_list = list(str(accent.levels).lower())
-    levels_list += [levels_list[-1]] * (len(moras) - len(levels_list))
+    levels_list += [levels_list[-1]] * (n_moras - len(levels_list))
     return [PitchLevel(c.lower()) for c in levels_list]  # construct pitch level from its value.
 
 
-def guess_role_from_pitch_num(moras: list[str], pitch_n: str | None) -> Role:
+def guess_role_from_pitch_num(n_moras: int, pitch_n: str | None) -> Role:
     """Infer the pitch accent role from the numeric pitch value and mora count."""
     if not pitch_n:
         return Role.heiban
@@ -103,20 +103,20 @@ def guess_role_from_pitch_num(moras: list[str], pitch_n: str | None) -> Role:
         return Role.particle
     if pitch_n_int == 1:
         return Role.atamadaka
-    if pitch_n_int == len(moras):
+    if pitch_n_int == n_moras:
         return Role.odaka
-    if pitch_n_int < len(moras):
+    if pitch_n_int < n_moras:
         return Role.nakadaka
     return Role.heiban
 
 
-def determine_role_tokyo(sdict: SectionParts, moras: list[str], accent: SplitAccent) -> Role:
+def determine_role_tokyo(sdict: SectionParts, n_moras: int, accent: SplitAccent) -> Role:
     """Determine the Tokyo dialect pitch role from a parsed section dict.
 
     If nothing at all => particle.
     If `;` but no letter or number, then it defaults to heiban.
     """
-    if not moras or is_empty_particle(sdict.word):
+    if n_moras < 1 or is_empty_particle(sdict.word):
         return Role.empty
     # Note: do NOT check accent.is_particle here.
     # is_particle (the 'p' prefix in notation like 'ぐらい;pa') is a rendering hint
@@ -128,7 +128,7 @@ def determine_role_tokyo(sdict: SectionParts, moras: list[str], accent: SplitAcc
     if not sdict.sep:
         return Role.particle
     if not accent.role:
-        return guess_role_from_pitch_num(moras, accent.pitch)
+        return guess_role_from_pitch_num(n_moras, accent.pitch)
 
     return Role(str(accent.role).lower())
 
@@ -141,7 +141,7 @@ class SpecialPitch(enum.Enum):
     drop_inside = 2
 
 
-def determine_pitch_tokyo(sdict: SectionParts, moras: list[str], accent: SplitAccent, role: Role) -> int | None:
+def determine_pitch_tokyo(sdict: SectionParts, n_moras: int, accent: SplitAccent, role: Role) -> int | None:
     """Determine the numeric pitch value for a Tokyo dialect section."""
     if sdict.sep and accent.pitch:
         return int(accent.pitch)
@@ -153,7 +153,7 @@ def determine_pitch_tokyo(sdict: SectionParts, moras: list[str], accent: SplitAc
     if role == Role.nakadaka or role == Role.kifuku:
         return SpecialPitch.drop_inside.value
     if role == Role.odaka:
-        return len(moras)
+        return n_moras
     if role == Role.particle:
         return None
     if role == Role.empty:
@@ -172,7 +172,7 @@ def adjust_kana(text: str, cfg: JapaneseConfig) -> str:
     raise ValueError(f"unknown reading format: {cfg.svg_graphs.reading_format.name}")
 
 
-def prepare_moras(word: str, cfg: JapaneseConfig) -> list[str]:
+def prepare_moras(word: str, cfg: JapaneseConfig) -> list[ArtistMora]:
     """Extract the reading from a word, apply kana conversion, then split into morae."""
     reading = furigana_to_reading(word)
     reading = adjust_kana(reading, cfg)
@@ -180,10 +180,10 @@ def prepare_moras(word: str, cfg: JapaneseConfig) -> list[str]:
     return reading
 
 
-def determine_role(sdict: SectionParts, moras: list[str], accent: SplitAccent) -> Role:
+def determine_role(sdict: SectionParts, moras: list[ArtistMora], accent: SplitAccent) -> Role:
     if accent.keihan:
         return determine_role_keihan(accent.role)
-    return determine_role_tokyo(sdict, moras, accent)
+    return determine_role_tokyo(sdict, len(moras), accent)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -195,26 +195,19 @@ class Section:
     role: Role
     levels: list[PitchLevel]
     pitch: int | None
-    moras: list[str]
+    moras: list[ArtistMora]
     word: str
 
-    """
-    'p' marks a particle.
-
-    For example, まで is an atamadaka particle,
-    so rather than just representing it as gray dots with no fill,
-    I would like to represent it as red dots with no fill.
-    """
+    # 'p' marks a particle.
+    # For example, まで is an atamadaka particle,
+    # so rather than just representing it as gray dots with no fill,
+    # I would like to represent it as red dots with no fill.
     is_particle: bool
 
-    @property
-    def is_tape(self) -> bool:
-        """Return True if this section is a tape connector (dotted line between words).
-
-        When two words are linked with a solid line, they are welded.
-        A dotted line means they are taped.
-        """
-        return self.raw == ";"
+    # True if this section is a tape connector (dotted line between words).
+    # When two words are linked with a solid line, they are welded.
+    # A dotted line means they are taped.
+    is_tape: bool
 
     @property
     def class_name(self) -> str:
@@ -224,13 +217,18 @@ class Section:
         return self.role.name
 
 
-def adjust_ha_wa(moras: list[str]) -> list[str]:
-    match moras:
-        case ["ハ"]:
-            return ["ワ"]
-        case ["は"]:
-            return ["わ"]
+def adjust_ha_wa(moras: list[ArtistMora]) -> list[ArtistMora]:
+    if len(moras) == 1:
+        match moras[0].text:
+            case "ハ":
+                return [ArtistMora("ワ", flags=moras[0].flags)]
+            case "は":
+                return [ArtistMora("わ", flags=moras[0].flags)]
     return moras
+
+
+def clean_non_printable_chars(word: str) -> str:
+    return word.replace(DEVOICED_PREFIX, "")
 
 
 def make_section(raw_section: str, cfg: JapaneseConfig) -> Section:
@@ -245,11 +243,12 @@ def make_section(raw_section: str, cfg: JapaneseConfig) -> Section:
         raw=raw_section,
         is_keihan=bool(accent.keihan),
         role=role,
-        levels=determine_levels_keihan(accent, moras),
-        pitch=determine_pitch_tokyo(sdict, moras, accent, role),
+        levels=determine_levels_keihan(accent, len(moras)),
+        pitch=determine_pitch_tokyo(sdict, len(moras), accent, role),
         is_particle=is_particle,
         moras=moras,
-        word=sdict.word.replace(DEVOICED_PREFIX, ""),
+        word=clean_non_printable_chars(sdict.word),
+        is_tape=(raw_section == ";"),
     )
 
 
