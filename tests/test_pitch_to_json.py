@@ -23,13 +23,17 @@ from japanese.pitch_accents.svg_graph_types import PitchLevel, SvgMoraFlag
     [
         (Mora(txt=["あ", "い"], level=PitchLevel.high, flags=SvgMoraFlag(0)), "あい", PitchLevel.high, SvgMoraFlag(0)),
         (
-            Mora(txt=["か", Quark(txt="゜", flags=SvgMoraFlag.nasal)], level=PitchLevel.low, flags=SvgMoraFlag.devoiced),
+            Mora(
+                txt=["か", Quark(txt="゜", flags=SvgMoraFlag.nasal)], level=PitchLevel.low, flags=SvgMoraFlag.devoiced
+            ),
             "か゚",  # Note: This is the combining form, not the non-combining form
             PitchLevel.low,
             SvgMoraFlag.nasal | SvgMoraFlag.devoiced,
         ),
         (
-            Mora(txt=["し", "ゅ", Quark(txt="゜", flags=SvgMoraFlag.nasal)], level=PitchLevel.high, flags=SvgMoraFlag(0)),
+            Mora(
+                txt=["し", "ゅ", Quark(txt="゜", flags=SvgMoraFlag.nasal)], level=PitchLevel.high, flags=SvgMoraFlag(0)
+            ),
             "しゅ゚",  # Note: This is the combining form, not the non-combining form
             PitchLevel.high,
             SvgMoraFlag.nasal,

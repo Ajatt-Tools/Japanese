@@ -218,7 +218,10 @@ def test_mora_flags2class_name() -> None:
     [
         (Mora(txt=["シ"], level=PitchLevel.high, flags=SvgMoraFlag(0)), False),
         (Mora(txt=["シ", "ュ"], level=PitchLevel.high, flags=SvgMoraFlag(0)), True),
-        (Mora(txt=["カ", Quark(txt="゜", flags=SvgMoraFlag.nasal)], level=PitchLevel.high, flags=SvgMoraFlag.nasal), False),
+        (
+            Mora(txt=["カ", Quark(txt="゜", flags=SvgMoraFlag.nasal)], level=PitchLevel.high, flags=SvgMoraFlag.nasal),
+            False,
+        ),
     ],
 )
 def test_mora_is_multi_char(mora: Mora, expected: bool) -> None:
