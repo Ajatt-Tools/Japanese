@@ -6,7 +6,35 @@ from collections.abc import Sequence
 
 from ..config_view import SvgPitchGraphOptionsConfigView
 from .svg_components import Line, Path, Point, attrs_circle, make_group
-from .svg_graph_types import PitchLevel, SvgGraph, SvgGraphWord, SvgMoraFlag
+from .svg_graph_types import (
+    ConnectToPrevious,
+    PitchLevel,
+    SvgGraph,
+    SvgGraphWord,
+    SvgMoraFlag,
+)
+
+
+class RenderedSection(typing.NamedTuple):
+    path: str
+    circles: str
+    text: str
+    connector: str
+    # Position where the next section should start drawing.
+    pos: Point
+
+
+class RenderedGraphComponents(typing.NamedTuple):
+    lines: str
+    circles: str
+    text: str
+
+
+def wrap_content(graph: SvgGraph, content: RenderedGraphComponents) -> str:
+    """Wrap ungrouped graphs in their pitch-type group while leaving artist graphs unwrapped."""
+    if graph.outer_class_name:
+        return make_group(content, graph.outer_class_name)
+    return "".join(content)
 
 
 class SvgGraphRenderer:
