@@ -19,8 +19,9 @@ from ..pitch_accents.svg_graph_types import (
 from .consts import (
     DEVOICED_PREFIX,
     GHOST_PARTICLE,
+    NON_RENDERED_SECTIONS,
     PITCH_BREAKS,
-    SEPARATORS,
+    SMALL_TSU,
     TAPE_CONNECTOR,
     TEXT_HIDDEN,
 )
@@ -63,15 +64,6 @@ class Role(Enum):
     keihan_low_nakadaka = "M"
     keihan_low_odaka = "O"
     keihan_kifuku = "K"
-
-
-def is_empty_particle(word: str) -> bool:
-    """Return True if the word is a separator character with no pitch content.
-
-    Separators (| , 、) are functionally identical — they disconnect adjacent
-    words and produce no visible elements in the graph.
-    """
-    return word in SEPARATORS
 
 
 def determine_role_keihan(raw_role: str | None) -> Role:
@@ -117,11 +109,8 @@ def guess_role_from_pitch_num(n_moras: int, pitch_n: str | None) -> Role:
 def determine_role_tokyo(sdict: SectionParts, n_moras: int, accent: SplitAccent) -> Role:
     """Determine the Tokyo dialect pitch role from a parsed section dict.
 
-    If nothing at all => particle.
     If `;` but no letter or number, then it defaults to heiban.
     """
-    if n_moras < 1 or is_empty_particle(sdict.word):
-        return Role.empty
     # Note: do NOT check accent.is_particle here.
     # is_particle (the 'p' prefix in notation like 'ぐらい;pa') is a rendering hint
     # that tells the SVG drawer to use unfilled circles. It is stored separately
@@ -135,6 +124,11 @@ def determine_role_tokyo(sdict: SectionParts, n_moras: int, accent: SplitAccent)
         return guess_role_from_pitch_num(n_moras, accent.pitch)
 
     return Role(str(accent.role).lower())
+
+
+def is_empty_section(word: str) -> bool:
+    """Return True for sections that never enter dialect-specific pitch logic."""
+    return not word or word in NON_RENDERED_SECTIONS
 
 
 class SpecialPitch(enum.Enum):
@@ -184,10 +178,12 @@ def prepare_moras(word: str, cfg: JapaneseConfig) -> list[ArtistMora]:
     return reading
 
 
-def determine_role(sdict: SectionParts, moras: list[ArtistMora], accent: SplitAccent) -> Role:
+def determine_role(sdict: SectionParts, n_moras: int, accent: SplitAccent) -> Role:
+    if is_empty_section(sdict.word):
+        return Role.empty
     if accent.keihan:
         return determine_role_keihan(accent.role)
-    return determine_role_tokyo(sdict, len(moras), accent)
+    return determine_role_tokyo(sdict, n_moras, accent)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -239,7 +235,7 @@ def make_section(raw_section: str, cfg: JapaneseConfig) -> Section:
     sdict: SectionParts = split_section(raw_section)
     moras = prepare_moras(sdict.word, cfg)
     accent = split_accent(sdict.accent)
-    role = determine_role(sdict, moras, accent)
+    role = determine_role(sdict, len(moras), accent)
     is_particle = bool(accent.is_particle) or role == Role.particle
     if is_particle:
         moras = adjust_ha_wa(moras)
