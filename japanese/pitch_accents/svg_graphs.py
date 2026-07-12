@@ -12,6 +12,11 @@ from .svg_graph_types import SvgGraph, SvgGraphMora, SvgGraphSection
 
 
 class SvgPitchGraphMaker:
+    """Adapter from dictionary pitch entries to the shared SVG graph renderer."""
+
+    _renderer: SvgGraphRenderer
+    _opts: SvgPitchGraphOptionsConfigView
+
     def __init__(self, options: SvgPitchGraphOptionsConfigView) -> None:
         self._opts = options
         self._renderer = SvgGraphRenderer(options)
