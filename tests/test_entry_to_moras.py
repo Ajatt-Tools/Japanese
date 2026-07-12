@@ -8,19 +8,18 @@ from japanese.pitch_accents.basic_types import PitchType
 from japanese.pitch_accents.common import FormattedEntry, split_html_notation
 from japanese.pitch_accents.entry_to_moras import (
     Mora,
-    MoraFlag,
     Quark,
     entry_to_moras,
     html_notation_to_moras,
     mora_flags2class_name,
 )
 from japanese.pitch_accents.styles import SpecialSymbols
-from japanese.pitch_accents.svg_graph_types import PitchLevel
+from japanese.pitch_accents.svg_graph_types import PitchLevel, SvgMoraFlag
 
 CIRCLE = SpecialSymbols.nasal_dakuten
 
 
-def filter_by_level(moras: Sequence[MoraFlag], level: PitchLevel) -> Sequence[str]:
+def filter_by_level(moras: Sequence[Mora], level: PitchLevel) -> Sequence[str]:
     return list(map(lambda mora: mora.txt, filter(lambda mora: mora.level == level and not mora.is_trailing(), moras)))
 
 
@@ -204,22 +203,22 @@ def test_entry_to_moras(
     as_list_str = [f"{mora_text_to_str(mora.txt)}:{mora.level.name[0].upper()}" for mora in moras.moras]
     assert as_list_str == expected_hl
     assert moras.pitch_type == pitch_type
-    assert all(MoraFlag.devoiced in moras.moras[pos].flags for pos in devoiced_pos)
-    assert all(MoraFlag.nasal in moras.moras[pos].flags for pos in nasal_pos)
+    assert all(SvgMoraFlag.devoiced in moras.moras[pos].flags for pos in devoiced_pos)
+    assert all(SvgMoraFlag.nasal in moras.moras[pos].flags for pos in nasal_pos)
 
 
 def test_mora_flags2class_name() -> None:
-    assert mora_flags2class_name(MoraFlag.nasal | MoraFlag.devoiced) == "nasal devoiced"
-    assert mora_flags2class_name(MoraFlag.nasal) == "nasal"
-    assert mora_flags2class_name(MoraFlag.devoiced) == "devoiced"
+    assert mora_flags2class_name(SvgMoraFlag.nasal | SvgMoraFlag.devoiced) == "nasal devoiced"
+    assert mora_flags2class_name(SvgMoraFlag.nasal) == "nasal"
+    assert mora_flags2class_name(SvgMoraFlag.devoiced) == "devoiced"
 
 
 @pytest.mark.parametrize(
     "mora, expected",
     [
-        (Mora(txt=["シ"], level=PitchLevel.high, flags=MoraFlag(0)), False),
-        (Mora(txt=["シ", "ュ"], level=PitchLevel.high, flags=MoraFlag(0)), True),
-        (Mora(txt=["カ", Quark(txt="゜", flags=MoraFlag.nasal)], level=PitchLevel.high, flags=MoraFlag.nasal), False),
+        (Mora(txt=["シ"], level=PitchLevel.high, flags=SvgMoraFlag(0)), False),
+        (Mora(txt=["シ", "ュ"], level=PitchLevel.high, flags=SvgMoraFlag(0)), True),
+        (Mora(txt=["カ", Quark(txt="゜", flags=SvgMoraFlag.nasal)], level=PitchLevel.high, flags=SvgMoraFlag.nasal), False),
     ],
 )
 def test_mora_is_multi_char(mora: Mora, expected: bool) -> None:

@@ -6,7 +6,6 @@ import pytest
 from japanese.pitch_accents.common import FormattedEntry
 from japanese.pitch_accents.entry_to_moras import (
     Mora,
-    MoraFlag,
     Quark,
     entry_to_moras,
 )
@@ -16,28 +15,28 @@ from japanese.pitch_accents.pitch_to_json import (
     mora_sequence_to_dict,
     mora_to_dict,
 )
-from japanese.pitch_accents.svg_graph_types import PitchLevel
+from japanese.pitch_accents.svg_graph_types import PitchLevel, SvgMoraFlag
 
 
 @pytest.mark.parametrize(
     "mora, expected_txt, expected_level, expected_flags",
     [
-        (Mora(txt=["あ", "い"], level=PitchLevel.high, flags=MoraFlag(0)), "あい", PitchLevel.high, MoraFlag(0)),
+        (Mora(txt=["あ", "い"], level=PitchLevel.high, flags=SvgMoraFlag(0)), "あい", PitchLevel.high, SvgMoraFlag(0)),
         (
-            Mora(txt=["か", Quark(txt="゜", flags=MoraFlag.nasal)], level=PitchLevel.low, flags=MoraFlag.devoiced),
+            Mora(txt=["か", Quark(txt="゜", flags=SvgMoraFlag.nasal)], level=PitchLevel.low, flags=SvgMoraFlag.devoiced),
             "か゚",  # Note: This is the combining form, not the non-combining form
             PitchLevel.low,
-            MoraFlag.nasal | MoraFlag.devoiced,
+            SvgMoraFlag.nasal | SvgMoraFlag.devoiced,
         ),
         (
-            Mora(txt=["し", "ゅ", Quark(txt="゜", flags=MoraFlag.nasal)], level=PitchLevel.high, flags=MoraFlag(0)),
+            Mora(txt=["し", "ゅ", Quark(txt="゜", flags=SvgMoraFlag.nasal)], level=PitchLevel.high, flags=SvgMoraFlag(0)),
             "しゅ゚",  # Note: This is the combining form, not the non-combining form
             PitchLevel.high,
-            MoraFlag.nasal,
+            SvgMoraFlag.nasal,
         ),
     ],
 )
-def test_combine_mora(mora: Mora, expected_txt: str, expected_level: PitchLevel, expected_flags: MoraFlag) -> None:
+def test_combine_mora(mora: Mora, expected_txt: str, expected_level: PitchLevel, expected_flags: SvgMoraFlag) -> None:
     """Test combining a mora with various content types."""
     combined = combine_mora(mora)
 
@@ -51,12 +50,12 @@ def test_combine_mora(mora: Mora, expected_txt: str, expected_level: PitchLevel,
     "combined, expected_txt, expected_level, expected_flags",
     [
         (
-            MoraCombined(txt="か゜", flags=MoraFlag.nasal | MoraFlag.devoiced, level=PitchLevel.high),
+            MoraCombined(txt="か゜", flags=SvgMoraFlag.nasal | SvgMoraFlag.devoiced, level=PitchLevel.high),
             "か゜",
             "high",
             ["nasal", "devoiced"],
         ),
-        (MoraCombined(txt="あ", flags=MoraFlag(0), level=PitchLevel.low), "あ", "low", []),
+        (MoraCombined(txt="あ", flags=SvgMoraFlag(0), level=PitchLevel.low), "あ", "low", []),
     ],
 )
 def test_mora_to_dict(

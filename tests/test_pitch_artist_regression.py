@@ -16,7 +16,7 @@ from japanese.pitch_artist.pitch_graph import (
     is_empty_particle,
     make_section,
 )
-from japanese.pitch_artist.split import SplitAccent, split_accent
+from japanese.pitch_artist.split import ArtistMora, SplitAccent, split_accent
 from playground.utils import NoAnkiConfigView
 
 # The canonical test sentences.
@@ -387,7 +387,7 @@ class TestGuessRoleFromPitchNum:
         ],
     )
     def test_guess_role(self, moras: list[str], pitch_n: str | None, expected: Role) -> None:
-        assert guess_role_from_pitch_num(moras, pitch_n) == expected
+        assert guess_role_from_pitch_num(len(moras), pitch_n) == expected
 
 
 class TestAdjustHaWa:
@@ -401,7 +401,7 @@ class TestAdjustHaWa:
         ],
     )
     def test_adjust_ha_wa(self, moras: list[str], expected: list[str]) -> None:
-        assert adjust_ha_wa(moras) == expected
+        assert adjust_ha_wa([ArtistMora.from_text(m) for m in moras]) == [ArtistMora.from_text(m) for m in expected]
 
 
 class TestClassName:

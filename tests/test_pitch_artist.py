@@ -4,6 +4,7 @@
 import pytest
 
 from japanese.pitch_artist.split import (
+    ArtistMora,
     SectionParts,
     SplitAccent,
     detach_ghost_particle,
@@ -46,7 +47,7 @@ def test_split_accent(expression: str, expected: SplitAccent) -> None:
     ],
 )
 def test_split_to_moras(expression: str, expected: list[str]) -> None:
-    assert split_to_moras(expression) == expected
+    assert split_to_moras(expression) == [ArtistMora.from_text(m) for m in expected]
 
 
 @pytest.mark.parametrize(
