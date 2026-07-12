@@ -7,13 +7,14 @@ import typing
 
 import pytest
 
+from japanese.pitch_artist.consts import GHOST_PARTICLE, TAPE_CONNECTOR
 from japanese.pitch_artist.pitch_graph import (
     Role,
     SvgPitchArtistGraphMaker,
     adjust_ha_wa,
     apply_kanji_colors,
     guess_role_from_pitch_num,
-    is_empty_particle,
+    is_empty_section,
     make_section,
 )
 from japanese.pitch_artist.split import ArtistMora, SplitAccent, split_accent
@@ -358,20 +359,22 @@ class TestSplitAccentExpanded:
         assert split_accent(expression) == expected
 
 
-class TestIsEmptyParticle:
+class TestIsEmptySection:
     @pytest.mark.parametrize(
         "word, expected",
         [
+            (TAPE_CONNECTOR, True),
             ("|", True),
             (",", True),
             ("、", True),
+            (GHOST_PARTICLE, False),
             ("は", False),
             ("a", False),
-            ("", False),
+            ("", True),
         ],
     )
-    def test_is_empty_particle(self, word: str, expected: bool) -> None:
-        assert is_empty_particle(word) == expected
+    def test_is_empty_section(self, word: str, expected: bool) -> None:
+        assert is_empty_section(word) is expected
 
 
 class TestGuessRoleFromPitchNum:
