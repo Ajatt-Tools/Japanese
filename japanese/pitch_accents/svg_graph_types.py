@@ -54,5 +54,5 @@ class SvgGraph(typing.NamedTuple):
     """A normalized pitch graph independent of the source notation domain."""
 
     sections: Sequence[SvgGraphSection]
-    outer_class_name: str = ""
-    section_grouped: bool = False
+    # When outer class name is not empty, the graph is being constructed from an instance of FormattedEntry.
+    outer_class_name: str
