@@ -7,7 +7,8 @@ from math import sqrt
 
 from ..config_view import SvgGraphReadingFormat, SvgPitchGraphOptionsConfigView
 from ..mecab_controller import to_hiragana, to_katakana
-from .entry_to_moras import Mora, MoraFlag, Quark, mora_flags2class_name
+from .entry_to_moras import Mora, Quark, mora_flags2class_name
+from .svg_graph_types import SvgMoraFlag
 
 
 @enum.unique
@@ -22,7 +23,7 @@ def make_group(elements: Iterable[str], class_name: str) -> str:
     return f'<g{attrs}>{"".join(elements)}</g>'
 
 
-def append_class_name(mora_flag: MoraFlag) -> str:
+def append_class_name(mora_flag: SvgMoraFlag) -> str:
     class_name = mora_flags2class_name(mora_flag)
     return f' class="{class_name}"' if class_name else ""
 

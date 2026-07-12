@@ -7,12 +7,11 @@ import typing
 from .common import FormattedEntry, replace_degree_with_dakuten
 from .entry_to_moras import (
     Mora,
-    MoraFlag,
     MoraSequence,
     Quark,
     entry_to_moras,
 )
-from .svg_graph_types import PitchLevel
+from .svg_graph_types import PitchLevel, SvgMoraFlag
 
 
 class MoraOutputJson(typing.TypedDict):
@@ -32,7 +31,7 @@ class MoraSequenceOutputJson(typing.TypedDict):
 @dataclasses.dataclass
 class MoraCombined:
     txt: str
-    flags: MoraFlag
+    flags: SvgMoraFlag
     level: PitchLevel
 
 
@@ -54,7 +53,7 @@ def mora_to_dict(mora: MoraCombined) -> MoraOutputJson:
     return {
         "txt": mora.txt,
         "level": mora.level.name,
-        "flags": [flag.name for flag in MoraFlag if flag in mora.flags],
+        "flags": [flag.name for flag in SvgMoraFlag if flag in mora.flags],
     }
 
 

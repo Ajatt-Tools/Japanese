@@ -1,8 +1,10 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
-
+import dataclasses
 import re
 from typing import NamedTuple
+
+from ..pitch_accents.svg_graph_types import SvgMoraFlag
 
 RE_FLAGS = re.MULTILINE | re.IGNORECASE
 GHOST_PARTICLE = "-"  # A special symbol reserved for drawing empty trailing circles.

@@ -16,7 +16,8 @@ class PitchLevel(enum.Enum):
 class SvgMoraFlag(enum.Flag):
     """Rendering flags for a normalized SVG mora."""
 
-    trailing = enum.auto()
+    nasal = enum.auto()
+    trailing = enum.auto()  # trailing means it will be a gray line with a pierced circle
     devoiced = enum.auto()
     multi_char = enum.auto()
     text_hidden = enum.auto()
@@ -30,6 +31,13 @@ class SvgGraphMora(typing.NamedTuple):
     class_attr: str = ""
     dx_units: int = 1
     flags: SvgMoraFlag = SvgMoraFlag(0)
+
+    @property
+    def is_trailing(self) -> bool:
+        if SvgMoraFlag.trailing in self.flags:
+            assert len(self.text) == 0
+            return True
+        return False
 
 
 class SvgGraphSection(typing.NamedTuple):

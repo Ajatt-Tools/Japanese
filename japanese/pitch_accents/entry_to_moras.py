@@ -2,7 +2,6 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import dataclasses
-import enum
 import typing
 
 from ..mecab_controller import kana_to_moras
@@ -13,42 +12,34 @@ from .styles import SpecialSymbols, XmlTags
 from .svg_graph_types import PitchLevel, SvgMoraFlag
 
 
-@enum.unique
-class MoraFlag(enum.Flag):
-    nasal = enum.auto()
-    devoiced = enum.auto()
-    trailing = enum.auto()
-
-
 @dataclasses.dataclass
 class Quark:
     txt: str
-    flags: MoraFlag
+    flags: SvgMoraFlag
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class Mora:
     txt: list[Quark | str]
     level: PitchLevel
-    flags: MoraFlag
+    flags: SvgMoraFlag
 
     def dx_units(self) -> int:
         # Note: Quark is a dataclass, not a subclass of str.
         return sum(1 for char in self.txt if isinstance(char, str))
 
-    def svg_mora_flags(self) -> SvgMoraFlag:
-        flags = SvgMoraFlag(0)
+    def render_flags(self) -> SvgMoraFlag:
+        """Return flags enriched with derived SVG-rendering flags."""
+        flags = self.flags
         if self.is_trailing():
             flags |= SvgMoraFlag.trailing
             flags |= SvgMoraFlag.text_hidden
-        if MoraFlag.devoiced in self.flags:
-            flags |= SvgMoraFlag.devoiced
         if self.is_multi_char():
             flags |= SvgMoraFlag.multi_char
         return flags
 
     def is_trailing(self) -> bool:
-        if MoraFlag.trailing in self.flags:
+        if SvgMoraFlag.trailing in self.flags:
             assert not self.txt
             return True
         return False
@@ -74,7 +65,7 @@ class MoraSequence(typing.NamedTuple):
 def html_notation_to_moras(html_notation: str) -> list[Mora]:
     moras: list[Mora] = []
     current_level: PitchLevel = PitchLevel.low
-    current_flags = MoraFlag(0)
+    current_flags = SvgMoraFlag(0)
 
     for token in split_html_notation(html_notation):
         if token in (XmlTags.low_rise_start, XmlTags.low_start, XmlTags.high_drop_end, XmlTags.high_end):
@@ -82,17 +73,17 @@ def html_notation_to_moras(html_notation: str) -> list[Mora]:
         elif token in (XmlTags.high_start, XmlTags.high_drop_start, XmlTags.low_rise_end, XmlTags.low_end):
             current_level = PitchLevel.high
         elif token == XmlTags.nasal_start:
-            current_flags |= MoraFlag.nasal
+            current_flags |= SvgMoraFlag.nasal
         elif token == XmlTags.nasal_end:
-            current_flags &= ~MoraFlag.nasal
+            current_flags &= ~SvgMoraFlag.nasal
         elif token == XmlTags.devoiced_start:
-            current_flags |= MoraFlag.devoiced
+            current_flags |= SvgMoraFlag.devoiced
         elif token == XmlTags.devoiced_end:
-            current_flags &= ~MoraFlag.devoiced
+            current_flags &= ~SvgMoraFlag.devoiced
         elif token in (XmlTags.handakuten_start, XmlTags.handakuten_end):
             pass
         elif token in (SpecialSymbols.nasal_dakuten_esc, SpecialSymbols.nasal_dakuten):
-            assert MoraFlag.nasal in current_flags, "nasal handakuten only appears inside nasal tags."
+            assert SvgMoraFlag.nasal in current_flags, "nasal handakuten only appears inside nasal tags."
             assert len(moras) > 0, "nasal handakuten must be attached to an existing mora."
             moras[-1].txt.append(Quark(token, flags=current_flags))
         elif token == SpecialSymbols.nakaten:
@@ -106,7 +97,7 @@ def html_notation_to_moras(html_notation: str) -> list[Mora]:
             if moras_txt[0] in SMALL_KANA_CHARS:
                 assert moras, "A word can't start with a small kana"
                 assert len(moras[-1].txt) == 1 or len(moras[-1].txt) == 2 and isinstance(moras[-1].txt[-1], Quark)
-                moras[-1].txt += moras_txt[0]
+                moras[-1].txt.append(moras_txt[0])
                 moras_txt = moras_txt[1:]
             moras.extend(Mora(list(mora), current_level, flags=current_flags) for mora in moras_txt)
     return moras
@@ -118,10 +109,10 @@ def entry_to_moras(entry: FormattedEntry, enable_trailing_mora: bool = True) -> 
     if enable_trailing_mora and (pitch_type == PitchType.heiban or len(moras) == 1):
         assert pitch_type in (PitchType.heiban, PitchType.atamadaka), f"pitch should be heiban or atamadaka: {entry}"
         level = PitchLevel.high if pitch_type == PitchType.heiban else PitchLevel.low
-        moras.append(Mora(txt=[], level=level, flags=MoraFlag.trailing))
+        moras.append(Mora(txt=[], level=level, flags=SvgMoraFlag.trailing))
 
     return MoraSequence(moras=moras, pitch_type=pitch_type, entry=entry)
 
 
-def mora_flags2class_name(flags: MoraFlag) -> str:
-    return " ".join(flag.name for flag in MoraFlag if flag.name and flag in flags)
+def mora_flags2class_name(flags: SvgMoraFlag) -> str:
+    return " ".join(flag.name for flag in SvgMoraFlag if flag.name and flag in flags)
