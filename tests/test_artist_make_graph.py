@@ -164,6 +164,27 @@ class TestTapeConnector:
         # Tape connector line should use stroke-dasharray="4".
         assert 'stroke-dasharray="4"' in svg
 
+    @pytest.mark.parametrize(
+        "notation, expected_circles, expected_texts",
+        [
+            # A leading tape has no rendered mora before it, so it must not create a connector from nowhere.
+            ("; -", 1, 0),
+            ("; せいかつ;", 4, 4),
+            ("| ; せいかつ;", 4, 4),
+        ],
+    )
+    def test_leading_tape_has_no_connector(
+        self, no_anki_config: NoAnkiConfigView, notation: str, expected_circles: int, expected_texts: int
+    ) -> None:
+        gen = SvgPitchArtistGraphMaker(no_anki_config)
+        sequences = gen.make_sequences(notation)
+        svg = list(gen.make_graphs(sequences))[0]
+
+        assert len(extract_circles(svg)) == expected_circles
+        assert len(extract_text_labels(svg)) == expected_texts
+        assert "connector" not in svg
+        assert 'stroke-dasharray="4"' not in svg
+
 
 class TestIncludeText:
     """When include_text is False, no <text> elements appear and height shrinks."""
