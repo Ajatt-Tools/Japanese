@@ -23,6 +23,15 @@ class SvgMoraFlag(enum.Flag):
     text_hidden = enum.auto()
 
 
+@enum.unique
+class ConnectToPrevious(enum.Enum):
+    """How a rendered section connects to the previous rendered section."""
+
+    none = enum.auto()
+    weld = enum.auto()
+    tape = enum.auto()
+
+
 class SvgGraphMora(typing.NamedTuple):
     """A single normalized mora ready for SVG rendering."""
 
@@ -46,10 +55,8 @@ class SvgGraphWord(typing.NamedTuple):
     class_name: str
     moras: Sequence[SvgGraphMora]
     is_particle: bool
-    # Set by adapter code. Draw a connector from the previous section when true.
-    connect_to_previous: bool
-    # Set by adapter code. Make the connector dashed when true.
-    tape_connector: bool
+    # Set by adapter code. Controls whether this section welds, tapes, or does not connect to the previous one.
+    connect_to_previous: ConnectToPrevious
 
 
 class SvgGraph(typing.NamedTuple):

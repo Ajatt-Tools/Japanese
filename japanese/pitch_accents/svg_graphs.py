@@ -8,7 +8,7 @@ from .svg_components import (
     assemble_txt_content,
 )
 from .svg_graph_renderer import SvgGraphRenderer
-from .svg_graph_types import SvgGraph, SvgGraphMora, SvgGraphWord
+from .svg_graph_types import ConnectToPrevious, SvgGraph, SvgGraphMora, SvgGraphWord
 
 
 class SvgPitchGraphMaker:
