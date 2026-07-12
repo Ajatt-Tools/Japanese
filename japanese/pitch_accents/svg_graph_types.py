@@ -40,19 +40,21 @@ class SvgGraphMora(typing.NamedTuple):
         return False
 
 
-class SvgGraphSection(typing.NamedTuple):
-    """A renderable group of morae and optional connection metadata."""
+class SvgGraphWord(typing.NamedTuple):
+    """A renderable group of morae."""
 
     class_name: str
     moras: Sequence[SvgGraphMora]
     is_particle: bool
-    connect_to_previous: bool = False
-    tape_connector: bool = False
+    # Set by adapter code. Draw a connector from the previous section when true.
+    connect_to_previous: bool
+    # Set by adapter code. Make the connector dashed when true.
+    tape_connector: bool
 
 
 class SvgGraph(typing.NamedTuple):
     """A normalized pitch graph independent of the source notation domain."""
 
-    sections: Sequence[SvgGraphSection]
+    sections: Sequence[SvgGraphWord]
     # When outer class name is not empty, the graph is being constructed from an instance of FormattedEntry.
     outer_class_name: str

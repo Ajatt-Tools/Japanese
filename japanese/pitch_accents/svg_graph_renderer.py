@@ -6,7 +6,7 @@ from collections.abc import Sequence
 
 from ..config_view import SvgPitchGraphOptionsConfigView
 from .svg_components import Line, Path, Point, attrs_circle, make_group
-from .svg_graph_types import PitchLevel, SvgGraph, SvgGraphSection, SvgMoraFlag
+from .svg_graph_types import PitchLevel, SvgGraph, SvgGraphWord, SvgMoraFlag
 
 
 class SvgGraphRenderer:

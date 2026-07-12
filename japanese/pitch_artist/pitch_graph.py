@@ -12,7 +12,7 @@ from ..pitch_accents.svg_graph_types import (
     PitchLevel,
     SvgGraph,
     SvgGraphMora,
-    SvgGraphSection,
+    SvgGraphWord,
     SvgMoraFlag,
 )
 from .split import (
