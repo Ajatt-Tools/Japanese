@@ -79,7 +79,7 @@ def detach_ghost_particle(text: str) -> str:
 
 def furigana_to_reading(word: str) -> str:
     """Strip furigana bracket notation, returning only the reading portion."""
-    return re.sub(r"([^\[\]]*\[|])", "", word, flags=RE_FLAGS)
+    return re.sub(r"[^\[\]]*\[|]", "", word, flags=RE_FLAGS)
 
 
 def filter_kana(reading: str) -> str:
