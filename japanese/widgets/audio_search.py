@@ -5,7 +5,7 @@ import enum
 import functools
 import subprocess
 import typing
-from typing import Optional, cast
+from typing import cast
 
 from anki.sound import SoundOrVideoTag
 from anki.utils import no_bundled_libs
@@ -22,6 +22,7 @@ from ..audio_manager.download_results import (
     FileSaveResults,
     calc_tooltip_offset,
     format_report_errors_msg,
+    is_bloop_placeholder,
     reserve_files,
 )
 from ..audio_manager.forvo_client import ForvoClient, FullForvoResult
@@ -303,10 +304,14 @@ class AudioSearchDialog(QDialog):
 class AnkiAudioSearchDialog(AudioSearchDialog, AnkiSaveAndRestoreGeomDialog):
     name: str = "ajt__audio_search_dialog"
 
+    def _has_real_media_file(self, desired_filename: str) -> bool:
+        """Return True when the media collection has a playable, non-placeholder file."""
+        return mw.col.media.have(desired_filename) and not is_bloop_placeholder(desired_filename)
+
     def _play_audio_file(self, file: FileUrlData) -> None:
         if os.path.isfile(file.url):
             return sound.av_player.play_tags([SoundOrVideoTag(filename=file.url)])
-        elif mw.col.media.have(file.desired_filename):
+        elif self._has_real_media_file(file.desired_filename):
             return sound.av_player.play_tags([SoundOrVideoTag(filename=file.desired_filename)])
         else:
             # file is not located on this computer and needs to be downloaded first.
@@ -328,7 +333,7 @@ class AnkiAudioSearchDialog(AudioSearchDialog, AnkiSaveAndRestoreGeomDialog):
         assert mw and mw.col, "Collection must be opened."
         if os.path.isfile(file.url):
             open_file(file.url)
-        elif mw.col.media.have(file.desired_filename):
+        elif self._has_real_media_file(file.desired_filename):
             open_file(os.path.join(mw.col.media.dir(), file.desired_filename))
         with no_bundled_libs():
             QDesktopServices.openUrl(QUrl(file.url))
