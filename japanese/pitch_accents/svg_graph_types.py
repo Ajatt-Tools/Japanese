@@ -48,6 +48,14 @@ class SvgGraphMora(typing.NamedTuple):
             return True
         return False
 
+    @property
+    def is_multi_char(self) -> bool:
+        return SvgMoraFlag.multi_char in self.flags
+
+    @property
+    def is_text_hidden(self) -> bool:
+        return SvgMoraFlag.text_hidden in self.flags
+
 
 class SvgGraphWord(typing.NamedTuple):
     """A renderable group of morae."""
