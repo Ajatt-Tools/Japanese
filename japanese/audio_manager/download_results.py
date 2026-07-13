@@ -1,5 +1,7 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
+import filecmp
+import functools
 import io
 import os
 import pathlib
@@ -34,6 +36,27 @@ class ReservedFile(NamedTuple):
 def only_missing(reserved_files: Iterable[ReservedFile]) -> Iterable[ReservedFile]:
     """Returns files that aren't present in the collection already."""
     yield from (file for file in reserved_files if not file.already_exists)
+
+
+@functools.cache
+def bloop_data() -> bytes:
+    """Return the bundled bloop audio data used for placeholder reservations."""
+    return BLOOP_FILE.read_bytes()
+
+
+def media_file_path(filename: str) -> pathlib.Path:
+    """Return the absolute path of a collection media file."""
+    assert mw, "Anki should be running."
+    assert mw.col, "Collection should be open."
+    return pathlib.Path(mw.col.media.dir()).joinpath(filename)
+
+
+def is_bloop_placeholder(filename: str) -> bool:
+    """Return True if an existing media file is the bundled bloop placeholder."""
+    try:
+        return filecmp.cmp(media_file_path(filename), BLOOP_FILE, shallow=False)
+    except FileNotFoundError:
+        return False
 
 
 class DownloadedData(NamedTuple):
@@ -87,20 +110,27 @@ def format_report_results_msg(r: FileSaveResults) -> str:
 def reserve_files(hits: Sequence[FileUrlData]) -> list[ReservedFile]:
     """Pre-reserve filenames in the media collection by writing a dummy file.
 
-    For each hit, either the file already exists (actual_filename = desired_filename),
-    or write_data() is called with dummy audio to reserve the normalized name.
-    Must be called from the main thread.
+    Real existing files are skipped. Existing bloop placeholders are treated as
+    missing so failed downloads can be retried and overwritten later. For missing
+    files, write_data() is called with dummy audio to reserve the normalized,
+    collision-resolved filename before the real audio is downloaded. Must be called
+    from the main thread.
     """
     assert mw, "Anki should be running."
     assert mw.col, "Collection should be open."
 
-    bloop_data = BLOOP_FILE.read_bytes()
     reserved: list[ReservedFile] = []
     for hit in hits:
         if mw.col.media.have(hit.desired_filename):
-            reserved.append(ReservedFile(source=hit, actual_filename=hit.desired_filename, already_exists=True))
+            reserved.append(
+                ReservedFile(
+                    source=hit,
+                    actual_filename=hit.desired_filename,
+                    already_exists=not is_bloop_placeholder(hit.desired_filename),
+                )
+            )
         else:
-            actual_filename = mw.col.media.write_data(desired_fname=hit.desired_filename, data=bloop_data)
+            actual_filename = mw.col.media.write_data(desired_fname=hit.desired_filename, data=bloop_data())
             reserved.append(ReservedFile(source=hit, actual_filename=actual_filename, already_exists=False))
     return reserved
 
