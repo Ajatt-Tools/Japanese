@@ -25,7 +25,8 @@ class FileInCollection(typing.NamedTuple):
 
 
 def find_ajt_script_names_in_collection() -> Iterable[pathlib.Path]:
-    # Note: the official binary bundle is stuck on python 3.9; glob() does not support the root_dir parameter.
+    # Note: the official binary bundle uses python 3.10;
+    # On some versions of Anki glob() might not support the root_dir parameter.
     assert mw
     return pathlib.Path(mw.col.media.dir()).glob("_ajt_japanese*.*")
 
