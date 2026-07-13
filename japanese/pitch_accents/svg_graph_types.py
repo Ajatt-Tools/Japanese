@@ -8,6 +8,8 @@ from collections.abc import Sequence
 
 @enum.unique
 class PitchLevel(enum.Enum):
+    """Pitch height for a normalized SVG mora."""
+
     low = "l"
     high = "h"
 
@@ -43,6 +45,7 @@ class SvgGraphMora(typing.NamedTuple):
 
     @property
     def is_trailing(self) -> bool:
+        """Return True when this mora is a trailing placeholder circle."""
         if SvgMoraFlag.trailing in self.flags:
             assert len(self.text) == 0
             return True
@@ -50,10 +53,12 @@ class SvgGraphMora(typing.NamedTuple):
 
     @property
     def is_multi_char(self) -> bool:
+        """Return True when this mora is rendered as multiple kana characters."""
         return SvgMoraFlag.multi_char in self.flags
 
     @property
     def is_text_hidden(self) -> bool:
+        """Return True when this mora should affect layout but not print text."""
         return SvgMoraFlag.text_hidden in self.flags
 
 

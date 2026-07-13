@@ -111,7 +111,7 @@ class ArtistMora:
 
 
 def split_to_moras(reading: str) -> list[ArtistMora]:
-    """Convert a reading string into a list of morae, wrapping devoiced morae in DevoicedMora."""
+    """Convert a reading string into ArtistMora objects with flags."""
     kana = filter_kana(reading)
     moras = kana_to_moras(kana)
     return [ArtistMora.from_text(mora) for mora in moras]
