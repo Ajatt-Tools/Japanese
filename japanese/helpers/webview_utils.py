@@ -22,9 +22,11 @@ def anki_addon_web_relpath() -> str:
 
 @functools.cache
 def ajt_webview_css() -> str:
+    """Return the web-exported path to the shared AJT webview CSS file."""
     return f"{anki_addon_web_relpath()}/{AJT_WEBVIEW_CSS_FILE_NAME}"
 
 
 @functools.cache
 def ajt_pitch_graph_css() -> str:
+    """Return the web-exported path to the shared pitch graph CSS file."""
     return f"{anki_addon_web_relpath()}/{PITCH_GRAPH_CSS_FILE_NAME}"

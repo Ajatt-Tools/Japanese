@@ -32,6 +32,7 @@ MEDIA_REGEX = re.compile(
 
 
 def media_strip(text: str) -> str:
+    """Strip Anki media references from text, using a regex fallback outside Anki."""
     if not mw:
         # Anki isn't running.
         return MEDIA_REGEX.sub("", text)
