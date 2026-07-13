@@ -5,8 +5,8 @@ import pathlib
 from collections.abc import Callable
 from typing import Any, TypeAlias
 
+from aqt.qt import *
 from aqt.webview import AnkiWebView
-from PyQt6.QtWidgets import QWidget
 
 from ..helpers.file_ops import find_file_in_parents
 from ..helpers.webview_utils import (
