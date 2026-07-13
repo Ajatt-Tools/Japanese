@@ -3,6 +3,7 @@
 # Tests for SvgPitchArtistGraphMaker.make_graph(), verifying exact SVG output.
 
 import re
+import typing
 
 import pytest
 
@@ -20,6 +21,14 @@ HIGH = 25
 LOW = 65
 
 
+class SvgRootDimensions(typing.NamedTuple):
+    """Integer dimensions declared on the root SVG element."""
+
+    view_box_width: int
+    view_box_height: int
+    visible_height: int
+
+
 def extract_circles(svg: str) -> list[tuple[int, int]]:
     """Extract (x, y) integer pairs from all <circle> elements in the SVG."""
     return [(int(float(cx)), int(float(cy))) for cx, cy in re.findall(r'cx="([0-9.]+)" cy="([0-9.]+)"', svg)]
@@ -30,11 +39,23 @@ def extract_text_labels(svg: str) -> list[str]:
     return re.findall(r"<text[^>]*>([^<]*)</text>", svg)
 
 
+def extract_svg_root_dimensions(svg: str) -> SvgRootDimensions:
+    """Extract integer root SVG dimensions from viewBox and height attributes."""
+    match = re.search(
+        r'viewBox="0 0 (?P<view_box_width>\d+) (?P<view_box_height>\d+)" height="(?P<visible_height>\d+)px"',
+        svg,
+    )
+    assert match is not None, "integer root SVG dimensions not found"
+    return SvgRootDimensions(
+        view_box_width=int(match.group("view_box_width")),
+        view_box_height=int(match.group("view_box_height")),
+        visible_height=int(match.group("visible_height")),
+    )
+
+
 def extract_visible_height(svg: str) -> int:
     """Extract the visible height (in pixels) from the SVG root element."""
-    m = re.search(r'height="(\d+)px"', svg)
-    assert m is not None, "height attribute not found in SVG"
-    return int(m.group(1))
+    return extract_svg_root_dimensions(svg).visible_height
 
 
 class TestCirclePositions:
@@ -188,6 +209,25 @@ class TestTapeConnector:
 
 class TestIncludeText:
     """When include_text is False, no <text> elements appear and height shrinks."""
+
+    @pytest.mark.parametrize(
+        "include_text, expected_dimensions, expected_text_count",
+        [
+            (True, SvgRootDimensions(view_box_width=212, view_box_height=140, visible_height=100), 4),
+            (False, SvgRootDimensions(view_box_width=212, view_box_height=90, visible_height=64), 0),
+        ],
+    )
+    def test_svg_dimensions_are_integer_formatted(
+        self, include_text: bool, expected_dimensions: SvgRootDimensions, expected_text_count: int
+    ) -> None:
+        """Root SVG dimensions remain integer-formatted when kana text is toggled."""
+        cfg = NoAnkiConfigView()
+        cfg.svg_graphs["include_text"] = include_text
+        gen = SvgPitchArtistGraphMaker(cfg)
+        svg = list(gen.make_graphs(gen.make_sequences("がっこう;0")))[0]
+
+        assert extract_svg_root_dimensions(svg) == expected_dimensions
+        assert len(extract_text_labels(svg)) == expected_text_count
 
     def test_no_text_when_disabled(self) -> None:
         # Create a fresh config to avoid mutating the shared session fixture.
