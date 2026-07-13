@@ -37,6 +37,11 @@ def split_multiple_pitch_notations(sequences: list[list[str]]) -> list[list[str]
     return result
 
 
+RE_SENTENCE_END = re.compile(r"(?P<sentence_end>[。!?！？])", flags=RE_FLAGS)
+RE_PUNCT = re.compile(r"(?P<punct>[「」|、､])", flags=RE_FLAGS)
+RE_COMMA = re.compile(r"(?P<before_comma>[^ ]), ", flags=RE_FLAGS)
+
+
 def normalize_for_parsing(expr: str) -> str:
     """Normalize a pitch expression string for parsing by inserting whitespace delimiters.
 
@@ -47,9 +52,9 @@ def normalize_for_parsing(expr: str) -> str:
     # Taking advantage of the fact that Japanese doesn't use spaces.
     expr = expr.replace("<br>", " . ")
     expr = strip_html_for_parsing(expr)
-    expr = re.sub(r"(?P<sentence_end>[。!?！？])", r" \g<sentence_end> .", expr, flags=RE_FLAGS)
-    expr = re.sub(r"(?P<punct>[「」|、､])", r" \g<punct> ", expr, flags=RE_FLAGS)
-    expr = re.sub(r"(?P<before_comma>[^ ]), ", r" \g<before_comma> , ", expr, flags=RE_FLAGS)
+    expr = re.sub(RE_SENTENCE_END, r" \g<sentence_end> .", expr)
+    expr = re.sub(RE_PUNCT, r" \g<punct> ", expr)
+    expr = re.sub(RE_COMMA, r" \g<before_comma> , ", expr)
     return expr
 
 
