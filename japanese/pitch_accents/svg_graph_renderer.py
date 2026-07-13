@@ -44,10 +44,26 @@ class SvgGraphRenderer:
 
     def __init__(self, options: SvgPitchGraphOptionsConfigView) -> None:
         self._opts = options
-        self._hor_pad = self._opts.graph_horizontal_padding
-        self._height_high = self._opts.size_unit
-        self._height_low = self._height_high + self._opts.graph_height
-        self._height_kana = self._height_low + self._opts.x_step
+
+    @property
+    def hor_pad(self) -> int:
+        """Return the horizontal padding around the graph."""
+        return self._opts.graph_horizontal_padding
+
+    @property
+    def height_high(self) -> int:
+        """Return the y-coordinate for a high-pitch mora."""
+        return self._opts.size_unit
+
+    @property
+    def height_low(self) -> int:
+        """Return the y-coordinate for a low-pitch mora."""
+        return self.height_high + self._opts.graph_height
+
+    @property
+    def height_kana(self) -> int:
+        """Return the y-coordinate for mora text."""
+        return self.height_low + self._opts.x_step
 
     def make_circle(self, pos: Point, is_trailing: bool, is_particle: bool) -> str:
         """Create a circle positioned where two pitch lines touch."""
@@ -111,7 +127,7 @@ class SvgGraphRenderer:
         Pitch Artist graphs leave sections grouped individually
         so particles and accent colors can be styled independently.
         """
-        start_pos = Point.new(x=self._height_high + self._hor_pad, y=self._height_high)
+        start_pos = Point.new(x=self.height_high + self.hor_pad, y=self.height_high)
 
         if graph.outer_class_name:
             # FormattedEntry-derived graph: one section, wrapped in a pitch-type class.
@@ -143,7 +159,7 @@ class SvgGraphRenderer:
         path = Path(self._opts)
         connector = self._start_connector(section, pos)
         for idx, mora in enumerate(section.moras):
-            pos = pos.replace(y=self._height_high if mora.level == PitchLevel.high else self._height_low)
+            pos = pos.replace(y=self.height_high if mora.level == PitchLevel.high else self.height_low)
             # Note: is_particle is always False for FormattedEntry-derived sections.
             word_circles.append(
                 self.make_circle(
@@ -159,7 +175,7 @@ class SvgGraphRenderer:
             if SvgMoraFlag.devoiced in mora.flags:
                 text_moras.append(
                     self.make_devoiced_circle(
-                        pos.replace(y=self._height_kana),
+                        pos.replace(y=self.height_kana),
                         multi_char=mora.is_multi_char,
                     )
                 )
@@ -169,7 +185,7 @@ class SvgGraphRenderer:
                 text_moras.append(
                     self.make_text_element(
                         mora.text,
-                        pos.replace(y=self._height_kana),
+                        pos.replace(y=self.height_kana),
                         mora.class_attr,
                         self._opts.text_dx * mora.dx_units,
                     )
@@ -232,8 +248,8 @@ class SvgGraphRenderer:
 
     def _make_sized_svg(self, graph: SvgGraph, content: RenderedGraphComponents) -> str:
         """Apply text visibility settings and SVG dimensions to content groups."""
-        svg_height_with_text = self._height_high + self._height_kana
-        svg_height_no_text = self._height_high + self._height_low
+        svg_height_with_text = self.height_high + self.height_kana
+        svg_height_no_text = self.height_high + self.height_low
         if self._opts.include_text:
             svg_height = svg_height_with_text
             visible_height = self._opts.graph_visible_height
