@@ -3,7 +3,9 @@
 
 import re
 
+# Regex
 RE_FLAGS = re.MULTILINE | re.IGNORECASE
+RE_HTML_TAG = re.compile(r"<[^<>]+>", flags=RE_FLAGS)
 
 # Disconnects adjacent words and renders no SVG element.
 PIPE_SEPARATOR = "|"
