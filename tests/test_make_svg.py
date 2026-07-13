@@ -91,10 +91,10 @@ def test_make_svg(no_anki_config: NoAnkiConfigView, formatted_entry: FormattedEn
     svg_config.graph_font_name = "Noto Sans CJK JP"  # simplify
     maker = SvgPitchGraphMaker(options=svg_config)
 
-    with open(DATA_DIR / svg_file_name, encoding="utf-8") as f:
-        assert (
-            f.read().strip() == maker.make_graph(formatted_entry).strip()
-        ), f"generated content must match: {DATA_DIR / svg_file_name}"
+    reference_file_path = DATA_DIR / "formatted_entry_graphs" / svg_file_name
+    reference = reference_file_path.read_text(encoding="utf-8").strip()
+    graph = maker.make_graph(formatted_entry).strip()
+    assert graph == reference, f"generated content must match: {reference_file_path}"
 
 
 @pytest.mark.parametrize("formatted_entry", TEST_ENTRIES)
