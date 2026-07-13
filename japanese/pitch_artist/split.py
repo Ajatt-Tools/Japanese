@@ -5,7 +5,18 @@ import re
 from typing import NamedTuple
 
 from ..pitch_accents.svg_graph_types import SvgMoraFlag
-from .consts import DEVOICED_PREFIX, GHOST_PARTICLE, RE_FLAGS
+from .consts import DEVOICED_PREFIX, GHOST_PARTICLE, RE_FLAGS, RE_HTML_TAG
+
+
+def strip_html_for_parsing(expr: str) -> str:
+    try:
+        # Import kept inside function: `html_to_text_line` may raise AttributeError
+        # on older Anki versions, and the except branch provides a regex fallback.
+        from anki.utils import html_to_text_line
+
+        return html_to_text_line(expr)
+    except AttributeError:
+        return re.sub(RE_HTML_TAG, "", expr)
 
 
 def split_multiple_pitch_notations(sequences: list[list[str]]) -> list[list[str]]:
@@ -35,14 +46,7 @@ def normalize_for_parsing(expr: str) -> str:
     # Using spaces to separate everything.
     # Taking advantage of the fact that Japanese doesn't use spaces.
     expr = expr.replace("<br>", " . ")
-    try:
-        # Import kept inside function: `html_to_text_line` may raise AttributeError
-        # on older Anki versions, and the except branch provides a regex fallback.
-        from anki.utils import html_to_text_line
-
-        expr = html_to_text_line(expr)
-    except AttributeError:
-        expr = re.sub(r"<[^<>]+>", "", expr, flags=RE_FLAGS)
+    expr = strip_html_for_parsing(expr)
     expr = re.sub(r"(?P<sentence_end>[。!?！？])", r" \g<sentence_end> .", expr, flags=RE_FLAGS)
     expr = re.sub(r"(?P<punct>[「」|、､])", r" \g<punct> ", expr, flags=RE_FLAGS)
     expr = re.sub(r"(?P<before_comma>[^ ]), ", r" \g<before_comma> , ", expr, flags=RE_FLAGS)
