@@ -43,9 +43,9 @@ def normalize_for_parsing(expr: str) -> str:
         expr = html_to_text_line(expr)
     except AttributeError:
         expr = re.sub(r"<[^<>]+>", "", expr, flags=RE_FLAGS)
-    expr = re.sub(r"([。!?！？])", r" \g<1> .", expr, flags=RE_FLAGS)
-    expr = re.sub(r"([「」|、､])", r" \g<1> ", expr, flags=RE_FLAGS)
-    expr = re.sub(r"([^ ]), ", r" \g<1> , ", expr, flags=RE_FLAGS)
+    expr = re.sub(r"(?P<sentence_end>[。!?！？])", r" \g<sentence_end> .", expr, flags=RE_FLAGS)
+    expr = re.sub(r"(?P<punct>[「」|、､])", r" \g<punct> ", expr, flags=RE_FLAGS)
+    expr = re.sub(r"(?P<before_comma>[^ ]), ", r" \g<before_comma> , ", expr, flags=RE_FLAGS)
     return expr
 
 
