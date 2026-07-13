@@ -6,9 +6,10 @@ import dataclasses
 import enum
 import re
 import sys
+from collections.abc import Sequence
 
 import requests
-from bs4 import BeautifulSoup, PageElement, ResultSet, Tag
+from bs4 import BeautifulSoup, PageElement, Tag
 
 from ..config_view import ForvoAudioFormat, ForvoSettingsConfigView
 from ..helpers.http_client import create_session
@@ -193,7 +194,7 @@ class ForvoClient:
             )
         return response
 
-    def find_pronunciations(self, results: ResultSet, word: str) -> list[ForvoPronunciation]:
+    def find_pronunciations(self, results: Sequence[Tag], word: str) -> list[ForvoPronunciation]:
         pronunciations: list[ForvoPronunciation] = []
         for result in results:
             pronunciation = ForvoPronunciation(
