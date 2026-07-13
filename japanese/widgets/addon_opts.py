@@ -133,6 +133,6 @@ class StrokeDisarrayLineEdit(NarrowLineEdit):
 
     def __init__(self, *args) -> None:
         super().__init__(*args)
-        rx = QRegularExpression(r"^(\d+ )*\d+$")
+        rx = QRegularExpression(r"^(?:\d+ )*\d+$")
         validator = QRegularExpressionValidator(rx)
         self.setValidator(validator)
