@@ -178,6 +178,7 @@ def prepare_moras(word: str, cfg: JapaneseConfig) -> list[ArtistMora]:
 
 
 def determine_role(sdict: SectionParts, n_moras: int, accent: SplitAccent) -> Role:
+    """Determine the rendered role for a parsed Pitch Artist section."""
     if is_empty_section(sdict.word):
         return Role.empty
     if accent.keihan:
@@ -217,6 +218,7 @@ class Section:
 
 
 def adjust_ha_wa(moras: list[ArtistMora]) -> list[ArtistMora]:
+    """Convert particle は/ハ to わ/ワ for rendered reading text."""
     if len(moras) == 1:
         match moras[0].text:
             case "ハ":
@@ -227,6 +229,7 @@ def adjust_ha_wa(moras: list[ArtistMora]) -> list[ArtistMora]:
 
 
 def clean_non_printable_chars(word: str) -> str:
+    """Remove internal notation markers that should not appear in graph comments."""
     return word.replace(DEVOICED_PREFIX, "")
 
 
@@ -252,6 +255,7 @@ def make_section(raw_section: str, cfg: JapaneseConfig) -> Section:
 
 
 def set_pitch(section: Section, last_word_ended_low: bool) -> Section:
+    """Fill an implicit pitch value based on the previous section's ending pitch."""
     if section.pitch is None:
         return dataclasses.replace(
             section, pitch=SpecialPitch.always_low.value if last_word_ended_low else SpecialPitch.always_high.value
@@ -260,6 +264,7 @@ def set_pitch(section: Section, last_word_ended_low: bool) -> Section:
 
 
 def calc_level(pitch_num: int, pos: int) -> PitchLevel:
+    """Calculate the Tokyo pitch level at a mora position."""
     if pos < pitch_num or pitch_num == SpecialPitch.heiban.value:
         return PitchLevel.high
     else:
@@ -412,9 +417,12 @@ def sections_to_graph(sequence: Sequence[Section]) -> SvgGraph:
 
 
 class SvgPitchArtistGraphMaker:
+    """Parse Pitch Artist notation and render it as SVG pitch graphs."""
+
     _renderer: SvgGraphRenderer
 
     def __init__(self, cfg: JapaneseConfig) -> None:
+        """Initialize the maker with Japanese add-on configuration."""
         self._cfg = cfg
         self._renderer = SvgGraphRenderer(self._cfg.svg_graphs)
 
