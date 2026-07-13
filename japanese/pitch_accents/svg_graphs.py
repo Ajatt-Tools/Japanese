@@ -47,4 +47,5 @@ class SvgPitchGraphMaker:
         )
 
     def make_graph(self, entry: FormattedEntry) -> str:
+        """Render a dictionary pitch entry as SVG markup."""
         return self._renderer.render_graph(self._entry_to_graph(entry))
