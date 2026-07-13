@@ -99,6 +99,6 @@ class SvgGraphRenderer:
         """Wrap SVG child markup in the pitch graph SVG element."""
         return (
             f'<svg class="ajt__pitch_svg" style="font-family: {self._opts.graph_font_name}" '
-            f'viewBox="0 0 {width} {height}" height="{visible_height}px" '
+            f'viewBox="0 0 {width:d} {height:d}" height="{visible_height:d}px" '
             f'xmlns="http://www.w3.org/2000/svg">{contents}</svg>'
         )
