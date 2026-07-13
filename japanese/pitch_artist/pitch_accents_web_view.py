@@ -35,6 +35,7 @@ class AnkiPitchAccentsWebView(AnkiWebView):
         self._graph_css_relpath = ajt_pitch_graph_css()
 
     def set_svg_graphs(self, graphs_as_html: str) -> None:
+        """Set pitch graph preview HTML using Anki's web-exported CSS files."""
         self.stdHtml(
             head=head_content(),
             body=graphs_as_html,
@@ -51,7 +52,10 @@ class AnkiPitchAccentsWebView(AnkiWebView):
 
 
 class NoAnkiPitchAccentsWebView(NoAnkiWebView):
+    """A pitch graph preview web view for standalone runs outside Anki."""
+
     def set_svg_graphs(self, graphs_as_html: str) -> None:
+        """Set pitch graph preview HTML with CSS inlined from local files."""
         css_files = [
             find_file_in_parents(f"web/{AJT_WEBVIEW_CSS_FILE_NAME}"),
             find_file_in_parents(f"web/{PITCH_GRAPH_CSS_FILE_NAME}"),
@@ -64,6 +68,7 @@ class NoAnkiPitchAccentsWebView(NoAnkiWebView):
 
     @staticmethod
     def set_bridge_command(_func: Callable[[str], Any], _context: Any) -> None:
+        """Do nothing; bridge commands are only available in Anki's web view."""
         print("set_bridge_command not implemented.")
 
     def zoom_in(self) -> None:
