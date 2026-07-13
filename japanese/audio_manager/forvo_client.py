@@ -114,7 +114,7 @@ def find_country(result: PageElement) -> str | None:
 
 
 def audio_transcription_from_play_button(element: Tag) -> str:
-    return re.sub(RE_SPACES, "_", element.text.removesuffix("pronunciation").strip())
+    return re.sub(RE_SPACES, "_", element.text.strip().removesuffix("pronunciation").strip())
 
 
 def make_search_result_filename(audio_url: str, word: str, lang: str) -> str:
