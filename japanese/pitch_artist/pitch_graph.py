@@ -323,22 +323,6 @@ def filter_empty_moras(sequence: list[Section]) -> list[Section]:
     ]
 
 
-def should_connect(section: Section, prev_section: Section) -> bool:
-    """Return True if the current section should be connected to the previous one by a line.
-
-    By default, all dots are connected by lines.
-    Everything is connected unless you specifically add , or |.
-    """
-    if prev_section.is_tape:
-        # if section is a tape, it is not printed on the svg
-        # but connects two moras around itself with a dotted line.
-        # Tape is skipped, so you only need to test prev_section.
-        return True
-    if section.role == Role.empty or prev_section.role == Role.empty:
-        return False
-    return True
-
-
 def _color_sentence(sentence: list[Section]) -> str:
     """Wrap each visible word in a sentence with an HTML span colored by its pitch role."""
     result = []
