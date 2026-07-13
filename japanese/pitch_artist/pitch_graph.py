@@ -18,7 +18,6 @@ from ..pitch_accents.svg_graph_types import (
 )
 from .consts import (
     DEVOICED_PREFIX,
-    GHOST_PARTICLE,
     NON_RENDERED_SECTIONS,
     PITCH_BREAKS,
     SMALL_TSU,
@@ -355,10 +354,84 @@ def apply_kanji_colors(seq_sequences: list[list[Section]]) -> list[str]:
     return [_color_sentence(s) for s in seq_sequences]
 
 
+def is_small_tsu(text: str) -> bool:
+    return text in SMALL_TSU
+
+
+def mora_level(section: Section, mora: ArtistMora, index: int) -> PitchLevel:
+    """Return the already-resolved level for a mora, preserving the small tsu special case."""
+    if is_small_tsu(mora.text) and index == 1 and section.levels[index - 1] == PitchLevel.low:
+        return section.levels[index - 1]
+    return section.levels[index]
+
+
+def artist_mora_to_graph_mora(section: Section, mora: ArtistMora, index: int) -> SvgGraphMora:
+    """Convert one Pitch Artist mora to the generic SVG graph model."""
+    return SvgGraphMora(
+        text=mora.text,
+        level=mora_level(section, mora, index),
+        class_attr=' class="devoiced"' if SvgMoraFlag.devoiced in mora.flags else "",
+        dx_units=len(mora.text),
+        flags=mora.flags,
+    )
+
+
+def has_visible_section_before_tape(previous_sections: Sequence[Section]) -> bool:
+    """Return True if a renderable mora section appears before a trailing tape section."""
+    sections_before_tape = iter(reversed(previous_sections))
+    next(sections_before_tape, None)  # Skip the immediate previous section, which is the tape connector.
+    for previous in sections_before_tape:
+        if previous.role == Role.empty:
+            return False
+        if previous.moras:
+            return True
+    return False
+
+
+def determine_connection_to_previous(section: Section, previous_sections: Sequence[Section]) -> ConnectToPrevious:
+    """Return how section connects to the previous rendered section."""
+    if not previous_sections:
+        return ConnectToPrevious.none
+    previous: Section = previous_sections[-1]
+    if previous.is_tape and has_visible_section_before_tape(previous_sections):
+        return ConnectToPrevious.tape
+    if previous.role != Role.empty and section.role != Role.empty:
+        return ConnectToPrevious.weld
+    return ConnectToPrevious.none
+
+
+def section_to_graph_section(section: Section, connect_to_previous: ConnectToPrevious) -> SvgGraphWord | None:
+    """Convert a renderable Pitch Artist section to the generic SVG graph model."""
+    if section.role == Role.empty or section.is_tape:
+        return None
+    return SvgGraphWord(
+        class_name=section.class_name,
+        moras=[artist_mora_to_graph_mora(section, mora, index) for index, mora in enumerate(section.moras)],
+        is_particle=section.is_particle,
+        connect_to_previous=connect_to_previous,
+    )
+
+
+def sections_to_graph(sequence: Sequence[Section]) -> SvgGraph:
+    """Convert Pitch Artist sections to a normalized SVG graph."""
+    previous_sections: list[Section] = []
+    sections: list[SvgGraphWord] = []
+    for section in sequence:
+        if graph_section := section_to_graph_section(
+            section,
+            connect_to_previous=determine_connection_to_previous(section, previous_sections),
+        ):
+            sections.append(graph_section)
+        previous_sections.append(section)
+    return SvgGraph(sections=sections, outer_class_name="")
+
+
 class SvgPitchArtistGraphMaker:
+    _renderer: SvgGraphRenderer
+
     def __init__(self, cfg: JapaneseConfig) -> None:
         self._cfg = cfg
-        self._mk = SvgPitchGraphMaker(self._cfg.svg_graphs)
+        self._renderer = SvgGraphRenderer(self._cfg.svg_graphs)
 
     def _parse_sections(self, sequence: list[str]) -> list[Section]:
         """Parse a list of raw section strings into Section objects."""
@@ -382,18 +455,6 @@ class SvgPitchArtistGraphMaker:
         sequences = [list(build_high_low(sequence)) for sequence in sequences]
         return sequences
 
-    def _calc_svg_width(self, sequence: list[Section], morae_width: int) -> int:
-        """Calculate the total SVG width in pixels for a sequence of sections."""
-        return (
-            sum(len(section.moras) if section.role != Role.empty else 0 for section in sequence) * morae_width
-            + self._cfg.svg_graphs.graph_horizontal_padding * 2
-        )
-
-    def _make_text(self, text: str, pos: Point, dx: int) -> str:
-        """Generate an SVG <text> element for a mora label."""
-        class_name = ' class="devoiced"' if isinstance(text, DevoicedMora) else ""
-        return self._mk.make_text_element(text, pos, class_name, dx)
-
     def make_graph(self, sequence: list[Section]) -> str | None:
         """Render a sequence of sections as a complete SVG pitch accent graph.
 
@@ -402,86 +463,8 @@ class SvgPitchArtistGraphMaker:
         sequence = filter_empty_moras(sequence)
         if not any(section.moras for section in sequence):
             return None
-
-        height_high = self._cfg.svg_graphs.size_unit
-        hor_pad = self._cfg.svg_graphs.graph_horizontal_padding
-        x_step = self._cfg.svg_graphs.x_step
-        height_low = height_high + self._cfg.svg_graphs.graph_height
-        height_kana = height_low + x_step
-
-        pos = Point.new(x=height_high + hor_pad, y=height_high)
-
-        circles, paths, text = [], [], []
-
-        for i, section in enumerate(sequence):
-            # each section is a word, a list of moras
-            if section.role == Role.empty or section.is_tape:
-                continue
-
-            word_circles, text_moras = [], []
-            path = Path(self._cfg.svg_graphs)
-            connector = Line(self._cfg.svg_graphs)  # single connector per section
-
-            if 0 < i < len(sequence) and should_connect(section, sequence[i - 1]):
-                connector.start_at(pos.shift_by(x=-x_step), tape=sequence[i - 1].is_tape)
-
-            for j, mora in enumerate(section.moras):
-                mora_level = (
-                    section.levels[j - 1]
-                    if mora in ("っ", "ッ") and j == 1 and section.levels[j - 1] == PitchLevel.low
-                    else section.levels[j]
-                )
-                pos = pos.replace(y=height_high if mora_level == PitchLevel.high else height_low)
-                word_circles.append(self._mk.make_circle(pos.replace()))
-                path.push(pos.replace(), is_trailing=False)
-
-                if j == 0 and connector.is_unfinished():
-                    # first mora of a word
-                    connector.end_at(pos.replace())
-
-                if mora != GHOST_PARTICLE:
-                    if isinstance(mora, DevoicedMora):
-                        # added some magic numbers here because it's unclear how the position is calculated.
-                        # possibly, it's font-dependent.
-                        text_moras.append(
-                            self._mk.make_devoiced_circle(pos.replace(y=height_kana), extend=len(mora) > 1)
-                        )
-                    text_moras.append(
-                        self._make_text(mora, pos.replace(y=height_kana), int(self._cfg.svg_graphs.text_dx) * len(mora))
-                    )
-
-                pos = pos.shift_by(x=x_step)
-
-            circles.append(make_group(word_circles, section.class_name))
-            paths.append(make_group([path.draw()], section.class_name))
-            text.append(make_group(text_moras, section.class_name))
-
-            if connector.is_completed():
-                paths.append(
-                    make_group([connector.adjust_to_radius(self._cfg.svg_graphs.circle_radius).draw()], "connector")
-                )
-
-        content = [
-            make_group(paths, "paths"),
-            make_group(circles, "circles"),
-        ]
-        svg_width = self._calc_svg_width(sequence, x_step)
-
-        svg_height_with_text = height_kana + self._cfg.svg_graphs.size_unit
-        svg_height_no_text = height_low + self._cfg.svg_graphs.size_unit
-
-        if not self._cfg.svg_graphs.include_text:
-            svg_height = svg_height_no_text
-            ratio = svg_height_no_text / svg_height_with_text
-            visible_height = int(ratio * self._cfg.svg_graphs.graph_visible_height)
-        else:
-            svg_height = svg_height_with_text
-            visible_height = self._cfg.svg_graphs.graph_visible_height
-            content.append(make_group(text, "text"))
-
-        svg = self._mk.make_svg("".join(content), width=svg_width, height=svg_height, visible_height=visible_height)
+        svg = self._renderer.render_graph(sections_to_graph(sequence))
         notation = f'<!-- generated with expression: "{" ".join(s.raw for s in sequence)}" -->'
-
         return f"{notation}\n{svg}"
 
     def make_graphs(self, sequences: list[list[Section]]) -> Iterable[str]:
