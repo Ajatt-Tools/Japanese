@@ -44,6 +44,10 @@ class SvgGraphRenderer:
 
     def __init__(self, options: SvgPitchGraphOptionsConfigView) -> None:
         self._opts = options
+        self._hor_pad = self._opts.graph_horizontal_padding
+        self._height_high = self._opts.size_unit
+        self._height_low = self._height_high + self._opts.graph_height
+        self._height_kana = self._height_low + self._opts.x_step
 
     def make_circle(self, pos: Point, is_trailing: bool, is_particle: bool) -> str:
         """Create a circle positioned where two pitch lines touch."""
