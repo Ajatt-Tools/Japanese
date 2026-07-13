@@ -339,6 +339,7 @@ def apply_kanji_colors(seq_sequences: list[list[Section]]) -> list[str]:
 
 
 def is_small_tsu(text: str) -> bool:
+    """Return True if text is a small tsu that can inherit the previous pitch level."""
     return text in SMALL_TSU
 
 
