@@ -122,6 +122,7 @@ class GraphSettingsWidget(QWidget):
 
     @property
     def inject_css_into_files(self) -> bool:
+        """Return True when exported/copied SVGs should include inline CSS."""
         return bool(get_from_widget(self._widgets.inject_css_into_files))
 
     def _fill_layout(self) -> None:
@@ -172,6 +173,7 @@ def make_graphs_list(text: str, gen: SvgPitchArtistGraphMaker) -> list[str]:
 
 
 def get_webview(parent: QWidget) -> PitchAccentsWebView:
+    """Return the Anki or standalone web view implementation for pitch graph previews."""
     if not mw:
         # Anki isn't running.
         return NoAnkiPitchAccentsWebView(parent=parent)
@@ -179,6 +181,7 @@ def get_webview(parent: QWidget) -> PitchAccentsWebView:
 
 
 def inject_css_into_svg(graph: str) -> str:
+    """Inline pitch graph CSS into a standalone SVG string."""
     return graph.replace("</svg>", inline_css_code(graphs_inline_css_style_tag()) + "</svg>")
 
 
@@ -258,7 +261,7 @@ class PitchArtistDialog(AnkiSaveAndRestoreGeomDialog):
         return self
 
     def _format_graphs_as_html(self, graphs: list[str] | None) -> str:
-        """Create HTML body"""
+        """Create the preview page body for generated SVG graphs."""
         html = io.StringIO()
         html.write('<main class="ajt__pitch_graphs">')
         if graphs:
@@ -373,6 +376,7 @@ class PitchArtistDialog(AnkiSaveAndRestoreGeomDialog):
         menu.addAction(ACTION_NAME, functools.partial(self._on_lookup_pronunciation, webview.selectedText()))
 
     def _present_examples(self) -> None:
+        """Prepend sample Pitch Artist notation and update the preview."""
         self.set_text(EXAMPLES + "\n" + self._text_edit.toPlainText())
         self.update_graphs()
 
