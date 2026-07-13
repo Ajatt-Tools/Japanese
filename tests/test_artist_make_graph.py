@@ -39,6 +39,11 @@ def extract_text_labels(svg: str) -> list[str]:
     return re.findall(r"<text[^>]*>([^<]*)</text>", svg)
 
 
+def extract_group_class_names(svg: str) -> list[str]:
+    """Extract CSS class names from all SVG group elements."""
+    return re.findall(r'<g class="(?P<class_name>[^"]+)">', svg)
+
+
 def extract_svg_root_dimensions(svg: str) -> SvgRootDimensions:
     """Extract integer root SVG dimensions from viewBox and height attributes."""
     match = re.search(
@@ -124,6 +129,28 @@ class TestTextLabels:
         sequences = gen.make_sequences(notation)
         svg = list(gen.make_graphs(sequences))[0]
         assert extract_text_labels(svg) == expected_labels
+
+
+class TestSvgGroupNames:
+    """Root pitch-contour group keeps the shared 'lines' class name."""
+
+    @pytest.mark.parametrize(
+        "notation, expected_path_classes",
+        [
+            ("がっこう;0", ["lines"]),
+            ("がっこう;1 つくった;2", ["lines"]),
+            ("大物[おおもの];2 ; まで;1", ["lines"]),
+        ],
+    )
+    def test_path_group_is_named_lines(
+        self, no_anki_config: NoAnkiConfigView, notation: str, expected_path_classes: list[str]
+    ) -> None:
+        gen = SvgPitchArtistGraphMaker(no_anki_config)
+        svg = list(gen.make_graphs(gen.make_sequences(notation)))[0]
+        group_class_names = extract_group_class_names(svg)
+
+        assert group_class_names[:1] == expected_path_classes
+        assert [class_name for class_name in group_class_names if class_name == "paths"] == []
 
 
 class TestGhostParticle:

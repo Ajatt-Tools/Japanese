@@ -1,6 +1,8 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
+import re
+
 import pytest
 
 from japanese.config_view import SvgPitchGraphOptionsConfigView
@@ -75,6 +77,11 @@ TEST_ENTRIES = (
 )
 
 
+def extract_group_class_names(svg: str) -> list[str]:
+    """Extract CSS class names from all SVG group elements."""
+    return re.findall(r'<g class="(?P<class_name>[^"]+)">', svg)
+
+
 @pytest.mark.parametrize(
     "formatted_entry, svg_file_name",
     [(entry, f"test_{idx}.svg") for idx, entry in enumerate(TEST_ENTRIES)],
@@ -88,6 +95,20 @@ def test_make_svg(no_anki_config: NoAnkiConfigView, formatted_entry: FormattedEn
         assert (
             f.read().strip() == maker.make_graph(formatted_entry).strip()
         ), f"generated content must match: {DATA_DIR / svg_file_name}"
+
+
+@pytest.mark.parametrize("formatted_entry", TEST_ENTRIES)
+def test_dictionary_path_group_is_named_lines(
+    no_anki_config: NoAnkiConfigView, formatted_entry: FormattedEntry
+) -> None:
+    """Dictionary SVGs use the shared 'lines' class for the pitch-contour group."""
+    svg_config = SvgPitchGraphOptionsConfigView(no_anki_config)
+    svg_config.graph_font_name = "Noto Sans CJK JP"
+    maker = SvgPitchGraphMaker(options=svg_config)
+    group_class_names = extract_group_class_names(maker.make_graph(formatted_entry))
+
+    assert [class_name for class_name in group_class_names if class_name == "lines"] == ["lines"]
+    assert [class_name for class_name in group_class_names if class_name == "paths"] == []
 
 
 @pytest.mark.parametrize(

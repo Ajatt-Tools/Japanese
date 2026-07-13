@@ -8,7 +8,6 @@ from japanese.audio_manager.download_results import (
     BLOOP_FILE,
     ReservedFile,
     calc_tooltip_offset,
-    format_report_successes_msg,
     only_missing,
 )
 
