@@ -11,7 +11,7 @@ from typing import Any, cast
 
 from aqt import gui_hooks, mw
 from aqt.qt import *
-from aqt.utils import disable_help_button, show_critical, showInfo, tooltip
+from aqt.utils import disable_help_button, openLink, show_critical, showInfo, tooltip
 from aqt.webview import AnkiWebView
 
 from ..ajt_common.about_menu import menu_root_entry
@@ -47,6 +47,7 @@ from .pitch_accents_web_view import (
 from .pitch_graph import SvgPitchArtistGraphMaker
 
 ACTION_NAME = "Pitch artist"
+USER_GUIDE_URL = "https://ajatt.top/blog/pitch-artist-user-guide.html"
 EXAMPLES = """
 わたし; は;p にほんご; を べんきょう; して; います;k2
 ぼく;1 は;p せんせい;3 を して;0 います;k2
@@ -348,8 +349,17 @@ class PitchArtistDialog(AnkiSaveAndRestoreGeomDialog):
             button.setToolTip(tooltip_text)
             qconnect(button.clicked, action)
             hbox.addWidget(button)
-        hbox.addStretch()
+        hbox.addStretch(1)
+        hbox.addWidget(self._make_user_guide_button())
         return hbox
+
+    def _make_user_guide_button(self) -> QPushButton:
+        """Create a button that opens the official Pitch Artist user guide."""
+        button = QPushButton("User Guide")
+        button.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_DialogHelpButton))
+        button.setToolTip("Open the official Pitch Artist user guide")
+        qconnect(button.clicked, lambda checked: openLink(USER_GUIDE_URL))
+        return button
 
     def _on_lookup_pronunciation(self, text: str) -> None:
         """Open the pitch graph preview dialog with the selected text."""
