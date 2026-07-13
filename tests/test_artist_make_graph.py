@@ -9,6 +9,8 @@ import pytest
 
 from japanese.pitch_artist.pitch_graph import SvgPitchArtistGraphMaker
 from playground.utils import NoAnkiConfigView
+from tests import DATA_DIR
+from tests.test_pitch_artist_regression import HEADLESS_SENTENCE, NUM_EXPECTED_SEQUENCES
 
 # Circle Y-coordinates derived from default config:
 #   height_high = size_unit = 25   → y=25 means "high"
@@ -29,14 +31,51 @@ class SvgRootDimensions(typing.NamedTuple):
     visible_height: int
 
 
-def extract_circles(svg: str) -> list[tuple[int, int]]:
+class ArtistGraphReference(typing.NamedTuple):
+    """Expected Pitch Artist SVG graph reference file."""
+
+    index: int
+    svg_file_name: str
+
+
+ARTIST_GRAPH_REFERENCES = tuple(
+    ArtistGraphReference(index=index, svg_file_name=f"test_{index}.svg") for index in range(NUM_EXPECTED_SEQUENCES)
+)
+
+
+class CirclePosition(typing.NamedTuple):
+    """Integer circle center coordinates in SVG user units."""
+
+    x: int
+    y: int
+
+
+def make_artist_graphs(cfg: NoAnkiConfigView) -> list[str]:
+    """Render the canonical Pitch Artist SVG snapshot set."""
+    gen = SvgPitchArtistGraphMaker(cfg)
+    return list(gen.make_graphs(gen.make_sequences(HEADLESS_SENTENCE)))
+
+
+@pytest.mark.parametrize("reference", ARTIST_GRAPH_REFERENCES)
+def test_make_artist_svg(no_anki_config: NoAnkiConfigView, reference: ArtistGraphReference) -> None:
+    """Pitch Artist SVG output matches the checked-in full SVG references."""
+    reference_file_path = DATA_DIR / "artist_graphs" / reference.svg_file_name
+    expected_graph = reference_file_path.read_text(encoding="utf-8").strip()
+
+    assert make_artist_graphs(no_anki_config)[reference.index].strip() == expected_graph
+
+
+def extract_circles(svg: str) -> list[CirclePosition]:
     """Extract (x, y) integer pairs from all <circle> elements in the SVG."""
-    return [(int(float(cx)), int(float(cy))) for cx, cy in re.findall(r'cx="([0-9.]+)" cy="([0-9.]+)"', svg)]
+    return [
+        CirclePosition(x=int(float(match.group("cx"))), y=int(float(match.group("cy"))))
+        for match in re.finditer(r'cx="(?P<cx>[0-9.]+)" cy="(?P<cy>[0-9.]+)"', svg)
+    ]
 
 
 def extract_text_labels(svg: str) -> list[str]:
     """Extract text content from all <text> elements in the SVG."""
-    return re.findall(r"<text[^>]*>([^<]*)</text>", svg)
+    return [match.group("label") for match in re.finditer(r"<text[^>]*>(?P<label>[^<]*)</text>", svg)]
 
 
 def extract_group_class_names(svg: str) -> list[str]:
@@ -70,20 +109,51 @@ class TestCirclePositions:
         "notation, expected_positions",
         [
             # heiban: low, low (ッ inherits low from j==1 rule), high, high
-            ("がっこう;0", [(31, LOW), (81, LOW), (131, HIGH), (181, HIGH)]),
+            (
+                "がっこう;0",
+                [
+                    CirclePosition(31, LOW),
+                    CirclePosition(81, LOW),
+                    CirclePosition(131, HIGH),
+                    CirclePosition(181, HIGH),
+                ],
+            ),
             # atamadaka: high, low, low, low
-            ("がっこう;1", [(31, HIGH), (81, LOW), (131, LOW), (181, LOW)]),
+            (
+                "がっこう;1",
+                [
+                    CirclePosition(31, HIGH),
+                    CirclePosition(81, LOW),
+                    CirclePosition(131, LOW),
+                    CirclePosition(181, LOW),
+                ],
+            ),
             # nakadaka: low, high, low, low
-            ("つくった;2", [(31, LOW), (81, HIGH), (131, LOW), (181, LOW)]),
+            (
+                "つくった;2",
+                [
+                    CirclePosition(31, LOW),
+                    CirclePosition(81, HIGH),
+                    CirclePosition(131, LOW),
+                    CirclePosition(181, LOW),
+                ],
+            ),
             # odaka (3 moras, pitch 3): low, high, high
-            ("ひとり;3", [(31, LOW), (81, HIGH), (131, HIGH)]),
+            (
+                "ひとり;3",
+                [
+                    CirclePosition(31, LOW),
+                    CirclePosition(81, HIGH),
+                    CirclePosition(131, HIGH),
+                ],
+            ),
         ],
     )
     def test_circle_positions(
         self,
         no_anki_config: NoAnkiConfigView,
         notation: str,
-        expected_positions: list[tuple[int, int]],
+        expected_positions: list[CirclePosition],
     ) -> None:
         gen = SvgPitchArtistGraphMaker(no_anki_config)
         sequences = gen.make_sequences(notation)
@@ -104,7 +174,7 @@ class TestSmallTsuSpecialCase:
         svg = list(gen.make_graphs(sequences))[0]
         circles = extract_circles(svg)
         # Circle for ッ (index 1) must be low, not high.
-        assert circles[1] == (81, LOW)
+        assert circles[1] == CirclePosition(81, LOW)
 
 
 class TestTextLabels:
@@ -176,7 +246,7 @@ class TestParticleCircleFallback:
 
         particle_circles = re.findall(r'<g class="particle atamadaka"><circle[^>]+>', svg)
         assert particle_circles
-        assert all('fill="none"' in circle for circle in particle_circles)
+        assert [circle.count('fill="none"') for circle in particle_circles] == [1]
 
     def test_normal_word_circles_remain_filled(self, no_anki_config: NoAnkiConfigView) -> None:
         gen = SvgPitchArtistGraphMaker(no_anki_config)
@@ -185,7 +255,7 @@ class TestParticleCircleFallback:
 
         circles = re.findall(r"<circle[^>]+>", svg)
         assert circles
-        assert all('fill="black"' in circle for circle in circles)
+        assert [circle.count('fill="black"') for circle in circles] == [1, 1, 1, 1]
 
 
 class TestDevoicedMora:
@@ -196,7 +266,7 @@ class TestDevoicedMora:
         sequences = gen.make_sequences("君[dきdみ];1")
         svg = list(gen.make_graphs(sequences))[0]
         # Devoiced text elements have class="devoiced".
-        assert 'class="devoiced"' in svg
+        assert svg.count('class="devoiced"') >= 2
         # Devoiced circle markers use stroke-dasharray (dashed circles/rects).
         dasharray_count = len(re.findall(r'stroke-dasharray="', svg))
         assert dasharray_count >= 2  # one for each devoiced mora (き and み)
@@ -210,7 +280,7 @@ class TestTapeConnector:
         sequences = gen.make_sequences("大物[おおもの];2 ; まで;1")
         svg = list(gen.make_graphs(sequences))[0]
         # Tape connector line should use stroke-dasharray="4".
-        assert 'stroke-dasharray="4"' in svg
+        assert svg.count('stroke-dasharray="4"') == 1
 
     @pytest.mark.parametrize(
         "notation, expected_circles, expected_texts",
@@ -230,8 +300,8 @@ class TestTapeConnector:
 
         assert len(extract_circles(svg)) == expected_circles
         assert len(extract_text_labels(svg)) == expected_texts
-        assert "connector" not in svg
-        assert 'stroke-dasharray="4"' not in svg
+        assert [class_name for class_name in extract_group_class_names(svg) if class_name == "connector"] == []
+        assert svg.count('stroke-dasharray="4"') == 0
 
 
 class TestIncludeText:
@@ -278,6 +348,21 @@ class TestIncludeText:
         assert len(extract_text_labels(svg)) == 4
         assert extract_visible_height(svg) == 100
 
+    @pytest.mark.parametrize(
+        "include_text, expected_text_group_count",
+        [
+            (False, 0),
+            (True, 1),
+        ],
+    )
+    def test_text_group_matches_text_visibility(self, include_text: bool, expected_text_group_count: int) -> None:
+        """Text group markup is emitted only when kana text is visible."""
+        cfg = NoAnkiConfigView()
+        cfg.svg_graphs["include_text"] = include_text
+        gen = SvgPitchArtistGraphMaker(cfg)
+        svg = list(gen.make_graphs(gen.make_sequences("がっこう;0")))[0]
+        assert svg.count('<g class="text">') == expected_text_group_count
+
 
 class TestEmptyInput:
     """Edge cases where make_graph returns None."""
@@ -301,11 +386,13 @@ class TestMultiWordConnector:
         sequences = gen.make_sequences("がっこう;1 つくった;2")
         svg = list(gen.make_graphs(sequences))[0]
         # A "connector" CSS class group should exist.
-        assert "connector" in svg
+        assert [class_name for class_name in extract_group_class_names(svg) if class_name == "connector"] == [
+            "connector"
+        ]
 
     def test_disconnected_words_have_no_connector(self, no_anki_config: NoAnkiConfigView) -> None:
         gen = SvgPitchArtistGraphMaker(no_anki_config)
         sequences = gen.make_sequences("がっこう;1 | つくった;2")
         svg = list(gen.make_graphs(sequences))[0]
         # Pipe disconnects → no connector group.
-        assert "connector" not in svg
+        assert [class_name for class_name in extract_group_class_names(svg) if class_name == "connector"] == []

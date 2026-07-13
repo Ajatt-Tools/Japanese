@@ -56,6 +56,7 @@ def tmp_user_accents_file(tmp_path_factory: pytest.TempPathFactory) -> pathlib.P
 def no_anki_config() -> NoAnkiConfigView:
     config = NoAnkiConfigView()
     config.furigana["maximum_results"] = 1
+    config.svg_graphs["graph_font_name"] = "Noto Sans CJK JP"
     # substitute audio sources
     config["audio_sources"] = [
         {

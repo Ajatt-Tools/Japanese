@@ -531,7 +531,8 @@ class TestSvgRegression:
         assert len(re.findall(r"<circle", svg)) == expected.num_circles
         assert len(re.findall(r"<line", svg)) == expected.num_lines
         assert len(re.findall(r"<text", svg)) == expected.num_texts
-        assert re.findall(r'<g class="([^"]+)"', svg) == expected.css_classes
+        classes = [match.group("class_name") for match in re.finditer(r'<g class="(?P<class_name>[^"]+)"', svg)]
+        assert classes == expected.css_classes
 
 
 class TestApplyKanjiColors:

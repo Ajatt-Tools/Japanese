@@ -88,7 +88,6 @@ def extract_group_class_names(svg: str) -> list[str]:
 )
 def test_make_svg(no_anki_config: NoAnkiConfigView, formatted_entry: FormattedEntry, svg_file_name: str) -> None:
     svg_config = SvgPitchGraphOptionsConfigView(no_anki_config)
-    svg_config.graph_font_name = "Noto Sans CJK JP"  # simplify
     maker = SvgPitchGraphMaker(options=svg_config)
 
     reference_file_path = DATA_DIR / "formatted_entry_graphs" / svg_file_name
@@ -103,7 +102,6 @@ def test_dictionary_path_group_is_named_lines(
 ) -> None:
     """Dictionary SVGs use the shared 'lines' class for the pitch-contour group."""
     svg_config = SvgPitchGraphOptionsConfigView(no_anki_config)
-    svg_config.graph_font_name = "Noto Sans CJK JP"
     maker = SvgPitchGraphMaker(options=svg_config)
     group_class_names = extract_group_class_names(maker.make_graph(formatted_entry))
 
@@ -117,8 +115,8 @@ def test_dictionary_path_group_is_named_lines(
         (Mora(txt=["ア"], level=PitchLevel.high, flags=SvgMoraFlag.devoiced), "ア"),
     ],
 )
-def test_make_text_keeps_mora_api(no_anki_config: NoAnkiConfigView, mora: Mora, expected_text: str) -> None:
-    """Public text rendering still accepts a Mora, not pre-rendered text."""
+def test_renderer_make_text_element(no_anki_config: NoAnkiConfigView, mora: Mora, expected_text: str) -> None:
+    """Renderer text elements keep class attributes and formatted coordinates."""
     svg_config = SvgPitchGraphOptionsConfigView(no_anki_config)
     maker = SvgGraphRenderer(options=svg_config)
     text = assemble_txt_content(mora, reading_format=svg_config.reading_format, tspan_dx=svg_config.tspan_dx)
@@ -130,12 +128,70 @@ def test_make_text_keeps_mora_api(no_anki_config: NoAnkiConfigView, mora: Mora, 
     )
 
 
-def test_heiban_trailing_circle_has_fill_none(no_anki_config: NoAnkiConfigView) -> None:
+@pytest.mark.parametrize("formatted_entry", [TEST_ENTRIES[0]])
+def test_heiban_trailing_circle_has_fill_none(
+    no_anki_config: NoAnkiConfigView, formatted_entry: FormattedEntry
+) -> None:
     """Heiban dictionary graphs add a trailing hollow circle for following particles."""
     svg_config = SvgPitchGraphOptionsConfigView(no_anki_config)
-    svg_config.graph_font_name = "Noto Sans CJK JP"
     maker = SvgPitchGraphMaker(options=svg_config)
 
-    svg = maker.make_graph(TEST_ENTRIES[0])
+    svg = maker.make_graph(formatted_entry)
 
-    assert '<circle class="trail" fill="none" stroke="gray"' in svg
+    assert svg.count('<circle class="trail" fill="none" stroke="gray"') == 1
+
+
+@pytest.mark.parametrize(
+    "formatted_entry, include_text, expected_text_group_count",
+    [
+        (TEST_ENTRIES[0], False, 0),
+        (TEST_ENTRIES[0], True, 1),
+    ],
+)
+def test_text_group_matches_text_visibility(
+    formatted_entry: FormattedEntry,
+    include_text: bool,
+    expected_text_group_count: int,
+) -> None:
+    """Text group markup is emitted only when kana text is visible."""
+    no_anki_config = NoAnkiConfigView()
+    no_anki_config.svg_graphs["include_text"] = include_text
+    svg_config = SvgPitchGraphOptionsConfigView(no_anki_config)
+    maker = SvgPitchGraphMaker(options=svg_config)
+    svg = maker.make_graph(formatted_entry)
+    assert svg.count('<g class="text">') == expected_text_group_count
+
+
+@pytest.mark.parametrize(
+    "formatted_entry, graph_horizontal_padding, size_unit, graph_height, expected_fragments",
+    [
+        (
+            TEST_ENTRIES[0],
+            50,
+            40,
+            80,
+            ('viewBox="0 0 350 210"', 'cx="90.000" cy="120.000"', 'cy="40.000"'),
+        ),
+    ],
+)
+def test_renderer_uses_mutated_options(
+    formatted_entry: FormattedEntry,
+    graph_horizontal_padding: int,
+    size_unit: int,
+    graph_height: int,
+    expected_fragments: tuple[str, str, str],
+) -> None:
+    """Renderer geometry is computed from current options, not stale cached values."""
+    svg_config = SvgPitchGraphOptionsConfigView(NoAnkiConfigView())
+    maker = SvgPitchGraphMaker(options=svg_config)
+    before = maker.make_graph(formatted_entry)
+    svg_config.update({
+        "graph_horizontal_padding": graph_horizontal_padding,
+        "size_unit": size_unit,
+        "graph_height": graph_height,
+    })
+
+    after = maker.make_graph(formatted_entry)
+
+    assert before != after
+    assert all(fragment in after for fragment in expected_fragments)
