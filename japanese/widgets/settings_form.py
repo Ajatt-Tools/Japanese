@@ -71,7 +71,8 @@ class SettingsForm(QWidget):
         """Subclasses add new tooltips here."""
         pass
 
-    def as_dict(self) -> dict[str, Union[bool, str, int]]:
+    def as_dict(self) -> dict[str, bool | str | int | float]:
+        """Return current widget values as a config dictionary."""
         return as_config_dict(self._widgets.__dict__)
 
     def _create_checkboxes(self) -> Iterable[tuple[str, QCheckBox]]:

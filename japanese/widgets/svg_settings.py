@@ -111,5 +111,6 @@ class SvgSettingsWidget(QWidget):
     def _make_svgs(self) -> str:
         return "".join(self._maker.make_graph(entry) for entry in SHOW_ENTRIES)
 
-    def as_dict(self) -> dict[str, Union[bool, str, int]]:
+    def as_dict(self) -> dict[str, bool | str | int | float]:
+        """Return current SVG settings as a config dictionary."""
         return self._form.as_dict()
