@@ -15,7 +15,7 @@ from japanese.pitch_accents.svg_components import (
 )
 from japanese.pitch_accents.svg_graph_renderer import SvgGraphRenderer
 from japanese.pitch_accents.svg_graph_types import PitchLevel, SvgMoraFlag
-from japanese.pitch_accents.svg_graphs import SvgPitchGraphMaker
+from japanese.pitch_accents.entry_to_svg import FormattedEntryToSvgAdapter
 from playground.utils import NoAnkiConfigView
 from tests import DATA_DIR
 
@@ -88,7 +88,7 @@ def extract_group_class_names(svg: str) -> list[str]:
 )
 def test_make_svg(no_anki_config: NoAnkiConfigView, formatted_entry: FormattedEntry, svg_file_name: str) -> None:
     svg_config = SvgPitchGraphOptionsConfigView(no_anki_config)
-    maker = SvgPitchGraphMaker(options=svg_config)
+    maker = FormattedEntryToSvgAdapter(options=svg_config)
 
     reference_file_path = DATA_DIR / "formatted_entry_graphs" / svg_file_name
     reference = reference_file_path.read_text(encoding="utf-8").strip()
@@ -102,7 +102,7 @@ def test_dictionary_path_group_is_named_lines(
 ) -> None:
     """Dictionary SVGs use the shared 'lines' class for the pitch-contour group."""
     svg_config = SvgPitchGraphOptionsConfigView(no_anki_config)
-    maker = SvgPitchGraphMaker(options=svg_config)
+    maker = FormattedEntryToSvgAdapter(options=svg_config)
     group_class_names = extract_group_class_names(maker.make_graph(formatted_entry))
 
     assert [class_name for class_name in group_class_names if class_name == "lines"] == ["lines"]
@@ -134,7 +134,7 @@ def test_heiban_trailing_circle_has_fill_none(
 ) -> None:
     """Heiban dictionary graphs add a trailing hollow circle for following particles."""
     svg_config = SvgPitchGraphOptionsConfigView(no_anki_config)
-    maker = SvgPitchGraphMaker(options=svg_config)
+    maker = FormattedEntryToSvgAdapter(options=svg_config)
 
     svg = maker.make_graph(formatted_entry)
 
@@ -157,7 +157,7 @@ def test_text_group_matches_text_visibility(
     no_anki_config = NoAnkiConfigView()
     no_anki_config.svg_graphs["include_text"] = include_text
     svg_config = SvgPitchGraphOptionsConfigView(no_anki_config)
-    maker = SvgPitchGraphMaker(options=svg_config)
+    maker = FormattedEntryToSvgAdapter(options=svg_config)
     svg = maker.make_graph(formatted_entry)
     assert svg.count('<g class="text">') == expected_text_group_count
 
@@ -183,7 +183,7 @@ def test_renderer_uses_mutated_options(
 ) -> None:
     """Renderer geometry is computed from current options, not stale cached values."""
     svg_config = SvgPitchGraphOptionsConfigView(NoAnkiConfigView())
-    maker = SvgPitchGraphMaker(options=svg_config)
+    maker = FormattedEntryToSvgAdapter(options=svg_config)
     before = maker.make_graph(formatted_entry)
     svg_config.update({
         "graph_horizontal_padding": graph_horizontal_padding,

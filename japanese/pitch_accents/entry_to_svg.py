@@ -11,7 +11,7 @@ from .svg_graph_renderer import SvgGraphRenderer
 from .svg_graph_types import ConnectToPrevious, SvgGraph, SvgGraphMora, SvgGraphWord
 
 
-class SvgPitchGraphMaker:
+class FormattedEntryToSvgAdapter:
     """Adapter from dictionary pitch entries to the shared SVG graph renderer."""
 
     _renderer: SvgGraphRenderer

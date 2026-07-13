@@ -7,7 +7,7 @@ from aqt.webview import AnkiWebView
 
 from ..config_view import SvgPitchGraphOptionsConfigView
 from ..pitch_accents.common import FormattedEntry
-from ..pitch_accents.svg_graphs import SvgPitchGraphMaker
+from ..pitch_accents.entry_to_svg import FormattedEntryToSvgAdapter
 from .settings_form import SvgSettingsForm
 
 SHOW_ENTRIES = (
@@ -85,7 +85,7 @@ class SvgSettingsWidget(QWidget):
         self._svg_config = svg_config
         self._form = SvgSettingsForm(self._svg_config)
         self._web_view = AnkiWebView() if mw else NoAnkiWebView()
-        self._maker = SvgPitchGraphMaker(options=self._svg_config)
+        self._maker = FormattedEntryToSvgAdapter(options=self._svg_config)
         self.initUI()
         self.update_view()
         qconnect(self._form.opts_changed, self.update_view)

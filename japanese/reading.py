@@ -22,7 +22,7 @@ from .pitch_accents.styles import (
     STYLE_MAP,
     HTMLPitchPatternStyle,
 )
-from .pitch_accents.svg_graphs import SvgPitchGraphMaker
+from .pitch_accents.entry_to_svg import FormattedEntryToSvgAdapter
 
 # Lookup
 ##########################################################################
@@ -133,7 +133,7 @@ def generate_furigana(
 ##########################################################################
 
 mecab = MecabController(verbose=True, cache_max_size=cfg.cache_lookups)
-svg_graph_maker = SvgPitchGraphMaker(options=cfg.svg_graphs)
+svg_graph_maker = FormattedEntryToSvgAdapter(options=cfg.svg_graphs)
 acc_dict = AccentDictManager2()
 lookup = AccentLookup(cfg, mecab)
 gui_hooks.main_window_did_init.append(acc_dict.ensure_dict_ready)
