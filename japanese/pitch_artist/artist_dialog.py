@@ -7,25 +7,28 @@ import pathlib
 import re
 from gettext import gettext as _
 from types import SimpleNamespace
-from typing import Any, cast
+from typing import Any
 
 from aqt import gui_hooks, mw
 from aqt.qt import *
 from aqt.utils import disable_help_button, openLink, show_critical, showInfo, tooltip
 from aqt.webview import AnkiWebView
 
+from .pitch_accents_web_view import (
+    AnkiPitchAccentsWebView,
+    NoAnkiPitchAccentsWebView,
+    PitchAccentsWebView,
+)
+from .pitch_graph import SvgPitchArtistGraphMaker
 from ..ajt_common.about_menu import menu_root_entry
 from ..ajt_common.enum_select_combo import EnumSelectCombo
 from ..ajt_common.restore_geom_dialog import AnkiSaveAndRestoreGeomDialog
 from ..ajt_common.utils import ui_translate
 from ..config_view import JapaneseConfig, SvgGraphReadingFormat, get_global_config
 from ..helpers.consts import ADDON_NAME
-from ..helpers.file_ops import find_file_in_parents
 from ..helpers.misc import media_strip
 from ..helpers.regex import RE_SPACES
-from ..helpers.webview_utils import (
-    PITCH_GRAPH_CSS_FILE_NAME,
-)
+from ..helpers.webview_utils import graphs_inline_css_style_tag
 from ..widgets.addon_opts import (
     AJTPlainTextEdit,
     AllowedRange,
@@ -39,12 +42,6 @@ from ..widgets.widgets_to_config_dict import (
     get_from_widget,
     set_from_cfg,
 )
-from .pitch_accents_web_view import (
-    AnkiPitchAccentsWebView,
-    NoAnkiPitchAccentsWebView,
-    PitchAccentsWebView,
-)
-from .pitch_graph import SvgPitchArtistGraphMaker
 
 ACTION_NAME = "Pitch artist"
 USER_GUIDE_URL = "https://ajatt.top/blog/pitch-artist-user-guide.html"
@@ -56,13 +53,6 @@ EXAMPLES = """
 きょう;1 は;p | てんき;1 が いい;1 です
 でんわ;0 を かける;k2
 """.strip()
-
-
-@functools.cache
-def graphs_inline_css_style_tag() -> str:
-    """Return the CSS stylesheet for styling pitch accent SVG graphs."""
-    css = find_file_in_parents(f"web/{PITCH_GRAPH_CSS_FILE_NAME}").read_text(encoding="utf-8")
-    return f"<style>\n{css}\n</style>"
 
 
 def head_content() -> str:

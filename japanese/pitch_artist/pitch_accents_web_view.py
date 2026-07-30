@@ -1,20 +1,16 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
-import pathlib
-from collections.abc import Callable
 from typing import Any, TypeAlias
 
 from aqt.qt import *
 from aqt.webview import AnkiWebView
 
-from ..helpers.file_ops import find_file_in_parents
 from ..helpers.webview_utils import (
-    AJT_WEBVIEW_CSS_FILE_NAME,
-    PITCH_GRAPH_CSS_FILE_NAME,
     ajt_pitch_graph_css,
     ajt_webview_css,
 )
+from ..helpers.webview_utils import graphs_inline_css_style_tag, webview_inline_css_style_tag
 from ..widgets.svg_settings import NoAnkiWebView
 
 
@@ -56,13 +52,9 @@ class NoAnkiPitchAccentsWebView(NoAnkiWebView):
 
     def set_svg_graphs(self, graphs_as_html: str) -> None:
         """Set pitch graph preview HTML with CSS inlined from local files."""
-        css_files = [
-            find_file_in_parents(f"web/{AJT_WEBVIEW_CSS_FILE_NAME}"),
-            find_file_in_parents(f"web/{PITCH_GRAPH_CSS_FILE_NAME}"),
-        ]
-        css_rules = "".join(f"<style>{pathlib.Path(file).read_text(encoding='utf-8')}</style>" for file in css_files)
+        css_styles = [webview_inline_css_style_tag(), graphs_inline_css_style_tag()]
         self.stdHtml(
-            head=head_content() + css_rules,
+            head=head_content() + "".join(css_styles),
             body=graphs_as_html,
         )
 

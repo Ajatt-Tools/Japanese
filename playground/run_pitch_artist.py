@@ -4,7 +4,7 @@
 from aqt.qt import *
 
 from japanese.pitch_artist.pitch_graph import SvgPitchArtistGraphMaker
-from japanese.pitch_artist.artist_dialog import graphs_inline_css_style_tag
+from helpers.webview_utils import graphs_inline_css_style_tag
 from playground.utils import NoAnkiConfigView
 
 CSS_INLINE = """
