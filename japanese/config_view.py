@@ -10,6 +10,7 @@ from typing import NamedTuple, final
 
 from aqt import mw
 
+from .pitch_accents.colors import SvgGraphColorMode, SvgGraphClassName
 from .ajt_common.addon_config import AddonConfigManager, ConfigSubViewBase
 from .audio_manager.abstract import AudioSettingsConfigViewABC
 from .audio_manager.basic_types import AudioSourceConfig, AudioSourceConfigDict
@@ -367,8 +368,11 @@ class SvgPitchGraphOptionsConfigView(ConfigSubViewBase):
         return self["include_text"] is True
 
     @property
-    def inject_css_into_files(self) -> bool:
-        return self["inject_css_into_files"] is True
+    def color_mode(self) -> SvgGraphColorMode:
+        try:
+            return SvgGraphColorMode[self["color_mode"]]
+        except KeyError:
+            return SvgGraphColorMode.black_and_white
 
     @property
     def graph_horizontal_padding(self) -> int:

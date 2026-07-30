@@ -193,7 +193,7 @@
   "svg_graphs": {
     "include_text": true,
     "reading_format": "katakana",
-    "inject_css_into_files": false,
+    "color_mode": "black_and_white",
     "graph_horizontal_padding": 6,
     "size_unit": 25,
     "x_step": 50,
