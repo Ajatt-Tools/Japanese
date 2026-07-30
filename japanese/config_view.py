@@ -10,7 +10,6 @@ from typing import NamedTuple, final
 
 from aqt import mw
 
-from .pitch_accents.colors import SvgGraphColorMode, SvgGraphClassName
 from .ajt_common.addon_config import AddonConfigManager, ConfigSubViewBase
 from .audio_manager.abstract import AudioSettingsConfigViewABC
 from .audio_manager.basic_types import AudioSourceConfig, AudioSourceConfigDict
@@ -24,6 +23,7 @@ from .helpers.sakura_client import (
 from .helpers.tokens import RE_FLAGS
 from .mecab_controller.kana_conv import to_katakana
 from .pitch_accents.basic_types import PitchType
+from .pitch_accents.colors import SvgGraphClassName, SvgGraphColorMode
 from .pitch_accents.styles import HTMLPitchPatternStyle
 
 RE_CFG_WORD_SEP = re.compile(r"[\n;、, ]+", flags=RE_FLAGS)
@@ -507,11 +507,33 @@ class PitchColorCodesConfigView(ConfigSubViewBase):
         return self[PitchType.unknown]
 
 
+@final
+class SvgGraphColorCodesConfigView(ConfigSubViewBase):
+    _view_key: str = "svg_graph_colors"
+
+    def lookup_color(self, class_name: SvgGraphClassName) -> str:
+        """
+        Same as __getitem__ but returns the unknown color if can't lookup.
+        """
+        try:
+            return self[class_name]
+        except KeyError:
+            return self[SvgGraphClassName.black]
+
+    def __getitem__(self, class_name: SvgGraphClassName) -> str:
+        """
+        Input: pitch type, e.g. "heiban"
+        Output: pitch color defined by the user in the config file, e.g. "blue"
+        """
+        return super().__getitem__(class_name.name)
+
+
 class JapaneseConfig(AddonConfigManager):
     def __init__(self, default: bool = False, *, allow_disk_writes: bool = True) -> None:
         super().__init__(default, allow_disk_writes=allow_disk_writes)
         self._furigana = FuriganaConfigView(self)
         self._pitch_color_codes = PitchColorCodesConfigView(self)
+        self._svg_graph_color_codes = SvgGraphColorCodesConfigView(self)
         self._pitch = PitchConfigView(self)
         self._context_menu = ContextMenuConfigView(self)
         self._toolbar = ToolbarConfigView(self)
@@ -555,6 +577,10 @@ class JapaneseConfig(AddonConfigManager):
     @property
     def pitch_color_codes(self) -> PitchColorCodesConfigView:
         return self._pitch_color_codes
+
+    @property
+    def svg_graph_colors(self) -> SvgGraphColorCodesConfigView:
+        return self._svg_graph_color_codes
 
     @property
     def pitch_accent(self) -> PitchConfigView:

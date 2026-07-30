@@ -80,6 +80,27 @@
     "kifuku": "purple",
     "unknown": "#5f5f5f"
   },
+  "svg_graph_colors": {
+    "heiban": "#005ce6",
+    "atamadaka": "#e60000",
+    "nakadaka": "#ff6207",
+    "odaka": "#00802b",
+    "kifuku": "#ac00e6",
+    "particle": "gray",
+    "setsubigo": "gray",
+    "connector": "gray",
+    "black": "#4f4b4b",
+    "white": "#eeeeee",
+    "keihan_heiban": "#3bb2ed",
+    "keihan_low_heiban": "#096999",
+    "keihan_atamadaka": "#f76d94",
+    "keihan_nakadaka": "#a89c0f",
+    "keihan_low_nakadaka": "#876333",
+    "keihan_odaka": "#658065",
+    "keihan_low_odaka": "#658065",
+    "keihan_particle": "gray",
+    "keihan_setsubigo": "gray"
+  },
   "context_menu": {
     "generate_furigana": true,
     "to_katakana": true,
