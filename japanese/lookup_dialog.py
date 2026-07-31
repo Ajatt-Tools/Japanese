@@ -124,14 +124,14 @@ class ViewPitchAccentsDialog(AnkiSaveAndRestoreGeomDialog):
 
         for pitch_pattern, headwords in self._map_html_entry_to_headwords().items():
             # Keyword (headword)
-            html.write(f'<div class="keyword"><ul>')
+            html.write('<div class="keyword"><ul>')
             for headword in headwords:
                 html.write(f"<li>{headword}</li>")
-            html.write(f"</ul></div>")
+            html.write("</ul></div>")
             # Pitches (entries)
             html.write('<div class="pitch_accents">')
             html.write(pitch_pattern)
-            html.write(f"</div>")
+            html.write("</div>")
         html.write("</main>")
         return html.getvalue()
 
