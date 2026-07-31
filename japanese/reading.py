@@ -2,11 +2,10 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 from collections import OrderedDict
 from collections.abc import Sequence
-from typing import Optional
 
 from aqt import gui_hooks
 
-from .config_view import config_view as cfg
+from .config_view import get_global_config
 from .database.sqlite3_buddy import Sqlite3Buddy
 from .furigana.gen_furigana import FuriganaGen
 from .helpers.profiles import ColorCodePitchFormat, PitchOutputFormat
@@ -132,8 +131,9 @@ def generate_furigana(
 # Entry point
 ##########################################################################
 
+cfg = get_global_config()
 mecab = MecabController(verbose=True, cache_max_size=cfg.cache_lookups)
-svg_graph_maker = FormattedEntryToSvgAdapter(options=cfg.svg_graphs)
+svg_graph_maker = FormattedEntryToSvgAdapter(cfg)
 acc_dict = AccentDictManager2()
 lookup = AccentLookup(cfg, mecab)
 gui_hooks.main_window_did_init.append(acc_dict.ensure_dict_ready)
