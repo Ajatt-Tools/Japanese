@@ -2,7 +2,6 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 from aqt.qt import *
 
-from japanese.config_view import SvgPitchGraphOptionsConfigView
 from japanese.widgets.svg_settings import SvgSettingsWidget
 from playground.utils import NoAnkiConfigView
 
@@ -11,8 +10,7 @@ class MockWindow(QDialog):
     def __init__(self) -> None:
         super().__init__()
         self._config = NoAnkiConfigView()
-        self._svg_config = SvgPitchGraphOptionsConfigView(self._config)
-        self._settings_widget = SvgSettingsWidget(self._svg_config)
+        self._settings_widget = SvgSettingsWidget(self._config)
         self.initUI()
 
     def initUI(self) -> None:
