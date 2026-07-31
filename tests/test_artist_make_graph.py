@@ -222,6 +222,21 @@ class TestSvgGroupNames:
         assert group_class_names[:1] == expected_path_classes
         assert [class_name for class_name in group_class_names if class_name == "paths"] == []
 
+    @pytest.mark.parametrize(
+        "notation",
+        [
+            "きょう;1 は | てんき;1 が いい;1 です",
+            "ひとり;1-",
+            "君[dきdみ]; dの 嘘[dうdそ];1 dを.",
+            "自分[じぶん]; じゃ | できない;k2.",
+        ],
+    )
+    def test_no_empty_groups(self, no_anki_config: NoAnkiConfigView, notation: str) -> None:
+        """Generated SVG omits all empty group elements."""
+        gen = SvgPitchArtistGraphMaker(no_anki_config)
+        svg = list(gen.make_graphs(gen.make_sequences(notation)))[0]
+        assert re.findall(r'<g(?: class="[^"]+")?></g>', svg) == []
+
 
 class TestGhostParticle:
     """Ghost particle (-) draws an empty circle but produces no text element."""

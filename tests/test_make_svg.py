@@ -5,9 +5,10 @@ import re
 
 import pytest
 
-from japanese.config_view import SvgPitchGraphOptionsConfigView
+from japanese.pitch_accents.colors import SvgGraphClassName, SvgGraphColorMode
 from japanese.pitch_accents.common import FormattedEntry
 from japanese.pitch_accents.entry_to_moras import Mora
+from japanese.pitch_accents.entry_to_svg import FormattedEntryToSvgAdapter
 from japanese.pitch_accents.svg_components import (
     Point,
     append_class_name,
@@ -15,7 +16,6 @@ from japanese.pitch_accents.svg_components import (
 )
 from japanese.pitch_accents.svg_graph_renderer import SvgGraphRenderer
 from japanese.pitch_accents.svg_graph_types import PitchLevel, SvgMoraFlag
-from japanese.pitch_accents.entry_to_svg import FormattedEntryToSvgAdapter
 from playground.utils import NoAnkiConfigView
 from tests import DATA_DIR
 
@@ -87,8 +87,7 @@ def extract_group_class_names(svg: str) -> list[str]:
     [(entry, f"test_{idx}.svg") for idx, entry in enumerate(TEST_ENTRIES)],
 )
 def test_make_svg(no_anki_config: NoAnkiConfigView, formatted_entry: FormattedEntry, svg_file_name: str) -> None:
-    svg_config = SvgPitchGraphOptionsConfigView(no_anki_config)
-    maker = FormattedEntryToSvgAdapter(options=svg_config)
+    maker = FormattedEntryToSvgAdapter(no_anki_config)
 
     reference_file_path = DATA_DIR / "formatted_entry_graphs" / svg_file_name
     reference = reference_file_path.read_text(encoding="utf-8").strip()
@@ -101,8 +100,7 @@ def test_dictionary_path_group_is_named_lines(
     no_anki_config: NoAnkiConfigView, formatted_entry: FormattedEntry
 ) -> None:
     """Dictionary SVGs use the shared 'lines' class for the pitch-contour group."""
-    svg_config = SvgPitchGraphOptionsConfigView(no_anki_config)
-    maker = FormattedEntryToSvgAdapter(options=svg_config)
+    maker = FormattedEntryToSvgAdapter(no_anki_config)
     group_class_names = extract_group_class_names(maker.make_graph(formatted_entry))
 
     assert [class_name for class_name in group_class_names if class_name == "lines"] == ["lines"]
@@ -117,14 +115,24 @@ def test_dictionary_path_group_is_named_lines(
 )
 def test_renderer_make_text_element(no_anki_config: NoAnkiConfigView, mora: Mora, expected_text: str) -> None:
     """Renderer text elements keep class attributes and formatted coordinates."""
-    svg_config = SvgPitchGraphOptionsConfigView(no_anki_config)
-    maker = SvgGraphRenderer(options=svg_config)
-    text = assemble_txt_content(mora, reading_format=svg_config.reading_format, tspan_dx=svg_config.tspan_dx)
+    maker = SvgGraphRenderer(no_anki_config)
+    text = assemble_txt_content(
+        mora,
+        reading_format=no_anki_config.svg_graphs.reading_format,
+        tspan_dx=no_anki_config.svg_graphs.tspan_dx,
+        nasal_color="red",
+    )
     assert not mora.is_trailing()
     assert (
-        maker.make_text_element(text, Point.new(x=1, y=2), class_attr=append_class_name(mora.flags), dx=3)
-        == f'<text class="devoiced" fill="black" font-size="{svg_config.font_size:.1f}px" '
-        f'letter-spacing="{svg_config.letter_spacing:.1f}px" x="1" y="2" dx="3">{expected_text}</text>'
+        maker.make_text_element(
+            text,
+            Point.new(x=1, y=2),
+            class_attr=append_class_name(mora.flags),
+            dx=3,
+            class_name=SvgGraphClassName.heiban,
+        )
+        == f'<text class="devoiced" fill="black" font-size="{no_anki_config.svg_graphs.font_size:.1f}px" '
+        f'letter-spacing="{no_anki_config.svg_graphs.letter_spacing:.1f}px" x="1" y="2" dx="3">{expected_text}</text>'
     )
 
 
@@ -133,12 +141,29 @@ def test_heiban_trailing_circle_has_fill_none(
     no_anki_config: NoAnkiConfigView, formatted_entry: FormattedEntry
 ) -> None:
     """Heiban dictionary graphs add a trailing hollow circle for following particles."""
-    svg_config = SvgPitchGraphOptionsConfigView(no_anki_config)
-    maker = FormattedEntryToSvgAdapter(options=svg_config)
+    maker = FormattedEntryToSvgAdapter(no_anki_config)
 
     svg = maker.make_graph(formatted_entry)
 
     assert svg.count('<circle class="trail" fill="none" stroke="gray"') == 1
+
+
+@pytest.mark.parametrize(
+    "formatted_entry, expected_color",
+    [
+        (TEST_ENTRIES[0], "#005ce6"),
+        (TEST_ENTRIES[1], "#ff6207"),
+        (TEST_ENTRIES[5], "#e60000"),
+    ],
+)
+def test_svg_attributes_color_mode(formatted_entry: FormattedEntry, expected_color: str) -> None:
+    """SVG attribute color mode writes role colors directly into SVG markup."""
+    no_anki_config = NoAnkiConfigView()
+    no_anki_config.svg_graphs["color_mode"] = SvgGraphColorMode.svg_attributes.name
+
+    svg = FormattedEntryToSvgAdapter(no_anki_config).make_graph(formatted_entry)
+
+    assert f'fill="{expected_color}" stroke="{expected_color}"' in svg
 
 
 @pytest.mark.parametrize(
@@ -156,8 +181,7 @@ def test_text_group_matches_text_visibility(
     """Text group markup is emitted only when kana text is visible."""
     no_anki_config = NoAnkiConfigView()
     no_anki_config.svg_graphs["include_text"] = include_text
-    svg_config = SvgPitchGraphOptionsConfigView(no_anki_config)
-    maker = FormattedEntryToSvgAdapter(options=svg_config)
+    maker = FormattedEntryToSvgAdapter(no_anki_config)
     svg = maker.make_graph(formatted_entry)
     assert svg.count('<g class="text">') == expected_text_group_count
 
@@ -182,10 +206,10 @@ def test_renderer_uses_mutated_options(
     expected_fragments: tuple[str, str, str],
 ) -> None:
     """Renderer geometry is computed from current options, not stale cached values."""
-    svg_config = SvgPitchGraphOptionsConfigView(NoAnkiConfigView())
-    maker = FormattedEntryToSvgAdapter(options=svg_config)
+    no_anki_config = NoAnkiConfigView()
+    maker = FormattedEntryToSvgAdapter(no_anki_config)
     before = maker.make_graph(formatted_entry)
-    svg_config.update({
+    no_anki_config.svg_graphs.update({
         "graph_horizontal_padding": graph_horizontal_padding,
         "size_unit": size_unit,
         "graph_height": graph_height,

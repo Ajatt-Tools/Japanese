@@ -14,7 +14,6 @@ from japanese.ajt_common.grab_key import ShortCutGrabButton
 from japanese.config_view import SvgGraphReadingFormat
 from japanese.widgets.addon_opts import (
     AJTPlainTextEdit,
-    NarrowLineEdit,
     PxDoubleNarrowSpinBox,
     PxNarrowSpinBox,
     StrokeDisarrayLineEdit,
@@ -208,7 +207,7 @@ class TestSvgSettingsForm:
         "widget_key, expected_type",
         [
             ("include_text", QCheckBox),
-            ("inject_css_into_files", QCheckBox),
+            ("color_mode", EnumSelectCombo),
             ("reading_format", EnumSelectCombo),
             ("graph_font_name", AJTPlainTextEdit),
             ("graph_horizontal_padding", PxNarrowSpinBox),
