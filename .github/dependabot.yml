@@ -35,3 +35,11 @@ updates:
         update-types:
           - "minor"
           - "patch"
+
+  # Git submodules (media_converter/ajt_common)
+  - package-ecosystem: "gitsubmodule"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "area/dependencies"
