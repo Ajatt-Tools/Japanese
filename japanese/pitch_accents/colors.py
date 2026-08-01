@@ -18,6 +18,7 @@ class SvgGraphClassName(enum.Enum):
     nakadaka = enum.auto()
     odaka = enum.auto()
     kifuku = enum.auto()
+    unknown = enum.auto()
     # Keihan
     keihan_heiban = enum.auto()
     keihan_low_heiban = enum.auto()
@@ -34,3 +35,4 @@ class SvgGraphClassName(enum.Enum):
     connector = enum.auto()
     black = enum.auto()
     white = enum.auto()
+    nasal = enum.auto()
