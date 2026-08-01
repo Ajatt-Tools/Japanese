@@ -4,16 +4,17 @@
 import os
 import pathlib
 
-# Force Qt to run without a real display so widget tests work in headless CI.
-os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
-
 import pytest
 from aqt.qt import QApplication
 
 from japanese.database.sqlite3_buddy import Sqlite3Buddy
 from japanese.helpers.file_ops import rm_file
+from japanese.pitch_accents.colors import SvgGraphColorMode
 from playground.utils import NoAnkiConfigView
-from tests import DATA_DIR
+from tests.consts import DATA_DIR
+
+# Force Qt to run without a real display so widget tests work in headless CI.
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -57,6 +58,7 @@ def no_anki_config() -> NoAnkiConfigView:
     config = NoAnkiConfigView()
     config.furigana["maximum_results"] = 1
     config.svg_graphs["graph_font_name"] = "Noto Sans CJK JP"
+    config.svg_graphs["color_mode"] = SvgGraphColorMode.black_and_white.name
     # substitute audio sources
     config["audio_sources"] = [
         {

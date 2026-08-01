@@ -7,6 +7,7 @@ import typing
 
 import pytest
 
+from japanese.pitch_accents.colors import SvgGraphClassName
 from japanese.pitch_artist.consts import GHOST_PARTICLE, TAPE_CONNECTOR
 from japanese.pitch_artist.pitch_graph import (
     Role,
@@ -404,22 +405,19 @@ class TestClassName:
     @pytest.mark.parametrize(
         "raw_section, expected",
         [
-            ("テスト;0", "heiban"),
-            ("テスト;1", "atamadaka"),
-            # is_particle=True with non-particle role produces two CSS classes.
-            ("ぐらい;pa", "particle atamadaka"),
-            ("ぐらい;po1", "particle odaka"),
-            # is_particle=True with particle role does not duplicate.
-            ("ぐらい;p", "particle"),
-            # Bare particle (no p prefix, role defaults to particle).
-            ("テスト", "particle"),
+            ("テスト;0", SvgGraphClassName.heiban),
+            ("テスト;1", SvgGraphClassName.atamadaka),
+            ("ぐらい;pa", SvgGraphClassName.atamadaka),
+            ("ぐらい;po1", SvgGraphClassName.odaka),
+            ("ぐらい;p", SvgGraphClassName.particle),
+            ("テスト", SvgGraphClassName.particle),
         ],
     )
     def test_class_name(
         self,
         no_anki_config: NoAnkiConfigView,
         raw_section: str,
-        expected: str,
+        expected: SvgGraphClassName,
     ) -> None:
         section = make_section(raw_section, no_anki_config)
         assert section.class_name == expected

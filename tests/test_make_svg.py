@@ -17,7 +17,7 @@ from japanese.pitch_accents.svg_components import (
 from japanese.pitch_accents.svg_graph_renderer import SvgGraphRenderer
 from japanese.pitch_accents.svg_graph_types import PitchLevel, SvgMoraFlag
 from playground.utils import NoAnkiConfigView
-from tests import DATA_DIR
+from tests.consts import DATA_DIR
 
 TEST_ENTRIES = (
     FormattedEntry(

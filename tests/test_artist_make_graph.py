@@ -9,7 +9,7 @@ import pytest
 
 from japanese.pitch_artist.pitch_graph import SvgPitchArtistGraphMaker
 from playground.utils import NoAnkiConfigView
-from tests import DATA_DIR
+from tests.consts import DATA_DIR
 from tests.test_pitch_artist_regression import HEADLESS_SENTENCE, NUM_EXPECTED_SEQUENCES
 
 # Circle Y-coordinates derived from default config:

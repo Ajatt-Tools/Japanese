@@ -5,7 +5,7 @@
 from aqt.qt import *
 
 from japanese.widgets.pitch_override_table import PitchOverrideTable
-from tests import DATA_DIR
+from tests.consts import DATA_DIR
 
 
 class App(QWidget):

@@ -13,7 +13,7 @@ from japanese.database.sqlite3_buddy import Sqlite3Buddy
 from japanese.helpers.audio_json_schema import SourceIndex
 from playground.run_audio_manager import NoAnkiAudioSourceManagerFactory
 from playground.utils import NoAnkiConfigView
-from tests import DATA_DIR
+from tests.consts import DATA_DIR
 from tests.conftest import tmp_sqlite3_db_path
 
 

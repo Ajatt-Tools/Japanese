@@ -3,7 +3,7 @@
 
 from japanese.pitch_accents.entry_to_svg import FormattedEntryToSvgAdapter
 from playground.utils import NoAnkiConfigView
-from tests import DATA_DIR
+from tests.consts import DATA_DIR
 from tests.test_make_svg import TEST_ENTRIES
 
 
