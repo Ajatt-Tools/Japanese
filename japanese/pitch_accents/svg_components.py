@@ -21,9 +21,11 @@ class SvgColor(enum.Enum):
 
 
 def make_group(elements: Iterable[str], class_name: str) -> str:
-    """Wrap SVG fragments in a group, optionally adding a CSS class."""
+    """Wrap SVG fragments in a group, returning an empty string for empty content."""
+    if not (content := "".join(elements)):
+        return ""
     attrs = f' class="{class_name}"' if class_name else ""
-    return f'<g{attrs}>{"".join(elements)}</g>'
+    return f"<g{attrs}>{content}</g>"
 
 
 def append_class_name(mora_flag: SvgMoraFlag) -> str:
