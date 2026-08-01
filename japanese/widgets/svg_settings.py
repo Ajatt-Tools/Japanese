@@ -5,7 +5,7 @@ from aqt import mw
 from aqt.qt import *
 from aqt.webview import AnkiWebView
 
-from ..config_view import SvgPitchGraphOptionsConfigView
+from ..config_view import JapaneseConfig
 from ..pitch_accents.common import FormattedEntry
 from ..pitch_accents.entry_to_svg import FormattedEntryToSvgAdapter
 from .settings_form import SvgSettingsForm
@@ -80,12 +80,12 @@ class NoAnkiWebView(QWebEngineView):
 class SvgSettingsWidget(QWidget):
     _web_view: Union[AnkiWebView, NoAnkiWebView]
 
-    def __init__(self, svg_config: SvgPitchGraphOptionsConfigView) -> None:
+    def __init__(self, cfg: JapaneseConfig) -> None:
         super().__init__()
-        self._svg_config = svg_config
-        self._form = SvgSettingsForm(self._svg_config)
+        self._cfg = cfg
+        self._form = SvgSettingsForm(self._cfg.svg_graphs)
         self._web_view = AnkiWebView() if mw else NoAnkiWebView()
-        self._maker = FormattedEntryToSvgAdapter(options=self._svg_config)
+        self._maker = FormattedEntryToSvgAdapter(cfg)
         self.initUI()
         self.update_view()
         qconnect(self._form.opts_changed, self.update_view)
@@ -99,7 +99,7 @@ class SvgSettingsWidget(QWidget):
         self.setLayout(layout)
 
     def update_view(self) -> None:
-        self._svg_config.update(self._form.as_dict())
+        self._cfg.svg_graphs.update(self._form.as_dict())
         self._web_view.stdHtml(
             head=f"""
             <meta name="viewport" content="width=device-width, initial-scale=1.0">

@@ -3,7 +3,6 @@
 
 from collections.abc import Iterable
 from types import SimpleNamespace
-from typing import Optional
 
 from aqt.qt import *
 

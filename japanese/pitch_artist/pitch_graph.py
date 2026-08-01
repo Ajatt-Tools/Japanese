@@ -424,7 +424,7 @@ class SvgPitchArtistGraphMaker:
     def __init__(self, cfg: JapaneseConfig) -> None:
         """Initialize the maker with Japanese add-on configuration."""
         self._cfg = cfg
-        self._renderer = SvgGraphRenderer(self._cfg.svg_graphs)
+        self._renderer = SvgGraphRenderer(self._cfg)
 
     def _parse_sections(self, sequence: list[str]) -> list[Section]:
         """Parse a list of raw section strings into Section objects."""

@@ -4,8 +4,8 @@
 import typing
 from collections.abc import Sequence
 
-from ..config_view import SvgPitchGraphOptionsConfigView
-from .svg_components import Line, Path, Point, attrs_circle, make_group
+from ..config_view import JapaneseConfig
+from .svg_components import Line, Path, Point, SvgColor, make_group
 from .svg_graph_types import (
     ConnectToPrevious,
     PitchLevel,
@@ -40,30 +40,30 @@ def wrap_content(graph: SvgGraph, content: RenderedGraphComponents) -> str:
 class SvgGraphRenderer:
     """Render normalized pitch graph data as SVG markup."""
 
-    _opts: SvgPitchGraphOptionsConfigView
+    _cfg: JapaneseConfig
 
-    def __init__(self, options: SvgPitchGraphOptionsConfigView) -> None:
-        self._opts = options
+    def __init__(self, cfg: JapaneseConfig) -> None:
+        self._cfg = cfg
 
     @property
     def hor_pad(self) -> int:
         """Return the horizontal padding around the graph."""
-        return self._opts.graph_horizontal_padding
+        return self._cfg.svg_graphs.graph_horizontal_padding
 
     @property
     def height_high(self) -> int:
         """Return the y-coordinate for a high-pitch mora."""
-        return self._opts.size_unit
+        return self._cfg.svg_graphs.size_unit
 
     @property
     def height_low(self) -> int:
         """Return the y-coordinate for a low-pitch mora."""
-        return self.height_high + self._opts.graph_height
+        return self.height_high + self._cfg.svg_graphs.graph_height
 
     @property
     def height_kana(self) -> int:
         """Return the y-coordinate for mora text."""
-        return self.height_low + self._opts.x_step
+        return self.height_low + self._cfg.svg_graphs.x_step
 
     def make_circle(self, pos: Point, is_trailing: bool, is_particle: bool) -> str:
         """Create a circle positioned where two pitch lines touch."""
@@ -78,43 +78,50 @@ class SvgGraphRenderer:
         Create a dashed circle around devoiced mora text.
         If multi_char is true, widen the circle. This is needed if the mora consists of two characters.
         """
+        stroke = SvgColor.word.value
+        font_size = self._cfg.svg_graphs.font_size
+        stroke_width = self._cfg.svg_graphs.devoiced_circle_width
+        r = self._cfg.svg_graphs.devoiced_circle_radius
+        dasharray = self._cfg.svg_graphs.devoiced_stroke_dasharray
+
         if not multi_char:
             pos = pos.shift_by(
-                x=self._opts.font_size / 2 + self._opts.text_dx,
-                y=-self._opts.font_size / 2 + self._opts.devoiced_circle_dy,
+                x=font_size / 2 + self._cfg.svg_graphs.text_dx,
+                y=-font_size / 2 + self._cfg.svg_graphs.devoiced_circle_dy,
             )
             return (
-                f'<circle class="devoiced" fill="none" stroke="black" cx="{pos.x:.0f}" cy="{pos.y:.0f}" '
-                f'stroke-width="{self._opts.devoiced_circle_width:.2f}" r="{self._opts.devoiced_circle_radius:.2f}" '
-                f'stroke-dasharray="{self._opts.devoiced_stroke_dasharray}" />'
+                f'<circle class="devoiced" fill="none" stroke="{stroke}" cx="{pos.x:.0f}" cy="{pos.y:.0f}" '
+                f'stroke-width="{stroke_width:.2f}" r="{r:.2f}" '
+                f'stroke-dasharray="{dasharray}" />'
             )
         else:
             pos = pos.shift_by(
-                x=-self._opts.font_size / 2 - self._opts.devoiced_rectangle_padding + self._opts.text_dx,
-                y=-self._opts.font_size / 2 - self._opts.devoiced_circle_radius + self._opts.devoiced_circle_dy,
+                x=-font_size / 2 - self._cfg.svg_graphs.devoiced_rectangle_padding + self._cfg.svg_graphs.text_dx,
+                y=-font_size / 2 - r + self._cfg.svg_graphs.devoiced_circle_dy,
             )
-            width = self._opts.font_size * 2 + self._opts.devoiced_rectangle_padding * 2
-            height = self._opts.devoiced_circle_radius * 2
+            width = self._cfg.svg_graphs.font_size * 2 + self._cfg.svg_graphs.devoiced_rectangle_padding * 2
+            height = r * 2
             return (
-                f'<rect class="devoiced" fill="none" stroke="black" x="{pos.x:.0f}" y="{pos.y:.0f}" '
+                f'<rect class="devoiced" fill="none" stroke="{stroke}" x="{pos.x:.0f}" y="{pos.y:.0f}" '
                 f'width="{width:.0f}" height="{height:.0f}" '
-                f'stroke-width="{self._opts.devoiced_circle_width:.2f}" rx="{self._opts.devoiced_circle_radius:.2f}" '
-                f'stroke-dasharray="{self._opts.devoiced_stroke_dasharray}" />'
+                f'stroke-width="{stroke_width:.2f}" rx="{r:.2f}" '
+                f'stroke-dasharray="{dasharray}" />'
             )
 
     def make_text_element(self, text: str, pos: Point, class_attr: str, dx: int) -> str:
         """Create an SVG text element from preformatted text content and class attributes."""
+        fill = SvgColor.word.value
         return (
-            f'<text{class_attr} fill="black" '
-            f'font-size="{self._opts.font_size:.1f}px" '
-            f'letter-spacing="{self._opts.letter_spacing:.1f}px" '
+            f'<text{class_attr} fill="{fill}" '
+            f'font-size="{self._cfg.svg_graphs.font_size:.1f}px" '
+            f'letter-spacing="{self._cfg.svg_graphs.letter_spacing:.1f}px" '
             f'x="{pos.x:.0f}" y="{pos.y:.0f}" dx="{dx:.0f}">{text}</text>'
         )
 
     def make_svg(self, contents: str, *, width: int, height: int, visible_height: int) -> str:
         """Wrap SVG child markup in the pitch graph SVG element."""
         return (
-            f'<svg class="ajt__pitch_svg" style="font-family: {self._opts.graph_font_name}" '
+            f'<svg class="ajt__pitch_svg" style="font-family: {self._cfg.svg_graphs.graph_font_name}" '
             f'viewBox="0 0 {width:d} {height:d}" height="{visible_height:d}px" '
             f'xmlns="http://www.w3.org/2000/svg">{contents}</svg>'
         )
@@ -138,12 +145,12 @@ class SvgGraphRenderer:
         return self._make_sized_svg(graph, content)
 
     def _start_connector(self, section: SvgGraphWord, pos: Point) -> Line:
-        connector = Line(self._opts)
+        connector = Line(self._cfg)
         match section.connect_to_previous:
             case ConnectToPrevious.weld:
-                connector.start_at(pos.shift_by(x=-self._opts.x_step), tape=False)
+                connector.start_at(pos.shift_by(x=-self._cfg.svg_graphs.x_step), tape=False)
             case ConnectToPrevious.tape:
-                connector.start_at(pos.shift_by(x=-self._opts.x_step), tape=True)
+                connector.start_at(pos.shift_by(x=-self._cfg.svg_graphs.x_step), tape=True)
             case ConnectToPrevious.none:
                 pass
         return connector
@@ -156,8 +163,9 @@ class SvgGraphRenderer:
         """
         word_circles: list[str] = []
         text_moras: list[str] = []
-        path = Path(self._opts)
+        path = Path(self._cfg)
         connector = self._start_connector(section, pos)
+
         for idx, mora in enumerate(section.moras):
             pos = pos.replace(y=self.height_high if mora.level == PitchLevel.high else self.height_low)
             # Note: is_particle is always False for FormattedEntry-derived sections.
@@ -187,15 +195,15 @@ class SvgGraphRenderer:
                         mora.text,
                         pos.replace(y=self.height_kana),
                         mora.class_attr,
-                        self._opts.text_dx * mora.dx_units,
+                        self._cfg.svg_graphs.text_dx * mora.dx_units,
                     )
                 )
-            pos = pos.shift_by(x=self._opts.x_step)
+            pos = pos.shift_by(x=self._cfg.svg_graphs.x_step)
 
         # Note: connectors are never used with FormattedEntry-derived sections.
         connector_svg = (
             make_group(
-                [connector.adjust_to_radius(self._opts.circle_radius).draw()],
+                [connector.adjust_to_radius(self._cfg.svg_graphs.circle_radius).draw()],
                 "connector",
             )
             if connector.is_completed()
@@ -250,14 +258,14 @@ class SvgGraphRenderer:
         """Apply text visibility settings and SVG dimensions to content groups."""
         svg_height_with_text = self.height_high + self.height_kana
         svg_height_no_text = self.height_high + self.height_low
-        if self._opts.include_text:
+        if self._cfg.svg_graphs.include_text:
             svg_height = svg_height_with_text
-            visible_height = self._opts.graph_visible_height
+            visible_height = self._cfg.svg_graphs.graph_visible_height
         else:
             svg_height = svg_height_no_text
             # Preserve the same viewBox-to-CSS-pixel scale when kana text is hidden.
             visible_height_ratio = svg_height_no_text / svg_height_with_text
-            visible_height = int(visible_height_ratio * self._opts.graph_visible_height)
+            visible_height = int(visible_height_ratio * self._cfg.svg_graphs.graph_visible_height)
             # Remove text
             content = RenderedGraphComponents(lines=content.lines, circles=content.circles, text="")
         return self.make_svg(
@@ -272,6 +280,6 @@ class SvgGraphRenderer:
         # SvgGraphWord instances are already renderable sections; adapter code
         # filters out separators and tape markers before constructing SvgGraph.
         return (
-            sum(len(section.moras) for section in sections) * self._opts.x_step
-            + self._opts.graph_horizontal_padding * 2
+            sum(len(section.moras) for section in sections) * self._cfg.svg_graphs.x_step
+            + self._cfg.svg_graphs.graph_horizontal_padding * 2
         )

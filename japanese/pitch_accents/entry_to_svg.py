@@ -1,9 +1,10 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
-from ..config_view import SvgPitchGraphOptionsConfigView
+from ..config_view import JapaneseConfig
 from .common import FormattedEntry
 from .entry_to_moras import Mora, entry_to_moras
 from .svg_components import (
+    SvgColor,
     append_class_name,
     assemble_txt_content,
 )
@@ -15,16 +16,20 @@ class FormattedEntryToSvgAdapter:
     """Adapter from dictionary pitch entries to the shared SVG graph renderer."""
 
     _renderer: SvgGraphRenderer
-    _opts: SvgPitchGraphOptionsConfigView
+    _cfg: JapaneseConfig
 
-    def __init__(self, options: SvgPitchGraphOptionsConfigView) -> None:
-        self._opts = options
-        self._renderer = SvgGraphRenderer(options)
+    def __init__(self, cfg: JapaneseConfig) -> None:
+        self._cfg = cfg
+        self._renderer = SvgGraphRenderer(cfg)
 
     def _mora_to_graph_mora(self, mora: Mora) -> SvgGraphMora:
         """Convert a dictionary pitch mora to the generic SVG graph model."""
         return SvgGraphMora(
-            text=assemble_txt_content(mora, reading_format=self._opts.reading_format, tspan_dx=self._opts.tspan_dx),
+            text=assemble_txt_content(
+                mora,
+                reading_format=self._cfg.svg_graphs.reading_format,
+                tspan_dx=self._cfg.svg_graphs.tspan_dx,
+            ),
             level=mora.level,
             class_attr=append_class_name(mora.flags),
             dx_units=mora.dx_units(),

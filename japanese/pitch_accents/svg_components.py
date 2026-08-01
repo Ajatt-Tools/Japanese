@@ -5,7 +5,7 @@ import typing
 from collections.abc import Iterable
 from math import sqrt
 
-from ..config_view import SvgGraphReadingFormat, SvgPitchGraphOptionsConfigView
+from ..config_view import JapaneseConfig, SvgGraphReadingFormat
 from ..mecab_controller import to_hiragana, to_katakana
 from .entry_to_moras import Mora, Quark, mora_flags2class_name
 from .svg_graph_types import SvgMoraFlag
@@ -89,15 +89,15 @@ class Point(typing.NamedTuple):
 class Line:
     """An SVG line segment between two points, optionally rendered as a dashed (tape) line."""
 
-    _opts: SvgPitchGraphOptionsConfigView
+    _cfg: JapaneseConfig
     is_trailing: bool
     start: Point | None
     end: Point | None
     _tape: bool
 
-    def __init__(self, options: SvgPitchGraphOptionsConfigView) -> None:
+    def __init__(self, cfg: JapaneseConfig) -> None:
         """Initialize an empty line with renderer options."""
-        self._opts = options
+        self._cfg = cfg
         self.is_trailing = False
         self.start = None
         self.end = None
@@ -127,13 +127,13 @@ class Line:
         assert self.start is not None and self.end is not None
         attrs = []
         if self._tape:
-            attrs.append(f'stroke-dasharray="{self._opts.stroke_dasharray}"')
+            attrs.append(f'stroke-dasharray="{self._cfg.svg_graphs.stroke_dasharray}"')
         if self.is_trailing:
             attrs.append(f'class="{SvgColor.trail.name}"')
             attrs.append(f'stroke="{SvgColor.trail.value}"')
         else:
             attrs.append(f'stroke="{SvgColor.word.value}"')
-        attrs.append(f'stroke-width="{self._opts.stroke_width:.2f}"')
+        attrs.append(f'stroke-width="{self._cfg.svg_graphs.stroke_width:.2f}"')
         attrs.append(f'x1="{self.start.x:.3f}"')
         attrs.append(f'y1="{self.start.y:.3f}"')
         attrs.append(f'x2="{self.end.x:.3f}"')
@@ -144,7 +144,7 @@ class Line:
         """Shorten this line so it touches circle edges instead of centers."""
         assert self.start is not None and self.end is not None
 
-        opts = self._opts
+        opts = self._cfg.svg_graphs
         tan = opts.graph_height / opts.x_step
         sin = tan / sqrt(1 + tan * tan)
         cos = 1 / sqrt(1 + tan * tan)
@@ -168,12 +168,12 @@ class Line:
 class Path:
     """A sequence of pitch-contour line segments."""
 
-    _opts: SvgPitchGraphOptionsConfigView
+    _cfg: JapaneseConfig
     _lines: list[Line]
 
-    def __init__(self, options: SvgPitchGraphOptionsConfigView) -> None:
+    def __init__(self, cfg: JapaneseConfig) -> None:
         """Initialize an empty pitch-contour path."""
-        self._opts = options
+        self._cfg = cfg
         self._lines = []
 
     @property
@@ -183,7 +183,7 @@ class Path:
 
     def start_at(self, pos: Point) -> "Path":
         """Begin a new line segment at the given coordinates."""
-        self._lines.append(Line(self._opts).start_at(pos))
+        self._lines.append(Line(self._cfg).start_at(pos))
         return self
 
     def go_to(self, pos: Point) -> "Path":
@@ -207,5 +207,7 @@ class Path:
     def draw(self) -> str:
         """Render all completed path segments as SVG line markup."""
         return "".join(
-            line.adjust_to_radius(self._opts.circle_radius).draw() for line in self._lines if line.is_completed()
+            line.adjust_to_radius(self._cfg.svg_graphs.circle_radius).draw()
+            for line in self._lines
+            if line.is_completed()
         )

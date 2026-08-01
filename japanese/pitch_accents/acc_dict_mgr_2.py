@@ -4,7 +4,6 @@ import collections
 import itertools
 import os
 import pathlib
-import typing
 from collections.abc import Iterable, Sequence
 
 from aqt import mw

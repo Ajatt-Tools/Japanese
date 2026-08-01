@@ -591,7 +591,7 @@ class SettingsDialog(AnkiSaveAndRestoreGeomDialog, MgrPropMixIn):
         # Pitch tab
         self._pitch_profiles_edit = PitchProfilesEdit()
         self._pitch_settings = GroupBoxWrapper(PitchSettingsForm(cfg.pitch_accent))
-        self._svg_settings = SvgSettingsWidget(cfg.svg_graphs)
+        self._svg_settings = SvgSettingsWidget(cfg)
         self._pitch_stats_label = PitchStatsLabel()
 
         # Audio tab
