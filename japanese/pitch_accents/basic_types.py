@@ -24,6 +24,8 @@ SMALL_KANA_CHARS = "ァィゥェォャュョぁぃぅぇぉゃゅょ"
 
 @enum.unique
 class PitchType(enum.Enum):
+    """Canonical pitch accent pattern type."""
+
     unknown = NO_ACCENT
     heiban = 0
     atamadaka = 1
@@ -34,11 +36,14 @@ class PitchType(enum.Enum):
 
 @enum.unique
 class PitchUnknown(enum.Enum):
+    """Special marker for unresolved pitch accent states."""
+
     many = enum.auto()
     none = enum.auto()
 
 
 def pitch_type_from_pitch_num(pitch_num_as_str: str, n_moras: int) -> PitchType:
+    """Convert a numeric pitch accent string to a PitchType for a word length."""
     if not pitch_num_as_str:
         return PitchType.unknown
 
@@ -67,10 +72,12 @@ def pitch_type_from_pitch_num(pitch_num_as_str: str, n_moras: int) -> PitchType:
 
 
 def count_moras(katakana_reading: str) -> int:
+    """Count morae in a katakana reading, excluding small kana combination characters."""
     return sum(1 for char in katakana_reading if char not in SMALL_KANA_CHARS)
 
 
 def is_verb_or_i_adjective(part_of_speech: PartOfSpeech) -> bool:
+    """Return True if the part of speech is a verb or i-adjective."""
     assert isinstance(part_of_speech, PartOfSpeech), f"expected PartOfSpeech, got {type(part_of_speech)}"
     return part_of_speech in (PartOfSpeech.verb, PartOfSpeech.i_adjective)
 
@@ -90,6 +97,8 @@ def adjust_if_kifuku(part_of_speech: PartOfSpeech, pitch_type: PitchType) -> Pit
 
 
 class PitchParam(NamedTuple):
+    """Pitch accent type, source number, and mora count for one reading."""
+
     type: PitchType
     number: str
     n_moras: int
@@ -108,6 +117,7 @@ class PitchParam(NamedTuple):
 
     @classmethod
     def from_symbol(cls, katakana_reading: str, pitch_num_as_str: str, part_of_speech: PartOfSpeech) -> "PitchParam":
+        """Create a pitch parameter from one pitch number symbol and reading metadata."""
         n_moras = count_moras(katakana_reading)
         return cls(
             type=adjust_if_kifuku(part_of_speech, pitch_type_from_pitch_num(pitch_num_as_str, n_moras=n_moras)),
@@ -117,11 +127,14 @@ class PitchParam(NamedTuple):
 
 
 class PitchAccentEntry(NamedTuple):
+    """A dictionary reading with one or more pitch accent parameters."""
+
     katakana_reading: str
     katakana_reading_sep: str
     pitches: list[PitchParam]
 
     def has_accent(self) -> bool:
+        """Return True if at least one pitch parameter contains a known accent."""
         return bool(self.pitches and any(pitch.type != PitchType.unknown for pitch in self.pitches))
 
     def describe_pitches(self, use_hiragana: bool = False) -> str:
@@ -182,12 +195,14 @@ class AccDbParsedToken(MecabParsedToken):
         )
 
     def has_pitch(self) -> bool:
+        """Return True if every headword accent entry has known pitch data."""
         return bool(self.headword_accents and all(token.has_accent() for token in self.headword_accents))
 
     @classmethod
     def from_mecab_parsed(
         cls, mpt: MecabParsedToken, headword_accents: Sequence[PitchAccentEntry]
     ) -> "AccDbParsedToken":
+        """Create an AccDbParsedToken from a MeCab token and matching accent entries."""
         return cls(
             **dataclasses.asdict(mpt),
             headword_accents=headword_accents,
