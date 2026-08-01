@@ -1,3 +1,8 @@
+/*
+ * Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
+ * License: GNU AGPL, version 3 or later; https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
 *,
 *::before,
 *::after {
@@ -89,33 +94,15 @@ a {
     user-select: none;
 }
 
+/* SVG */
+
 svg,
 img {
     display: block;
 }
 
-/*
-Pitch accent roles.
-NOTE: limit these rules to lookup dialog only to avoid conflicts with pitch artist (ajt_pitch_graph.css)
-*/
-
-.ajt__pitch_lookup {
-    .heiban :is(line, circle):not(.trail, .devoiced) {
-        stroke: #3366cc;
-        fill: #3366cc;
-    }
-    .atamadaka :is(line, circle):not(.trail, .devoiced) {
-        stroke: red;
-        fill: red;
-    }
-    .odaka :is(line, circle):not(.trail, .devoiced) {
-        stroke: green;
-        fill: green;
-    }
-    .nakadaka :is(line, circle):not(.trail, .devoiced) {
-        stroke: #ff6207;
-        fill: #ff6207;
-    }
+.ajt__pitch_graphs svg {
+    height: 150px;
 }
 
 /* Pitch accent lookup - dark mode */
