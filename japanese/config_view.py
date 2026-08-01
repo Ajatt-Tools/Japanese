@@ -372,7 +372,7 @@ class SvgPitchGraphOptionsConfigView(ConfigSubViewBase):
         try:
             return SvgGraphColorMode[self["color_mode"]]
         except KeyError:
-            return SvgGraphColorMode.black_and_white
+            return SvgGraphColorMode.svg_attributes
 
     @property
     def graph_horizontal_padding(self) -> int:
