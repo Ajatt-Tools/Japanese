@@ -46,6 +46,7 @@ from ..widgets.widgets_to_config_dict import (
 ACTION_NAME = "Pitch artist"
 USER_GUIDE_URL = "https://ajatt.top/blog/pitch-artist-user-guide.html"
 EXAMPLES = """
+dひとり;2 で dくすり;0 を のんだ;1
 わたし; は;p にほんご; を べんきょう; して; います;k2
 ぼく;1 は;p せんせい;3 を して;0 います;k2
 くるま;0 が すき;2 です か
@@ -67,16 +68,19 @@ class GraphCodeEdit(AJTPlainTextEdit):
     _font_size: int = 16
 
     def __init__(self) -> None:
+        """Initialize the Pitch Artist notation editor."""
         super().__init__()
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
         """Handle Ctrl+Enter to trigger graph update."""
         if event.key() == Qt.Key.Key_Return and event.modifiers() == Qt.KeyboardModifier.ControlModifier:
             self.settings_changed.emit()
-        return super().keyPressEvent(event)
+        super().keyPressEvent(event)
 
 
 class FormWidgets(SimpleNamespace):
+    """Container for Pitch Artist settings form widgets."""
+
     circle_radius: PxDoubleNarrowSpinBox
     stroke_width: PxDoubleNarrowSpinBox
     graph_height: PxNarrowSpinBox
@@ -92,6 +96,7 @@ class GraphSettingsWidget(QWidget):
     settings_changed = pyqtSignal()
 
     def __init__(self, parent: QWidget | None, cfg: JapaneseConfig) -> None:
+        """Initialize the settings panel for the provided add-on configuration."""
         super().__init__(parent)
         self._cfg = cfg
         self._form_layout = QFormLayout(self)
@@ -129,6 +134,7 @@ class GraphSettingsWidget(QWidget):
         return as_config_dict(self._widgets.__dict__)
 
     def _set_initial_values(self) -> None:
+        """Load graph settings from the configuration into the form widgets."""
         set_from_cfg(self._widgets.circle_radius, self._cfg.svg_graphs.circle_radius)
         set_from_cfg(self._widgets.stroke_width, self._cfg.svg_graphs.stroke_width)
         set_from_cfg(self._widgets.graph_height, self._cfg.svg_graphs.graph_height)
@@ -154,7 +160,7 @@ def format_graph_as_html(graph: str, index: int) -> str:
 
 
 def make_graphs_list(text: str, gen: SvgPitchArtistGraphMaker) -> list[str]:
-    """Parse text into pitch accent sequences and return a list of SVG graphs, or None."""
+    """Parse text into pitch accent sequences and return a list of SVG graphs."""
     if text := media_strip(text.replace("\n", "<br>")).strip():
         seq_sequences = gen.make_sequences(text)
         graphs = list(gen.make_graphs(seq_sequences))
@@ -183,6 +189,7 @@ class PitchArtistDialog(AnkiSaveAndRestoreGeomDialog):
     _graphs_list: list[str]
 
     def __init__(self, cfg: JapaneseConfig, *, parent: QWidget | None = None) -> None:
+        """Initialize the Pitch Artist preview dialog."""
         super().__init__(parent)
         disable_help_button(self)
         self._cfg = cfg
@@ -205,7 +212,7 @@ class PitchArtistDialog(AnkiSaveAndRestoreGeomDialog):
                 self._webview.zoom_in()
             elif event.key() == Qt.Key.Key_Minus:
                 self._webview.zoom_out()
-        return super().keyPressEvent(event)
+        super().keyPressEvent(event)
 
     def _setup_ui(self) -> None:
         """Initialize the dialog layout with splitter, web view, and buttons."""
