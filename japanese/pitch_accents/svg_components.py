@@ -91,60 +91,77 @@ class Point(typing.NamedTuple):
 class Line:
     """An SVG line segment between two points, optionally rendered as a dashed (tape) line."""
 
+    _start: Point | None
+    _end: Point | None
+
     _cfg: JapaneseConfig
-    is_trailing: bool
-    start: Point | None
-    end: Point | None
-    _tape: bool
+    _is_trailing: bool
+    _is_tape: bool
 
     def __init__(self, cfg: JapaneseConfig) -> None:
         """Initialize an empty line with renderer options."""
         self._cfg = cfg
-        self.is_trailing = False
-        self.start = None
-        self.end = None
-        self._tape = False
+        # Positions
+        self._start = None
+        self._end = None
+        # Properties
+        self._is_tape = False
+        self._is_trailing = False
+
+    @property
+    def end_point(self) -> Point:
+        if self._end:
+            return self._end
+        raise ValueError("End is not set.")
+
+    @property
+    def is_trailing(self) -> bool:
+        return self._is_trailing
+
+    def set_trailing(self, is_trailing: bool) -> "Line":
+        self._is_trailing = is_trailing
+        return self
 
     def start_at(self, pos: Point, tape: bool = False) -> "Line":
         """Set the line's start point and optional tape styling."""
-        self.start = pos
-        self._tape = tape
+        self._start = pos
+        self._is_tape = tape
         return self
 
     def end_at(self, pos: Point) -> "Line":
         """Set the line's end point."""
-        self.end = pos
+        self._end = pos
         return self
 
     def is_unfinished(self) -> bool:
         """Return True if the line has a start point but no end point."""
-        return self.start is not None and self.end is None
+        return self._start is not None and self._end is None
 
     def is_completed(self) -> bool:
         """Return True if the line has both start and end points."""
-        return self.start is not None and self.end is not None
+        return self._start is not None and self._end is not None
 
     def draw(self) -> str:
         """Render this completed line as SVG markup."""
-        assert self.start is not None and self.end is not None
+        assert self._start is not None and self._end is not None
         attrs = []
-        if self._tape:
+        if self._is_tape:
             attrs.append(f'stroke-dasharray="{self._cfg.svg_graphs.stroke_dasharray}"')
-        if self.is_trailing:
+        if self._is_trailing:
             attrs.append(f'class="{SvgColor.trail.name}"')
             attrs.append(f'stroke="{SvgColor.trail.value}"')
         else:
             attrs.append(f'stroke="{SvgColor.word.value}"')
         attrs.append(f'stroke-width="{self._cfg.svg_graphs.stroke_width:.2f}"')
-        attrs.append(f'x1="{self.start.x:.3f}"')
-        attrs.append(f'y1="{self.start.y:.3f}"')
-        attrs.append(f'x2="{self.end.x:.3f}"')
-        attrs.append(f'y2="{self.end.y:.3f}"')
+        attrs.append(f'x1="{self._start.x:.3f}"')
+        attrs.append(f'y1="{self._start.y:.3f}"')
+        attrs.append(f'x2="{self._end.x:.3f}"')
+        attrs.append(f'y2="{self._end.y:.3f}"')
         return f'<line {" ".join(attrs)} />'
 
     def adjust_to_radius(self, r: float) -> "Line":
         """Shorten this line so it touches circle edges instead of centers."""
-        assert self.start is not None and self.end is not None
+        assert self._start is not None and self._end is not None
 
         opts = self._cfg.svg_graphs
         tan = opts.graph_height / opts.x_step
@@ -154,15 +171,15 @@ class Line:
         offset_y = r * sin
         offset_x = r * cos
 
-        if self.start.y == self.end.y:
-            self.start = self.start.shift_by(x=r)
-            self.end = self.end.shift_by(x=-r)
-        elif self.start.y > self.end.y:
-            self.start = self.start.shift_by(x=offset_x, y=-offset_y)
-            self.end = self.end.shift_by(x=-offset_x, y=offset_y)
-        elif self.start.y < self.end.y:
-            self.start = self.start.shift_by(x=offset_x, y=offset_y)
-            self.end = self.end.shift_by(x=-offset_x, y=-offset_y)
+        if self._start.y == self._end.y:
+            self._start = self._start.shift_by(x=r)
+            self._end = self._end.shift_by(x=-r)
+        elif self._start.y > self._end.y:
+            self._start = self._start.shift_by(x=offset_x, y=-offset_y)
+            self._end = self._end.shift_by(x=-offset_x, y=offset_y)
+        elif self._start.y < self._end.y:
+            self._start = self._start.shift_by(x=offset_x, y=offset_y)
+            self._end = self._end.shift_by(x=-offset_x, y=-offset_y)
 
         return self
 
@@ -198,12 +215,11 @@ class Path:
         if len(self._lines) == 0:
             self.start_at(pos)
         elif self.last.is_completed():
-            assert self.last.end
-            self.start_at(self.last.end)
+            self.start_at(self.last.end_point)
             self.go_to(pos)
         else:
             self.go_to(pos)
-        self.last.is_trailing = is_trailing
+        self.last.set_trailing(is_trailing)
         return self
 
     def draw(self) -> str:
