@@ -396,7 +396,7 @@ def section_to_graph_section(section: Section, connect_to_previous: ConnectToPre
         return None
     return SvgGraphWord(
         class_name=section.class_name,
-        moras=[artist_mora_to_graph_mora(section, mora, index) for index, mora in enumerate(section.moras)],
+        moras=tuple(artist_mora_to_graph_mora(section, mora, index) for index, mora in enumerate(section.moras)),
         is_particle=section.is_particle,
         connect_to_previous=connect_to_previous,
     )

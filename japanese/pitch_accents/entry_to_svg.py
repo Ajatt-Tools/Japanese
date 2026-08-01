@@ -43,7 +43,7 @@ class FormattedEntryToSvgAdapter:
             sections=[
                 SvgGraphWord(
                     class_name=seq.class_name(),
-                    moras=[self._mora_to_graph_mora(mora) for mora in seq.moras],
+                    moras=tuple(self._mora_to_graph_mora(mora) for mora in seq.moras),
                     is_particle=False,
                     connect_to_previous=ConnectToPrevious.none,
                 )
