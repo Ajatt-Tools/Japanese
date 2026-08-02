@@ -80,12 +80,12 @@ class NoAnkiWebView(QWebEngineView):
 class SvgSettingsWidget(QWidget):
     _web_view: Union[AnkiWebView, NoAnkiWebView]
 
-    def __init__(self, cfg: JapaneseConfig) -> None:
+    def __init__(self, cfg: JapaneseConfig, svg_maker: FormattedEntryToSvgAdapter | None = None) -> None:
         super().__init__()
         self._cfg = cfg
         self._form = SvgSettingsForm(self._cfg.svg_graphs)
         self._web_view = AnkiWebView() if mw else NoAnkiWebView()
-        self._maker = FormattedEntryToSvgAdapter(cfg)
+        self._svg_maker = svg_maker or FormattedEntryToSvgAdapter(cfg)
         self.initUI()
         self.update_view()
         qconnect(self._form.opts_changed, self.update_view)
@@ -109,7 +109,7 @@ class SvgSettingsWidget(QWidget):
         )
 
     def _make_svgs(self) -> str:
-        return "".join(self._maker.make_graph(entry) for entry in SHOW_ENTRIES)
+        return "".join(self._svg_maker.make_graph(entry) for entry in SHOW_ENTRIES)
 
     def as_dict(self) -> dict[str, bool | str | int | float]:
         """Return current SVG settings as a config dictionary."""
