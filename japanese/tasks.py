@@ -32,8 +32,9 @@ from .helpers.profiles import (
     TaskCaller,
 )
 from .pitch_accents.accent_lookup import AccentLookup
+from .pitch_accents.format_entries import EntryFormatter
 from .pitch_artist.add import PitchArtist
-from .reading import fgen, format_pronunciations, lookup, pronunciations_to_json
+from .reading import fgen, lookup
 
 
 def note_type_matches(note_type: AnkiNoteTypeDict, profile: Profile) -> bool:
@@ -107,12 +108,14 @@ class AddPitch(DoTask, task_type=ProfilePitch):
 
     _lookup: AccentLookup
     _artist: PitchArtist
+    _formatter: EntryFormatter
     _task: ProfilePitch
 
     def __init__(self, task: Profile, caller: TaskCaller, db: Sqlite3Buddy, cfg: JapaneseConfig) -> None:
         super().__init__(task, caller, db, cfg)
         self._lookup = lookup.with_new_buddy(db)
         self._artist = PitchArtist(self._cfg)
+        self._formatter = EntryFormatter(self._cfg)
         assert isinstance(self._task, ProfilePitch), "AddPitch task should be initialized with ProfilePitch"
 
     def _generate_text(self, src_text: str) -> str:
@@ -125,9 +128,10 @@ class AddPitch(DoTask, task_type=ProfilePitch):
         max_results = self._cfg.pitch_accent.maximum_results
 
         if output_format == PitchOutputFormat.json:
-            return json.dumps(pronunciations_to_json(pronunciations, max_results=max_results), ensure_ascii=False)
+            as_json = self._formatter.pronunciations_to_json(pronunciations, max_results=max_results)
+            return json.dumps(as_json, ensure_ascii=False)
 
-        return format_pronunciations(
+        return self._formatter.format_pronunciations(
             pronunciations=pronunciations,
             output_format=output_format,
             sep_single=self._cfg.pitch_accent.reading_separator,
