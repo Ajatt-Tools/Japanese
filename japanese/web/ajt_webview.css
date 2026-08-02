@@ -14,6 +14,7 @@
 :root {
     --text-color: #2a1b0a;
     --background-color: #fffaf0;
+    --min-width: 33px;
 }
 
 body {
@@ -39,7 +40,7 @@ a {
     background-color: var(--background-color);
     color: var(--text-color);
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(75px, max-content) minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(85px, 4fr) minmax(250px, 5fr));
     row-gap: 0.2rem;
     column-gap: 0.2rem;
     font-size: 1.5rem;
@@ -47,7 +48,28 @@ a {
 
 .keyword {
     color: #582020;
+    display: contents;
+}
+
+.keyword :where(ol, ul) {
+	/* A list of words that share the same pitch pattern. */
     background-color: rgba(87, 43, 43, 0.1);
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: space-between;
+    align-content: stretch;
+    min-width: var(--min-width);
+}
+
+.keyword :where(ol, ul) > li {
+    flex: 1 1 var(--min-width);
+    /*
+     * Japanese can wrap between characters by default.
+     * Keep short headwords like 会う on one line.
+     * The flex container can still wrap whole list items onto another row when needed.
+     */
+    white-space: nowrap;
+    word-break: keep-all;
 }
 
 .ajt__pitch_lookup li {
@@ -56,6 +78,7 @@ a {
 
 .pitch_accents {
     background-color: rgba(144, 148, 113, 0.1);
+    min-width: var(--min-width);
 }
 
 .ajt__pitch_lookup :where(ol, ul, li) {
