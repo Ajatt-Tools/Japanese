@@ -13,6 +13,7 @@ from aqt import mw
 from .ajt_common.addon_config import AddonConfigManager, ConfigSubViewBase
 from .audio_manager.abstract import AudioSettingsConfigViewABC
 from .audio_manager.basic_types import AudioSourceConfig, AudioSourceConfigDict
+from .helpers.misc import compact_seq
 from .helpers.profiles import Profile
 from .helpers.sakura_client import (
     AddDefBehavior,
@@ -32,7 +33,7 @@ RE_CFG_WORD_SEP = re.compile(r"[\n;、, ]+", flags=RE_FLAGS)
 @functools.lru_cache(maxsize=50)
 def split_cfg_words(config_value: str) -> Sequence[str]:
     """Splits string by comma. Cache identical values."""
-    return tuple(dict.fromkeys(re.split(RE_CFG_WORD_SEP, config_value)))
+    return compact_seq(re.split(RE_CFG_WORD_SEP, config_value))
 
 
 @functools.lru_cache(maxsize=50)

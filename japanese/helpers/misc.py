@@ -38,3 +38,7 @@ def media_strip(text: str) -> str:
         return MEDIA_REGEX.sub("", text)
     assert mw and mw.col, "Collection must be open."
     return mw.col.media.strip(text)
+
+
+def compact_seq(seq: Iterable) -> Sequence:
+    return tuple(dict.fromkeys(seq))
