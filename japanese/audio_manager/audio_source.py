@@ -37,16 +37,29 @@ class AudioSource(AudioSourceConfig):
 
     @property
     def media_dir(self) -> str:
-        # Meta can specify absolute path to the media dir,
-        # which will be used if set.
-        # Otherwise, fall back to relative path.
+        """Return the best available media directory for this source."""
+        # Release indexes may specify media_dir_abs as a remote media URL.
+        # For local/offline indexes, prefer an existing local media_dir beside index.json.
+        # Existing local media_dir_abs is still supported for custom source layouts.
         self.raise_if_not_ready()
         assert self.db
-        if dir_path_abs := self.db.get_media_dir_abs(self.name):
-            return dir_path_abs
+
+        media_dir_abs = self.db.get_media_dir_abs(self.name)
+        local_media_dir = self.join_media_path(os.path.dirname(self.url), self.db.get_media_dir_rel(self.name))
+
+        if media_dir_abs and os.path.isdir(media_dir_abs):
+            return media_dir_abs
+
+        if self.is_local and os.path.isdir(local_media_dir):
+            return local_media_dir
+
+        # Official release indexes may contain a remote media_dir_abs injected by release tooling.
+        if media_dir_abs:
+            return media_dir_abs
+
         # e.g. if self.url = "/path/to/taas/index.json" and media_dir = "media",
         # then join("/path/to/taas", "media") = "/path/to/taas/media"
-        return self.join_media_path(os.path.dirname(self.url), self.db.get_media_dir_rel(self.name))
+        return local_media_dir
 
     def join_media_path(self, *args) -> str:
         """Join multiple paths."""
