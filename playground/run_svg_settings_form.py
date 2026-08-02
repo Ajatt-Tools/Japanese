@@ -11,9 +11,9 @@ class MockWindow(QDialog):
         super().__init__()
         self._config = NoAnkiConfigView()
         self._settings_widget = SvgSettingsWidget(self._config)
-        self.initUI()
+        self._init_ui()
 
-    def initUI(self) -> None:
+    def _init_ui(self) -> None:
         self.setWindowTitle("Settings Form")
         self.setMinimumSize(300, 300)
 

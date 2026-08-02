@@ -9,10 +9,14 @@ from aqt import mw
 
 from japanese.config_view import JapaneseConfig
 from japanese.helpers.file_ops import rm_file
+from japanese.pitch_accents.consts import FORMATTED_ACCENTS_UPDATED
 
 # Cache directory for the database used in the playground.
 CACHE_DIR = pathlib.Path(__file__).parent / "cache"
-
+PLAYGROUND_DB_PATH = CACHE_DIR / "playground_db.sqlite3"
+# The playground's copy of the "pitch accents table is up to date" marker file.
+# Kept in the playground cache so the real user_files marker is never touched.
+PITCH_ACCENTS_UPDATED_FILE = CACHE_DIR / FORMATTED_ACCENTS_UPDATED.name
 
 @contextmanager
 def tmp_sqlite3_db_path():
@@ -27,10 +31,9 @@ def tmp_sqlite3_db_path():
 @contextmanager
 def persistent_sqlite3_db_path():
     CACHE_DIR.mkdir(exist_ok=True)
-    db_path = CACHE_DIR / "playground_db.sqlite3"
-    print(f"persistent db path: {db_path}")
+    print(f"persistent db path: {PLAYGROUND_DB_PATH}")
     try:
-        yield pathlib.Path(db_path)
+        yield pathlib.Path(PLAYGROUND_DB_PATH)
     finally:
         pass
 
