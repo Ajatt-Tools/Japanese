@@ -1,12 +1,13 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
+import functools
 import typing
 from collections import OrderedDict
 from typing import Optional
 
 from aqt import mw
 
-from ..config_view import JapaneseConfig
+from ..config_view import JapaneseConfig, get_global_config
 from ..database.sqlite3_buddy import Sqlite3Buddy
 from ..helpers.mingle_readings import split_possible_furigana
 from ..helpers.tokens import split_separators
@@ -194,3 +195,24 @@ class AccentLookup:
         if len(tokens := self._mecab.translate(word)) == 1 and tokens[-1].katakana_reading:
             return tokens[-1].katakana_reading
         return ""
+
+
+@functools.cache
+def get_global_mecab() -> MecabController:
+    """Return the shared MecabController instance used when Anki is running.
+
+    The instance is cached for the whole Anki session.
+    Standalone runs (tests, playground) construct their own.
+    """
+    return MecabController(verbose=True, cache_max_size=get_global_config().cache_lookups)
+
+
+@functools.cache
+def get_global_accent_lookup() -> AccentLookup:
+    """Return the shared AccentLookup instance used when Anki is running.
+
+    The instance is cached, so all callers share one AccentLookup (and the shared
+    MeCab controller) for the whole Anki session. Standalone runs (tests,
+    playground) must construct their own AccentLookup instead of calling this.
+    """
+    return AccentLookup(get_global_config(), get_global_mecab())
