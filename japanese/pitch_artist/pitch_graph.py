@@ -7,6 +7,7 @@ from enum import Enum
 
 from ..config_view import JapaneseConfig, SvgGraphReadingFormat
 from ..mecab_controller import to_hiragana, to_katakana
+from ..pitch_accents.colors import SvgGraphClassName
 from ..pitch_accents.svg_graph_renderer import SvgGraphRenderer
 from ..pitch_accents.svg_graph_types import (
     ConnectToPrevious,
@@ -210,11 +211,9 @@ class Section:
     is_tape: bool
 
     @property
-    def class_name(self) -> str:
-        """Return the CSS class name for SVG rendering based on the section's role."""
-        if self.is_particle and self.role != Role.particle:
-            return f"{Role.particle.name} {self.role.name}"
-        return self.role.name
+    def class_name(self) -> SvgGraphClassName:
+        """Return the pitch role class used for SVG rendering and color lookup."""
+        return SvgGraphClassName[self.role.name]
 
 
 def adjust_ha_wa(moras: list[ArtistMora]) -> list[ArtistMora]:
@@ -413,7 +412,7 @@ def sections_to_graph(sequence: Sequence[Section]) -> SvgGraph:
         ):
             sections.append(graph_section)
         previous_sections.append(section)
-    return SvgGraph(sections=sections, outer_class_name="")
+    return SvgGraph(sections=sections, outer_class_name=None)
 
 
 class SvgPitchArtistGraphMaker:
