@@ -107,6 +107,9 @@ class ArtistMora:
             flags |= SvgMoraFlag.multi_char
         if text == GHOST_PARTICLE:
             flags |= SvgMoraFlag.text_hidden
+            flags |= SvgMoraFlag.trailing
+            # Trailing SVG moras are marker-only placeholders; keep the section word as "-" but render no mora text.
+            text = ""
         return cls(text=text, flags=flags)
 
 
