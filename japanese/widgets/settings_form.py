@@ -409,8 +409,9 @@ class SvgSettingsForm(MultiColumnSettingsForm):
     def _add_widgets(self) -> None:
         super()._add_widgets()
 
-        # Reading format selector.
+        # Reading format and color mode selectors.
         self._widgets.reading_format = EnumSelectCombo(initial_value=self._config.reading_format)
+        self._widgets.color_mode = EnumSelectCombo(initial_value=self._config.color_mode)
         self._widgets.graph_font_name = AJTPlainTextEdit(initial_value=self._config.graph_font_name)
 
         # dy/dx are allowed to be negative.
@@ -445,8 +446,8 @@ class SvgSettingsForm(MultiColumnSettingsForm):
     def _add_tooltips(self) -> None:
         super()._add_tooltips()
         self._widgets.include_text.setToolTip("Show kana labels below the pitch contour circles.")
-        self._widgets.inject_css_into_files.setToolTip(
-            "Embed CSS styles directly inside saved SVG files for standalone viewing."
+        self._widgets.color_mode.setToolTip(
+            "How SVG graph colors are applied: black and white, CSS rules, or inline SVG attributes."
         )
         self._widgets.reading_format.setToolTip("Reading format for kana labels: hiragana or katakana.")
         self._widgets.graph_font_name.setToolTip("CSS font-family value used to render kana labels in SVG graphs.")
