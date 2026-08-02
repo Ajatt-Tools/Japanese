@@ -14,12 +14,6 @@ from aqt.qt import *
 from aqt.utils import disable_help_button, openLink, show_critical, showInfo, tooltip
 from aqt.webview import AnkiWebView
 
-from .pitch_accents_web_view import (
-    AnkiPitchAccentsWebView,
-    NoAnkiPitchAccentsWebView,
-    PitchAccentsWebView,
-)
-from .pitch_graph import SvgPitchArtistGraphMaker
 from ..ajt_common.about_menu import menu_root_entry
 from ..ajt_common.enum_select_combo import EnumSelectCombo
 from ..ajt_common.restore_geom_dialog import AnkiSaveAndRestoreGeomDialog
@@ -29,6 +23,7 @@ from ..helpers.consts import ADDON_NAME
 from ..helpers.misc import media_strip
 from ..helpers.regex import RE_SPACES
 from ..helpers.webview_utils import graphs_inline_css_style_tag
+from ..pitch_accents.colors import SvgGraphColorMode
 from ..widgets.addon_opts import (
     AJTPlainTextEdit,
     AllowedRange,
@@ -42,6 +37,12 @@ from ..widgets.widgets_to_config_dict import (
     get_from_widget,
     set_from_cfg,
 )
+from .pitch_accents_web_view import (
+    AnkiPitchAccentsWebView,
+    NoAnkiPitchAccentsWebView,
+    PitchAccentsWebView,
+)
+from .pitch_graph import SvgPitchArtistGraphMaker
 
 ACTION_NAME = "Pitch artist"
 USER_GUIDE_URL = "https://ajatt.top/blog/pitch-artist-user-guide.html"
@@ -86,7 +87,7 @@ class FormWidgets(SimpleNamespace):
     graph_height: PxNarrowSpinBox
     graph_font_name: QLineEdit
     reading_format: EnumSelectCombo
-    inject_css_into_files: QCheckBox
+    color_mode: EnumSelectCombo
     include_text: QCheckBox
 
 
@@ -108,7 +109,7 @@ class GraphSettingsWidget(QWidget):
         self._widgets.graph_height = PxNarrowSpinBox(allowed_range=AllowedRange(0, 999))
         self._widgets.graph_font_name = QLineEdit()
         self._widgets.reading_format = EnumSelectCombo(enum_type=SvgGraphReadingFormat)
-        self._widgets.inject_css_into_files = QCheckBox("Inject CSS into SVG markup")
+        self._widgets.color_mode = EnumSelectCombo(enum_type=SvgGraphColorMode)
         self._widgets.include_text = QCheckBox("Include text")
 
         self.setLayout(self._form_layout)
@@ -116,9 +117,9 @@ class GraphSettingsWidget(QWidget):
         self._fill_layout()
 
     @property
-    def inject_css_into_files(self) -> bool:
-        """Return True when exported/copied SVGs should include inline CSS."""
-        return bool(get_from_widget(self._widgets.inject_css_into_files))
+    def color_mode(self) -> SvgGraphColorMode:
+        """Return the selected SVG graph color mode."""
+        return SvgGraphColorMode[get_from_widget(self._widgets.color_mode)]
 
     def _fill_layout(self) -> None:
         """Populate the form layout with config widgets and connect change signals."""
@@ -140,7 +141,7 @@ class GraphSettingsWidget(QWidget):
         set_from_cfg(self._widgets.graph_height, self._cfg.svg_graphs.graph_height)
         set_from_cfg(self._widgets.graph_font_name, self._cfg.svg_graphs.graph_font_name)
         set_from_cfg(self._widgets.reading_format, self._cfg.svg_graphs.reading_format)
-        set_from_cfg(self._widgets.inject_css_into_files, self._cfg.svg_graphs.inject_css_into_files)
+        set_from_cfg(self._widgets.color_mode, self._cfg.svg_graphs.color_mode)
         set_from_cfg(self._widgets.include_text, self._cfg.svg_graphs.include_text)
 
 
@@ -277,7 +278,10 @@ class PitchArtistDialog(AnkiSaveAndRestoreGeomDialog):
         gen = SvgPitchArtistGraphMaker(cfg)
         text = self._text_edit.toPlainText()
         self._graphs_list = make_graphs_list(text, gen)
-        self._webview.set_svg_graphs(self._format_graphs_as_html(self._graphs_list))
+        self._webview.set_svg_graphs(
+            self._format_graphs_as_html(self._graphs_list),
+            color_mode=cfg.svg_graphs.color_mode,
+        )
 
     def handle_save_button(self, bridge_cmd: str) -> None:
         """Handle the save button bridge command to export a graph as an SVG file."""
@@ -296,7 +300,7 @@ class PitchArtistDialog(AnkiSaveAndRestoreGeomDialog):
         if not name:
             tooltip("Aborted.")
             return
-        graph = inject_css_into_svg(graph) if self._graph_settings_dialog.inject_css_into_files else graph
+        graph = inject_css_into_svg(graph) if self._graph_settings_dialog.color_mode == SvgGraphColorMode.css else graph
         try:
             with open(name, "w", encoding="utf8") as of:
                 of.write(graph)
@@ -313,7 +317,7 @@ class PitchArtistDialog(AnkiSaveAndRestoreGeomDialog):
         sep = self._cfg.pitch_artist.separator_expression_graphs
         graphs = (
             [inject_css_into_svg(graph) for graph in self._graphs_list]
-            if self._graph_settings_dialog.inject_css_into_files
+            if self._graph_settings_dialog.color_mode == SvgGraphColorMode.css
             else self._graphs_list
         )
         if clip := QApplication.clipboard():
