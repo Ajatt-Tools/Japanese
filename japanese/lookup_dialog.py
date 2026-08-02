@@ -36,6 +36,16 @@ def lookup_pronunciations(search: str) -> AccentDict:
         return lookup.with_new_buddy(db).get_pronunciations(search, group_by_headword=True)
 
 
+def get_parent_widget(parent: QWidget | None) -> QWidget:
+    """Return a concrete parent widget suitable for dialogs and tooltips."""
+    if parent is None:
+        return mw
+    elif isinstance(parent, AnkiWebView):
+        return parent.window() or mw
+    else:
+        return parent
+
+
 @final
 class ViewPitchAccentsDialog(AnkiSaveAndRestoreGeomDialog):
     """Dialog that displays pitch accent lookup results."""
@@ -156,13 +166,6 @@ class ViewPitchAccentsDialog(AnkiSaveAndRestoreGeomDialog):
         # https://doc.qt.io/qt-6/qdialog.html#done
         print("closing AJT lookup window...")
         super().done(result)
-
-
-def get_parent_widget(parent: QWidget) -> QWidget:
-    """Return a concrete parent widget suitable for dialogs and tooltips."""
-    if isinstance(parent, AnkiWebView):
-        return parent.window() or mw
-    return parent
 
 
 class LookupMenus:
