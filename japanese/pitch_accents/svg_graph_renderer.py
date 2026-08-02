@@ -5,7 +5,15 @@ import typing
 from collections.abc import Sequence
 
 from ..config_view import JapaneseConfig
-from .svg_components import Line, Path, Point, SvgColor, make_group
+from .colors import SvgGraphClassName
+from .svg_components import (
+    Line,
+    Path,
+    Point,
+    SvgColor,
+    lookup_component_color,
+    make_group,
+)
 from .svg_graph_types import (
     ConnectToPrevious,
     PitchLevel,
@@ -33,8 +41,24 @@ class RenderedGraphComponents(typing.NamedTuple):
 def wrap_content(graph: SvgGraph, content: RenderedGraphComponents) -> str:
     """Wrap ungrouped graphs in their pitch-type group while leaving artist graphs unwrapped."""
     if graph.outer_class_name:
-        return make_group(content, graph.outer_class_name)
+        return make_group(content, graph.outer_class_name.name)
     return "".join(content)
+
+
+def section_css_class(section: SvgGraphWord) -> str:
+    """Return the CSS class string for a section, adding particle for compound particle roles."""
+    if section.is_particle and section.class_name != SvgGraphClassName.particle:
+        return f"{SvgGraphClassName.particle.name} {section.class_name.name}"
+    return section.class_name.name
+
+
+def attrs_circle(*, is_trailing: bool, is_particle: bool, circle_color: str) -> str:
+    """Return SVG circle attributes for pitch points using an already-resolved color."""
+    if is_trailing:
+        return f'class="{SvgColor.trail.name}" fill="none" stroke="{circle_color}"'
+    if is_particle:
+        return f'fill="none" stroke="{circle_color}"'
+    return f'fill="{circle_color}" stroke="{circle_color}"'
 
 
 class SvgGraphRenderer:
@@ -65,20 +89,27 @@ class SvgGraphRenderer:
         """Return the y-coordinate for mora text."""
         return self.height_low + self._cfg.svg_graphs.x_step
 
-    def make_circle(self, pos: Point, is_trailing: bool, is_particle: bool) -> str:
+    def make_circle(self, pos: Point, *, is_trailing: bool, is_particle: bool, circle_color: str) -> str:
         """Create a circle positioned where two pitch lines touch."""
         return (
-            f"<circle {attrs_circle(is_trailing=is_trailing, is_particle=is_particle)} "
-            f'stroke-width="{self._opts.stroke_width:.2f}" '
-            f'cx="{pos.x:.3f}" cy="{pos.y:.3f}" r="{self._opts.circle_radius:.2f}" />'
+            f"<circle {attrs_circle(is_trailing=is_trailing, is_particle=is_particle, circle_color=circle_color)} "
+            f'stroke-width="{self._cfg.svg_graphs.stroke_width:.2f}" '
+            f'cx="{pos.x:.3f}" cy="{pos.y:.3f}" r="{self._cfg.svg_graphs.circle_radius:.2f}" />'
         )
 
-    def make_devoiced_circle(self, pos: Point, multi_char: bool) -> str:
+    def _circle_color_for_mora(self, *, is_trailing: bool, is_particle: bool, word_color: str) -> str:
+        """Resolve the final circle color for one mora."""
+        if is_trailing:
+            return lookup_component_color(self._cfg, SvgColor.trail, SvgGraphClassName.connector)
+        if is_particle:
+            return lookup_component_color(self._cfg, SvgColor.word, SvgGraphClassName.particle)
+        return word_color
+
+    def make_devoiced_circle(self, pos: Point, *, multi_char: bool, circle_color: str) -> str:
         """
         Create a dashed circle around devoiced mora text.
         If multi_char is true, widen the circle. This is needed if the mora consists of two characters.
         """
-        stroke = SvgColor.word.value
         font_size = self._cfg.svg_graphs.font_size
         stroke_width = self._cfg.svg_graphs.devoiced_circle_width
         r = self._cfg.svg_graphs.devoiced_circle_radius
@@ -90,7 +121,7 @@ class SvgGraphRenderer:
                 y=-font_size / 2 + self._cfg.svg_graphs.devoiced_circle_dy,
             )
             return (
-                f'<circle class="devoiced" fill="none" stroke="{stroke}" cx="{pos.x:.0f}" cy="{pos.y:.0f}" '
+                f'<circle class="devoiced" fill="none" stroke="{circle_color}" cx="{pos.x:.0f}" cy="{pos.y:.0f}" '
                 f'stroke-width="{stroke_width:.2f}" r="{r:.2f}" '
                 f'stroke-dasharray="{dasharray}" />'
             )
@@ -102,17 +133,16 @@ class SvgGraphRenderer:
             width = self._cfg.svg_graphs.font_size * 2 + self._cfg.svg_graphs.devoiced_rectangle_padding * 2
             height = r * 2
             return (
-                f'<rect class="devoiced" fill="none" stroke="{stroke}" x="{pos.x:.0f}" y="{pos.y:.0f}" '
+                f'<rect class="devoiced" fill="none" stroke="{circle_color}" x="{pos.x:.0f}" y="{pos.y:.0f}" '
                 f'width="{width:.0f}" height="{height:.0f}" '
                 f'stroke-width="{stroke_width:.2f}" rx="{r:.2f}" '
                 f'stroke-dasharray="{dasharray}" />'
             )
 
-    def make_text_element(self, text: str, pos: Point, class_attr: str, dx: int) -> str:
+    def make_text_element(self, text: str, *, pos: Point, class_attr: str, dx: int, text_color: str) -> str:
         """Create an SVG text element from preformatted text content and class attributes."""
-        fill = SvgColor.word.value
         return (
-            f'<text{class_attr} fill="{fill}" '
+            f'<text{class_attr} fill="{text_color}" '
             f'font-size="{self._cfg.svg_graphs.font_size:.1f}px" '
             f'letter-spacing="{self._cfg.svg_graphs.letter_spacing:.1f}px" '
             f'x="{pos.x:.0f}" y="{pos.y:.0f}" dx="{dx:.0f}">{text}</text>'
@@ -144,8 +174,8 @@ class SvgGraphRenderer:
             content = self._make_pitch_artist_content(graph, start_pos)
         return self._make_sized_svg(graph, content)
 
-    def _start_connector(self, section: SvgGraphWord, pos: Point) -> Line:
-        connector = Line(self._cfg)
+    def _start_connector(self, section: SvgGraphWord, pos: Point, class_name: SvgGraphClassName) -> Line:
+        connector = Line(self._cfg, class_name).set_trailing(section.starts_with_trailing_mora)
         match section.connect_to_previous:
             case ConnectToPrevious.weld:
                 connector.start_at(pos.shift_by(x=-self._cfg.svg_graphs.x_step), tape=False)
@@ -163,8 +193,9 @@ class SvgGraphRenderer:
         """
         word_circles: list[str] = []
         text_moras: list[str] = []
-        path = Path(self._cfg)
-        connector = self._start_connector(section, pos)
+        path = Path(self._cfg, section.class_name)
+        connector = self._start_connector(section, pos, SvgGraphClassName.connector)
+        word_color = lookup_component_color(self._cfg, SvgColor.word, section.class_name)
 
         for idx, mora in enumerate(section.moras):
             pos = pos.replace(y=self.height_high if mora.level == PitchLevel.high else self.height_low)
@@ -172,6 +203,11 @@ class SvgGraphRenderer:
             word_circles.append(
                 self.make_circle(
                     pos.replace(),
+                    circle_color=self._circle_color_for_mora(
+                        is_trailing=mora.is_trailing,
+                        is_particle=section.is_particle,
+                        word_color=word_color,
+                    ),
                     is_trailing=mora.is_trailing,
                     is_particle=section.is_particle,
                 )
@@ -185,6 +221,7 @@ class SvgGraphRenderer:
                     self.make_devoiced_circle(
                         pos.replace(y=self.height_kana),
                         multi_char=mora.is_multi_char,
+                        circle_color=word_color,
                     )
                 )
             # If this mora is trailing (FormattedEntry path) or is a ghost particle (Pitch Artist path),
@@ -193,9 +230,10 @@ class SvgGraphRenderer:
                 text_moras.append(
                     self.make_text_element(
                         mora.text,
-                        pos.replace(y=self.height_kana),
-                        mora.class_attr,
-                        self._cfg.svg_graphs.text_dx * mora.dx_units,
+                        pos=pos.replace(y=self.height_kana),
+                        class_attr=mora.class_attr,
+                        dx=self._cfg.svg_graphs.text_dx * mora.dx_units,
+                        text_color=word_color,
                     )
                 )
             pos = pos.shift_by(x=self._cfg.svg_graphs.x_step)
@@ -203,8 +241,8 @@ class SvgGraphRenderer:
         # Note: connectors are never used with FormattedEntry-derived sections.
         connector_svg = (
             make_group(
-                [connector.adjust_to_radius(self._cfg.svg_graphs.circle_radius).draw()],
-                "connector",
+                [connector.adjust_to_radius().draw()],
+                SvgGraphClassName.connector.name,
             )
             if connector.is_completed()
             else ""
@@ -227,11 +265,11 @@ class SvgGraphRenderer:
 
         for section in graph.sections:
             rendered = self._render_section(section, start_pos)
-            paths.append(make_group([rendered.path], section.class_name))
+            paths.append(make_group([rendered.path], section_css_class(section)))
             if rendered.connector:
                 paths.append(rendered.connector)
-            circles.append(make_group([rendered.circles], section.class_name))
-            text.append(make_group([rendered.text], section.class_name))
+            circles.append(make_group([rendered.circles], section_css_class(section)))
+            text.append(make_group([rendered.text], section_css_class(section)))
             start_pos = rendered.pos
 
         return RenderedGraphComponents(

@@ -6,6 +6,7 @@ import typing
 
 from ..mecab_controller import kana_to_moras
 from .basic_types import PitchType, pitch_type_from_pitch_num
+from .colors import SvgGraphClassName
 from .common import FormattedEntry, split_html_notation
 from .consts import SMALL_KANA_CHARS
 from .styles import SpecialSymbols, XmlTags
@@ -31,13 +32,14 @@ class Mora:
     def render_flags(self) -> SvgMoraFlag:
         """Return flags enriched with derived SVG-rendering flags."""
         flags = self.flags
-        if self.is_trailing():
+        if self.is_trailing:
             flags |= SvgMoraFlag.trailing
             flags |= SvgMoraFlag.text_hidden
         if self.is_multi_char():
             flags |= SvgMoraFlag.multi_char
         return flags
 
+    @property
     def is_trailing(self) -> bool:
         if SvgMoraFlag.trailing in self.flags:
             assert not self.txt
@@ -56,10 +58,11 @@ class MoraSequence(typing.NamedTuple):
     pitch_type: PitchType
     entry: FormattedEntry
 
-    def class_name(self) -> str:
+    @property
+    def class_name(self) -> SvgGraphClassName:
         # Note: when a word is a compound with two accents, e.g. 二十四時間 with accents 二十(1) and 四時間(2),
         # class name will be "unknown".
-        return self.pitch_type.name
+        return SvgGraphClassName[self.pitch_type.name]
 
 
 def html_notation_to_moras(html_notation: str) -> list[Mora]:

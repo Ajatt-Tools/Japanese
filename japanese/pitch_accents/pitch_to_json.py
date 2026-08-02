@@ -63,7 +63,7 @@ def mora_sequence_to_dict(seq: MoraSequence) -> MoraSequenceOutputJson:
         "katakana_reading": seq.entry.katakana_reading,
         "pitch_number": seq.entry.pitch_number,
         "pitch_type": seq.pitch_type.name,
-        "moras": [mora_to_dict(combine_mora(mora)) for mora in seq.moras if not mora.is_trailing()],
+        "moras": [mora_to_dict(combine_mora(mora)) for mora in seq.moras if not mora.is_trailing],
     }
 
 

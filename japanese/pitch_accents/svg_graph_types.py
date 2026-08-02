@@ -5,6 +5,8 @@ import enum
 import typing
 from collections.abc import Sequence
 
+from .colors import SvgGraphClassName
+
 
 @enum.unique
 class PitchLevel(enum.Enum):
@@ -65,11 +67,16 @@ class SvgGraphMora(typing.NamedTuple):
 class SvgGraphWord(typing.NamedTuple):
     """A renderable group of morae."""
 
-    class_name: str
+    class_name: SvgGraphClassName
     moras: Sequence[SvgGraphMora]
     is_particle: bool
     # Set by adapter code. Controls whether this section welds, tapes, or does not connect to the previous one.
     connect_to_previous: ConnectToPrevious
+
+    @property
+    def starts_with_trailing_mora(self) -> bool:
+        """Return True if this section starts with a trailing marker mora."""
+        return bool(self.moras and self.moras[0].is_trailing)
 
 
 class SvgGraph(typing.NamedTuple):
@@ -77,4 +84,4 @@ class SvgGraph(typing.NamedTuple):
 
     sections: Sequence[SvgGraphWord]
     # When outer class name is not empty, the graph is being constructed from an instance of FormattedEntry.
-    outer_class_name: str
+    outer_class_name: SvgGraphClassName | None

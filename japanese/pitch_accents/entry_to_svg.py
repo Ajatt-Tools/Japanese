@@ -1,12 +1,14 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 from ..config_view import JapaneseConfig
+from .colors import SvgGraphClassName
 from .common import FormattedEntry
 from .entry_to_moras import Mora, entry_to_moras
 from .svg_components import (
     SvgColor,
     append_class_name,
     assemble_txt_content,
+    lookup_component_color,
 )
 from .svg_graph_renderer import SvgGraphRenderer
 from .svg_graph_types import ConnectToPrevious, SvgGraph, SvgGraphMora, SvgGraphWord
@@ -29,6 +31,7 @@ class FormattedEntryToSvgAdapter:
                 mora,
                 reading_format=self._cfg.svg_graphs.reading_format,
                 tspan_dx=self._cfg.svg_graphs.tspan_dx,
+                nasal_color=lookup_component_color(self._cfg, SvgColor.nasal, SvgGraphClassName.nasal),
             ),
             level=mora.level,
             class_attr=append_class_name(mora.flags),
@@ -42,13 +45,13 @@ class FormattedEntryToSvgAdapter:
         return SvgGraph(
             sections=[
                 SvgGraphWord(
-                    class_name=seq.class_name(),
+                    class_name=seq.class_name,
                     moras=tuple(self._mora_to_graph_mora(mora) for mora in seq.moras),
                     is_particle=False,
                     connect_to_previous=ConnectToPrevious.none,
                 )
             ],
-            outer_class_name=seq.class_name(),
+            outer_class_name=seq.class_name,
         )
 
     def make_graph(self, entry: FormattedEntry) -> str:
