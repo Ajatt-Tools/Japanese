@@ -1,115 +1,19 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
-from collections import OrderedDict
-from collections.abc import Sequence
+
+# Entry point for Anki.
+# This module creates the global objects used by the rest of the add-on.
+# It can only be imported when Anki is running.
+# Entry formatting functions live in pitch_accents/format_entries.py (see EntryFormatter).
 
 from aqt import gui_hooks
 
 from .config_view import get_global_config
 from .database.sqlite3_buddy import Sqlite3Buddy
 from .furigana.gen_furigana import FuriganaGen
-from .helpers.profiles import ColorCodePitchFormat, PitchOutputFormat
-from .mecab_controller.kana_conv import to_hiragana
-from .mecab_controller.mecab_controller import MecabController
+from .helpers.profiles import ColorCodePitchFormat
 from .pitch_accents.acc_dict_mgr_2 import AccentDictManager2
-from .pitch_accents.accent_lookup import AccentLookup
-from .pitch_accents.basic_types import count_moras, pitch_type_from_pitch_num
-from .pitch_accents.common import AccentDict, FormattedEntry
-from .pitch_accents.entry_to_svg import FormattedEntryToSvgAdapter
-from .pitch_accents.pitch_to_json import MoraSequenceOutputJson, make_json_from_entry
-from .pitch_accents.styles import (
-    PITCH_COLOR_PLACEHOLDER,
-    STYLE_MAP,
-    HTMLPitchPatternStyle,
-)
-
-# Lookup
-##########################################################################
-
-
-def convert_to_inline_style(txt: str, pitch_color: str, pitch_accent_style: HTMLPitchPatternStyle) -> str:
-    """Map style classes to their user-configured inline versions."""
-    if not pitch_color:
-        pitch_color = "currentColor"  # fallback
-    for k, v in STYLE_MAP[pitch_accent_style].items():
-        txt = txt.replace(k, v)
-    txt = txt.replace(PITCH_COLOR_PLACEHOLDER, pitch_color)
-    return txt
-
-
-def pitch_color_from_entry(entry: FormattedEntry) -> str:
-    return cfg.pitch_color_codes.lookup_color(
-        pitch_type_from_pitch_num(entry.pitch_number, count_moras(entry.katakana_reading))
-    )
-
-
-def update_html(entry: FormattedEntry, pitch_accent_style: HTMLPitchPatternStyle) -> str:
-    html_notation = convert_to_inline_style(
-        entry.html_notation,
-        pitch_color=pitch_color_from_entry(entry),
-        pitch_accent_style=pitch_accent_style,
-    )
-    if cfg.pitch_accent.output_hiragana:
-        html_notation = to_hiragana(html_notation)
-    return html_notation
-
-
-def get_notation(entry: FormattedEntry, mode: PitchOutputFormat) -> str:
-    if mode == PitchOutputFormat.html:
-        return update_html(entry, pitch_accent_style=cfg.pitch_accent.html_style)
-    elif mode == PitchOutputFormat.number:
-        return entry.pitch_number
-    elif mode == PitchOutputFormat.html_and_number:
-        return f"{update_html(entry, pitch_accent_style=cfg.pitch_accent.html_style)} {entry.pitch_number_html}"
-    elif mode == PitchOutputFormat.svg:
-        return svg_graph_maker.make_graph(entry)
-    raise RuntimeError(f"Unsupported output format: {mode.name}")
-
-
-def sort_entries(entries: Sequence[FormattedEntry]) -> Sequence[FormattedEntry]:
-    return sorted(entries, key=lambda entry: (entry.katakana_reading, entry.pitch_number))
-
-
-def entries_to_html(
-    entries: Sequence[FormattedEntry],
-    output_format: PitchOutputFormat,
-    max_results: int,
-) -> Sequence[str]:
-    """
-    Convert entries to HTML, sort and remove duplicates.
-    """
-    return tuple(dict.fromkeys(get_notation(entry, output_format) for entry in sort_entries(entries)))[:max_results]
-
-
-def pronunciations_to_json(pronunciations: AccentDict, *, max_results: int) -> Sequence[MoraSequenceOutputJson]:
-    result: dict[str, MoraSequenceOutputJson] = OrderedDict()
-    for word, entries in pronunciations.items():
-        for entry in sort_entries(entries):
-            result[update_html(entry, pitch_accent_style=cfg.pitch_accent.html_style)] = make_json_from_entry(entry)
-    return tuple(result.values())[:max_results]
-
-
-def format_pronunciations(
-    pronunciations: AccentDict,
-    *,
-    output_format: PitchOutputFormat = PitchOutputFormat.html,
-    max_results: int,
-    sep_single: str = "・",
-    sep_multi: str = "、",
-    expr_sep: str | None = None,
-) -> str:
-    ordered_dict: dict[str, str] = OrderedDict()
-    for word, entries in pronunciations.items():
-        if entries_html := entries_to_html(entries, output_format, max_results=max_results):
-            ordered_dict[word] = sep_single.join(entries_html)
-
-    # expr_sep is used to separate entries on lookup
-    if expr_sep:
-        txt = sep_multi.join(f"{word}{expr_sep}{entries}" for word, entries in ordered_dict.items() if word and entries)
-    else:
-        txt = sep_multi.join(ordered_dict.values())
-
-    return txt
+from .pitch_accents.accent_lookup import get_global_accent_lookup, get_global_mecab
 
 
 def generate_furigana(
@@ -119,6 +23,7 @@ def generate_furigana(
     full_hiragana: bool = False,
     output_format: ColorCodePitchFormat = ColorCodePitchFormat(0),
 ) -> str:
+    """Generate furigana for the source text using a temporary db connection."""
     with Sqlite3Buddy() as db:
         return fgen.with_new_buddy(db).generate_furigana(
             src_text,
@@ -132,9 +37,8 @@ def generate_furigana(
 ##########################################################################
 
 cfg = get_global_config()
-mecab = MecabController(verbose=True, cache_max_size=cfg.cache_lookups)
-svg_graph_maker = FormattedEntryToSvgAdapter(cfg)
+mecab = get_global_mecab()
+lookup = get_global_accent_lookup()
 acc_dict = AccentDictManager2()
-lookup = AccentLookup(cfg, mecab)
 gui_hooks.main_window_did_init.append(acc_dict.ensure_dict_ready)
 fgen = FuriganaGen(cfg, lookup, mecab)
