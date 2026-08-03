@@ -13,7 +13,7 @@ from .svg_graph_types import SvgMoraFlag
 
 
 @enum.unique
-class SvgColor(enum.Enum):
+class SvgBlackAndWhiteRole(enum.Enum):
     """Named colors used by pitch graph SVG primitives."""
 
     trail = "gray"
@@ -82,7 +82,7 @@ class Point(typing.NamedTuple):
         return Point.new(x=x if x is not None else self.x, y=y if y is not None else self.y)
 
 
-def lookup_component_color(cfg: JapaneseConfig, role: SvgColor, class_name: SvgGraphClassName) -> str:
+def lookup_component_color(cfg: JapaneseConfig, role: SvgBlackAndWhiteRole, class_name: SvgGraphClassName) -> str:
     """Resolve an SVG graph role class to its configured color."""
     match cfg.svg_graphs.color_mode:
         case SvgGraphColorMode.svg_attributes:
@@ -154,11 +154,11 @@ class Line:
         if self._is_tape:
             attrs.append(f'stroke-dasharray="{self._cfg.svg_graphs.stroke_dasharray}"')
         if self._is_trailing:
-            stroke_color = lookup_component_color(self._cfg, SvgColor.trail, SvgGraphClassName.connector)
-            attrs.append(f'class="{SvgColor.trail.name}"')
+            stroke_color = lookup_component_color(self._cfg, SvgBlackAndWhiteRole.trail, SvgGraphClassName.connector)
+            attrs.append(f'class="{SvgBlackAndWhiteRole.trail.name}"')
             attrs.append(f'stroke="{stroke_color}"')
         else:
-            stroke_color = lookup_component_color(self._cfg, SvgColor.word, self._class_name)
+            stroke_color = lookup_component_color(self._cfg, SvgBlackAndWhiteRole.word, self._class_name)
             attrs.append(f'stroke="{stroke_color}"')
         attrs.append(f'stroke-width="{self._cfg.svg_graphs.stroke_width:.2f}"')
         attrs.append(f'x1="{self._start.x:.3f}"')

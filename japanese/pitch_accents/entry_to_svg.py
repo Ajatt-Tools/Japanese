@@ -5,7 +5,7 @@ from .colors import SvgGraphClassName
 from .common import FormattedEntry
 from .entry_to_moras import Mora, entry_to_moras
 from .svg_components import (
-    SvgColor,
+    SvgBlackAndWhiteRole,
     append_class_name,
     assemble_txt_content,
     lookup_component_color,
@@ -31,7 +31,7 @@ class FormattedEntryToSvgAdapter:
                 mora,
                 reading_format=self._cfg.svg_graphs.reading_format,
                 tspan_dx=self._cfg.svg_graphs.tspan_dx,
-                nasal_color=lookup_component_color(self._cfg, SvgColor.nasal, SvgGraphClassName.nasal),
+                nasal_color=lookup_component_color(self._cfg, SvgBlackAndWhiteRole.nasal, SvgGraphClassName.nasal),
             ),
             level=mora.level,
             class_attr=append_class_name(mora.flags),

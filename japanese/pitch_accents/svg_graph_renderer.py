@@ -10,7 +10,7 @@ from .svg_components import (
     Line,
     Path,
     Point,
-    SvgColor,
+    SvgBlackAndWhiteRole,
     lookup_component_color,
     make_group,
 )
@@ -55,7 +55,7 @@ def section_css_class(section: SvgGraphWord) -> str:
 def attrs_circle(*, is_trailing: bool, is_particle: bool, circle_color: str) -> str:
     """Return SVG circle attributes for pitch points using an already-resolved color."""
     if is_trailing:
-        return f'class="{SvgColor.trail.name}" fill="none" stroke="{circle_color}"'
+        return f'class="{SvgBlackAndWhiteRole.trail.name}" fill="none" stroke="{circle_color}"'
     if is_particle:
         return f'fill="none" stroke="{circle_color}"'
     return f'fill="{circle_color}" stroke="{circle_color}"'
@@ -100,9 +100,9 @@ class SvgGraphRenderer:
     def _circle_color_for_mora(self, *, is_trailing: bool, is_particle: bool, word_color: str) -> str:
         """Resolve the final circle color for one mora."""
         if is_trailing:
-            return lookup_component_color(self._cfg, SvgColor.trail, SvgGraphClassName.connector)
+            return lookup_component_color(self._cfg, SvgBlackAndWhiteRole.trail, SvgGraphClassName.connector)
         if is_particle:
-            return lookup_component_color(self._cfg, SvgColor.word, SvgGraphClassName.particle)
+            return lookup_component_color(self._cfg, SvgBlackAndWhiteRole.word, SvgGraphClassName.particle)
         return word_color
 
     def make_devoiced_circle(self, pos: Point, *, multi_char: bool, circle_color: str) -> str:
@@ -195,7 +195,7 @@ class SvgGraphRenderer:
         text_moras: list[str] = []
         path = Path(self._cfg, section.class_name)
         connector = self._start_connector(section, pos, SvgGraphClassName.connector)
-        word_color = lookup_component_color(self._cfg, SvgColor.word, section.class_name)
+        word_color = lookup_component_color(self._cfg, SvgBlackAndWhiteRole.word, section.class_name)
 
         for idx, mora in enumerate(section.moras):
             pos = pos.replace(y=self.height_high if mora.level == PitchLevel.high else self.height_low)
