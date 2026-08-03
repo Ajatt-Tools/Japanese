@@ -31,7 +31,8 @@ from .audio_manager.basic_types import (
     TotalAudioStats,
 )
 from .audio_manager.source_manager import InitResult
-from .config_view import config_view as cfg, ToolbarButtonConfig
+from .config_view import ToolbarButtonConfig
+from .config_view import config_view as cfg
 from .helpers.consts import ADDON_NAME, THIS_ADDON_MODULE
 from .helpers.misc import split_list
 from .helpers.profiles import (
