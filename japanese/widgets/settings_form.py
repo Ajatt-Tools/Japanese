@@ -1,6 +1,5 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
-
 from collections.abc import Iterable
 from types import SimpleNamespace
 
@@ -39,6 +38,8 @@ from .addon_opts import (
 )
 from .widgets_to_config_dict import as_config_dict, change_event
 
+AllowedConfigValues = bool | str | int | float
+
 
 class SettingsForm(QWidget):
     _config: ConfigSubViewBase | None = None
@@ -70,7 +71,7 @@ class SettingsForm(QWidget):
         """Subclasses add new tooltips here."""
         pass
 
-    def as_dict(self) -> dict[str, bool | str | int | float]:
+    def as_dict(self) -> dict[str, AllowedConfigValues]:
         """Return current widget values as a config dictionary."""
         return as_config_dict(self._widgets.__dict__)
 
@@ -233,7 +234,7 @@ class PitchColorCodesSettingsForm(SettingsForm):
     _config: PitchColorCodesConfigView
 
     def _make_color_line_edits(self) -> Iterable[tuple[str, ColorEditPicker]]:
-        assert self._config
+        assert self._config, "config must be set"
         for pitch_type in PitchType:
             picker = ColorEditPicker()
             picker.set_color(self._config.lookup_color(pitch_type))

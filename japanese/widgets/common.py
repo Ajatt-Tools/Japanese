@@ -3,7 +3,7 @@
 
 from aqt.qt import *
 
-from .settings_form import SettingsForm, AllowedConfigValues
+from .settings_form import AllowedConfigValues, SettingsForm
 
 
 class NoAnkiWebView(QWebEngineView):
