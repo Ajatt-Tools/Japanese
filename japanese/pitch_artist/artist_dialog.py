@@ -57,11 +57,6 @@ dひとり;2 で dくすり;0 を のんだ;1
 """.strip()
 
 
-def head_content() -> str:
-    """Return the HTML <head> content with base CSS for the graph preview page."""
-    return '<meta charset="UTF-8" />'
-
-
 class GraphCodeEdit(AJTPlainTextEdit):
     """A text editor that triggers graph updates on Ctrl+Enter."""
 
