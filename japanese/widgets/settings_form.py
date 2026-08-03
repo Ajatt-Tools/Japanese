@@ -386,7 +386,7 @@ def make_px_spin_box(initial_value: NumericValue) -> SvgOptSpinbox:
 
 
 class SvgSettingsForm(MultiColumnSettingsForm):
-    _columns: int = 2
+    _columns: int = 3
     _title: str = "SVG settings"
     _config: SvgPitchGraphOptionsConfigView
     opts_changed = pyqtSignal()
