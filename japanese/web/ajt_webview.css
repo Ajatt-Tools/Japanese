@@ -52,7 +52,7 @@ a {
 }
 
 .keyword :where(ol, ul) {
-	/* A list of words that share the same pitch pattern. */
+    /* A list of words that share the same pitch pattern. */
     background-color: rgba(87, 43, 43, 0.1);
     display: flex;
     flex-flow: row wrap;
