@@ -19,8 +19,12 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 @pytest.fixture(scope="session", autouse=True)
 def qapp() -> QApplication:
-    """Ensure a QApplication exists for widget tests."""
-    return QApplication.instance() or QApplication([])
+    """Ensure a QApplication exists for widget tests.
+
+    A program name must be present in argv because QtWebEngine aborts
+    when QApplication is created with an empty argument list.
+    """
+    return QApplication.instance() or QApplication(["pytest"])
 
 
 @pytest.fixture(scope="class")
