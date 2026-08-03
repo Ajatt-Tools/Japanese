@@ -2,18 +2,19 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 import collections
 import io
+import pathlib
 from collections.abc import Collection
 from gettext import gettext as _
-from typing import final
+from typing import TypeAlias, final
 
+import aqt
 from aqt import gui_hooks, mw
 from aqt.browser import Browser
 from aqt.qt import *
 from aqt.utils import tooltip
 from aqt.webview import AnkiWebView
 
-from .ajt_common.about_menu import menu_root_entry, tweak_window
-from .ajt_common.restore_geom_dialog import AnkiSaveAndRestoreGeomDialog
+from .ajt_common.about_menu import disable_help_button, menu_root_entry
 from .config_view import (
     JapaneseConfig,
     LookupDialogPitchOutputFormat,
@@ -22,21 +23,24 @@ from .config_view import (
 from .database.sqlite3_buddy import Sqlite3Buddy
 from .helpers.consts import ADDON_NAME
 from .helpers.tokens import clean_furigana
+from .pitch_accents.accent_lookup import AccentLookup, get_global_accent_lookup
+from .pitch_accents.colors import SvgGraphColorMode
 from .pitch_accents.common import AccentDict, FormattedEntry
+from .pitch_accents.entry_to_svg import FormattedEntryToSvgAdapter
+from .pitch_accents.format_entries import EntryFormatter
 from .pitch_accents.styles import HTMLPitchPatternStyle
-from .pitch_artist.pitch_accents_web_view import get_css_file_refs
-from .reading import format_pronunciations, lookup, svg_graph_maker, update_html
+from .pitch_artist.pitch_accents_web_view import (
+    get_pitch_webview_css_file_refs,
+    get_pitch_webview_css_inline_styles,
+    head_content,
+)
+from .widgets.raise_on_show_dialog import RaiseOnShowDialog
+from .widgets.svg_settings import NoAnkiWebView
 
 ACTION_NAME = "Pitch Accent lookup"
 
 
-def lookup_pronunciations(search: str) -> AccentDict:
-    """Look up pitch accent pronunciations for the given search text."""
-    with Sqlite3Buddy() as db:
-        return lookup.with_new_buddy(db).get_pronunciations(search, group_by_headword=True)
-
-
-def get_parent_widget(parent: QWidget | None) -> QWidget:
+def get_parent_widget(parent: QWidget | None) -> QWidget | None:
     """Return a concrete parent widget suitable for dialogs and tooltips."""
     if parent is None:
         return mw
@@ -46,26 +50,79 @@ def get_parent_widget(parent: QWidget | None) -> QWidget:
         return parent
 
 
+class AnkiLookupWebView(AnkiWebView):
+    """Web view for the pitch accent lookup dialog when Anki is running."""
+
+    def __init__(self, parent: QWidget | None) -> None:
+        super().__init__(parent=parent, title=ACTION_NAME)
+
+    def set_formatted_html(self, formatted_html: str, color_mode: SvgGraphColorMode) -> None:
+        """Set the lookup result page using Anki's web-exported CSS files."""
+        self.stdHtml(head=head_content(), body=formatted_html, css=get_pitch_webview_css_file_refs(color_mode))
+
+
+class NoAnkiLookupWebView(NoAnkiWebView):
+    """Web view for the pitch accent lookup dialog in standalone runs (playground, tests)."""
+
+    def set_formatted_html(self, formatted_html: str, color_mode: SvgGraphColorMode) -> None:
+        """Set the lookup result page with CSS inlined from local files."""
+        self.stdHtml(
+            head=head_content() + "".join(get_pitch_webview_css_inline_styles(color_mode)),
+            body=formatted_html,
+        )
+
+
+LookupWebView: TypeAlias = AnkiLookupWebView | NoAnkiLookupWebView
+
+
+def get_lookup_webview(parent: QWidget) -> LookupWebView:
+    """Return the Anki or standalone web view for the lookup dialog."""
+    if mw:
+        return AnkiLookupWebView(parent)
+    return NoAnkiLookupWebView(parent)
+
+
 @final
-class ViewPitchAccentsDialog(AnkiSaveAndRestoreGeomDialog):
-    """Dialog that displays pitch accent lookup results."""
+class ViewPitchAccentsDialog(RaiseOnShowDialog):
+    """Dialog that displays pitch accent lookup results.
+
+    The dialog is persistent: it is created once and reused for every lookup.
+    """
 
     name: str = "ajt__pitch_accent_lookup"
     _pronunciations: AccentDict
-    _web: AnkiWebView
+    _web: LookupWebView
     _cfg: JapaneseConfig
+    _accent_lookup: AccentLookup
+    _formatter: EntryFormatter
+    _svg_maker: FormattedEntryToSvgAdapter
+    _accent_db_path: pathlib.Path | None
 
-    def __init__(self, cfg: JapaneseConfig, pronunciations: AccentDict, parent: QWidget | None = None) -> None:
-        """Initialize the lookup result dialog with pronunciations and add-on config."""
+    def __init__(
+        self,
+        cfg: JapaneseConfig,
+        parent: QWidget | None = None,
+        accent_lookup: AccentLookup | None = None,
+        accent_db_path: pathlib.Path | None = None,
+    ) -> None:
+        """Initialize the lookup result dialog with add-on config and optional dependencies.
+
+        When Anki is running, the cached global AccentLookup instance is used.
+        Standalone runs (tests, playground) must pass their own AccentLookup
+        and a path to the database file.
+        """
         super().__init__(parent)
         self._cfg = cfg
-        self._web = AnkiWebView(parent=self, title=ACTION_NAME)
+        self._accent_lookup = accent_lookup or get_global_accent_lookup()
+        self._accent_db_path = accent_db_path
+        self._svg_maker = FormattedEntryToSvgAdapter(cfg)
+        self._formatter = EntryFormatter(cfg, svg_maker=self._svg_maker)
+        self._web = get_lookup_webview(self)
         self._web.setProperty("url", QUrl("about:blank"))
         self._web.setObjectName(self.name)
-        self._pronunciations = pronunciations
+        self._pronunciations = {}
         self._setup_ui()
-        self._set_html_result()
-        tweak_window(self)
+        disable_help_button(self)
 
     def _setup_ui(self) -> None:
         """Create the dialog layout and web view controls."""
@@ -79,8 +136,8 @@ class ViewPitchAccentsDialog(AnkiSaveAndRestoreGeomDialog):
     def _make_bottom_buttons(self) -> QLayout:
         """Create the bottom button row for closing and copying results."""
         buttons = (
-            ("Ok", self.accept),
-            ("Copy HTML to Clipboard", self._copy_pronunciations),
+            ("Ok", lambda: self.accept()),
+            ("Copy HTML to Clipboard", lambda: self._copy_pronunciations()),
         )
         hbox = QHBoxLayout()
         for label, action in buttons:
@@ -94,7 +151,7 @@ class ViewPitchAccentsDialog(AnkiSaveAndRestoreGeomDialog):
         """Copy the currently displayed pronunciations as HTML to the clipboard."""
         if clip := QApplication.clipboard():
             clip.setText(
-                format_pronunciations(
+                self._formatter.format_pronunciations(
                     self._pronunciations,
                     sep_single="、",
                     sep_multi="<br>",
@@ -107,21 +164,23 @@ class ViewPitchAccentsDialog(AnkiSaveAndRestoreGeomDialog):
 
     def _html_style(self) -> HTMLPitchPatternStyle:
         """Return the HTML style used for lookup pitch pattern rendering."""
-        style = self._cfg.pitch_accent.html_style
-        if style is HTMLPitchPatternStyle.none:
-            # 'none' can't be selected here because it is intended for anki card customization.
-            return HTMLPitchPatternStyle.u_biq_color_coded
-        return style
+        match style := self._cfg.pitch_accent.html_style:
+            case HTMLPitchPatternStyle.none:
+                # 'none' can't be selected here because it is intended for anki card customization.
+                return HTMLPitchPatternStyle.u_biq_color_coded
+            case _:
+                return style
 
     def _get_notation(self, entry: FormattedEntry, mode: LookupDialogPitchOutputFormat) -> str:
         """Format one pronunciation entry in the requested notation mode."""
-        if mode == LookupDialogPitchOutputFormat.html:
-            return (
-                f'<span class="pitch_html">{update_html(entry, pitch_accent_style=self._html_style())}</span>'
-                f" {entry.pitch_number_html}"
-            )
-        elif mode == LookupDialogPitchOutputFormat.svg:
-            return f"{svg_graph_maker.make_graph(entry)} {entry.pitch_number_html}"
+        match mode:
+            case LookupDialogPitchOutputFormat.html:
+                return (
+                    f'<span class="pitch_html">{self._formatter.update_html(entry, self._html_style())}</span>'
+                    f" {entry.pitch_number_html}"
+                )
+            case LookupDialogPitchOutputFormat.svg:
+                return f"{self._svg_maker.make_graph(entry)} {entry.pitch_number_html}"
         raise RuntimeError("Unreachable.")
 
     def _entry_to_html(self, entry: FormattedEntry) -> str:
@@ -156,10 +215,7 @@ class ViewPitchAccentsDialog(AnkiSaveAndRestoreGeomDialog):
 
     def _set_html_result(self) -> None:
         """Format pronunciations as an HTML list."""
-        self._web.stdHtml(
-            body=self._format_html_result(),
-            css=get_css_file_refs(self._cfg.svg_graphs.color_mode),
-        )
+        self._web.set_formatted_html(self._format_html_result(), self._cfg.svg_graphs.color_mode)
 
     def done(self, result: int) -> None:
         """Close the dialog and let Qt finalize the dialog result."""
@@ -167,51 +223,64 @@ class ViewPitchAccentsDialog(AnkiSaveAndRestoreGeomDialog):
         print("closing AJT lookup window...")
         super().done(result)
 
+    def lookup_pronunciations(self, text: str, parent: QWidget | None = None) -> None:
+        """Do a lookup on the selected text, showing results or an empty-selection tooltip.
+
+        The parent widget is used to position the tooltip near the window the
+        lookup was triggered from (e.g. the Browser instead of the main window).
+        """
+        if text := clean_furigana(text).strip():
+            with Sqlite3Buddy(self._accent_db_path) as db:
+                self._pronunciations = self._accent_lookup.with_new_buddy(db).get_pronunciations(
+                    text, group_by_headword=True
+                )
+            self._set_html_result()
+            self.show()
+        else:
+            tooltip(msg=_("Empty selection."), parent=get_parent_widget(parent or self.parent()))
+
 
 class LookupMenus:
     """Installer for lookup actions in Anki menus and context menus."""
 
-    def __init__(self, cfg: JapaneseConfig) -> None:
+    def __init__(self, cfg: JapaneseConfig, parent: aqt.AnkiQt | None = None) -> None:
         """Store config for dialog callbacks."""
         self._cfg = cfg
+        self._mw = parent
+        self._dialog = ViewPitchAccentsDialog(self._cfg, parent=self._mw)
 
     def setup_mw_lookup_action(self, root_menu: QMenu) -> None:
         """Add a main window entry"""
         assert mw, "Anki must be running."
         action = QAction(f"🔍 {ACTION_NAME}", root_menu)
-        qconnect(action.triggered, lambda: self._on_lookup_pronunciation(mw, mw.web.selectedText()))
+        qconnect(action.triggered, lambda: self._dialog.lookup_pronunciations(mw.web.selectedText(), parent=mw))
         if shortcut := self._cfg.pitch_accent.lookup_shortcut:
             action.setShortcut(shortcut)
         root_menu.addAction(action)
 
     def add_context_menu_item(self, webview: AnkiWebView, menu: QMenu) -> None:
         """Add a context menu entry"""
-        menu.addAction(ACTION_NAME, lambda: self._on_lookup_pronunciation(webview, webview.selectedText()))
+        menu.addAction(ACTION_NAME, lambda: self._dialog.lookup_pronunciations(webview.selectedText(), parent=webview))
 
     def setup_browser_menu(self, browser: Browser) -> None:
         """Add a browser entry"""
         action = QAction(ACTION_NAME, browser)
         qconnect(
             action.triggered,
-            lambda: self._on_lookup_pronunciation(browser, browser.editor.web.selectedText() if browser.editor else ""),
+            lambda: self._dialog.lookup_pronunciations(
+                browser.editor.web.selectedText() if browser.editor else "", parent=browser
+            ),
         )
         if shortcut := self._cfg.pitch_accent.lookup_shortcut:
             action.setShortcut(shortcut)
         # This is the "Go" menu.
         browser.form.menuJump.addAction(action)
 
-    def _on_lookup_pronunciation(self, parent: QWidget, text: str) -> None:
-        """Do a lookup on the selection"""
-        if text := clean_furigana(text).strip():
-            ViewPitchAccentsDialog(cfg=self._cfg, pronunciations=lookup_pronunciations(text), parent=parent).show()
-        else:
-            tooltip(msg=_("Empty selection."), parent=get_parent_widget(parent))
-
 
 def init() -> None:
     """Initialize lookup menu entries and context menu hooks."""
     cfg = get_global_config()
-    menus = LookupMenus(cfg)
+    menus = LookupMenus(cfg, mw)
     # Create the manual look-up menu entry
     menus.setup_mw_lookup_action(menu_root_entry())
     # Hook to context menu events
