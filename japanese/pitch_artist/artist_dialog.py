@@ -16,7 +16,6 @@ from aqt.webview import AnkiWebView
 
 from ..ajt_common.about_menu import menu_root_entry
 from ..ajt_common.enum_select_combo import EnumSelectCombo
-from ..ajt_common.restore_geom_dialog import AnkiSaveAndRestoreGeomDialog
 from ..ajt_common.utils import ui_translate
 from ..config_view import JapaneseConfig, SvgGraphReadingFormat, get_global_config
 from ..helpers.consts import ADDON_NAME
@@ -31,6 +30,7 @@ from ..widgets.addon_opts import (
     PxDoubleNarrowSpinBox,
     PxNarrowSpinBox,
 )
+from ..widgets.raise_on_show_dialog import RaiseOnShowDialog
 from ..widgets.widgets_to_config_dict import (
     as_config_dict,
     change_event,
@@ -182,7 +182,7 @@ def inject_css_into_svg(graph: str) -> str:
     return graph.replace("</svg>", inline_css_code(graphs_inline_css_style_tag()) + "</svg>")
 
 
-class PitchArtistDialog(AnkiSaveAndRestoreGeomDialog):
+class PitchArtistDialog(RaiseOnShowDialog):
     """A dialog for previewing, editing, and saving pitch accent graphs."""
 
     name: str = "ajt__pitch_artist_dialog"
