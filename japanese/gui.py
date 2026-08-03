@@ -693,7 +693,8 @@ class SettingsDialog(AnkiSaveAndRestoreGeomDialog, MgrPropMixIn):
     def accept(self) -> None:
         # https://doc.qt.io/qt-6/qdialog.html#accept
         cfg["pitch_accent"].update(self._pitch_settings.as_dict())
-        cfg["svg_graphs"].update(self._svg_settings.as_dict())
+        cfg["svg_graphs"].update(self._svg_settings.svg_settings_as_dict())
+        cfg["svg_graph_colors"].update(self._svg_settings.svg_colors_as_dict())
         cfg["furigana"].update(self._furigana_settings.as_dict())
         cfg["pitch_color_codes"].update(self._color_codes_settings.as_dict())
         cfg["context_menu"].update(self._context_menu_settings.as_dict())
