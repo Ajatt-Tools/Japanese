@@ -8,6 +8,7 @@ from .file_ops import find_file_in_parents
 
 AJT_WEBVIEW_CSS_FILE_NAME = "ajt_webview.css"
 PITCH_GRAPH_CSS_FILE_NAME = "ajt_pitch_graph.css"
+AJT_SVG_SETTINGS_CSS_FILE_NAME = "svg_settings.css"
 
 
 @functools.cache
@@ -35,6 +36,12 @@ def ajt_pitch_graph_css() -> str:
 
 
 @functools.cache
+def ajt_svg_settings_css() -> str:
+    """Return the web-exported path to the shared pitch graph CSS file."""
+    return f"{anki_addon_web_relpath()}/{AJT_SVG_SETTINGS_CSS_FILE_NAME}"
+
+
+@functools.cache
 def inline_css_style_tag(css_file_name: str) -> str:
     """Return the CSS stylesheet."""
     css = find_file_in_parents(f"web/{css_file_name}").read_text(encoding="utf-8")
@@ -49,3 +56,8 @@ def graphs_inline_css_style_tag() -> str:
 def webview_inline_css_style_tag() -> str:
     """Return the CSS stylesheet for styling pitch accent SVG graphs."""
     return inline_css_style_tag(AJT_WEBVIEW_CSS_FILE_NAME)
+
+
+def svg_settings_inline_css_style_tag() -> str:
+    """Return the CSS stylesheet for styling pitch accent SVG graphs."""
+    return inline_css_style_tag(AJT_SVG_SETTINGS_CSS_FILE_NAME)
