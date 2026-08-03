@@ -60,15 +60,6 @@ DEBOUNCE_UPDATE_VIEW_MS = 200
 SVG_SETTINGS_BODY_VERTICAL_PADDING = 8  # padding=3 + border=1
 
 
-class SVGColorEditPicker(ColorEditPicker):
-    color_changed = pyqtSignal(str)
-
-    def __init__(self, initial_color: str = "", parent: QWidget | None = None) -> None:
-        super().__init__(initial_color, parent)
-        # https://doc.qt.io/qt-6/qlineedit.html#textChanged
-        qconnect(self._edit.textChanged, lambda text: q_emit(self.color_changed, text))
-
-
 class SvgPitchColorCodesSettingsForm(MultiColumnSettingsForm):
     """Mirrors logic of PitchColorCodesSettingsForm for SVG graphs."""
 
@@ -78,10 +69,10 @@ class SvgPitchColorCodesSettingsForm(MultiColumnSettingsForm):
 
     opts_changed = pyqtSignal()
 
-    def _make_color_line_edits(self) -> Iterable[tuple[str, SVGColorEditPicker]]:
+    def _make_color_line_edits(self) -> Iterable[tuple[str, ColorEditPicker]]:
         assert self._config, "config must be set"
         for pitch_type in SvgGraphClassName:
-            picker = SVGColorEditPicker()
+            picker = ColorEditPicker()
             picker.set_color(self._config.lookup_color(pitch_type))
             yield pitch_type.name, picker
 
