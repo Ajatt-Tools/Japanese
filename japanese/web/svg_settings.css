@@ -3,6 +3,11 @@
  * License: GNU AGPL, version 3 or later; https://www.gnu.org/licenses/agpl-3.0.html
  */
 
+:root {
+    --gap-size: 3px;
+    --border-size: 1px;
+}
+
 *,
 *::before,
 *::after {
@@ -13,16 +18,19 @@
 body {
     display: flex;
     flex-flow: row wrap;
-    gap: 3px;
-    padding: 3px;
+    align-content: stretch;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--gap-size);
+    padding: var(--gap-size);
     margin: 0;
-    align-content: flex-start;
-    border: 1px dotted gray;
+    border: var(--border-size) dotted gray;
 }
 svg {
     display: block;
-    border: 1px dotted gray;
+    border: var(--border-size) dotted gray;
     max-width: 100%;
+    max-height: calc(100vh - (var(--gap-size) * 2));
 }
 :root[class~="night-mode"] [fill="black"] {
     fill: white;

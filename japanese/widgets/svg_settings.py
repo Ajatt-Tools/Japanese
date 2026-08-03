@@ -57,6 +57,7 @@ SHOW_ENTRIES = (
     ),
 )
 DEBOUNCE_UPDATE_VIEW_MS = 200
+SVG_SETTINGS_BODY_VERTICAL_PADDING = 8  # padding=3 + border=1
 
 
 class SVGColorEditPicker(ColorEditPicker):
@@ -170,16 +171,21 @@ class SvgSettingsWidget(QWidget):
     def _init_ui(self) -> None:
         layout = QVBoxLayout()
         # row: int, column: int, rowSpan: int, columnSpan: int
-        layout.addWidget(self._web_view)
-        layout.addWidget(self._form)
-        layout.addWidget(self._color_settings)
-        self._web_view.setMinimumSize(100, 100)
+        layout.addWidget(self._web_view, stretch=1)
+        layout.addWidget(self._form, stretch=0)
+        layout.addWidget(self._color_settings, stretch=0)
+        self._web_view.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.MinimumExpanding)
+        self._web_view.setMinimumHeight(self._preview_minimum_height())
         self.setLayout(layout)
 
     def update_view(self) -> None:
         self._cfg.svg_graphs.update(self._form.as_dict())
         self._cfg.svg_graph_colors.update(self._color_settings.as_dict())
         self._web_view.set_svg_preview(formatted_html=self._make_svgs(), color_mode=self._cfg.svg_graphs.color_mode)
+        self._web_view.setMinimumHeight(self._preview_minimum_height())
+
+    def _preview_minimum_height(self) -> int:
+        return self._cfg.svg_graphs.graph_visible_height + SVG_SETTINGS_BODY_VERTICAL_PADDING
 
     def _make_svgs(self) -> str:
         return "".join(self._svg_maker.make_graph(entry) for entry in SHOW_ENTRIES)
