@@ -47,6 +47,8 @@ def change_event(widget: QWidget) -> pyqtBoundSignal:
     elif isinstance(widget, QPlainTextEdit):
         # https://doc.qt.io/qt-6/qplaintextedit.html#textChanged
         return widget.textChanged
+    elif isinstance(widget, ColorEditPicker):
+        return widget.color_changed
     else:
         raise ValueError(f"unknown type: {type(widget).__name__}")
 
