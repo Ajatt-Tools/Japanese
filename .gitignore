@@ -11,7 +11,7 @@ meta.json
 manifest.json
 *.ankiaddon
 */user_files/*.tsv
-*/user_files/*.updated
+*.updated
 *TODO*
 __about__.py
 dist
