@@ -9,8 +9,8 @@
 from collections import OrderedDict
 from collections.abc import Sequence
 
-from helpers.misc import compact_seq
 from ..config_view import JapaneseConfig
+from ..helpers.misc import compact_seq
 from ..helpers.profiles import PitchOutputFormat
 from ..mecab_controller.kana_conv import to_hiragana
 from .basic_types import count_moras, pitch_type_from_pitch_num
@@ -45,7 +45,7 @@ class EntryFormatter:
     _cfg: JapaneseConfig
     _svg_maker: FormattedEntryToSvgAdapter
 
-    def __init__(self, cfg: JapaneseConfig, svg_maker: FormattedEntryToSvgAdapter | None = None) -> None:
+    def __init__(self, cfg: JapaneseConfig, *, svg_maker: FormattedEntryToSvgAdapter | None = None) -> None:
         self._cfg = cfg
         self._svg_maker = svg_maker or FormattedEntryToSvgAdapter(cfg)
 
