@@ -31,7 +31,7 @@ from .audio_manager.basic_types import (
     TotalAudioStats,
 )
 from .audio_manager.source_manager import InitResult
-from .config_view import config_view as cfg
+from .config_view import config_view as cfg, ToolbarButtonConfig
 from .helpers.consts import ADDON_NAME, THIS_ADDON_MODULE
 from .helpers.misc import split_list
 from .helpers.profiles import (
@@ -353,7 +353,7 @@ class AudioProfilesEdit(ProfileEdit, profile_class=ProfileAudio):
     pass
 
 
-class ToolbarButtonConfig(TypedDict):
+class ToolbarButtonConfigDict(TypedDict):
     enabled: bool
     shortcut: str
     text: str
@@ -379,7 +379,7 @@ class ToolbarButtonSettingsForm(QGroupBox):
     def setButtonKeyboardShortcut(self, shortcut: str) -> None:
         return self._shortcut_edit.setValue(shortcut)
 
-    def as_dict(self) -> ToolbarButtonConfig:
+    def as_dict(self) -> ToolbarButtonConfigDict:
         return {
             "enabled": self.isChecked(),
             "shortcut": self._shortcut_edit.value(),
@@ -395,6 +395,7 @@ class ToolbarSettingsForm(QGroupBox):
     """
 
     _columns = 2
+    _widgets: dict[str, ToolbarButtonSettingsForm]
 
     def __init__(self, *args) -> None:
         super().__init__(*args)
@@ -405,6 +406,7 @@ class ToolbarSettingsForm(QGroupBox):
         self.setLayout(self._make_layout())
 
     def _create_widgets(self) -> None:
+        button_config: ToolbarButtonConfig
         for key, button_config in cfg.toolbar.items():
             widget = ToolbarButtonSettingsForm()
             widget.setTitle(ui_translate(key))
@@ -421,7 +423,7 @@ class ToolbarSettingsForm(QGroupBox):
                 layout.addWidget(widget, row_n + 1, col_n + 1)
         return layout
 
-    def as_dict(self) -> dict[str, ToolbarButtonConfig]:
+    def as_dict(self) -> dict[str, ToolbarButtonConfigDict]:
         return {key: widget.as_dict() for key, widget in self._widgets.items()}
 
 
