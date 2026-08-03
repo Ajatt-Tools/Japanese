@@ -4,10 +4,11 @@
 from aqt.qt import *
 
 from japanese.pitch_artist.pitch_graph import SvgPitchArtistGraphMaker
-from helpers.webview_utils import graphs_inline_css_style_tag
+from japanese.helpers.webview_utils import graphs_inline_css_style_tag
 from playground.utils import NoAnkiConfigView
 
 CSS_INLINE = """
+<style>
 body {
     box-sizing: border-box;
     font-size: 25px;
@@ -33,6 +34,7 @@ svg {
     border: 1px solid pink;
     display: block;
 }
+</style>
 """
 CSS_INLINE_GRAPHS = graphs_inline_css_style_tag()
 
@@ -42,7 +44,7 @@ def html_page(body_content: str) -> str:
     <meta charset="UTF-8" />
     <title>Pronunciations</title>
     """
-    style = f"<style>{CSS_INLINE}{CSS_INLINE_GRAPHS}</style>"
+    style = f"{CSS_INLINE}{CSS_INLINE_GRAPHS}"
     return f"<!DOCTYPE html><html><head>{head_content}{style}</head><body>{body_content}</body></html>"
 
 
