@@ -6,6 +6,7 @@ from typing import Any, TypeAlias
 from aqt.qt import *
 from aqt.webview import AnkiWebView
 
+from ..helpers.consts import META_CHARSET, META_VIEWPORT
 from ..helpers.webview_utils import (
     ajt_pitch_graph_css,
     ajt_webview_css,
@@ -13,21 +14,25 @@ from ..helpers.webview_utils import (
     webview_inline_css_style_tag,
 )
 from ..pitch_accents.colors import SvgGraphColorMode
-from ..widgets.svg_settings import NoAnkiWebView
+from ..widgets.common import NoAnkiWebView
 
 
 def head_content() -> str:
     """Return the HTML <head> content with base CSS for the graph preview page."""
-    return '<meta charset="UTF-8" />'
+    return f"{META_VIEWPORT}{META_CHARSET}"
 
 
-def get_css_file_refs(color_mode: SvgGraphColorMode) -> list[str]:
+def get_css_file_refs(color_mode: SvgGraphColorMode, includes: Sequence[str]) -> list[str]:
     """Return CSS files needed for the selected color mode."""
     match color_mode:
         case SvgGraphColorMode.css:
-            return [ajt_webview_css(), ajt_pitch_graph_css()]
+            return [*includes, ajt_pitch_graph_css()]
         case _:
-            return [ajt_webview_css()]
+            return [*includes]
+
+
+def get_pitch_webview_css_file_refs(color_mode: SvgGraphColorMode) -> list[str]:
+    return get_css_file_refs(color_mode=color_mode, includes=(ajt_webview_css(),))
 
 
 class AnkiPitchAccentsWebView(AnkiWebView):
@@ -41,7 +46,7 @@ class AnkiPitchAccentsWebView(AnkiWebView):
         self.stdHtml(
             head=head_content(),
             body=graphs_as_html,
-            css=get_css_file_refs(color_mode),
+            css=get_pitch_webview_css_file_refs(color_mode),
         )
 
     def zoom_in(self) -> None:
@@ -53,13 +58,17 @@ class AnkiPitchAccentsWebView(AnkiWebView):
         self.setZoomFactor(self.zoomFactor() - 0.1)
 
 
-def get_css_inline_styles(color_mode: SvgGraphColorMode) -> Sequence[str]:
+def get_css_inline_styles(color_mode: SvgGraphColorMode, includes: Sequence[str]) -> Sequence[str]:
     """Return CSS files needed for the selected color mode."""
     match color_mode:
         case SvgGraphColorMode.css:
-            return webview_inline_css_style_tag(), graphs_inline_css_style_tag()
+            return *includes, graphs_inline_css_style_tag()
         case _:
-            return (webview_inline_css_style_tag(),)
+            return (*includes,)
+
+
+def get_pitch_webview_css_inline_styles(color_mode: SvgGraphColorMode) -> Sequence[str]:
+    return get_css_inline_styles(color_mode=color_mode, includes=(webview_inline_css_style_tag(),))
 
 
 class NoAnkiPitchAccentsWebView(NoAnkiWebView):
@@ -68,7 +77,7 @@ class NoAnkiPitchAccentsWebView(NoAnkiWebView):
     def set_svg_graphs(self, graphs_as_html: str, color_mode: SvgGraphColorMode) -> None:
         """Set pitch graph preview HTML with CSS inlined from local files."""
         self.stdHtml(
-            head=head_content() + "".join(get_css_inline_styles(color_mode)),
+            head=head_content() + "".join(get_pitch_webview_css_inline_styles(color_mode)),
             body=graphs_as_html,
         )
 

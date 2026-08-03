@@ -7,3 +7,5 @@ LONG_VOWEL_MARK: str = "ー"
 ADDON_NAME: str = f"{ADDON_SERIES} Japanese"
 THIS_ADDON_MODULE: str = __name__.split(".")[0]
 CFG_WORD_SEP = ","
+META_VIEWPORT = '<meta name="viewport" content="width=device-width, initial-scale=1.0">'
+META_CHARSET = '<meta charset="UTF-8" />'
