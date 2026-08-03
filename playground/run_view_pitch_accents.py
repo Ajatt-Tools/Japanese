@@ -8,7 +8,7 @@ from japanese.pitch_accents.acc_dict_mgr_2 import AccentDictManager2
 from japanese.pitch_accents.accent_lookup import AccentLookup
 from playground.utils import PITCH_ACCENTS_UPDATED_FILE, NoAnkiConfigView, persistent_sqlite3_db_path
 
-EXAMPLE_SENTENCE = "夕日の中伝説の大樹の下で睦み合う２人"
+EXAMPLE_SENTENCE = "夕日の中伝説の大樹の下で睦み合う二人"
 
 
 def main() -> None:

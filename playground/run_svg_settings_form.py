@@ -27,7 +27,7 @@ class MockWindow(QDialog):
 
     def accept(self) -> None:
         # https://doc.qt.io/qt-6/qdialog.html#accept
-        print(f"{self._settings_widget.as_dict()=}")
+        print(f"{self._settings_widget.svg_settings_as_dict()=}")
         return super().accept()
 
 
