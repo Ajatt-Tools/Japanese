@@ -3,6 +3,7 @@
 
 import os
 import pathlib
+from collections.abc import Iterable
 
 import pytest
 from aqt.qt import QApplication
@@ -28,7 +29,7 @@ def qapp() -> QApplication:
 
 
 @pytest.fixture(scope="class")
-def tmp_sqlite3_db_path(tmp_path_factory: pytest.TempPathFactory) -> pathlib.Path:
+def tmp_sqlite3_db_path(tmp_path_factory: pytest.TempPathFactory) -> Iterable[pathlib.Path]:
     db_path = tmp_path_factory.mktemp("data") / "db.sqlite3"
     yield db_path
     rm_file(db_path)
@@ -39,20 +40,20 @@ def tmp_db_connection(
     tmp_sqlite3_db_path: pathlib.Path,
     tmp_upd_file: pathlib.Path,
     tmp_user_accents_file: pathlib.Path,
-) -> Sqlite3Buddy:
+) -> Iterable[Sqlite3Buddy]:
     with Sqlite3Buddy(tmp_sqlite3_db_path) as db:
         yield db
 
 
 @pytest.fixture(scope="class")
-def tmp_upd_file(tmp_path_factory: pytest.TempPathFactory) -> pathlib.Path:
+def tmp_upd_file(tmp_path_factory: pytest.TempPathFactory) -> Iterable[pathlib.Path]:
     upd_file = tmp_path_factory.mktemp("data") / "db.updated"
     yield upd_file
     rm_file(upd_file)
 
 
 @pytest.fixture(scope="class")
-def tmp_user_accents_file(tmp_path_factory: pytest.TempPathFactory) -> pathlib.Path:
+def tmp_user_accents_file(tmp_path_factory: pytest.TempPathFactory) -> Iterable[pathlib.Path]:
     user_accents_file = DATA_DIR / "test_user_accents.tsv"
     yield user_accents_file
 
