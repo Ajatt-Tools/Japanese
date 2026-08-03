@@ -3,7 +3,7 @@
 import os.path
 from collections.abc import Iterable
 from types import SimpleNamespace
-from typing import Any, Optional, TypedDict, cast, final
+from typing import TypedDict, cast, final
 
 from aqt import mw
 from aqt.addons import AddonsDialog, ConfigEditor
@@ -49,6 +49,7 @@ from .reading import acc_dict
 from .widgets.anki_style import fix_default_anki_style
 from .widgets.audio_sources import AudioSourcesTable, tooltip_cache_remove_complete
 from .widgets.audio_sources_stats import AudioStatsDialog
+from .widgets.common import GroupBoxWrapper
 from .widgets.enum_selector import FlagSelectCombo
 from .widgets.pitch_override_widget import PitchOverrideWidget
 from .widgets.settings_form import (
@@ -58,7 +59,6 @@ from .widgets.settings_form import (
     FuriganaSettingsForm,
     PitchColorCodesSettingsForm,
     PitchSettingsForm,
-    SettingsForm,
 )
 from .widgets.svg_settings import SvgSettingsWidget
 from .widgets.widgets_to_config_dict import as_config_dict
@@ -351,18 +351,6 @@ class PitchProfilesEdit(ProfileEdit, profile_class=ProfilePitch):
 
 class AudioProfilesEdit(ProfileEdit, profile_class=ProfileAudio):
     pass
-
-
-class GroupBoxWrapper(QGroupBox):
-    def __init__(self, settings_form: SettingsForm, *args) -> None:
-        super().__init__(*args)
-        self._form = settings_form
-        self.setTitle(settings_form.title)
-        self.setCheckable(False)
-        self.setLayout(settings_form.layout())
-
-    def as_dict(self) -> dict[str, Union[bool, str, int]]:
-        return self._form.as_dict()
 
 
 class ToolbarButtonConfig(TypedDict):
