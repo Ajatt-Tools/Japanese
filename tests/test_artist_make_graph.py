@@ -10,6 +10,7 @@ import pytest
 from japanese.pitch_artist.pitch_graph import SvgPitchArtistGraphMaker
 from playground.utils import NoAnkiConfigView
 from tests.consts import DATA_DIR
+from tests.helpers import extract_group_class_names, make_fresh_config
 from tests.test_pitch_artist_regression import HEADLESS_SENTENCE, NUM_EXPECTED_SEQUENCES
 
 # Circle Y-coordinates derived from default config:
@@ -76,11 +77,6 @@ def extract_circles(svg: str) -> list[CirclePosition]:
 def extract_text_labels(svg: str) -> list[str]:
     """Extract text content from all <text> elements in the SVG."""
     return [match.group("label") for match in re.finditer(r"<text[^>]*>(?P<label>[^<]*)</text>", svg)]
-
-
-def extract_group_class_names(svg: str) -> list[str]:
-    """Extract CSS class names from all SVG group elements."""
-    return re.findall(r'<g class="(?P<class_name>[^"]+)">', svg)
 
 
 def extract_svg_root_dimensions(svg: str) -> SvgRootDimensions:
@@ -249,6 +245,9 @@ class TestGhostParticle:
         assert len(extract_circles(svg)) == 4
         # Ghost particle has no text.
         assert len(extract_text_labels(svg)) == 3
+        # Ghost particle is visually equivalent to a trailing mora.
+        assert svg.count('<circle class="trail" fill="none" stroke="gray"') == 1
+        assert svg.count('<line class="trail" stroke="gray"') == 1
 
 
 class TestParticleCircleFallback:
@@ -333,7 +332,7 @@ class TestIncludeText:
         self, include_text: bool, expected_dimensions: SvgRootDimensions, expected_text_count: int
     ) -> None:
         """Root SVG dimensions remain integer-formatted when kana text is toggled."""
-        cfg = NoAnkiConfigView()
+        cfg = make_fresh_config()
         cfg.svg_graphs["include_text"] = include_text
         gen = SvgPitchArtistGraphMaker(cfg)
         svg = list(gen.make_graphs(gen.make_sequences("がっこう;0")))[0]
@@ -342,8 +341,7 @@ class TestIncludeText:
         assert len(extract_text_labels(svg)) == expected_text_count
 
     def test_no_text_when_disabled(self) -> None:
-        # Create a fresh config to avoid mutating the shared session fixture.
-        cfg = NoAnkiConfigView()
+        cfg = make_fresh_config()
         cfg.svg_graphs["include_text"] = False
         gen = SvgPitchArtistGraphMaker(cfg)
         sequences = gen.make_sequences("がっこう;0")
@@ -372,7 +370,7 @@ class TestIncludeText:
     )
     def test_text_group_matches_text_visibility(self, include_text: bool, expected_text_group_count: int) -> None:
         """Text group markup is emitted only when kana text is visible."""
-        cfg = NoAnkiConfigView()
+        cfg = make_fresh_config()
         cfg.svg_graphs["include_text"] = include_text
         gen = SvgPitchArtistGraphMaker(cfg)
         svg = list(gen.make_graphs(gen.make_sequences("がっこう;0")))[0]

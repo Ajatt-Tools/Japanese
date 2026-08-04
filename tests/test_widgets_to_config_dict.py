@@ -8,6 +8,11 @@ from typing import Any
 import pytest
 from aqt.qt import *
 
+try:
+    QTest
+except NameError:
+    from PyQt6.QtTest import QTest
+
 from japanese.ajt_common.color_picker import ColorEditPicker
 from japanese.ajt_common.enum_select_combo import EnumSelectCombo
 from japanese.ajt_common.grab_key import ShortCutGrabButton
@@ -21,6 +26,11 @@ from japanese.widgets.addon_opts import (
 )
 from japanese.widgets.enum_selector import FlagSelectCombo
 from japanese.widgets.settings_form import SvgSettingsForm
+from japanese.widgets.svg_settings import (
+    DEBOUNCE_UPDATE_VIEW_MS,
+    SVG_SETTINGS_BODY_VERTICAL_PADDING,
+    SvgSettingsWidget,
+)
 from japanese.widgets.widgets_to_config_dict import (
     as_config_dict,
     change_event,
@@ -281,3 +291,74 @@ class TestStrokeDisarrayLineEdit:
         validator = StrokeDisarrayLineEdit().validator()
         assert validator is not None
         assert validator.validate(text, 0)[0] == expected_state
+
+
+class TestSvgSettingsWidget:
+    @pytest.mark.parametrize("expected_interval", [DEBOUNCE_UPDATE_VIEW_MS])
+    def test_debounce_timer_configured(self, no_anki_config: NoAnkiConfigView, expected_interval: int) -> None:
+        """SVG preview updates are delayed by a single-shot debounce timer."""
+        widget = SvgSettingsWidget(no_anki_config)
+
+        assert widget._update_view_timer.isSingleShot() is True
+        assert widget._update_view_timer.interval() == expected_interval
+
+    @pytest.mark.parametrize("font_name", ["Noto Serif CJK JP, serif"])
+    def test_form_signal_schedules_update_without_immediate_render(
+        self, no_anki_config: NoAnkiConfigView, font_name: str
+    ) -> None:
+        """Changing form settings starts the timer instead of reloading the web view immediately."""
+        widget = SvgSettingsWidget(no_anki_config)
+        emissions: list[None] = []
+        qconnect(widget._update_view_timer.timeout, lambda: emissions.append(None))
+
+        widget._form._widgets.graph_font_name.setPlainText(font_name)
+
+        assert emissions == []
+        assert widget._update_view_timer.isActive() is True
+
+    @pytest.mark.parametrize("font_names", [("Noto Serif", "Noto Sans", "Noto Mono")])
+    def test_debounce_coalesces_rapid_changes(
+        self, no_anki_config: NoAnkiConfigView, font_names: tuple[str, ...]
+    ) -> None:
+        """Several rapid setting changes produce one debounced preview update."""
+        widget = SvgSettingsWidget(no_anki_config)
+        emissions: list[None] = []
+        qconnect(widget._update_view_timer.timeout, lambda: emissions.append(None))
+
+        for font_name in font_names:
+            widget._form._widgets.graph_font_name.setPlainText(font_name)
+        QTest.qWait(DEBOUNCE_UPDATE_VIEW_MS + 50)
+
+        assert emissions == [None]
+        assert widget._cfg_clone.svg_graphs.graph_font_name == font_names[-1]
+
+    @pytest.mark.parametrize("include_text", [False])
+    def test_preview_changes_do_not_mutate_original_config(
+        self, no_anki_config: NoAnkiConfigView, include_text: bool
+    ) -> None:
+        """Preview updates use a config clone until the settings dialog accepts changes."""
+        original_include_text = no_anki_config.svg_graphs.include_text
+        widget = SvgSettingsWidget(no_anki_config)
+
+        widget._form._widgets.include_text.setChecked(include_text)
+        widget.update_view()
+
+        assert widget._cfg_clone.svg_graphs.include_text is include_text
+        assert no_anki_config.svg_graphs.include_text is original_include_text
+
+    def test_preview_webview_minimum_height_matches_graph_visible_height(
+        self, no_anki_config: NoAnkiConfigView
+    ) -> None:
+        """The preview webview reserves enough vertical space for the configured graph height."""
+        widget = SvgSettingsWidget(no_anki_config)
+
+        assert widget._web_view.minimumHeight() == (
+            no_anki_config.svg_graphs.graph_visible_height + SVG_SETTINGS_BODY_VERTICAL_PADDING
+        )
+
+    def test_preview_webview_size_policy_prefers_vertical_expansion(self, no_anki_config: NoAnkiConfigView) -> None:
+        """The preview webview expands vertically before the settings forms consume extra space."""
+        widget = SvgSettingsWidget(no_anki_config)
+
+        assert widget._web_view.sizePolicy().horizontalPolicy() == QSizePolicy.Policy.Expanding
+        assert widget._web_view.sizePolicy().verticalPolicy() == QSizePolicy.Policy.MinimumExpanding

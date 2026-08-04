@@ -1,6 +1,5 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
-from collections.abc import Sequence
 
 import pytest
 
@@ -17,10 +16,6 @@ from japanese.pitch_accents.styles import SpecialSymbols
 from japanese.pitch_accents.svg_graph_types import PitchLevel, SvgMoraFlag
 
 CIRCLE = SpecialSymbols.nasal_dakuten
-
-
-def filter_by_level(moras: Sequence[Mora], level: PitchLevel) -> Sequence[str]:
-    return list(map(lambda mora: mora.txt, filter(lambda mora: mora.level == level and not mora.is_trailing(), moras)))
 
 
 def mora_char_to_str(char: Quark | str) -> str:

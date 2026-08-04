@@ -140,4 +140,4 @@ def test_mora_sequence_to_dict_with_trailing_mora(entry: FormattedEntry) -> None
     sequence = entry_to_moras(entry, enable_trailing_mora=False)
 
     # Verify we have a trailing mora
-    assert not any(mora.is_trailing() for mora in sequence.moras)
+    assert not any(mora.is_trailing for mora in sequence.moras)

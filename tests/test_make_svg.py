@@ -1,8 +1,6 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
-import re
-
 import pytest
 
 from japanese.pitch_accents.colors import SvgGraphClassName, SvgGraphColorMode
@@ -11,13 +9,16 @@ from japanese.pitch_accents.entry_to_moras import Mora
 from japanese.pitch_accents.entry_to_svg import FormattedEntryToSvgAdapter
 from japanese.pitch_accents.svg_components import (
     Point,
+    SvgBlackAndWhiteRole,
     append_class_name,
     assemble_txt_content,
+    lookup_component_color,
 )
 from japanese.pitch_accents.svg_graph_renderer import SvgGraphRenderer
 from japanese.pitch_accents.svg_graph_types import PitchLevel, SvgMoraFlag
 from playground.utils import NoAnkiConfigView
 from tests.consts import DATA_DIR
+from tests.helpers import extract_group_class_names, make_fresh_config
 
 TEST_ENTRIES = (
     FormattedEntry(
@@ -77,11 +78,6 @@ TEST_ENTRIES = (
 )
 
 
-def extract_group_class_names(svg: str) -> list[str]:
-    """Extract CSS class names from all SVG group elements."""
-    return re.findall(r'<g class="(?P<class_name>[^"]+)">', svg)
-
-
 @pytest.mark.parametrize(
     "formatted_entry, svg_file_name",
     [(entry, f"test_{idx}.svg") for idx, entry in enumerate(TEST_ENTRIES)],
@@ -120,18 +116,19 @@ def test_renderer_make_text_element(no_anki_config: NoAnkiConfigView, mora: Mora
         mora,
         reading_format=no_anki_config.svg_graphs.reading_format,
         tspan_dx=no_anki_config.svg_graphs.tspan_dx,
-        nasal_color="red",
+        nasal_color=SvgBlackAndWhiteRole.nasal.value,
     )
-    assert not mora.is_trailing()
+    assert not mora.is_trailing, "mora can't be trailing"
+    expected_color = lookup_component_color(no_anki_config, SvgBlackAndWhiteRole.word, SvgGraphClassName.heiban)
     assert (
         maker.make_text_element(
             text,
-            Point.new(x=1, y=2),
+            pos=Point.new(x=1, y=2),
             class_attr=append_class_name(mora.flags),
             dx=3,
-            class_name=SvgGraphClassName.heiban,
+            text_color=expected_color,
         )
-        == f'<text class="devoiced" fill="black" font-size="{no_anki_config.svg_graphs.font_size:.1f}px" '
+        == f'<text class="devoiced" fill="{expected_color}" font-size="{no_anki_config.svg_graphs.font_size:.1f}px" '
         f'letter-spacing="{no_anki_config.svg_graphs.letter_spacing:.1f}px" x="1" y="2" dx="3">{expected_text}</text>'
     )
 
@@ -158,7 +155,7 @@ def test_heiban_trailing_circle_has_fill_none(
 )
 def test_svg_attributes_color_mode(formatted_entry: FormattedEntry, expected_color: str) -> None:
     """SVG attribute color mode writes role colors directly into SVG markup."""
-    no_anki_config = NoAnkiConfigView()
+    no_anki_config = make_fresh_config()
     no_anki_config.svg_graphs["color_mode"] = SvgGraphColorMode.svg_attributes.name
 
     svg = FormattedEntryToSvgAdapter(no_anki_config).make_graph(formatted_entry)
@@ -179,7 +176,7 @@ def test_text_group_matches_text_visibility(
     expected_text_group_count: int,
 ) -> None:
     """Text group markup is emitted only when kana text is visible."""
-    no_anki_config = NoAnkiConfigView()
+    no_anki_config = make_fresh_config()
     no_anki_config.svg_graphs["include_text"] = include_text
     maker = FormattedEntryToSvgAdapter(no_anki_config)
     svg = maker.make_graph(formatted_entry)
@@ -206,7 +203,7 @@ def test_renderer_uses_mutated_options(
     expected_fragments: tuple[str, str, str],
 ) -> None:
     """Renderer geometry is computed from current options, not stale cached values."""
-    no_anki_config = NoAnkiConfigView()
+    no_anki_config = make_fresh_config()
     maker = FormattedEntryToSvgAdapter(no_anki_config)
     before = maker.make_graph(formatted_entry)
     no_anki_config.svg_graphs.update({

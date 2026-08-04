@@ -16,10 +16,8 @@ from playground.utils import NoAnkiConfigView
 from tests.conftest import (
     acc_dict_mgr,
     tmp_db_connection,
-    tmp_sqlite3_db_path,
-    tmp_upd_file,
-    tmp_user_accents_file,
 )
+from tests.helpers import make_accent_lookup
 
 try:
     from itertools import pairwise
@@ -45,10 +43,7 @@ class TestAccDictLookup:
         cls,
         no_anki_config: NoAnkiConfigView,
     ) -> AccentLookup:
-        cfg = no_anki_config
-        mecab = MecabController(verbose=False, cache_max_size=cfg.cache_lookups)
-        lookup = AccentLookup(cfg, mecab)
-        return lookup
+        return make_accent_lookup(no_anki_config)
 
     @pytest.fixture(scope="class")
     @classmethod
