@@ -97,7 +97,7 @@ class SvgSettingsWidget(QWidget):
             css_file_names=(AJT_SVG_SETTINGS_CSS_FILE_NAME,),
         )
         self._svg_maker = svg_maker or FormattedEntryToSvgAdapter(self._cfg_clone)
-        self._color_settings = SvgPitchColorCodesSettingsForm(cfg.svg_graph_colors)
+        self._color_settings = SvgPitchColorCodesSettingsForm(self._cfg_clone.svg_graph_colors)
         self._init_update_view_timer()
         self._init_ui()
         self.update_view()
