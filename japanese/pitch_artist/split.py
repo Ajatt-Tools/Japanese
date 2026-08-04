@@ -40,6 +40,12 @@ def split_multiple_pitch_notations(sequences: list[list[str]]) -> list[list[str]
 RE_SENTENCE_END = re.compile(r"(?P<sentence_end>[。!?！？])", flags=RE_FLAGS)
 RE_PUNCT = re.compile(r"(?P<punct>[「」|、､])", flags=RE_FLAGS)
 RE_COMMA = re.compile(r"(?P<before_comma>[^ ]), ", flags=RE_FLAGS)
+RE_SENTENCE_SPLIT = re.compile(r"[.\n]+", flags=RE_FLAGS)
+RE_SECTION_SPLIT = re.compile(r"[\n\t\s　]+", flags=RE_FLAGS)
+RE_TRAILING_GHOST_PARTICLE = re.compile(rf"{GHOST_PARTICLE}[\s\n.]*$", flags=RE_FLAGS)
+RE_FURIGANA_TO_READING = re.compile(r"[^\[\]]*\[|]", flags=RE_FLAGS)
+RE_NON_KANA = re.compile(rf"[^ぁ-ゔゞァ-・ヽヾ゛゜ぁ-んァ-ンー{DEVOICED_PREFIX}{GHOST_PARTICLE}]", flags=RE_FLAGS)
+RE_KANA_MORA = re.compile(rf"{DEVOICED_PREFIX}?.[ァィゥェォャュョぁぃぅぇぉゃゅょ]?", flags=RE_FLAGS)
 
 
 def normalize_for_parsing(expr: str) -> str:
@@ -60,12 +66,12 @@ def normalize_for_parsing(expr: str) -> str:
 
 def split_to_sentences(expr: str) -> list[str]:
     """Split a normalized expression into individual sentences on periods and newlines."""
-    return list(filter(bool, map(str.strip, re.split(r"[.\n]+", expr, flags=RE_FLAGS))))
+    return list(filter(bool, map(str.strip, RE_SENTENCE_SPLIT.split(expr))))
 
 
 def split_to_sections(sentence: str) -> list[str]:
     """Split a sentence into whitespace-delimited sections."""
-    return [s for s in re.split(r"[\n\t\s　]+", sentence, flags=RE_FLAGS) if s]
+    return [s for s in RE_SECTION_SPLIT.split(sentence) if s]
 
 
 def detach_ghost_particle(text: str) -> str:
@@ -74,22 +80,22 @@ def detach_ghost_particle(text: str) -> str:
     After a ghost particle there has to be the end of the sentence,
     which is ensured by adding an extra dot.
     """
-    return re.sub(rf"{GHOST_PARTICLE}[\s\n.]*$", f" {GHOST_PARTICLE}", text)
+    return RE_TRAILING_GHOST_PARTICLE.sub(f" {GHOST_PARTICLE}", text)
 
 
 def furigana_to_reading(word: str) -> str:
     """Strip furigana bracket notation, returning only the reading portion."""
-    return re.sub(r"[^\[\]]*\[|]", "", word, flags=RE_FLAGS)
+    return RE_FURIGANA_TO_READING.sub("", word)
 
 
 def filter_kana(reading: str) -> str:
     """Remove all non-kana characters from a reading string, preserving devoiced and ghost markers."""
-    return re.sub(rf"[^ぁ-ゔゞァ-・ヽヾ゛゜ぁ-んァ-ンー{DEVOICED_PREFIX}{GHOST_PARTICLE}]", "", reading, flags=RE_FLAGS)
+    return RE_NON_KANA.sub("", reading)
 
 
 def kana_to_moras(kana: str) -> list[str]:
     """Split a kana string into a list of morae, respecting combination characters."""
-    return re.findall(rf"{DEVOICED_PREFIX}?.[ァィゥェォャュョぁぃぅぇぉゃゅょ]?", kana, flags=RE_FLAGS)
+    return RE_KANA_MORA.findall(kana)
 
 
 @dataclasses.dataclass(frozen=True)
