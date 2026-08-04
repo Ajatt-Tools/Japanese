@@ -1,33 +1,24 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 from collections.abc import Iterable
-from typing import TypeAlias
 
-from aqt import mw
 from aqt.qt import *
-from aqt.webview import AnkiWebView
 
 from ..ajt_common.color_picker import ColorEditPicker
 from ..ajt_common.utils import q_emit
 from ..config_view import JapaneseConfig, SvgGraphColorCodesConfigView
 from ..helpers.webview_utils import (
-    ajt_svg_settings_css,
-    head_content,
-    svg_settings_inline_css_style_tag,
+    AJT_SVG_SETTINGS_CSS_FILE_NAME,
 )
-from ..pitch_accents.colors import SvgGraphClassName, SvgGraphColorMode
+from ..pitch_accents.colors import SvgGraphClassName
 from ..pitch_accents.common import FormattedEntry
 from ..pitch_accents.entry_to_svg import FormattedEntryToSvgAdapter
-from ..pitch_artist.pitch_accents_web_view import (
-    get_css_file_refs,
-    get_css_inline_styles,
-)
-from .common import NoAnkiWebView
 from .settings_form import (
     AllowedConfigValues,
     MultiColumnSettingsForm,
     SvgSettingsForm,
 )
+from .webview import SVGPreviewWebView, get_svg_preview_webview
 from .widgets_to_config_dict import change_event
 
 SHOW_ENTRIES = (
@@ -89,53 +80,6 @@ class SvgPitchColorCodesSettingsForm(MultiColumnSettingsForm):
             qconnect(change_event(widget), lambda: q_emit(self.opts_changed))
 
 
-def get_svg_settings_css_file_refs(color_mode: SvgGraphColorMode) -> list[str]:
-    """Return CSS files needed for the selected color mode."""
-    return get_css_file_refs(color_mode=color_mode, includes=(ajt_svg_settings_css(),))
-
-
-def get_svg_settings_inline_styles(color_mode: SvgGraphColorMode) -> Sequence[str]:
-    """Return inline pitch graph CSS only when CSS color mode is active."""
-    return get_css_inline_styles(color_mode=color_mode, includes=(svg_settings_inline_css_style_tag(),))
-
-
-class AnkiSVGPreviewWebView(AnkiWebView):
-    """An Anki web view used to preview SVG graph settings."""
-
-    def __init__(self, parent: QWidget | None) -> None:
-        """Initialize the preview web view with a stable title."""
-        super().__init__(parent=parent, title="Preview SVG graphs")
-
-    def set_svg_preview(self, formatted_html: str, color_mode: SvgGraphColorMode) -> None:
-        """Set the preview page using Anki's web-exported CSS files."""
-        self.stdHtml(
-            head=head_content(),
-            css=get_svg_settings_css_file_refs(color_mode),
-            body=formatted_html,
-        )
-
-
-class NoAnkiSVGPreviewWebView(NoAnkiWebView):
-    """A standalone SVG settings preview web view for tests and playground scripts."""
-
-    def set_svg_preview(self, formatted_html: str, color_mode: SvgGraphColorMode) -> None:
-        """Set the preview page with CSS inlined from local files."""
-        self.stdHtml(
-            head=head_content() + "".join(get_svg_settings_inline_styles(color_mode)),
-            body=formatted_html,
-        )
-
-
-SVGPreviewWebView: TypeAlias = AnkiSVGPreviewWebView | NoAnkiSVGPreviewWebView
-
-
-def get_preview_webview(parent: QWidget) -> SVGPreviewWebView:
-    """Return the Anki or standalone web view for the lookup dialog."""
-    if mw:
-        return AnkiSVGPreviewWebView(parent)
-    return NoAnkiSVGPreviewWebView(parent)
-
-
 class SvgSettingsWidget(QWidget):
     """Widget that edits SVG graph settings and renders a live preview."""
 
@@ -147,7 +91,11 @@ class SvgSettingsWidget(QWidget):
         super().__init__()
         self._cfg_clone = cfg.clone()
         self._form = SvgSettingsForm(self._cfg_clone.svg_graphs)
-        self._web_view = get_preview_webview(self)
+        self._web_view = get_svg_preview_webview(
+            self,
+            action_name="Preview SVG graphs",
+            css_file_names=(AJT_SVG_SETTINGS_CSS_FILE_NAME,),
+        )
         self._svg_maker = svg_maker or FormattedEntryToSvgAdapter(self._cfg_clone)
         self._color_settings = SvgPitchColorCodesSettingsForm(cfg.svg_graph_colors)
         self._init_update_view_timer()
@@ -187,8 +135,9 @@ class SvgSettingsWidget(QWidget):
         # Update the cloned config so preview graphs reflect unsaved settings without mutating the live config.
         self._cfg_clone.svg_graphs.update(self._form.as_dict())
         self._cfg_clone.svg_graph_colors.update(self._color_settings.as_dict())
-        self._web_view.set_svg_preview(
-            formatted_html=self._make_svgs(), color_mode=self._cfg_clone.svg_graphs.color_mode
+        self._web_view.set_formatted_html(
+            formatted_html=self._make_svgs(),
+            color_mode=self._cfg_clone.svg_graphs.color_mode,
         )
         self._web_view.setMinimumHeight(self._preview_minimum_height())
 

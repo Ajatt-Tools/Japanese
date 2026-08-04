@@ -510,6 +510,8 @@ class PitchColorCodesConfigView(ConfigSubViewBase):
 
 @final
 class SvgGraphColorCodesConfigView(ConfigSubViewBase):
+    """Config view for the user-configurable colors of SVG pitch graph roles."""
+
     _view_key: str = "svg_graph_colors"
 
     def lookup_color(self, class_name: SvgGraphClassName) -> str:

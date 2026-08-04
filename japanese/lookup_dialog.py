@@ -5,7 +5,7 @@ import io
 import pathlib
 from collections.abc import Collection
 from gettext import gettext as _
-from typing import TypeAlias, final
+from typing import final
 
 import aqt
 from aqt import gui_hooks, mw
@@ -23,19 +23,16 @@ from .config_view import (
 from .database.sqlite3_buddy import Sqlite3Buddy
 from .helpers.consts import ADDON_NAME
 from .helpers.tokens import clean_furigana
-from .helpers.webview_utils import head_content
+from .helpers.webview_utils import (
+    AJT_WEBVIEW_CSS_FILE_NAME,
+)
 from .pitch_accents.accent_lookup import AccentLookup, get_global_accent_lookup
-from .pitch_accents.colors import SvgGraphColorMode
 from .pitch_accents.common import AccentDict, FormattedEntry
 from .pitch_accents.entry_to_svg import FormattedEntryToSvgAdapter
 from .pitch_accents.format_entries import EntryFormatter
 from .pitch_accents.styles import HTMLPitchPatternStyle
-from .pitch_artist.pitch_accents_web_view import (
-    get_pitch_webview_css_file_refs,
-    get_pitch_webview_css_inline_styles,
-)
 from .widgets.raise_on_show_dialog import RaiseOnShowDialog
-from .widgets.svg_settings import NoAnkiWebView
+from .widgets.webview import SVGPreviewWebView, get_svg_preview_webview
 
 ACTION_NAME = "Pitch Accent lookup"
 
@@ -50,38 +47,6 @@ def get_parent_widget(parent: QWidget | None) -> QWidget | None:
         return parent
 
 
-class AnkiLookupWebView(AnkiWebView):
-    """Web view for the pitch accent lookup dialog when Anki is running."""
-
-    def __init__(self, parent: QWidget | None) -> None:
-        super().__init__(parent=parent, title=ACTION_NAME)
-
-    def set_formatted_html(self, formatted_html: str, color_mode: SvgGraphColorMode) -> None:
-        """Set the lookup result page using Anki's web-exported CSS files."""
-        self.stdHtml(head=head_content(), body=formatted_html, css=get_pitch_webview_css_file_refs(color_mode))
-
-
-class NoAnkiLookupWebView(NoAnkiWebView):
-    """Web view for the pitch accent lookup dialog in standalone runs (playground, tests)."""
-
-    def set_formatted_html(self, formatted_html: str, color_mode: SvgGraphColorMode) -> None:
-        """Set the lookup result page with CSS inlined from local files."""
-        self.stdHtml(
-            head=head_content() + "".join(get_pitch_webview_css_inline_styles(color_mode)),
-            body=formatted_html,
-        )
-
-
-LookupWebView: TypeAlias = AnkiLookupWebView | NoAnkiLookupWebView
-
-
-def get_lookup_webview(parent: QWidget) -> LookupWebView:
-    """Return the Anki or standalone web view for the lookup dialog."""
-    if mw:
-        return AnkiLookupWebView(parent)
-    return NoAnkiLookupWebView(parent)
-
-
 @final
 class ViewPitchAccentsDialog(RaiseOnShowDialog):
     """Dialog that displays pitch accent lookup results.
@@ -91,7 +56,7 @@ class ViewPitchAccentsDialog(RaiseOnShowDialog):
 
     name: str = "ajt__pitch_accent_lookup"
     _pronunciations: AccentDict
-    _web: LookupWebView
+    _web: SVGPreviewWebView
     _cfg: JapaneseConfig
     _accent_lookup: AccentLookup
     _formatter: EntryFormatter
@@ -117,7 +82,11 @@ class ViewPitchAccentsDialog(RaiseOnShowDialog):
         self._accent_db_path = accent_db_path
         self._svg_maker = FormattedEntryToSvgAdapter(cfg)
         self._formatter = EntryFormatter(cfg, svg_maker=self._svg_maker)
-        self._web = get_lookup_webview(self)
+        self._web = get_svg_preview_webview(
+            self,
+            action_name=ACTION_NAME,
+            css_file_names=(AJT_WEBVIEW_CSS_FILE_NAME,),
+        )
         self._web.setProperty("url", QUrl("about:blank"))
         self._web.setObjectName(self.name)
         self._pronunciations = {}

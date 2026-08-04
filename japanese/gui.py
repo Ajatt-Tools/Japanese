@@ -10,7 +10,6 @@ from aqt.addons import AddonsDialog, ConfigEditor
 from aqt.operations import QueryOp
 from aqt.qt import *
 from aqt.utils import openLink, tooltip
-from config_view import JapaneseConfig
 
 from .ajt_common.about_menu import menu_root_entry, tweak_window
 from .ajt_common.addon_config import (
@@ -32,7 +31,7 @@ from .audio_manager.basic_types import (
     TotalAudioStats,
 )
 from .audio_manager.source_manager import InitResult
-from .config_view import ToolbarButtonConfig, get_global_config
+from .config_view import JapaneseConfig, ToolbarButtonConfig, get_global_config
 from .helpers.consts import ADDON_NAME, THIS_ADDON_MODULE
 from .helpers.misc import split_list
 from .helpers.profiles import (

@@ -21,7 +21,10 @@ from ..config_view import JapaneseConfig, SvgGraphReadingFormat, get_global_conf
 from ..helpers.consts import ADDON_NAME
 from ..helpers.misc import media_strip
 from ..helpers.regex import RE_SPACES
-from ..helpers.webview_utils import graphs_inline_css_style_tag
+from ..helpers.webview_utils import (
+    AJT_WEBVIEW_CSS_FILE_NAME,
+    graphs_inline_css_style_tag,
+)
 from ..pitch_accents.colors import SvgGraphColorMode
 from ..widgets.addon_opts import (
     AJTPlainTextEdit,
@@ -31,16 +34,12 @@ from ..widgets.addon_opts import (
     PxNarrowSpinBox,
 )
 from ..widgets.raise_on_show_dialog import RaiseOnShowDialog
+from ..widgets.webview import SVGPreviewWebView, get_svg_preview_webview
 from ..widgets.widgets_to_config_dict import (
     as_config_dict,
     change_event,
     get_from_widget,
     set_from_cfg,
-)
-from .pitch_accents_web_view import (
-    AnkiPitchAccentsWebView,
-    NoAnkiPitchAccentsWebView,
-    PitchAccentsWebView,
 )
 from .pitch_graph import SvgPitchArtistGraphMaker
 
@@ -164,14 +163,6 @@ def make_graphs_list(text: str, gen: SvgPitchArtistGraphMaker) -> list[str]:
     return []
 
 
-def get_webview(parent: QWidget) -> PitchAccentsWebView:
-    """Return the Anki or standalone web view implementation for pitch graph previews."""
-    if not mw:
-        # Anki isn't running.
-        return NoAnkiPitchAccentsWebView(parent=parent)
-    return AnkiPitchAccentsWebView(parent=parent, title=ACTION_NAME)
-
-
 def inject_css_into_svg(graph: str) -> str:
     """Inline pitch graph CSS into a standalone SVG string."""
     return graph.replace("</svg>", inline_css_code(graphs_inline_css_style_tag()) + "</svg>")
@@ -183,6 +174,7 @@ class PitchArtistDialog(RaiseOnShowDialog):
     name: str = "ajt__pitch_artist_dialog"
 
     _graphs_list: list[str]
+    _webview: SVGPreviewWebView
 
     def __init__(self, cfg: JapaneseConfig, *, parent: QWidget | None = None) -> None:
         """Initialize the Pitch Artist preview dialog."""
@@ -193,7 +185,11 @@ class PitchArtistDialog(RaiseOnShowDialog):
         self._splitter = QSplitter(Qt.Orientation.Vertical)
         self._graph_settings_dialog = GraphSettingsWidget(self, self._cfg)
         self._text_edit = GraphCodeEdit()
-        self._webview = get_webview(self)
+        self._webview = get_svg_preview_webview(
+            self,
+            action_name=ACTION_NAME,
+            css_file_names=(AJT_WEBVIEW_CSS_FILE_NAME,),
+        )
         self._webview.set_bridge_command(self.handle_save_button, self)
         self._setup_ui()
         self._set_initial_values()
@@ -273,7 +269,7 @@ class PitchArtistDialog(RaiseOnShowDialog):
         gen = SvgPitchArtistGraphMaker(cfg)
         text = self._text_edit.toPlainText()
         self._graphs_list = make_graphs_list(text, gen)
-        self._webview.set_svg_graphs(
+        self._webview.set_formatted_html(
             self._format_graphs_as_html(self._graphs_list),
             color_mode=cfg.svg_graphs.color_mode,
         )
