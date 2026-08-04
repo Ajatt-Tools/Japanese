@@ -2,6 +2,7 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 import dataclasses
 import re
+from collections.abc import Sequence
 from typing import NamedTuple
 
 from ..pitch_accents.svg_graph_types import SvgMoraFlag
@@ -65,9 +66,9 @@ def normalize_for_parsing(expr: str) -> str:
     return expr
 
 
-def split_to_sentences(expr: str) -> list[str]:
+def split_to_sentences(expr: str) -> Sequence[str]:
     """Split a normalized expression into individual sentences on periods and newlines."""
-    return list(filter(bool, map(str.strip, RE_SENTENCE_SPLIT.split(expr))))
+    return tuple(sentence for part in RE_SENTENCE_SPLIT.split(expr) if (sentence := part.strip()))
 
 
 def split_to_sections(sentence: str) -> list[str]:
