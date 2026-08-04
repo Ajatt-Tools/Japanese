@@ -441,6 +441,8 @@ class SvgSettingsForm(MultiColumnSettingsForm):
         self._connect_widgets()
 
     def _connect_widgets(self) -> None:
+        """Forward supported widget changes through a subclass opts_changed signal."""
+        assert hasattr(self, "opts_changed"), "subclasses must define opts_changed before connecting widgets"
         for widget in self._widgets.__dict__.values():
             qconnect(change_event(widget), lambda: q_emit(self.opts_changed))
 

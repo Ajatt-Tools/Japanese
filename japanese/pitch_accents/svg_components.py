@@ -38,6 +38,8 @@ def append_class_name(mora_flag: SvgMoraFlag) -> str:
 def quark_to_tspan(quark: Quark, tspan_dx: int | float, nasal_color: str) -> str:
     """Render a nasal or handakuten quark as a colored SVG tspan."""
     assert isinstance(quark, Quark)
+    # Keep fill as a presentation-attribute fallback for standalone/old SVGs.
+    # In CSS color mode, loaded CSS rules override presentation attributes.
     return f'<tspan{append_class_name(quark.flags)} fill="{nasal_color}" dx="{tspan_dx:.0f}">{quark.txt}</tspan>'
 
 
@@ -83,7 +85,12 @@ class Point(typing.NamedTuple):
 
 
 def lookup_component_color(cfg: JapaneseConfig, role: SvgBlackAndWhiteRole, class_name: SvgGraphClassName) -> str:
-    """Resolve an SVG graph role class to its configured color."""
+    """Resolve an SVG graph role class to its presentation-attribute fallback color.
+
+    In CSS mode, these values remain in the SVG for backwards compatibility and
+    standalone viewing. CSS rules override SVG presentation attributes, so the
+    class-based stylesheet still controls colors when it is loaded.
+    """
     match cfg.svg_graphs.color_mode:
         case SvgGraphColorMode.svg_attributes:
             return cfg.svg_graph_colors.lookup_color(class_name)

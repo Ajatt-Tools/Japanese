@@ -9,6 +9,7 @@ from .consts import DEVOICED_PREFIX, GHOST_PARTICLE, RE_FLAGS, RE_HTML_TAG
 
 
 def strip_html_for_parsing(expr: str) -> str:
+    """Strip HTML from Pitch Artist input, using Anki's HTML helper when available."""
     try:
         # Import kept inside function: `html_to_text_line` may raise AttributeError
         # on older Anki versions, and the except branch provides a regex fallback.

@@ -52,7 +52,7 @@ def ajt_svg_settings_css() -> str:
 
 @functools.cache
 def inline_css_style_tag(css_file_name: str) -> str:
-    """Return the CSS stylesheet."""
+    """Return a <style> tag with the local CSS file inlined."""
     css = find_file_in_parents(f"web/{css_file_name}").read_text(encoding="utf-8")
     return f"<style>\n{css}\n</style>"
 
@@ -63,10 +63,10 @@ def graphs_inline_css_style_tag() -> str:
 
 
 def webview_inline_css_style_tag() -> str:
-    """Return the CSS stylesheet for styling pitch accent SVG graphs."""
+    """Return the CSS stylesheet for styling AJT webview content."""
     return inline_css_style_tag(AJT_WEBVIEW_CSS_FILE_NAME)
 
 
 def svg_settings_inline_css_style_tag() -> str:
-    """Return the CSS stylesheet for styling pitch accent SVG graphs."""
+    """Return the CSS stylesheet for styling SVG settings previews."""
     return inline_css_style_tag(AJT_SVG_SETTINGS_CSS_FILE_NAME)

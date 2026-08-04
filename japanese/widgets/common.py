@@ -11,7 +11,7 @@ class NoAnkiWebView(QWebEngineView):
 
     def stdHtml(self, body: str, head: str) -> None:
         """Set a complete HTML page from head and body fragments."""
-        return self.setHtml(f"""
+        self.setHtml(f"""
         <html>
         <head>{head}</head>
         <body>{body}</body>

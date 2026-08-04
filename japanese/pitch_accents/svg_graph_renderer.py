@@ -141,6 +141,8 @@ class SvgGraphRenderer:
 
     def make_text_element(self, text: str, *, pos: Point, class_attr: str, dx: int, text_color: str) -> str:
         """Create an SVG text element from preformatted text content and class attributes."""
+        # Keep fill as a presentation-attribute fallback. CSS color mode loads
+        # stylesheet rules that override presentation attributes through the cascade.
         return (
             f'<text{class_attr} fill="{text_color}" '
             f'font-size="{self._cfg.svg_graphs.font_size:.1f}px" '
