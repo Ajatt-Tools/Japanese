@@ -6,20 +6,15 @@ from typing import Any, TypeAlias
 from aqt.qt import *
 from aqt.webview import AnkiWebView
 
-from ..helpers.consts import META_CHARSET, META_VIEWPORT
 from ..helpers.webview_utils import (
     ajt_pitch_graph_css,
     ajt_webview_css,
     graphs_inline_css_style_tag,
+    head_content,
     webview_inline_css_style_tag,
 )
 from ..pitch_accents.colors import SvgGraphColorMode
 from ..widgets.common import NoAnkiWebView
-
-
-def head_content() -> str:
-    """Return the HTML <head> content with base CSS for the graph preview page."""
-    return f"{META_VIEWPORT}{META_CHARSET}"
 
 
 def get_css_file_refs(color_mode: SvgGraphColorMode, includes: Sequence[str]) -> list[str]:

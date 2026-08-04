@@ -4,11 +4,17 @@ import functools
 
 from aqt import mw
 
+from .consts import META_CHARSET, META_VIEWPORT
 from .file_ops import find_file_in_parents
 
 AJT_WEBVIEW_CSS_FILE_NAME = "ajt_webview.css"
 PITCH_GRAPH_CSS_FILE_NAME = "ajt_pitch_graph.css"
 AJT_SVG_SETTINGS_CSS_FILE_NAME = "svg_settings.css"
+
+
+def head_content() -> str:
+    """Return the HTML <head> content with base CSS for the graph preview page."""
+    return f"{META_VIEWPORT}{META_CHARSET}"
 
 
 @functools.cache

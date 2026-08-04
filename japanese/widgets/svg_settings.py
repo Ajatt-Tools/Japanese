@@ -12,6 +12,7 @@ from ..ajt_common.utils import q_emit
 from ..config_view import JapaneseConfig, SvgGraphColorCodesConfigView
 from ..helpers.webview_utils import (
     ajt_svg_settings_css,
+    head_content,
     svg_settings_inline_css_style_tag,
 )
 from ..pitch_accents.colors import SvgGraphClassName, SvgGraphColorMode
@@ -20,7 +21,6 @@ from ..pitch_accents.entry_to_svg import FormattedEntryToSvgAdapter
 from ..pitch_artist.pitch_accents_web_view import (
     get_css_file_refs,
     get_css_inline_styles,
-    head_content,
 )
 from .common import NoAnkiWebView
 from .settings_form import (

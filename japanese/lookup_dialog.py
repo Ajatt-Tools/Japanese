@@ -23,6 +23,7 @@ from .config_view import (
 from .database.sqlite3_buddy import Sqlite3Buddy
 from .helpers.consts import ADDON_NAME
 from .helpers.tokens import clean_furigana
+from .helpers.webview_utils import head_content
 from .pitch_accents.accent_lookup import AccentLookup, get_global_accent_lookup
 from .pitch_accents.colors import SvgGraphColorMode
 from .pitch_accents.common import AccentDict, FormattedEntry
@@ -32,7 +33,6 @@ from .pitch_accents.styles import HTMLPitchPatternStyle
 from .pitch_artist.pitch_accents_web_view import (
     get_pitch_webview_css_file_refs,
     get_pitch_webview_css_inline_styles,
-    head_content,
 )
 from .widgets.raise_on_show_dialog import RaiseOnShowDialog
 from .widgets.svg_settings import NoAnkiWebView
