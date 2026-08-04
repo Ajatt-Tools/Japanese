@@ -10,6 +10,7 @@ from aqt.addons import AddonsDialog, ConfigEditor
 from aqt.operations import QueryOp
 from aqt.qt import *
 from aqt.utils import openLink, tooltip
+from config_view import JapaneseConfig
 
 from .ajt_common.about_menu import menu_root_entry, tweak_window
 from .ajt_common.addon_config import (
@@ -31,8 +32,7 @@ from .audio_manager.basic_types import (
     TotalAudioStats,
 )
 from .audio_manager.source_manager import InitResult
-from .config_view import ToolbarButtonConfig
-from .config_view import config_view as cfg
+from .config_view import ToolbarButtonConfig, get_global_config
 from .helpers.consts import ADDON_NAME, THIS_ADDON_MODULE
 from .helpers.misc import split_list
 from .helpers.profiles import (
@@ -107,8 +107,9 @@ class NoteTypeSelector(EditableSelector):
 
 
 class ProfileList(QGroupBox):
-    def __init__(self, profile_class: type[Profile], *args) -> None:
-        super().__init__(*args)
+    def __init__(self, cfg: JapaneseConfig, profile_class: type[Profile], parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self._cfg = cfg
         self.setTitle("Profiles")
         self.setCheckable(False)
         self._store_type = profile_class
@@ -153,7 +154,7 @@ class ProfileList(QGroupBox):
 
     def populate(self) -> None:
         self._list_widget.clear()
-        for profile in cfg.iter_profiles():
+        for profile in self._cfg.iter_profiles():
             if isinstance(profile, self._store_type):
                 self.add_and_select(profile)
         self._list_widget.setCurrentRow(0)
@@ -308,9 +309,10 @@ class ProfileEdit(QWidget):
         cls._profile_class = kwargs.pop("profile_class")  # suppresses ide warning
         super().__init_subclass__(**kwargs)
 
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        self._profile_list = ProfileList(profile_class=self._profile_class)
+    def __init__(self, cfg: JapaneseConfig, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self._cfg = cfg
+        self._profile_list = ProfileList(cfg=self._cfg, profile_class=self._profile_class)
         self._edit_form = ProfileEditForm(profile_class=self._profile_class)
         self.setLayout(self._create_layout())
         qconnect(self._profile_list.current_item_changed, self._edit_profile)
@@ -398,8 +400,9 @@ class ToolbarSettingsForm(QGroupBox):
     _columns = 2
     _widgets: dict[str, ToolbarButtonSettingsForm]
 
-    def __init__(self, *args) -> None:
-        super().__init__(*args)
+    def __init__(self, cfg: JapaneseConfig, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self._cfg = cfg
         self.setTitle("Toolbar")
         self.setCheckable(False)
         self._widgets = {}
@@ -408,7 +411,7 @@ class ToolbarSettingsForm(QGroupBox):
 
     def _create_widgets(self) -> None:
         button_config: ToolbarButtonConfig
-        for key, button_config in cfg.toolbar.items():
+        for key, button_config in self._cfg.toolbar.items():
             widget = ToolbarButtonSettingsForm()
             widget.setTitle(ui_translate(key))
             widget.setChecked(button_config.enabled)
@@ -437,9 +440,10 @@ class AudioSourcesEditTable(QWidget):
     _audio_stats: TotalAudioStats | None
     _filename_filter: str = "JSON Files (*.json);; All Files (*.*)"
 
-    def __init__(self, parent: QWidget | None = None) -> None:
+    def __init__(self, cfg: JapaneseConfig, parent: QWidget | None = None) -> None:
         super().__init__(parent)
-        self._audio_sources_table = AudioSourcesTable().populate(cfg.iter_audio_sources())
+        self._cfg = cfg
+        self._audio_sources_table = AudioSourcesTable().populate(self._cfg.iter_audio_sources())
         self._bottom_label = QLabel()
         self._audio_stats = None
         self._apply_button = QPushButton("Apply")
@@ -504,8 +508,8 @@ class AudioSourcesEditTable(QWidget):
 
     def _on_apply_clicked(self) -> None:
         self._apply_button.setEnabled(False)
-        cfg["audio_sources"] = [source.as_config_dict() for source in self.iterateConfigs()]
-        cfg.write_config()
+        self._cfg["audio_sources"] = [source.as_config_dict() for source in self.iterateConfigs()]
+        self._cfg.write_config()
         aud_src_mgr.init_sources_anki(on_finish=self._on_audio_sources_init_finished)
 
     def _on_audio_sources_init_finished(self, result: InitResult) -> None:
@@ -531,13 +535,14 @@ class AudioSourcesEditTable(QWidget):
         name, mime = QFileDialog.getOpenFileName(
             parent=cast(QWidget, self),
             caption="Load audio source from JSON File",
-            directory=cfg["last_file_save_location"],
+            directory=self._cfg["last_file_save_location"],
             filter=self._filename_filter,
         )
         if not name:
-            return tooltip("Aborted.", parent=self)
+            tooltip("Aborted.", parent=self)
+            return
         self._audio_sources_table.addSource(AudioSourceConfig(True, os.path.splitext(os.path.basename(name))[0], name))
-        cfg["last_file_save_location"] = name  # may or may not be lost
+        self._cfg["last_file_save_location"] = name  # may or may not be lost
 
     def iterateConfigs(self) -> Iterable[AudioSourceConfig]:
         return self._audio_sources_table.iterateConfigs()
@@ -571,29 +576,30 @@ class PitchStatsLabel(QLabel):
 class SettingsDialog(AnkiSaveAndRestoreGeomDialog, MgrPropMixIn):
     name: str = "ajt__japanese_options"
 
-    def __init__(self, *args) -> None:
-        super().__init__(*args)
+    def __init__(self, cfg: JapaneseConfig, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self._cfg = cfg
 
         # Furigana tab
-        self._furigana_profiles_edit = FuriganaProfilesEdit()
+        self._furigana_profiles_edit = FuriganaProfilesEdit(cfg=self._cfg)
         self._furigana_settings = GroupBoxWrapper(FuriganaSettingsForm(cfg.furigana))
         self._color_codes_settings = GroupBoxWrapper(PitchColorCodesSettingsForm(cfg.pitch_color_codes))
 
         # Pitch tab
-        self._pitch_profiles_edit = PitchProfilesEdit()
+        self._pitch_profiles_edit = PitchProfilesEdit(cfg=self._cfg)
         self._pitch_settings = GroupBoxWrapper(PitchSettingsForm(cfg.pitch_accent))
         self._svg_settings = SvgSettingsWidget(cfg)
         self._pitch_stats_label = PitchStatsLabel()
 
         # Audio tab
-        self._audio_profiles_edit = AudioProfilesEdit()
+        self._audio_profiles_edit = AudioProfilesEdit(cfg=self._cfg)
         self._audio_settings = GroupBoxWrapper(AudioSettingsForm(cfg.audio_settings))
 
         # Audio sources
-        self._audio_sources_edit = AudioSourcesEditTable()
+        self._audio_sources_edit = AudioSourcesEditTable(cfg=self._cfg)
 
         # Menus tab
-        self._toolbar_settings = ToolbarSettingsForm()
+        self._toolbar_settings = ToolbarSettingsForm(cfg=self._cfg)
         self._context_menu_settings = GroupBoxWrapper(ContextMenuSettingsForm(cfg.context_menu))
         self._forvo_settings = GroupBoxWrapper(ForvoSettingsForm(cfg.forvo))
 
@@ -693,24 +699,24 @@ class SettingsDialog(AnkiSaveAndRestoreGeomDialog, MgrPropMixIn):
 
     def accept(self) -> None:
         # https://doc.qt.io/qt-6/qdialog.html#accept
-        cfg["pitch_accent"].update(self._pitch_settings.as_dict())
-        cfg["svg_graphs"].update(self._svg_settings.svg_settings_as_dict())
-        cfg["svg_graph_colors"].update(self._svg_settings.svg_colors_as_dict())
-        cfg["furigana"].update(self._furigana_settings.as_dict())
-        cfg["pitch_color_codes"].update(self._color_codes_settings.as_dict())
-        cfg["context_menu"].update(self._context_menu_settings.as_dict())
-        cfg["forvo"].update(self._forvo_settings.as_dict())
-        cfg["toolbar"].update(self._toolbar_settings.as_dict())
-        cfg["profiles"] = [
+        self._cfg["pitch_accent"].update(self._pitch_settings.as_dict())
+        self._cfg["svg_graphs"].update(self._svg_settings.svg_settings_as_dict())
+        self._cfg["svg_graph_colors"].update(self._svg_settings.svg_colors_as_dict())
+        self._cfg["furigana"].update(self._furigana_settings.as_dict())
+        self._cfg["pitch_color_codes"].update(self._color_codes_settings.as_dict())
+        self._cfg["context_menu"].update(self._context_menu_settings.as_dict())
+        self._cfg["forvo"].update(self._forvo_settings.as_dict())
+        self._cfg["toolbar"].update(self._toolbar_settings.as_dict())
+        self._cfg["profiles"] = [
             *self._furigana_profiles_edit.as_list(),
             *self._pitch_profiles_edit.as_list(),
             *self._audio_profiles_edit.as_list(),
         ]
-        cfg["audio_sources"] = [source.as_config_dict() for source in self._audio_sources_edit.iterateConfigs()]
-        cfg["audio_settings"].update(self._audio_settings.as_dict())
+        self._cfg["audio_sources"] = [source.as_config_dict() for source in self._audio_sources_edit.iterateConfigs()]
+        self._cfg["audio_settings"].update(self._audio_settings.as_dict())
         # Write the new data to disk
-        cfg.del_deprecated_keys()
-        cfg.write_config()
+        self._cfg.del_deprecated_keys()
+        self._cfg.write_config()
         self._accents_override.save_to_disk()
         # Reload
         acc_dict.reload_user_accents_from_disk()
@@ -724,7 +730,7 @@ class SettingsDialog(AnkiSaveAndRestoreGeomDialog, MgrPropMixIn):
             d = ConfigEditor(
                 dlg=cast(AddonsDialog, self),
                 addon=THIS_ADDON_MODULE,
-                conf=cfg.dict_copy(),
+                conf=self._cfg.dict_copy(),
             )
             qconnect(d.accepted, self.reject)
 
@@ -732,9 +738,9 @@ class SettingsDialog(AnkiSaveAndRestoreGeomDialog, MgrPropMixIn):
         qconnect(b.clicked, on_advanced_clicked)
 
 
-def add_settings_action(root_menu: QMenu) -> None:
+def add_settings_action(cfg: JapaneseConfig, root_menu: QMenu) -> None:
     menu_action = QAction("🇯🇵 Japanese Options...", root_menu)
-    qconnect(menu_action.triggered, lambda: SettingsDialog(mw))
+    qconnect(menu_action.triggered, lambda: SettingsDialog(cfg=cfg, parent=root_menu.window()))
     root_menu.addAction(menu_action)
 
 
@@ -745,8 +751,9 @@ def add_deck_download_action(root_menu: QMenu) -> None:
 
 
 def init() -> None:
+    cfg = get_global_config()
     root_menu = menu_root_entry()
-    add_settings_action(root_menu)
+    add_settings_action(cfg, root_menu)
     add_deck_download_action(root_menu)
-    set_config_action(lambda: SettingsDialog(mw))
+    set_config_action(lambda: SettingsDialog(cfg=cfg, parent=root_menu.window()))
     set_config_update_action(cfg.update_from_addon_manager)
