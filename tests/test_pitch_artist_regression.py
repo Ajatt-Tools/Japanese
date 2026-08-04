@@ -411,6 +411,9 @@ class TestClassName:
             ("ぐらい;po1", SvgGraphClassName.odaka),
             ("ぐらい;p", SvgGraphClassName.particle),
             ("テスト", SvgGraphClassName.particle),
+            # Keihan roles resolve to their own class names.
+            ("たべる;H;hh", SvgGraphClassName.keihan_heiban),
+            ("たべる;K;hlh", SvgGraphClassName.keihan_kifuku),
         ],
     )
     def test_class_name(

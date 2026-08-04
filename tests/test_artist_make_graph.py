@@ -7,6 +7,7 @@ import typing
 
 import pytest
 
+from japanese.helpers.misc import compact_seq
 from japanese.pitch_artist.pitch_graph import SvgPitchArtistGraphMaker
 from playground.utils import NoAnkiConfigView
 from tests.consts import DATA_DIR
@@ -232,6 +233,33 @@ class TestSvgGroupNames:
         gen = SvgPitchArtistGraphMaker(no_anki_config)
         svg = list(gen.make_graphs(gen.make_sequences(notation)))[0]
         assert re.findall(r'<g(?: class="[^"]+")?></g>', svg) == []
+
+
+class TestKeihanClassNames:
+    """Every renderable Keihan role resolves to an SvgGraphClassName without KeyError."""
+
+    @pytest.mark.parametrize(
+        "notation, expected_class_name",
+        [
+            ("たべる;H;hh", "keihan_heiban"),
+            ("たべる;L;hl", "keihan_low_heiban"),
+            ("たべる;A;hl", "keihan_atamadaka"),
+            ("たべる;N;hlh", "keihan_nakadaka"),
+            ("たべる;M;hlh", "keihan_low_nakadaka"),
+            ("たべる;O;hl", "keihan_low_odaka"),
+            ("たべる;K;hlh", "keihan_kifuku"),
+        ],
+    )
+    def test_keihan_section_renders(
+        self, no_anki_config: NoAnkiConfigView, notation: str, expected_class_name: str
+    ) -> None:
+        gen = SvgPitchArtistGraphMaker(no_anki_config)
+        svg = list(gen.make_graphs(gen.make_sequences(notation)))[0]
+        group_class_names = extract_group_class_names(svg)
+        # The section class appears in the lines, circles, and text groups; dedup to compare.
+        assert compact_seq(name for name in group_class_names if name == expected_class_name) == (
+            expected_class_name,
+        )
 
 
 class TestGhostParticle:

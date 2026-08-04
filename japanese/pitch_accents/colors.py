@@ -42,6 +42,7 @@ class SvgGraphClassName(enum.Enum):
     keihan_low_nakadaka = enum.auto()
     keihan_odaka = enum.auto()
     keihan_low_odaka = enum.auto()
+    keihan_kifuku = enum.auto()
     keihan_particle = enum.auto()
     keihan_setsubigo = enum.auto()
     # Special
