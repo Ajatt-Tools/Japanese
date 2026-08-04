@@ -209,6 +209,13 @@ class ViewPitchAccentsDialog(RaiseOnShowDialog):
             tooltip(msg=_("Empty selection."), parent=get_parent_widget(parent or self.parent()))
 
 
+def get_view_pitch_accents_dialog(cfg: JapaneseConfig, parent: QWidget | None = None) -> ViewPitchAccentsDialog:
+    """Return the persistent lookup dialog, creating it lazily on first use."""
+    if not (dlg := getattr(mw, "_ajt__view_pitch_accents_dialog", None)):
+        dlg = mw._ajt__view_pitch_accents_dialog = ViewPitchAccentsDialog(cfg, parent=parent)
+    return dlg
+
+
 class LookupMenus:
     """Installer for lookup actions in Anki menus and context menus."""
 
@@ -216,7 +223,11 @@ class LookupMenus:
         """Store config for dialog callbacks."""
         self._cfg = cfg
         self._mw = parent
-        self._dialog = ViewPitchAccentsDialog(self._cfg, parent=self._mw)
+
+    @property
+    def _dialog(self) -> ViewPitchAccentsDialog:
+        """Return the shared lookup dialog, creating it on first use."""
+        return get_view_pitch_accents_dialog(self._cfg, parent=self._mw)
 
     def setup_mw_lookup_action(self, root_menu: QMenu) -> None:
         """Add a main window entry"""
