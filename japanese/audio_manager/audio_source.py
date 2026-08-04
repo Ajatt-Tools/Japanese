@@ -49,7 +49,7 @@ class AudioSource(AudioSourceConfig):
         if media_dir_abs and os.path.isdir(media_dir_abs):
             return media_dir_abs
 
-        if self.is_local and os.path.isdir(local_media_dir := self.media_dir_rel_to_source()):
+        if self.is_local and os.path.isdir(local_media_dir := self._media_dir_rel_to_source()):
             return local_media_dir
 
         # Official release indexes may contain a remote media_dir_abs injected by release tooling.
@@ -58,9 +58,9 @@ class AudioSource(AudioSourceConfig):
 
         # e.g. if self.url = "/path/to/taas/index.json" and media_dir = "media",
         # then join("/path/to/taas", "media") = "/path/to/taas/media"
-        return self.media_dir_rel_to_source()
+        return self._media_dir_rel_to_source()
 
-    def media_dir_rel_to_source(self) -> str:
+    def _media_dir_rel_to_source(self) -> str:
         """Return media_dir resolved relative to this source URL."""
         assert self.db
         return self.join_media_path(os.path.dirname(self.url), self.db.get_media_dir_rel(self.name))
