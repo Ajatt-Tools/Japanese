@@ -15,12 +15,15 @@ from japanese.pitch_accents.colors import SvgGraphColorMode
 from playground.utils import NoAnkiConfigView
 from tests.consts import DATA_DIR
 
-# Force Qt to run without a real display so widget tests work in headless CI.
-os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+
+@pytest.fixture(scope="session", autouse=True)
+def qt_offscreen_platform() -> None:
+    """Force Qt to run without a real display so widget tests work in headless CI."""
+    os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 
 @pytest.fixture(scope="session", autouse=True)
-def qapp() -> QApplication:
+def qapp(qt_offscreen_platform: None) -> QApplication:
     """Ensure a QApplication exists for widget tests.
 
     A program name must be present in argv because QtWebEngine aborts
