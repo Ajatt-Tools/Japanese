@@ -70,6 +70,7 @@ class SvgPitchColorCodesSettingsForm(MultiColumnSettingsForm):
     opts_changed = pyqtSignal()
 
     def _make_color_line_edits(self) -> Iterable[tuple[str, ColorEditPicker]]:
+        """Yield color picker widgets for every SVG graph class."""
         assert self._config, "config must be set"
         for pitch_type in SvgGraphClassName:
             picker = ColorEditPicker()
@@ -77,11 +78,13 @@ class SvgPitchColorCodesSettingsForm(MultiColumnSettingsForm):
             yield pitch_type.name, picker
 
     def _add_widgets(self) -> None:
+        """Create color picker widgets and connect change signals."""
         super()._add_widgets()
         self._widgets.__dict__.update(self._make_color_line_edits())
         self._connect_widgets()
 
     def _connect_widgets(self) -> None:
+        """Forward color picker changes through opts_changed."""
         for widget in self._widgets.__dict__.values():
             qconnect(change_event(widget), lambda: q_emit(self.opts_changed))
 
@@ -97,11 +100,14 @@ def get_svg_settings_inline_styles(color_mode: SvgGraphColorMode) -> Sequence[st
 
 
 class AnkiSVGPreviewWebView(AnkiWebView):
+    """An Anki web view used to preview SVG graph settings."""
+
     def __init__(self, parent: QWidget | None) -> None:
+        """Initialize the preview web view with a stable title."""
         super().__init__(parent=parent, title="Preview SVG graphs")
 
     def set_svg_preview(self, formatted_html: str, color_mode: SvgGraphColorMode) -> None:
-        """Set the lookup result page using Anki's web-exported CSS files."""
+        """Set the preview page using Anki's web-exported CSS files."""
         self.stdHtml(
             head=head_content(),
             css=get_svg_settings_css_file_refs(color_mode),
@@ -110,8 +116,10 @@ class AnkiSVGPreviewWebView(AnkiWebView):
 
 
 class NoAnkiSVGPreviewWebView(NoAnkiWebView):
+    """A standalone SVG settings preview web view for tests and playground scripts."""
+
     def set_svg_preview(self, formatted_html: str, color_mode: SvgGraphColorMode) -> None:
-        """Set the lookup result page with CSS inlined from local files."""
+        """Set the preview page with CSS inlined from local files."""
         self.stdHtml(
             head=head_content() + "".join(get_svg_settings_inline_styles(color_mode)),
             body=formatted_html,
@@ -129,10 +137,13 @@ def get_preview_webview(parent: QWidget) -> SVGPreviewWebView:
 
 
 class SvgSettingsWidget(QWidget):
+    """Widget that edits SVG graph settings and renders a live preview."""
+
     _web_view: SVGPreviewWebView
     _update_view_timer: QTimer
 
     def __init__(self, cfg: JapaneseConfig, svg_maker: FormattedEntryToSvgAdapter | None = None) -> None:
+        """Initialize settings forms, preview web view, and debounced updates."""
         super().__init__()
         self._cfg = cfg
         self._form = SvgSettingsForm(self._cfg.svg_graphs)
@@ -145,6 +156,7 @@ class SvgSettingsWidget(QWidget):
         self._connect_signals()
 
     def _connect_signals(self) -> None:
+        """Connect settings changes to debounced preview updates."""
         qconnect(self._form.opts_changed, self._schedule_update_view)
         qconnect(self._color_settings.opts_changed, self._schedule_update_view)
 
@@ -160,6 +172,7 @@ class SvgSettingsWidget(QWidget):
         self._update_view_timer.start()
 
     def _init_ui(self) -> None:
+        """Arrange the preview, graph settings, and color settings widgets."""
         layout = QVBoxLayout()
         # row: int, column: int, rowSpan: int, columnSpan: int
         layout.addWidget(self._web_view, stretch=1)
@@ -179,13 +192,13 @@ class SvgSettingsWidget(QWidget):
         return self._cfg.svg_graphs.graph_visible_height + SVG_SETTINGS_BODY_VERTICAL_PADDING
 
     def _make_svgs(self) -> str:
-
+        """Render preview SVGs for the sample entries."""
         return "".join(self._svg_maker.make_graph(entry) for entry in SHOW_ENTRIES)
 
     def svg_colors_as_dict(self) -> dict[str, AllowedConfigValues]:
-        """Return current SVG settings as a config dictionary."""
+        """Return current SVG color settings as a config dictionary."""
         return self._color_settings.as_dict()
 
     def svg_settings_as_dict(self) -> dict[str, AllowedConfigValues]:
-        """Return current SVG settings as a config dictionary."""
+        """Return current SVG graph settings as a config dictionary."""
         return self._form.as_dict()
