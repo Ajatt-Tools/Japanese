@@ -145,10 +145,10 @@ class SvgSettingsWidget(QWidget):
     def __init__(self, cfg: JapaneseConfig, svg_maker: FormattedEntryToSvgAdapter | None = None) -> None:
         """Initialize settings forms, preview web view, and debounced updates."""
         super().__init__()
-        self._cfg = cfg
-        self._form = SvgSettingsForm(self._cfg.svg_graphs)
+        self._cfg_clone = cfg.clone()
+        self._form = SvgSettingsForm(self._cfg_clone.svg_graphs)
         self._web_view = get_preview_webview(self)
-        self._svg_maker = svg_maker or FormattedEntryToSvgAdapter(cfg)
+        self._svg_maker = svg_maker or FormattedEntryToSvgAdapter(self._cfg_clone)
         self._color_settings = SvgPitchColorCodesSettingsForm(cfg.svg_graph_colors)
         self._init_update_view_timer()
         self._init_ui()
@@ -183,13 +183,18 @@ class SvgSettingsWidget(QWidget):
         self.setLayout(layout)
 
     def update_view(self) -> None:
-        self._cfg.svg_graphs.update(self._form.as_dict())
-        self._cfg.svg_graph_colors.update(self._color_settings.as_dict())
-        self._web_view.set_svg_preview(formatted_html=self._make_svgs(), color_mode=self._cfg.svg_graphs.color_mode)
+        """Apply form values to the preview config and redraw the SVG preview."""
+        # Update the cloned config so preview graphs reflect unsaved settings without mutating the live config.
+        self._cfg_clone.svg_graphs.update(self._form.as_dict())
+        self._cfg_clone.svg_graph_colors.update(self._color_settings.as_dict())
+        self._web_view.set_svg_preview(
+            formatted_html=self._make_svgs(), color_mode=self._cfg_clone.svg_graphs.color_mode
+        )
         self._web_view.setMinimumHeight(self._preview_minimum_height())
 
     def _preview_minimum_height(self) -> int:
-        return self._cfg.svg_graphs.graph_visible_height + SVG_SETTINGS_BODY_VERTICAL_PADDING
+        """Return the minimum height needed for the current preview graph size."""
+        return self._cfg_clone.svg_graphs.graph_visible_height + SVG_SETTINGS_BODY_VERTICAL_PADDING
 
     def _make_svgs(self) -> str:
         """Render preview SVGs for the sample entries."""
