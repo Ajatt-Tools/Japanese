@@ -1,7 +1,6 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
-import functools
 import io
 import pathlib
 import re
@@ -387,8 +386,12 @@ def add_settings_action(root_menu: QMenu) -> None:
     root_menu.addAction(menu_action)
 
 
+def add_pitch_arist_context_menu_item(editor_webview: AnkiWebView, menu: QMenu) -> None:
+    get_pitch_artist_dialog().add_context_menu_item(editor_webview, menu)
+
+
 def init() -> None:
     """Initialize the Pitch Graph Artist menu entries and context menu hooks."""
     assert mw, "Anki should be running."
     add_settings_action(menu_root_entry())
-    gui_hooks.editor_will_show_context_menu.append(get_pitch_artist_dialog().add_context_menu_item)
+    gui_hooks.editor_will_show_context_menu.append(add_pitch_arist_context_menu_item)
