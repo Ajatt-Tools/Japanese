@@ -1,6 +1,8 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
+import re
+
 import pytest
 
 from japanese.pitch_accents.colors import SvgGraphClassName, SvgGraphColorMode
@@ -161,6 +163,54 @@ def test_svg_attributes_color_mode(formatted_entry: FormattedEntry, expected_col
     svg = FormattedEntryToSvgAdapter(no_anki_config).make_graph(formatted_entry)
 
     assert f'fill="{expected_color}" stroke="{expected_color}"' in svg
+
+
+@pytest.mark.parametrize("formatted_entry", TEST_ENTRIES)
+def test_css_color_mode_omits_configured_colors(formatted_entry: FormattedEntry) -> None:
+    """CSS color mode keeps role classes and a neutral fallback, not configured hex colors."""
+    no_anki_config = make_fresh_config()
+    no_anki_config.svg_graphs["color_mode"] = SvgGraphColorMode.css.name
+
+    svg = FormattedEntryToSvgAdapter(no_anki_config).make_graph(formatted_entry)
+
+    assert 'class="ajt__pitch_svg"' in svg
+    # In CSS mode the SVG relies on external CSS for coloring, so no configured hex colors are inlined.
+    assert re.search(r"#[0-9a-fA-F]{6}\b", svg) is None
+
+
+@pytest.mark.parametrize(
+    "color_mode, expected_color",
+    [
+        (SvgGraphColorMode.black_and_white, SvgBlackAndWhiteRole.word.value),
+        (SvgGraphColorMode.css, SvgBlackAndWhiteRole.word.value),
+        (SvgGraphColorMode.svg_attributes, "#005ce6"),
+    ],
+)
+def test_lookup_component_color_respects_color_mode(color_mode: SvgGraphColorMode, expected_color: str) -> None:
+    """Color lookup uses configured colors only when SVG attributes mode is active."""
+    no_anki_config = make_fresh_config()
+    no_anki_config.svg_graphs["color_mode"] = color_mode.name
+
+    assert lookup_component_color(no_anki_config, SvgBlackAndWhiteRole.word, SvgGraphClassName.heiban) == expected_color
+
+
+def test_svg_graph_color_lookup_falls_back_to_black() -> None:
+    """Missing SVG class color config falls back to the configured black color."""
+    no_anki_config = make_fresh_config()
+    del no_anki_config.svg_graph_colors.config[SvgGraphClassName.heiban.name]
+
+    assert (
+        no_anki_config.svg_graph_colors.lookup_color(SvgGraphClassName.heiban)
+        == no_anki_config.svg_graph_colors[SvgGraphClassName.black]
+    )
+
+
+def test_color_mode_falls_back_to_svg_attributes() -> None:
+    """Invalid color_mode config values fall back to SVG attributes mode."""
+    no_anki_config = make_fresh_config()
+    no_anki_config.svg_graphs["color_mode"] = "invalid_mode"
+
+    assert no_anki_config.svg_graphs.color_mode == SvgGraphColorMode.svg_attributes
 
 
 @pytest.mark.parametrize(

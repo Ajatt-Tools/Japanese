@@ -257,9 +257,7 @@ class TestKeihanClassNames:
         svg = list(gen.make_graphs(gen.make_sequences(notation)))[0]
         group_class_names = extract_group_class_names(svg)
         # The section class appears in the lines, circles, and text groups; dedup to compare.
-        assert compact_seq(name for name in group_class_names if name == expected_class_name) == (
-            expected_class_name,
-        )
+        assert compact_seq(name for name in group_class_names if name == expected_class_name) == (expected_class_name,)
 
 
 class TestGhostParticle:
