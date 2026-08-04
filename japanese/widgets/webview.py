@@ -1,5 +1,6 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
+import logging
 from collections.abc import Sequence
 from typing import Any, TypeAlias
 
@@ -16,6 +17,8 @@ from ..helpers.webview_utils import (
 )
 from ..pitch_accents.colors import SvgGraphColorMode
 from ..widgets.common import NoAnkiWebView
+
+logger = logging.getLogger(__name__)
 
 
 def get_css_file_refs(color_mode: SvgGraphColorMode, includes: Sequence[str]) -> list[str]:
@@ -82,7 +85,7 @@ class NoAnkiSVGPreviewWebView(NoAnkiWebView):
     @staticmethod
     def set_bridge_command(_func: Callable[[str], Any], _context: Any) -> None:
         """Do nothing; bridge commands are only available in Anki's web view."""
-        print("set_bridge_command not implemented.")
+        logger.info("set_bridge_command not implemented.")
 
     def zoom_in(self) -> None:
         """Increase the zoom factor by 0.1."""
