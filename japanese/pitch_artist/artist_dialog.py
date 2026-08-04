@@ -365,7 +365,7 @@ class PitchArtistDialog(RaiseOnShowDialog):
 
     def add_context_menu_item(self, webview: AnkiWebView, menu: QMenu) -> None:
         """Add a 'Preview pitch graphs' entry to the editor context menu."""
-        menu.addAction(ACTION_NAME, functools.partial(self._on_lookup_pronunciation, webview.selectedText()))
+        menu.addAction(ACTION_NAME, lambda: self._on_lookup_pronunciation(webview.selectedText()))
 
     def _present_examples(self) -> None:
         """Prepend sample Pitch Artist notation and update the preview."""
@@ -373,23 +373,22 @@ class PitchArtistDialog(RaiseOnShowDialog):
         self.update_graphs()
 
 
-def add_settings_action(root_menu: QMenu, dialog: PitchArtistDialog) -> None:
+def get_pitch_artist_dialog() -> PitchArtistDialog:
+    """Return the persistent Pitch Artist dialog, creating it lazily on first use."""
+    if not (dlg := getattr(mw, "_ajt__pitch_artist_dialog", None)):
+        dlg = mw._ajt__pitch_artist_dialog = PitchArtistDialog(get_global_config(), parent=mw)
+    return dlg
+
+
+def add_settings_action(root_menu: QMenu) -> None:
     """Add a menu action to open the Pitch Graph Artist dialog."""
     menu_action = QAction("🎨 Pitch &Graph Artist...", root_menu)
-    qconnect(menu_action.triggered, lambda: dialog.show())
+    qconnect(menu_action.triggered, lambda: get_pitch_artist_dialog().show())
     root_menu.addAction(menu_action)
 
 
 def init() -> None:
-    """Initialize the Pitch Graph Artist dialog, menu entries, and context menu hooks."""
+    """Initialize the Pitch Graph Artist menu entries and context menu hooks."""
     assert mw, "Anki should be running."
-    # Get config
-    cfg = get_global_config()
-    # init dialog
-    mw._ajt__pitch_artist_dialog = dialog = PitchArtistDialog(cfg, parent=mw)
-    # get AJT menu
-    root_menu = menu_root_entry()
-    # create a new menu item
-    add_settings_action(root_menu, dialog)
-    # Hook to context menu events
-    gui_hooks.editor_will_show_context_menu.append(dialog.add_context_menu_item)
+    add_settings_action(menu_root_entry())
+    gui_hooks.editor_will_show_context_menu.append(get_pitch_artist_dialog().add_context_menu_item)
