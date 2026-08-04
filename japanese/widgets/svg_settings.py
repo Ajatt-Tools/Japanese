@@ -91,6 +91,11 @@ def get_svg_settings_css_file_refs(color_mode: SvgGraphColorMode) -> list[str]:
     return get_css_file_refs(color_mode=color_mode, includes=(ajt_svg_settings_css(),))
 
 
+def get_svg_settings_inline_styles(color_mode: SvgGraphColorMode) -> Sequence[str]:
+    """Return inline pitch graph CSS only when CSS color mode is active."""
+    return get_css_inline_styles(color_mode=color_mode, includes=(svg_settings_inline_css_style_tag(),))
+
+
 class AnkiSVGPreviewWebView(AnkiWebView):
     def __init__(self, parent: QWidget | None) -> None:
         super().__init__(parent=parent, title="Preview SVG graphs")
@@ -102,11 +107,6 @@ class AnkiSVGPreviewWebView(AnkiWebView):
             css=get_svg_settings_css_file_refs(color_mode),
             body=formatted_html,
         )
-
-
-def get_svg_settings_inline_styles(color_mode: SvgGraphColorMode) -> Sequence[str]:
-    """Return inline pitch graph CSS only when CSS color mode is active."""
-    return get_css_inline_styles(color_mode=color_mode, includes=(svg_settings_inline_css_style_tag(),))
 
 
 class NoAnkiSVGPreviewWebView(NoAnkiWebView):
@@ -179,6 +179,7 @@ class SvgSettingsWidget(QWidget):
         return self._cfg.svg_graphs.graph_visible_height + SVG_SETTINGS_BODY_VERTICAL_PADDING
 
     def _make_svgs(self) -> str:
+
         return "".join(self._svg_maker.make_graph(entry) for entry in SHOW_ENTRIES)
 
     def svg_colors_as_dict(self) -> dict[str, AllowedConfigValues]:
