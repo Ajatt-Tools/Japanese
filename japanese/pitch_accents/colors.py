@@ -5,6 +5,14 @@ import enum
 
 @enum.unique
 class SvgGraphColorMode(enum.Enum):
+    """How SVG graph colors are applied to rendered pitch graphs.
+
+    black_and_white: no CSS is loaded; default role colors are baked into element attributes.
+    css: class-based CSS rules style the graphs; element attributes carry default colors
+         as fallbacks (presentation attributes have specificity 0, so CSS rules override them).
+    svg_attributes: user-configured colors are baked into element attributes; no CSS is loaded.
+    """
+
     black_and_white = enum.auto()
     css = enum.auto()
     svg_attributes = enum.auto()
@@ -12,6 +20,13 @@ class SvgGraphColorMode(enum.Enum):
 
 @enum.unique
 class SvgGraphClassName(enum.Enum):
+    """CSS class names used to style pitch graph elements and look up their colors.
+
+    Renderable Role member names in pitch_artist/pitch_graph.py must have a matching
+    member here, because Section.class_name is resolved as SvgGraphClassName[role.name].
+    Role.empty is excluded: empty sections are filtered out before rendering.
+    """
+
     # Tokyo
     heiban = enum.auto()
     atamadaka = enum.auto()

@@ -27,6 +27,7 @@ def get_css_file_refs(color_mode: SvgGraphColorMode, includes: Sequence[str]) ->
 
 
 def get_pitch_webview_css_file_refs(color_mode: SvgGraphColorMode) -> list[str]:
+    """Return web-exported CSS files for Pitch Artist and lookup previews."""
     return get_css_file_refs(color_mode=color_mode, includes=(ajt_webview_css(),))
 
 
@@ -63,6 +64,7 @@ def get_css_inline_styles(color_mode: SvgGraphColorMode, includes: Sequence[str]
 
 
 def get_pitch_webview_css_inline_styles(color_mode: SvgGraphColorMode) -> Sequence[str]:
+    """Return inline CSS style tags for Pitch Artist and lookup previews."""
     return get_css_inline_styles(color_mode=color_mode, includes=(webview_inline_css_style_tag(),))
 
 

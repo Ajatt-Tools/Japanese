@@ -10,28 +10,36 @@ from .basic_types import AudioSourceConfig
 
 
 class AudioSourceError(RuntimeError):
+    """Raised when an audio source is accessed before it is ready."""
+
     pass
 
 
 @dataclasses.dataclass
 class AudioSource(AudioSourceConfig):
+    """Audio source config with database-backed metadata lookups."""
+
     # current schema has three fields: "meta", "headwords", "files"
     db: Sqlite3Buddy | None
 
     def with_db(self, db: Sqlite3Buddy | None) -> "AudioSource":
+        """Return a copy of this audio source bound to a different database."""
         return dataclasses.replace(self, db=db)
 
     @classmethod
     def from_cfg(cls, source: AudioSourceConfig, db: Sqlite3Buddy) -> "AudioSource":
+        """Create an AudioSource from config and bind it to a database."""
         # noinspection PyTypeChecker
         return cls(**dataclasses.asdict(source), db=db)
 
     def is_cached(self) -> bool:
+        """Return True if this source has been initialized in the database."""
         if not self.db:
             raise AudioSourceError("db is none")
         return self.db.is_source_cached(self.name)
 
     def raise_if_not_ready(self) -> None:
+        """Raise if this source has not been initialized in the database."""
         if not self.is_cached():
             raise AudioSourceError("Attempt to access property of an uninitialized source.")
 
@@ -65,7 +73,7 @@ class AudioSource(AudioSourceConfig):
         assert self.db
         return self.join_media_path(os.path.dirname(self.url), self.db.get_media_dir_rel(self.name))
 
-    def join_media_path(self, *args) -> str:
+    def join_media_path(self, *args: str) -> str:
         """Join multiple paths."""
         if self.is_local:
             # Local paths are platform-dependent.
@@ -76,15 +84,18 @@ class AudioSource(AudioSourceConfig):
 
     @property
     def is_local(self) -> bool:
+        """Return True if this source URL points to an existing local file."""
         return file_exists(self.url)
 
     @property
     def original_url(self) -> str | None:
+        """Return the source URL recorded when this source was initialized."""
         self.raise_if_not_ready()
         assert self.db
         return self.db.get_original_url(self.name)
 
     def update_original_url(self) -> None:
+        """Store the current source URL as the initialized source URL."""
         # Remember where the file was downloaded from.
         self.raise_if_not_ready()
         assert self.db
