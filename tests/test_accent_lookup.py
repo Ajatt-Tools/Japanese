@@ -140,6 +140,10 @@ class TestAccDictLookup:
             ("謝らないでほしい。", ["謝らないで", "ほしい", "。"]),
             ("死んだよ", ["死んだ", "よ"]),
             ("暮らしたりする", ["暮らしたり", "する"]),
+            # なんか starts a new color unit instead of attaching to the conditional.
+            ("足りなかったらなんか", ["足りなかったら", "なんか"]),
+            # らっしゃる starts a new color unit after the て-form.
+            ("鳴いてらっしゃった", ["鳴いて", "らっしゃった"]),
         ],
     )
     def test_attach_rules(
