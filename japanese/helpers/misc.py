@@ -40,5 +40,6 @@ def media_strip(text: str) -> str:
     return mw.col.media.strip(text)
 
 
-def compact_seq(seq: Iterable) -> Sequence:
+def compact_seq(seq: Iterable[T]) -> Sequence[T]:
+    """Return a deduplicated, order-preserving sequence from seq."""
     return tuple(dict.fromkeys(seq))
