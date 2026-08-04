@@ -2,7 +2,7 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 
-from typing import NewType, Optional, TypedDict
+from typing import NewType, TypedDict
 
 FileList = NewType("FileList", list[str])
 
@@ -13,11 +13,14 @@ class FileInfo(TypedDict):
     pitch_number: str | None
 
 
-class SourceMeta(TypedDict):
+class SourceMetaRequired(TypedDict):
     name: str
     year: int
     version: int
     media_dir: str
+
+
+class SourceMeta(SourceMetaRequired, total=False):
     media_dir_abs: str
 
 
