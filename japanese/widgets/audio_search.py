@@ -335,8 +335,9 @@ class AnkiAudioSearchDialog(AudioSearchDialog, AnkiSaveAndRestoreGeomDialog):
             open_file(file.url)
         elif self._has_real_media_file(file.desired_filename):
             open_file(os.path.join(mw.col.media.dir(), file.desired_filename))
-        with no_bundled_libs():
-            QDesktopServices.openUrl(QUrl(file.url))
+        else:
+            with no_bundled_libs():
+                QDesktopServices.openUrl(QUrl(file.url))
 
     def _search_forvo(self, search_text: str) -> None:
         """
