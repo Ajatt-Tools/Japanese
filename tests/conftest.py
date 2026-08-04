@@ -10,6 +10,7 @@ from aqt.qt import QApplication
 
 from japanese.database.sqlite3_buddy import Sqlite3Buddy
 from japanese.helpers.file_ops import rm_file
+from japanese.pitch_accents.acc_dict_mgr_2 import AccentDictManager2
 from japanese.pitch_accents.colors import SvgGraphColorMode
 from playground.utils import NoAnkiConfigView
 from tests.consts import DATA_DIR
@@ -56,6 +57,18 @@ def tmp_upd_file(tmp_path_factory: pytest.TempPathFactory) -> Iterable[pathlib.P
 def tmp_user_accents_file(tmp_path_factory: pytest.TempPathFactory) -> Iterable[pathlib.Path]:
     user_accents_file = DATA_DIR / "test_user_accents.tsv"
     yield user_accents_file
+
+
+@pytest.fixture(scope="class")
+def acc_dict_mgr(
+    tmp_sqlite3_db_path: pathlib.Path,
+    tmp_upd_file: pathlib.Path,
+    tmp_user_accents_file: pathlib.Path,
+) -> AccentDictManager2:
+    """Populate a temporary database with the bundled pitch accent data."""
+    mgr = AccentDictManager2(tmp_sqlite3_db_path, tmp_upd_file, tmp_user_accents_file)
+    mgr.ensure_dict_ready_on_main()
+    return mgr
 
 
 @pytest.fixture(scope="session")
