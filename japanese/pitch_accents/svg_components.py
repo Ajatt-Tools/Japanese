@@ -98,6 +98,11 @@ def lookup_component_color(cfg: JapaneseConfig, role: SvgBlackAndWhiteRole, clas
             return role.value
 
 
+def trail_color(cfg: JapaneseConfig) -> str:
+    """Resolve the color used for trailing lines and circles (odaka drop markers)."""
+    return lookup_component_color(cfg, SvgBlackAndWhiteRole.trail, SvgGraphClassName.connector)
+
+
 class Line:
     """An SVG line segment between two points, optionally rendered as a dashed (tape) line."""
 
@@ -162,9 +167,8 @@ class Line:
         if self._is_tape:
             attrs.append(f'stroke-dasharray="{self._cfg.svg_graphs.stroke_dasharray}"')
         if self._is_trailing:
-            stroke_color = lookup_component_color(self._cfg, SvgBlackAndWhiteRole.trail, SvgGraphClassName.connector)
             attrs.append(f'class="{SvgBlackAndWhiteRole.trail.name}"')
-            attrs.append(f'stroke="{stroke_color}"')
+            attrs.append(f'stroke="{trail_color(self._cfg)}"')
         else:
             stroke_color = lookup_component_color(self._cfg, SvgBlackAndWhiteRole.word, self._class_name)
             attrs.append(f'stroke="{stroke_color}"')

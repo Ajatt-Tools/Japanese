@@ -13,6 +13,7 @@ from .svg_components import (
     SvgBlackAndWhiteRole,
     lookup_component_color,
     make_group,
+    trail_color,
 )
 from .svg_graph_types import (
     ConnectToPrevious,
@@ -101,7 +102,7 @@ class SvgGraphRenderer:
     def _circle_color_for_mora(self, *, is_trailing: bool, is_particle: bool, word_color: str) -> str:
         """Resolve the final circle color for one mora."""
         if is_trailing:
-            return lookup_component_color(self._cfg, SvgBlackAndWhiteRole.trail, SvgGraphClassName.connector)
+            return trail_color(self._cfg)
         if is_particle:
             return lookup_component_color(self._cfg, SvgBlackAndWhiteRole.word, SvgGraphClassName.particle)
         return word_color
