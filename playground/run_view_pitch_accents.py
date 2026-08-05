@@ -3,10 +3,9 @@
 from aqt.qt import *
 
 from japanese.lookup_dialog import ViewPitchAccentsDialog
-from japanese.mecab_controller import MecabController
 from japanese.pitch_accents.acc_dict_mgr_2 import AccentDictManager2
-from japanese.pitch_accents.accent_lookup import AccentLookup
 from playground.utils import PITCH_ACCENTS_UPDATED_FILE, NoAnkiConfigView, persistent_sqlite3_db_path
+from tests.helpers import make_accent_lookup
 
 EXAMPLE_SENTENCE = "夕日の中伝説の大樹の下で睦み合う二人"
 
@@ -24,7 +23,7 @@ def main() -> None:
             upd_file_path=PITCH_ACCENTS_UPDATED_FILE,
         )
         acc_dict.ensure_dict_ready_on_main()
-        accent_lookup = AccentLookup(cfg, MecabController(verbose=False, cache_max_size=cfg.cache_lookups))
+        accent_lookup = make_accent_lookup(cfg)
         app = QApplication(sys.argv)
         dialog = ViewPitchAccentsDialog(cfg, accent_lookup=accent_lookup, accent_db_path=db_path)
         dialog.lookup_pronunciations(EXAMPLE_SENTENCE)
