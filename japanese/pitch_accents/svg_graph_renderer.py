@@ -1,6 +1,7 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
+import enum
 import typing
 from collections.abc import Sequence
 
@@ -22,6 +23,18 @@ from .svg_graph_types import (
     SvgGraphWord,
     SvgMoraFlag,
 )
+
+
+@enum.unique
+class SvgGroupName(enum.Enum):
+    """
+    Names of the top-level SVG groups in every rendered graph.
+    The "lines" group holds pitch-contour path/line markup.
+    """
+
+    lines = "lines"
+    circles = "circles"
+    text = "text"
 
 
 class RenderedSection(typing.NamedTuple):
@@ -277,9 +290,9 @@ class SvgGraphRenderer:
             start_pos = rendered.pos
 
         return RenderedGraphComponents(
-            lines=make_group(paths, "lines"),
-            circles=make_group(circles, "circles"),
-            text=make_group(text, "text"),
+            lines=make_group(paths, SvgGroupName.lines.name),
+            circles=make_group(circles, SvgGroupName.circles.name),
+            text=make_group(text, SvgGroupName.text.name),
         )
 
     def _make_dictionary_entry_content(self, graph: SvgGraph, start_pos: Point) -> RenderedGraphComponents:
@@ -291,9 +304,9 @@ class SvgGraphRenderer:
         assert len(graph.sections) == 1, "FormattedEntry-derived graph must have only one section."
         rendered = self._render_section(graph.sections[0], pos=start_pos)
         return RenderedGraphComponents(
-            lines=make_group([rendered.path], "lines"),
-            circles=make_group([rendered.circles], "circles"),
-            text=make_group([rendered.text], "text"),
+            lines=make_group([rendered.path], SvgGroupName.lines.name),
+            circles=make_group([rendered.circles], SvgGroupName.circles.name),
+            text=make_group([rendered.text], SvgGroupName.text.name),
         )
 
     def _make_sized_svg(self, graph: SvgGraph, content: RenderedGraphComponents) -> str:
