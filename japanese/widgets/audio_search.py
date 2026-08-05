@@ -294,17 +294,19 @@ class AudioSearchDialog(QDialog):
         return self._dest_field_selector.currentText()
 
 
+def has_real_media_file(desired_filename: str) -> bool:
+    """Return True when the media collection has a playable, non-placeholder file."""
+    assert mw and mw.col, "Anki must be running to access Collection."
+    return mw.col.media.have(desired_filename) and not is_bloop_placeholder(desired_filename)
+
+
 class AnkiAudioSearchDialog(AudioSearchDialog, AnkiSaveAndRestoreGeomDialog):
     name: str = "ajt__audio_search_dialog"
-
-    def _has_real_media_file(self, desired_filename: str) -> bool:
-        """Return True when the media collection has a playable, non-placeholder file."""
-        return mw.col.media.have(desired_filename) and not is_bloop_placeholder(desired_filename)
 
     def _play_audio_file(self, file: FileUrlData) -> None:
         if os.path.isfile(file.url):
             return sound.av_player.play_tags([SoundOrVideoTag(filename=file.url)])
-        elif self._has_real_media_file(file.desired_filename):
+        elif has_real_media_file(file.desired_filename):
             return sound.av_player.play_tags([SoundOrVideoTag(filename=file.desired_filename)])
         else:
             # file is not located on this computer and needs to be downloaded first.
@@ -331,7 +333,7 @@ class AnkiAudioSearchDialog(AudioSearchDialog, AnkiSaveAndRestoreGeomDialog):
         assert mw and mw.col, "Collection must be opened."
         if os.path.isfile(file.url):
             open_file(file.url)
-        elif self._has_real_media_file(file.desired_filename):
+        elif has_real_media_file(file.desired_filename):
             open_file(os.path.join(mw.col.media.dir(), file.desired_filename))
         else:
             with no_bundled_libs():
