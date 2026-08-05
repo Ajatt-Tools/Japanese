@@ -15,14 +15,27 @@ from playground.utils import NoAnkiConfigView
 from tests.conftest import (
     acc_dict_mgr,
     tmp_sqlite3_db_path,
-    tmp_upd_file,
-    tmp_user_accents_file,
 )
 from tests.helpers import make_accent_lookup
 
 # 僕 has 5 unique pitch notations in the bundled data
 # (ボク:0, ボク:1, シモベ:0, シモベ:3, ヤツガレ:0).
 EXPECTED_BOKU_NOTATIONS: typing.Final[int] = 5
+
+
+class RecordingRaiseOnShowDialog(RaiseOnShowDialog):
+    """RaiseOnShowDialog variant that records raise_ calls."""
+
+    name: str = "ajt__recording_raise_on_show_dialog"
+
+    def __init__(self) -> None:
+        """Initialize the dialog with a raise-call counter."""
+        super().__init__()
+        self.raise_count = 0
+
+    def raise_(self) -> None:
+        """Record that show() requested the dialog to be raised."""
+        self.raise_count += 1
 
 
 class OutsideAnkiScenario(typing.NamedTuple):
@@ -76,6 +89,14 @@ class TestViewPitchAccentsDialog:
     def test_dialog_is_raise_on_show(self, dialog: ViewPitchAccentsDialog) -> None:
         """The persistent dialog raises above other windows when shown."""
         assert isinstance(dialog, RaiseOnShowDialog)
+
+    def test_raise_on_show_calls_raise(self) -> None:
+        """RaiseOnShowDialog.show calls raise_ even when the dialog is already reusable."""
+        dialog = RecordingRaiseOnShowDialog()
+        dialog.show()
+
+        assert dialog.raise_count == 1
+        dialog.hide()
 
     def test_webview_is_no_anki(self, dialog: ViewPitchAccentsDialog) -> None:
         """Outside Anki, the standalone web view with inlined CSS is selected."""

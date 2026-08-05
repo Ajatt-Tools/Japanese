@@ -1,7 +1,11 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
+import json
+import pathlib
 import re
+import typing
+from collections.abc import Sequence
 
 import pytest
 
@@ -10,6 +14,7 @@ from japanese.pitch_accents.common import FormattedEntry
 from japanese.pitch_accents.entry_to_moras import Mora
 from japanese.pitch_accents.entry_to_svg import FormattedEntryToSvgAdapter
 from japanese.pitch_accents.svg_components import (
+    Line,
     Point,
     SvgBlackAndWhiteRole,
     append_class_name,
@@ -17,12 +22,24 @@ from japanese.pitch_accents.svg_components import (
     lookup_component_color,
 )
 from japanese.pitch_accents.svg_graph_renderer import SvgGraphRenderer
-from japanese.pitch_accents.svg_graph_types import PitchLevel, SvgMoraFlag
+from japanese.pitch_accents.svg_graph_types import (
+    ConnectToPrevious,
+    PitchLevel,
+    SvgGraphMora,
+    SvgGraphWord,
+    SvgMoraFlag,
+)
 from playground.utils import NoAnkiConfigView
 from tests.consts import DATA_DIR
 from tests.helpers import extract_group_class_names, make_fresh_config
 
-TEST_ENTRIES = (
+RE_HEX_COLOR: typing.Final = re.compile(r"#[0-9a-fA-F]{6}\b")
+RE_CSS_CLASS_REFERENCE: typing.Final = re.compile(r"\.(?P<class_name>[a-zA-Z_][a-zA-Z0-9_]*)")
+PROJECT_ROOT: typing.Final = pathlib.Path(__file__).resolve().parents[1]
+CONFIG_PATH: typing.Final = PROJECT_ROOT / "japanese" / "config.json"
+PITCH_GRAPH_CSS_PATH: typing.Final = PROJECT_ROOT / "japanese" / "web" / "ajt_pitch_graph.css"
+
+TEST_ENTRIES: typing.Final = (
     FormattedEntry(
         "塵労",
         "ジンロウ",
@@ -80,6 +97,24 @@ TEST_ENTRIES = (
 )
 
 
+class StartsWithTrailingMoraScenario(typing.NamedTuple):
+    """Scenario for SvgGraphWord.starts_with_trailing_mora."""
+
+    moras: Sequence[SvgGraphMora]
+    expected: bool
+
+
+STARTS_WITH_TRAILING_MORA_SCENARIOS: typing.Final[dict[str, StartsWithTrailingMoraScenario]] = {
+    "empty": StartsWithTrailingMoraScenario(moras=(), expected=False),
+    "first_trailing": StartsWithTrailingMoraScenario(
+        moras=(SvgGraphMora(text="", level=PitchLevel.low, flags=SvgMoraFlag.trailing),), expected=True
+    ),
+    "first_normal": StartsWithTrailingMoraScenario(
+        moras=(SvgGraphMora(text="ア", level=PitchLevel.low),), expected=False
+    ),
+}
+
+
 @pytest.mark.parametrize(
     "formatted_entry, svg_file_name",
     [(entry, f"test_{idx}.svg") for idx, entry in enumerate(TEST_ENTRIES)],
@@ -135,34 +170,54 @@ def test_renderer_make_text_element(no_anki_config: NoAnkiConfigView, mora: Mora
     )
 
 
-@pytest.mark.parametrize("formatted_entry", [TEST_ENTRIES[0]])
-def test_heiban_trailing_circle_has_fill_none(
-    no_anki_config: NoAnkiConfigView, formatted_entry: FormattedEntry
-) -> None:
+@pytest.mark.parametrize(
+    "scenario", STARTS_WITH_TRAILING_MORA_SCENARIOS.values(), ids=list(STARTS_WITH_TRAILING_MORA_SCENARIOS.keys())
+)
+def test_starts_with_trailing_mora(scenario: StartsWithTrailingMoraScenario) -> None:
+    """SvgGraphWord reports whether its first mora is a trailing marker."""
+    word = SvgGraphWord(
+        class_name=SvgGraphClassName.heiban,
+        moras=scenario.moras,
+        is_particle=False,
+        connect_to_previous=ConnectToPrevious.none,
+    )
+
+    assert word.starts_with_trailing_mora is scenario.expected
+
+
+def test_line_end_point_raises_before_end_is_set(no_anki_config: NoAnkiConfigView) -> None:
+    """Line.end_point rejects incomplete lines."""
+    with pytest.raises(ValueError):
+        Line(no_anki_config, SvgGraphClassName.heiban).end_point
+
+
+def test_heiban_trailing_circle_has_fill_none(no_anki_config: NoAnkiConfigView) -> None:
     """Heiban dictionary graphs add a trailing hollow circle for following particles."""
     maker = FormattedEntryToSvgAdapter(no_anki_config)
 
-    svg = maker.make_graph(formatted_entry)
+    svg = maker.make_graph(TEST_ENTRIES[0])
 
     assert svg.count('<circle class="trail" fill="none" stroke="gray"') == 1
 
 
 @pytest.mark.parametrize(
-    "formatted_entry, expected_color",
+    "formatted_entry, expected_color, expected_color_pair_count",
     [
-        (TEST_ENTRIES[0], "#005ce6"),
-        (TEST_ENTRIES[1], "#ff6207"),
-        (TEST_ENTRIES[5], "#e60000"),
+        (TEST_ENTRIES[0], "#005ce6", 4),
+        (TEST_ENTRIES[1], "#ff6207", 6),
+        (TEST_ENTRIES[5], "#e60000", 1),
     ],
 )
-def test_svg_attributes_color_mode(formatted_entry: FormattedEntry, expected_color: str) -> None:
+def test_svg_attributes_color_mode(
+    formatted_entry: FormattedEntry, expected_color: str, expected_color_pair_count: int
+) -> None:
     """SVG attribute color mode writes role colors directly into SVG markup."""
     no_anki_config = make_fresh_config()
     no_anki_config.svg_graphs["color_mode"] = SvgGraphColorMode.svg_attributes.name
 
     svg = FormattedEntryToSvgAdapter(no_anki_config).make_graph(formatted_entry)
 
-    assert f'fill="{expected_color}" stroke="{expected_color}"' in svg
+    assert svg.count(f'fill="{expected_color}" stroke="{expected_color}"') == expected_color_pair_count
 
 
 @pytest.mark.parametrize("formatted_entry", TEST_ENTRIES)
@@ -173,9 +228,9 @@ def test_css_color_mode_omits_configured_colors(formatted_entry: FormattedEntry)
 
     svg = FormattedEntryToSvgAdapter(no_anki_config).make_graph(formatted_entry)
 
-    assert 'class="ajt__pitch_svg"' in svg
+    assert svg.count('class="ajt__pitch_svg"') == 1
     # In CSS mode the SVG relies on external CSS for coloring, so no configured hex colors are inlined.
-    assert re.search(r"#[0-9a-fA-F]{6}\b", svg) is None
+    assert RE_HEX_COLOR.search(svg) is None
 
 
 @pytest.mark.parametrize(
@@ -211,6 +266,16 @@ def test_color_mode_falls_back_to_svg_attributes() -> None:
     no_anki_config.svg_graphs["color_mode"] = "invalid_mode"
 
     assert no_anki_config.svg_graphs.color_mode == SvgGraphColorMode.svg_attributes
+
+
+def test_svg_graph_class_names_have_config_colors_and_css_rules() -> None:
+    """Every SVG graph class has a config color and a CSS selector."""
+    class_names = frozenset(class_name.name for class_name in SvgGraphClassName)
+    config = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
+    css_classes = frozenset(RE_CSS_CLASS_REFERENCE.findall(PITCH_GRAPH_CSS_PATH.read_text(encoding="utf-8")))
+
+    assert frozenset(config["svg_graph_colors"]) == class_names
+    assert class_names <= css_classes
 
 
 @pytest.mark.parametrize(

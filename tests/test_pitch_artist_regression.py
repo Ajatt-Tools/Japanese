@@ -20,6 +20,7 @@ from japanese.pitch_artist.pitch_graph import (
 )
 from japanese.pitch_artist.split import ArtistMora, SplitAccent, split_accent
 from playground.utils import NoAnkiConfigView
+from tests.helpers import extract_group_class_names
 
 # The canonical test sentences.
 HEADLESS_SENTENCE = """
@@ -39,6 +40,9 @@ HEADLESS_SENTENCE = """
 """
 
 NUM_EXPECTED_SEQUENCES = 15
+RE_CIRCLE_TAG = re.compile(r"<circle")
+RE_LINE_TAG = re.compile(r"<line")
+RE_TEXT_TAG = re.compile(r"<text")
 
 
 class ExpectedSection(typing.NamedTuple):
@@ -287,7 +291,7 @@ EXPECTED_SVG_STRUCTURE: list[ExpectedSvgStructure] = [
             "lines",
             "heiban",
             "particle atamadaka",
-            "connector",
+            "connector particle atamadaka",
             "circles",
             "heiban",
             "particle atamadaka",
@@ -304,7 +308,7 @@ EXPECTED_SVG_STRUCTURE: list[ExpectedSvgStructure] = [
             "lines",
             "heiban",
             "particle odaka",
-            "connector",
+            "connector particle odaka",
             "circles",
             "heiban",
             "particle odaka",
@@ -520,11 +524,10 @@ class TestSvgRegression:
 
         expected = EXPECTED_SVG_STRUCTURE[index]
 
-        assert len(re.findall(r"<circle", svg)) == expected.num_circles
-        assert len(re.findall(r"<line", svg)) == expected.num_lines
-        assert len(re.findall(r"<text", svg)) == expected.num_texts
-        classes = [match.group("class_name") for match in re.finditer(r'<g class="(?P<class_name>[^"]+)"', svg)]
-        assert classes == expected.css_classes
+        assert len(RE_CIRCLE_TAG.findall(svg)) == expected.num_circles
+        assert len(RE_LINE_TAG.findall(svg)) == expected.num_lines
+        assert len(RE_TEXT_TAG.findall(svg)) == expected.num_texts
+        assert extract_group_class_names(svg) == expected.css_classes
 
 
 class TestApplyKanjiColors:

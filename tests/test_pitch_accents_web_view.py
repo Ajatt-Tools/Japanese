@@ -1,6 +1,7 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
+import typing
 from collections.abc import Sequence
 
 import pytest
@@ -8,10 +9,10 @@ import pytest
 from japanese.pitch_accents.colors import SvgGraphColorMode
 from japanese.widgets import webview
 
-BASE_CSS_REF = "base.css"
-GRAPH_CSS_REF = "graph.css"
-BASE_STYLE_TAG = "<style>base</style>"
-GRAPH_STYLE_TAG = "<style>graph</style>"
+BASE_CSS_REF: typing.Final = "base.css"
+GRAPH_CSS_REF: typing.Final = "graph.css"
+BASE_STYLE_TAG: typing.Final = "<style>base</style>"
+GRAPH_STYLE_TAG: typing.Final = "<style>graph</style>"
 
 
 @pytest.mark.parametrize(

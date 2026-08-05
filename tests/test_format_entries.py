@@ -20,20 +20,20 @@ from japanese.pitch_accents.styles import HTMLPitchPatternStyle
 from playground.utils import NoAnkiConfigView
 from tests.helpers import make_fresh_config
 
-HEIBAN_ENTRY = FormattedEntry("僕", "ボク", "<low_rise>ボ</low_rise><high>ク</high>", "0")
-ATAMADAKA_ENTRY = FormattedEntry("僕", "ボク", "<high_drop>ボ</high_drop><low>ク</low>", "1")
-GAKKOU_ENTRY = FormattedEntry("学校", "ガッコウ", "<low_rise>ガ</low_rise><high>ッコウ</high>", "0")
+HEIBAN_ENTRY: typing.Final = FormattedEntry("僕", "ボク", "<low_rise>ボ</low_rise><high>ク</high>", "0")
+ATAMADAKA_ENTRY: typing.Final = FormattedEntry("僕", "ボク", "<high_drop>ボ</high_drop><low>ク</low>", "1")
+GAKKOU_ENTRY: typing.Final = FormattedEntry("学校", "ガッコウ", "<low_rise>ガ</low_rise><high>ッコウ</high>", "0")
 
 # Expected u_biq renderings (the default html_style in config.json).
-HEIBAN_UBIQ = (
+HEIBAN_UBIQ: typing.Final = (
     '<span style="box-shadow: inset -2px -2px 0 0 #FF6633;">ボ</span>'
     '<span style="box-shadow: inset 0px 2px 0 0px #FF6633;">ク</span>'
 )
-ATAMADAKA_UBIQ = (
+ATAMADAKA_UBIQ: typing.Final = (
     '<span style="box-shadow: inset -2px 2px 0 0px #FF6633;">ボ</span>'
     '<span style="box-shadow: inset 0px -2px 0 0px #FF6633;">ク</span>'
 )
-GAKKOU_UBIQ = (
+GAKKOU_UBIQ: typing.Final = (
     '<span style="box-shadow: inset -2px -2px 0 0 #FF6633;">ガ</span>'
     '<span style="box-shadow: inset 0px 2px 0 0px #FF6633;">ッコウ</span>'
 )
@@ -72,6 +72,23 @@ class TestConvertToInlineStyle:
                 "",
                 HTMLPitchPatternStyle.u_biq_color_coded,
                 '<span style="box-shadow: inset -2px -2px 0 0 currentColor;">ボ</span>',
+            ),
+            (
+                "<low_rise>ボ</low_rise><high>ク</high>",
+                "red",
+                HTMLPitchPatternStyle.none,
+                '<span class="low_rise">ボ</span><span class="high">ク</span>',
+            ),
+            (
+                "<high>ク</high>",
+                "red",
+                HTMLPitchPatternStyle.kanjium,
+                (
+                    '<span style="display:inline-block;position:relative;"><span style="display:inline;">ク</span>'
+                    '<span style="border-color:currentColor;display:block;user-select:none;pointer-events:none;'
+                    "position:absolute;top:0.1em;left:0;right:0;height:0;border-top-width:0.1em;"
+                    'border-top-style:solid;"></span></span>'
+                ),
             ),
         ],
     )
@@ -259,6 +276,10 @@ class TestFormatPronunciations:
             == scenario.expected
         )
 
+    def test_empty_pronunciations_format_to_empty_string(self, no_anki_config: NoAnkiConfigView) -> None:
+        """Empty pronunciation mappings produce an empty output string."""
+        assert EntryFormatter(no_anki_config).format_pronunciations({}, max_results=99) == ""
+
     def test_svg_output_matches_adapter(self, no_anki_config: NoAnkiConfigView) -> None:
         """The svg branch of the internal dispatcher renders through the adapter."""
         formatter = EntryFormatter(no_anki_config)
@@ -303,12 +324,31 @@ class TestPronunciationsToJson:
         formatter = EntryFormatter(no_anki_config)
         assert tuple(formatter.pronunciations_to_json(pronunciations, max_results=max_results)) == expected
 
+    def test_pronunciations_to_json_deduplicates_by_styled_html(self, no_anki_config: NoAnkiConfigView) -> None:
+        """Entries with identical styled HTML collapse to one JSON mora sequence."""
+        formatter = EntryFormatter(no_anki_config)
+
+        assert tuple(
+            formatter.pronunciations_to_json({"僕": [HEIBAN_ENTRY], "ボク": [HEIBAN_ENTRY]}, max_results=99)
+        ) == (
+            {
+                "raw_headword": "僕",
+                "katakana_reading": "ボク",
+                "pitch_number": "0",
+                "pitch_type": "heiban",
+                "moras": [
+                    {"txt": "ボ", "level": "low", "flags": []},
+                    {"txt": "ク", "level": "high", "flags": []},
+                ],
+            },
+        )
+
 
 class TestSvgMakerInjection:
     """An injected SVG adapter is used instead of a newly constructed one."""
 
     def test_injected_svg_maker_is_used(self, no_anki_config: NoAnkiConfigView) -> None:
-        """An injected SVG adapter is used instead of a newly constructed one."""
+        """format_pronunciations renders SVGs through the injected adapter, not a new one."""
         svg_maker = create_autospec(FormattedEntryToSvgAdapter, instance=True)
         svg_maker.make_graph.return_value = "<svg>fake</svg>"
         formatter = EntryFormatter(no_anki_config, svg_maker=svg_maker)

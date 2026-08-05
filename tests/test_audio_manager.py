@@ -43,6 +43,7 @@ def make_source_index(media_dir_abs: str | None = None) -> SourceIndex:
 
 def make_cached_source(
     db: Sqlite3Buddy,
+    *,
     source_url: str,
     media_dir_abs: str | None = None,
     source_name: str = "TEST",
@@ -52,91 +53,27 @@ def make_cached_source(
     return AudioSource(name=source_name, url=source_url, enabled=True, db=db)
 
 
-class MediaDirKind(typing.NamedTuple):
-    """Scenario input that determines which media_dir_abs value to insert.
-
-    'value' is stored verbatim in the source index meta, or omitted when None.
-    'create_dir_name' names a directory to create under tmp_path and use as the
-    media_dir_abs value instead, so the scenario can exercise an existing path.
-    """
-
-    value: str | None
-    create_dir_name: str | None = None
-
-
-class MediaDirScenario(typing.NamedTuple):
-    """Scenario for resolving an audio source media directory."""
-
-    source_name: str
-    source_is_local: bool
-    media_dir_abs: MediaDirKind
-    create_relative_media_dir: bool
-    expected_dir_name: str | None
-
-
-MEDIA_DIR_SCENARIOS: dict[str, MediaDirScenario] = {
-    "local_prefers_sibling_media_over_remote_abs": MediaDirScenario(
-        source_name="TEST_LOCAL_SIBLING",
-        source_is_local=True,
-        media_dir_abs=MediaDirKind(REMOTE_MEDIA_DIR),
-        create_relative_media_dir=True,
-        expected_dir_name=RELATIVE_MEDIA_DIR,
-    ),
-    "local_existing_abs_takes_precedence": MediaDirScenario(
-        source_name="TEST_LOCAL_ABS",
-        source_is_local=True,
-        media_dir_abs=MediaDirKind(value=None, create_dir_name=LOCAL_ABS_MEDIA_DIR),
-        create_relative_media_dir=True,
-        expected_dir_name=LOCAL_ABS_MEDIA_DIR,
-    ),
-    "local_missing_sibling_falls_back_to_remote_abs": MediaDirScenario(
-        source_name="TEST_REMOTE_FALLBACK",
-        source_is_local=True,
-        media_dir_abs=MediaDirKind(REMOTE_MEDIA_DIR),
-        create_relative_media_dir=False,
-        expected_dir_name=None,
-    ),
-    "remote_uses_remote_abs": MediaDirScenario(
-        source_name="TEST_REMOTE_ABS",
-        source_is_local=False,
-        media_dir_abs=MediaDirKind(REMOTE_MEDIA_DIR),
-        create_relative_media_dir=False,
-        expected_dir_name=None,
-    ),
-    "local_without_abs_uses_sibling_media": MediaDirScenario(
-        source_name="TEST_LOCAL_REL",
-        source_is_local=True,
-        media_dir_abs=MediaDirKind(None),
-        create_relative_media_dir=True,
-        expected_dir_name=RELATIVE_MEDIA_DIR,
-    ),
-}
-
-
-def make_source_url(tmp_path: pathlib.Path, scenario: MediaDirScenario) -> str:
-    """Return a local or remote source URL for a media-dir scenario."""
-    if scenario.source_is_local:
+def make_source_url(tmp_path: pathlib.Path, source_is_local: bool) -> str:
+    """Return a local or remote source URL for a media-dir test case."""
+    if source_is_local:
         return str(tmp_path / "index.json")
     return REMOTE_SOURCE_URL
 
 
-def make_media_dir_abs(tmp_path: pathlib.Path, scenario: MediaDirScenario) -> str | None:
-    """Create and return the scenario's media_dir_abs value."""
-    if scenario.media_dir_abs.create_dir_name:
-        media_dir = tmp_path / scenario.media_dir_abs.create_dir_name
-        media_dir.mkdir()
-        return str(media_dir)
-    return scenario.media_dir_abs.value
+def make_media_dir_abs(tmp_path: pathlib.Path, media_dir_abs: str | None) -> str | None:
+    """Resolve a parametrized media_dir_abs value for the test filesystem."""
+    if media_dir_abs == LOCAL_ABS_MEDIA_DIR:
+        return str(tmp_path / LOCAL_ABS_MEDIA_DIR)
+    return media_dir_abs
 
 
-def expected_media_dir(tmp_path: pathlib.Path, scenario: MediaDirScenario) -> str:
-    """Return the expected resolved media directory for a scenario."""
-    if scenario.expected_dir_name:
-        return str(tmp_path / scenario.expected_dir_name)
-    assert (
-        scenario.media_dir_abs.value is not None
-    ), "a scenario without expected_dir_name must declare the media_dir_abs it falls back to"
-    return scenario.media_dir_abs.value
+def expected_media_dir(tmp_path: pathlib.Path, source_is_local: bool, media_dir_abs: str | None) -> str:
+    """Return the expected resolved media directory for the parametrized source."""
+    if resolved_abs := make_media_dir_abs(tmp_path, media_dir_abs):
+        return resolved_abs
+    if source_is_local:
+        return str(tmp_path / RELATIVE_MEDIA_DIR)
+    return "/".join((REMOTE_SOURCE_URL.rsplit("/", maxsplit=1)[0], RELATIVE_MEDIA_DIR))
 
 
 @pytest.fixture()
@@ -170,28 +107,37 @@ def test_get_sources(init_factory: NoAnkiAudioSourceManagerFactory, no_anki_conf
 
 
 class TestAudioSourceMediaDir:
-    """AudioSource.media_dir prefers a usable local directory over the indexed absolute path."""
+    """AudioSource.media_dir returns media_dir_abs verbatim or falls back to the relative media dir."""
 
-    @pytest.mark.parametrize("scenario", MEDIA_DIR_SCENARIOS.values(), ids=list(MEDIA_DIR_SCENARIOS.keys()))
+    @pytest.mark.parametrize(
+        "source_name, source_is_local, media_dir_abs",
+        [
+            ("TEST_LOCAL_REL", True, None),
+            ("TEST_LOCAL_ABS", True, LOCAL_ABS_MEDIA_DIR),
+            ("TEST_REMOTE_ABS", False, REMOTE_MEDIA_DIR),
+            ("TEST_REMOTE_REL", False, None),
+        ],
+    )
     def test_resolves_media_dir(
         self,
         tmp_path: pathlib.Path,
         tmp_sqlite3_db_path: pathlib.Path,
-        scenario: MediaDirScenario,
+        source_name: str,
+        source_is_local: bool,
+        media_dir_abs: str | None,
     ) -> None:
-        """AudioSource.media_dir chooses the best usable media directory."""
-        if scenario.source_is_local:
-            pathlib.Path(make_source_url(tmp_path, scenario)).write_text("{}", encoding="utf-8")
-        if scenario.create_relative_media_dir:
-            tmp_path.joinpath(RELATIVE_MEDIA_DIR).mkdir()
+        """media_dir_abs wins when present; otherwise media_dir is resolved relative to the source URL."""
+        source_url = make_source_url(tmp_path, source_is_local)
+        if source_is_local:
+            pathlib.Path(source_url).write_text("{}", encoding="utf-8")
         with Sqlite3Buddy(tmp_sqlite3_db_path) as db:
             source = make_cached_source(
                 db,
-                make_source_url(tmp_path, scenario),
-                make_media_dir_abs(tmp_path, scenario),
-                source_name=scenario.source_name,
+                source_url=source_url,
+                media_dir_abs=make_media_dir_abs(tmp_path, media_dir_abs),
+                source_name=source_name,
             )
-            assert source.media_dir == expected_media_dir(tmp_path, scenario)
+            assert source.media_dir == expected_media_dir(tmp_path, source_is_local, media_dir_abs)
 
 
 def test_delete_cache(init_factory: NoAnkiAudioSourceManagerFactory) -> None:

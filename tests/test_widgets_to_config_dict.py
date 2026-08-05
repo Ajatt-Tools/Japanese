@@ -147,6 +147,7 @@ class TestChangeEvent:
             QCheckBox,
             QComboBox,
             QPlainTextEdit,
+            ColorEditPicker,
             lambda: EnumSelectCombo(enum_type=SvgGraphReadingFormat),
         ],
     )
@@ -251,19 +252,17 @@ class TestSvgSettingsForm:
         missing_tooltips = [key for key, widget in form._widgets.__dict__.items() if not widget.toolTip()]
         assert missing_tooltips == []
 
-    @pytest.mark.parametrize("font_name", ["Noto Sans CJK JP, sans-serif"])
-    def test_graph_font_name_round_trips_through_config_dict(
-        self, no_anki_config: NoAnkiConfigView, font_name: str
-    ) -> None:
+    def test_graph_font_name_round_trips_through_config_dict(self, no_anki_config: NoAnkiConfigView) -> None:
         form = SvgSettingsForm(config=no_anki_config.svg_graphs)
+        font_name = "Noto Sans CJK JP, sans-serif"
         set_from_cfg(form._widgets.graph_font_name, font_name)
 
         assert as_config_dict(form._widgets.__dict__)["graph_font_name"] == font_name
 
-    @pytest.mark.parametrize("font_name", ["Noto Serif CJK JP, serif"])
-    def test_graph_font_name_emits_opts_changed(self, no_anki_config: NoAnkiConfigView, font_name: str) -> None:
+    def test_graph_font_name_emits_opts_changed(self, no_anki_config: NoAnkiConfigView) -> None:
         """Changing the QPlainTextEdit font-name field emits opts_changed."""
         form = SvgSettingsForm(config=no_anki_config.svg_graphs)
+        font_name = "Noto Serif CJK JP, serif"
         emissions: list[None] = []
         qconnect(form.opts_changed, lambda: emissions.append(None))
 
@@ -294,20 +293,19 @@ class TestStrokeDisarrayLineEdit:
 
 
 class TestSvgSettingsWidget:
-    @pytest.mark.parametrize("expected_interval", [DEBOUNCE_UPDATE_VIEW_MS])
-    def test_debounce_timer_configured(self, no_anki_config: NoAnkiConfigView, expected_interval: int) -> None:
+    """SvgSettingsWidget debounces preview updates and derives its height from the config."""
+
+    def test_debounce_timer_configured(self, no_anki_config: NoAnkiConfigView) -> None:
         """SVG preview updates are delayed by a single-shot debounce timer."""
         widget = SvgSettingsWidget(no_anki_config)
 
         assert widget._update_view_timer.isSingleShot() is True
-        assert widget._update_view_timer.interval() == expected_interval
+        assert widget._update_view_timer.interval() == DEBOUNCE_UPDATE_VIEW_MS
 
-    @pytest.mark.parametrize("font_name", ["Noto Serif CJK JP, serif"])
-    def test_form_signal_schedules_update_without_immediate_render(
-        self, no_anki_config: NoAnkiConfigView, font_name: str
-    ) -> None:
+    def test_form_signal_schedules_update_without_immediate_render(self, no_anki_config: NoAnkiConfigView) -> None:
         """Changing form settings starts the timer instead of reloading the web view immediately."""
         widget = SvgSettingsWidget(no_anki_config)
+        font_name = "Noto Serif CJK JP, serif"
         emissions: list[None] = []
         qconnect(widget._update_view_timer.timeout, lambda: emissions.append(None))
 
@@ -316,12 +314,10 @@ class TestSvgSettingsWidget:
         assert emissions == []
         assert widget._update_view_timer.isActive() is True
 
-    @pytest.mark.parametrize("font_names", [("Noto Serif", "Noto Sans", "Noto Mono")])
-    def test_debounce_coalesces_rapid_changes(
-        self, no_anki_config: NoAnkiConfigView, font_names: tuple[str, ...]
-    ) -> None:
+    def test_debounce_coalesces_rapid_changes(self, no_anki_config: NoAnkiConfigView) -> None:
         """Several rapid setting changes produce one debounced preview update."""
         widget = SvgSettingsWidget(no_anki_config)
+        font_names = ("Noto Serif", "Noto Sans", "Noto Mono")
         emissions: list[None] = []
         qconnect(widget._update_view_timer.timeout, lambda: emissions.append(None))
 
@@ -332,11 +328,9 @@ class TestSvgSettingsWidget:
         assert emissions == [None]
         assert widget._cfg_clone.svg_graphs.graph_font_name == font_names[-1]
 
-    @pytest.mark.parametrize("include_text", [False])
-    def test_preview_changes_do_not_mutate_original_config(
-        self, no_anki_config: NoAnkiConfigView, include_text: bool
-    ) -> None:
+    def test_preview_changes_do_not_mutate_original_config(self, no_anki_config: NoAnkiConfigView) -> None:
         """Preview updates use a config clone until the settings dialog accepts changes."""
+        include_text = False
         original_include_text = no_anki_config.svg_graphs.include_text
         widget = SvgSettingsWidget(no_anki_config)
 
@@ -353,7 +347,7 @@ class TestSvgSettingsWidget:
         widget = SvgSettingsWidget(no_anki_config)
 
         assert widget._web_view.minimumHeight() == (
-            no_anki_config.svg_graphs.graph_visible_height + SVG_SETTINGS_BODY_VERTICAL_PADDING
+            widget._cfg_clone.svg_graphs.graph_visible_height + SVG_SETTINGS_BODY_VERTICAL_PADDING
         )
 
     def test_preview_webview_size_policy_prefers_vertical_expansion(self, no_anki_config: NoAnkiConfigView) -> None:
