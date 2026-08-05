@@ -100,6 +100,16 @@ RE_FIND_COUNTRY = re.compile(r"\((?:Male|Female) from (?P<country>[^()]+)")
 RE_PLAY_ARG = re.compile(r"(?P<play_arg>[^',()]+)")
 
 
+@enum.unique
+class PlayArgIndex(enum.Enum):
+    """Positional indices of the normalized and raw file path arguments in Forvo's Play()."""
+
+    ogg_normalized = 5
+    ogg_raw = 2
+    mp3_normalized = 4
+    mp3_raw = 1
+
+
 def find_username(result: PageElement) -> str:
     """
     Capture the username of the user.
@@ -263,9 +273,9 @@ class ForvoClient:
         # /mp3 is raw and has the filename in the 2nd argument of Play encoded
 
         if self._config.audio_format == ForvoAudioFormat.ogg:
-            normalized_arg, raw_arg = 5, 2
+            normalized_arg, raw_arg = PlayArgIndex.ogg_normalized.value, PlayArgIndex.ogg_raw.value
         elif self._config.audio_format == ForvoAudioFormat.mp3:
-            normalized_arg, raw_arg = 4, 1
+            normalized_arg, raw_arg = PlayArgIndex.mp3_normalized.value, PlayArgIndex.mp3_raw.value
         else:
             raise ValueError(f"unsupported audio format: {self._config.audio_format.name}")
 
