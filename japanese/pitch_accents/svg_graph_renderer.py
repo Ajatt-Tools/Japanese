@@ -129,12 +129,15 @@ class SvgGraphRenderer:
             f'cx="{pos.x:.3f}" cy="{pos.y:.3f}" r="{self._cfg.svg_graphs.circle_radius:.2f}" />'
         )
 
-    def _circle_color_for_mora(self, *, is_trailing: bool, is_particle: bool, word_color: str) -> str:
-        """Resolve the final circle color for one mora."""
+    def _circle_color_for_mora(self, *, is_trailing: bool, word_color: str) -> str:
+        """Resolve the final circle color for one mora.
+
+        word_color already encodes the section's role color: a plain particle
+        section carries the particle class (gray), while a particle with an
+        explicit pitch accent (e.g. ぐらい;pa) carries the accent's class.
+        """
         if is_trailing:
             return trail_color(self._cfg)
-        if is_particle:
-            return lookup_component_color(self._cfg, SvgBlackAndWhiteRole.word, SvgGraphClassName.particle)
         return word_color
 
     def make_devoiced_circle(self, pos: Point, *, multi_char: bool, circle_color: str) -> str:
@@ -239,7 +242,6 @@ class SvgGraphRenderer:
                     pos.replace(),
                     circle_color=self._circle_color_for_mora(
                         is_trailing=mora.is_trailing,
-                        is_particle=section.is_particle,
                         word_color=word_color,
                     ),
                     is_trailing=mora.is_trailing,
