@@ -3,8 +3,8 @@
 
 from aqt.qt import *
 
-from japanese.pitch_artist.pitch_graph import SvgPitchArtistGraphMaker
 from japanese.helpers.webview_utils import graphs_inline_css_style_tag
+from japanese.pitch_artist.pitch_graph import SvgPitchArtistGraphMaker
 from playground.utils import NoAnkiConfigView
 
 CSS_INLINE = """
