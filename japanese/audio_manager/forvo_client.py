@@ -110,6 +110,17 @@ class PlayArgIndex(enum.Enum):
     mp3_raw = 1
 
 
+def preference_index(value: str | None, preferred: Sequence[str]) -> int:
+    """Return the value's position in the preferred list, or sys.maxsize if absent."""
+    # Country may be None when the regex misses; treat such pronunciations as unpreferred.
+    if value is None:
+        return sys.maxsize
+    try:
+        return preferred.index(value.lower())
+    except ValueError:
+        return sys.maxsize
+
+
 def find_username(result: PageElement) -> str:
     """
     Capture the username of the user.
@@ -233,32 +244,21 @@ class ForvoClient:
             pronunciations.append(pronunciation)
         return pronunciations
 
+    def _sort_key(self, pronunciation: ForvoPronunciation) -> tuple[int, int]:
+        """Return the (username, country) preference index pair used for sorting."""
+        # If the username isn't in the preferred lists, put it at the end
+        return (
+            preference_index(pronunciation.username, self._config.preferred_usernames),
+            preference_index(pronunciation.country, self._config.preferred_countries),
+        )
+
     def sort_pronunciations(self, pronunciations: list[ForvoPronunciation]) -> list[ForvoPronunciation]:
+        """Order the list based on preferred_usernames and preferred_countries.
+
+        Preferred usernames take priority over preferred countries.
+        If a value isn't in the preferred lists, the pronunciation goes last.
         """
-        Order the list based on preferred_usernames and preferred_countries
-        Preferred usernames takes priority over preferred countries
-        """
-
-        def username_key(pronunciation: ForvoPronunciation) -> int:
-            try:
-                return self._config.preferred_usernames.index(pronunciation.username.lower())
-            except ValueError:
-                return sys.maxsize
-
-        def country_key(pronunciation: ForvoPronunciation) -> int:
-            # Country may be None when the regex misses; treat such pronunciations as unpreferred.
-            if pronunciation.country is None:
-                return sys.maxsize
-            try:
-                return self._config.preferred_countries.index(pronunciation.country.lower())
-            except ValueError:
-                return sys.maxsize
-
-        def sort_key(pronunciation: ForvoPronunciation) -> tuple[int, int]:
-            # If the username isn't in the preferred lists, put it at the end
-            return username_key(pronunciation), country_key(pronunciation)
-
-        return sorted(pronunciations, key=sort_key)
+        return sorted(pronunciations, key=self._sort_key)
 
     def _extract_url(self, element: Tag) -> str:
         play = element["onclick"]
