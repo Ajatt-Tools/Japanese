@@ -27,7 +27,9 @@ class SourceMetaRequired(TypedDict):
 class SourceMeta(SourceMetaRequired, total=False):
     """Audio source metadata; media_dir_abs is optional.
 
-    media_dir_abs is injected only by release tooling for online (remote) sources.
+    media_dir_abs is usually injected by release tooling as a URL prefix into
+    online (release) indexes, but custom or unreleased sources may set it to a
+    local path. Offline (local) indexes never contain it.
     typing.NotRequired is avoided because it is unavailable on the Python versions Anki supports.
     """
 

@@ -2,8 +2,7 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 # Formatting helpers for pitch accent entries.
-# This module has no import-time side effects and never touches the Anki-only global config.
-# EntryFormatter holds the config and SVG adapter explicitly.
+# EntryFormatter receives config and SVG adapter dependencies explicitly, so
 # reading.py keeps only the Anki entry point globals and generate_furigana().
 
 from collections import OrderedDict

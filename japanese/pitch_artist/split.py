@@ -102,11 +102,14 @@ def kana_to_moras(kana: str) -> list[str]:
 
 @dataclasses.dataclass(frozen=True)
 class ArtistMora:
+    """One parsed Pitch Artist mora with SVG rendering flags."""
+
     text: str
     flags: SvgMoraFlag
 
     @classmethod
     def from_text(cls, text: str) -> "ArtistMora":
+        """Create a mora from notation text, extracting devoiced and trailing markers."""
         flags = SvgMoraFlag(0)
         if text.startswith(DEVOICED_PREFIX):
             flags |= SvgMoraFlag.devoiced

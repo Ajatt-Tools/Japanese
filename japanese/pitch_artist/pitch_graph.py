@@ -245,6 +245,7 @@ def clean_non_printable_chars(word: str) -> str:
 
 
 def make_section(raw_section: str, cfg: JapaneseConfig) -> Section:
+    """Parse one raw Pitch Artist section and resolve its role, pitch, and mora data."""
     sdict: SectionParts = split_section(raw_section)
     moras = prepare_moras(sdict.word, cfg)
     accent = split_accent(sdict.accent)

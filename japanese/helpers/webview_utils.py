@@ -53,5 +53,5 @@ def inline_css_style_tag(css_file_name: str) -> str:
 
 
 def graphs_inline_css_style_tag() -> str:
-    """Return the CSS stylesheet for styling pitch accent SVG graphs."""
+    """Return a <style> tag with the pitch graph CSS inlined, for styling SVG graphs."""
     return inline_css_style_tag(PITCH_GRAPH_CSS_FILE_NAME)

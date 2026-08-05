@@ -49,7 +49,8 @@ SHOW_ENTRIES = (
     ),
 )
 DEBOUNCE_UPDATE_VIEW_MS = 200
-SVG_SETTINGS_BODY_VERTICAL_PADDING = 8  # padding=3 + border=1
+# Vertical body chrome: top+bottom padding (3*2) plus top+bottom border (1*2).
+SVG_SETTINGS_BODY_VERTICAL_PADDING = 8
 
 
 class SvgPitchColorCodesSettingsForm(MultiColumnSettingsForm):

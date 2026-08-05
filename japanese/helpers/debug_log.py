@@ -7,9 +7,16 @@ from aqt.addons import AddonManager
 
 
 def get_logger() -> logging.Logger:
-    """Return Anki's add-on logger with messages visible by default."""
+    """Return Anki's add-on logger with messages visible by default.
+
+    The level is set to DEBUG so diagnostic messages are not dropped.
+    Outside Anki (tests, playground), where Anki's log handler is absent,
+    a stderr StreamHandler is attached and propagation is disabled so
+    messages are not duplicated under logging.basicConfig() or pytest.
+    """
     logger = AddonManager.get_logger(__name__)
     logger.setLevel(logging.DEBUG)
     if not mw and not logger.handlers:
         logger.addHandler(logging.StreamHandler())
+        logger.propagate = False
     return logger

@@ -51,9 +51,9 @@ class AudioSource(AudioSourceConfig):
         may set it to a local path. Offline indexes never contain it and fall
         back to the media dir beside the source file.
         """
-        # Meta can specify absolute path to the media dir,
-        # which will be used if set.
-        # Otherwise, fall back to relative path.
+        # Release indexes may specify media_dir_abs as a remote media URL.
+        # Custom or unreleased sources may specify it as a local path.
+        # Otherwise, fall back to the media dir relative to the source URL.
         self.raise_if_not_ready()
         assert self.db, "db must be set."
         if media_dir_abs := self.db.get_media_dir_abs(self.name):

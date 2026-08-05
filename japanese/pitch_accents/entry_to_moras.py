@@ -15,6 +15,8 @@ from .svg_graph_types import PitchLevel, SvgMoraFlag
 
 @dataclasses.dataclass
 class Quark:
+    """Text fragment with SVG rendering flags attached."""
+
     txt: str
     flags: SvgMoraFlag
 
@@ -26,6 +28,7 @@ class Mora:
     flags: SvgMoraFlag
 
     def dx_units(self) -> int:
+        """Return base text unit count used for text dx alignment."""
         # Note: Quark is a dataclass, not a subclass of str.
         return sum(1 for char in self.txt if isinstance(char, str))
 
@@ -68,6 +71,7 @@ class MoraSequence(typing.NamedTuple):
 
 
 def html_notation_to_moras(html_notation: str) -> list[Mora]:
+    """Parse formatted pitch HTML notation into renderable mora objects."""
     moras: list[Mora] = []
     current_level: PitchLevel = PitchLevel.low
     current_flags = SvgMoraFlag(0)
@@ -109,6 +113,7 @@ def html_notation_to_moras(html_notation: str) -> list[Mora]:
 
 
 def entry_to_moras(entry: FormattedEntry, enable_trailing_mora: bool = True) -> MoraSequence:
+    """Convert a formatted dictionary entry to a mora sequence for SVG rendering."""
     moras = html_notation_to_moras(entry.html_notation)
     pitch_type = pitch_type_from_pitch_num(entry.pitch_number, len(moras))
     if enable_trailing_mora and (pitch_type == PitchType.heiban or len(moras) == 1):
@@ -120,4 +125,5 @@ def entry_to_moras(entry: FormattedEntry, enable_trailing_mora: bool = True) -> 
 
 
 def mora_flags2class_name(flags: SvgMoraFlag) -> str:
+    """Return a space-separated CSS class string for the given mora flags."""
     return " ".join(flag.name for flag in SvgMoraFlag if flag.name and flag in flags)
