@@ -37,6 +37,10 @@ if mw is None:
         return text  # noop
 
 
+TOOLTIP_ERROR_PERIOD_MS = 7000
+TOOLTIP_LOADING_PERIOD_MS = 2000
+
+
 class SearchBar(QWidget):
     """
     Combines a line edit and a search button.
@@ -321,10 +325,15 @@ class AnkiAudioSearchDialog(AudioSearchDialog, AnkiSaveAndRestoreGeomDialog):
         self._search_result_label.hide_count()
         sound.av_player.play_tags([SoundOrVideoTag(filename=result.actual_filename) for result in results.successes])
         if results.fails and (txt := format_report_errors_msg(results.fails)):
-            tooltip(msg=txt, parent=self, period=7000, y_offset=calc_tooltip_offset(len(results.fails)))
+            tooltip(
+                msg=txt,
+                parent=self,
+                period=TOOLTIP_ERROR_PERIOD_MS,
+                y_offset=calc_tooltip_offset(len(results.fails)),
+            )
 
     def _open_audio_file(self, file: FileUrlData) -> None:
-        tooltip(tr.qt_misc_loading(), period=1000)
+        tooltip(tr.qt_misc_loading(), period=TOOLTIP_LOADING_PERIOD_MS)
         assert mw and mw.col, "Collection must be opened."
         if os.path.isfile(file.url):
             open_file(file.url)
