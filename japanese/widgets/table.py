@@ -3,7 +3,6 @@
 
 import re
 from collections.abc import Collection, Iterable, Sequence
-from typing import Optional
 
 from aqt.qt import *
 
@@ -13,7 +12,7 @@ def is_ctrl_v_pressed(event: QKeyEvent) -> bool:
 
 
 UNUSED = -1
-CellContent = Union[QTableWidgetItem, QWidget]
+CellContent = QTableWidgetItem | QWidget
 TableRow = Sequence[CellContent]
 
 
@@ -107,7 +106,7 @@ class ExpandingTableWidget(QTableWidget):
         elif is_empty_not_last_row(row_cells):
             self.removeRow(row_n)
 
-    def addRow(self, cells: Iterable[Union[str, QWidget]], row_idx: int | None = None) -> None:
+    def addRow(self, cells: Iterable[str | QWidget], row_idx: int | None = None) -> None:
         if row_idx is None:
             # Insert before the last row, since the last row is always an empty row for new data.
             row_idx = self.rowCount() - 1
@@ -115,7 +114,7 @@ class ExpandingTableWidget(QTableWidget):
         for col_n, cell_content in enumerate(cells):
             self.insertCellContent(row_n, col_n, cell_content)
 
-    def insertCellContent(self, row_n: int, col_n: int, content: Union[str, QWidget]) -> None:
+    def insertCellContent(self, row_n: int, col_n: int, content: str | QWidget) -> None:
         """
         Depending on the type of content, either set a new item, or set a cell widget.
         """

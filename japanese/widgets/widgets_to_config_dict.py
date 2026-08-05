@@ -11,7 +11,7 @@ from ..widgets.addon_opts import WordsEdit
 from .enum_selector import FlagSelectCombo
 
 
-def set_from_cfg(widget: QWidget, value: Union[bool, str, int, float, enum.Enum]) -> None:
+def set_from_cfg(widget: QWidget, value: bool | str | int | float | enum.Enum) -> None:
     """Set a widget's value from a configuration value based on the widget type."""
     if isinstance(widget, QDoubleSpinBox) and isinstance(value, (int, float)):
         widget.setValue(value)
@@ -53,7 +53,7 @@ def change_event(widget: QWidget) -> pyqtBoundSignal:
         raise ValueError(f"unknown type: {type(widget).__name__}")
 
 
-def get_from_widget(widget: QWidget) -> Union[bool, str, int, float]:
+def get_from_widget(widget: QWidget) -> bool | str | int | float:
     """Extract the current value from a widget based on its type."""
     if isinstance(widget, (QDoubleSpinBox, QSpinBox)):
         return widget.value()
@@ -79,5 +79,5 @@ def get_from_widget(widget: QWidget) -> Union[bool, str, int, float]:
         raise ValueError(f"Don't know how to handle widget of type {type(widget).__name__}.")
 
 
-def as_config_dict(widgets: dict[str, QWidget]) -> dict[str, Union[bool, str, int, float]]:
+def as_config_dict(widgets: dict[str, QWidget]) -> dict[str, bool | str | int | float]:
     return {key: get_from_widget(widget) for key, widget in widgets.items()}

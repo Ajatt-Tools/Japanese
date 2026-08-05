@@ -2,7 +2,6 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 from collections.abc import Iterable, MutableSequence
-from typing import Union
 
 from ..helpers.inflections import longest_kana_suffix
 from ..helpers.tokens import Token
@@ -18,7 +17,7 @@ from .attach_rules import (
     TAPE_PAIRS,
 )
 
-AnyToken = Union[AccDbParsedToken, Token]
+AnyToken = AccDbParsedToken | Token
 
 
 class TokenAccessError(Exception):

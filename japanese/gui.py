@@ -237,7 +237,7 @@ class ProfileEditForm(QGroupBox):
         self._form.overwrite_destination.setChecked(profile.overwrite_destination)
         self._repopulate_fields(profile)
 
-    def _as_dict(self) -> dict[str, Union[str, bool]]:
+    def _as_dict(self) -> dict[str, str | bool]:
         return self._last_used_profile.as_config_dict() | as_config_dict(self._form.__dict__)
 
     def _make_layout(self) -> QLayout:

@@ -390,7 +390,7 @@ class ForvoSettingsForm(SettingsForm):
         self._widgets.preferred_countries.setToolTip("A comma-separated list of countries that will be sorted higher.")
 
 
-SvgOptSpinbox = Union[PxNarrowSpinBox, PxDoubleNarrowSpinBox]
+SvgOptSpinbox = PxNarrowSpinBox | PxDoubleNarrowSpinBox
 
 
 def make_px_spin_box(initial_value: NumericValue) -> SvgOptSpinbox:
