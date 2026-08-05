@@ -3,6 +3,20 @@
  * License: GNU AGPL, version 3 or later; https://www.gnu.org/licenses/agpl-3.0.html
  */
 
+/* Other elements.
+ * Declared before the role classes so that a particle with an explicit pitch
+ * accent (e.g. <g class="particle atamadaka">) inherits the accent's color,
+ * while plain particles keep the gray color below. */
+
+.connector,
+.particle,
+.setsubigo,
+.keihan_particle,
+.keihan_setsubigo,
+.p {
+    color: gray;
+}
+
 /* Tokyo accents */
 
 .atamadaka {
@@ -72,17 +86,6 @@
 
 .keihan_kifuku {
     color: #c65cf0;
-}
-
-/* Other elements */
-
-.connector,
-.particle,
-.setsubigo,
-.keihan_particle,
-.keihan_setsubigo,
-.p {
-    color: gray;
 }
 
 /* SVG rules */
