@@ -287,11 +287,12 @@ class SvgGraphRenderer:
 
         for section in graph.sections:
             rendered = self._render_section(section, start_pos)
-            paths.append(make_group([rendered.path], section_css_class(section)))
+            css_class = section_css_class(section)
+            paths.append(make_group([rendered.path], css_class))
             if rendered.connector:
                 paths.append(rendered.connector)
-            circles.append(make_group([rendered.circles], section_css_class(section)))
-            text.append(make_group([rendered.text], section_css_class(section)))
+            circles.append(make_group([rendered.circles], css_class))
+            text.append(make_group([rendered.text], css_class))
             start_pos = rendered.pos
 
         return RenderedGraphComponents(
