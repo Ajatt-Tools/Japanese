@@ -79,7 +79,7 @@ class AnkiSVGPreviewWebView(ZoomableWebViewMixin, AnkiWebView):
 class NoAnkiSVGPreviewWebView(ZoomableWebViewMixin, NoAnkiWebView):
     """Web view for the pitch accent lookup dialog in standalone runs (playground, tests)."""
 
-    def __init__(self, css_file_names: Sequence[str], parent: QWidget | None):
+    def __init__(self, css_file_names: Sequence[str], parent: QWidget | None) -> None:
         super().__init__(parent)
         self._css_file_names = css_file_names
 
