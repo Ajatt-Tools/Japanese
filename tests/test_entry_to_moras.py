@@ -63,6 +63,7 @@ def mora_char_to_str(char: Quark | str) -> str:
     ],
 )
 def test_split_html_notation(html_notation: str, expected: list[str]) -> None:
+    """HTML pitch notation splits into tag and text tokens."""
     assert list(split_html_notation(html_notation)) == expected
 
 
@@ -80,6 +81,7 @@ def test_split_html_notation(html_notation: str, expected: list[str]) -> None:
     ],
 )
 def test_html_notation_to_moras(html_notation: str, expected: list[str]) -> None:
+    """HTML pitch notation converts to moras with the expected text content."""
     moras = html_notation_to_moras(html_notation)
     as_list_str = ["".join(mora_char_to_str(char) for char in mora.txt) for mora in moras]
     assert as_list_str == expected
@@ -191,6 +193,8 @@ def test_html_notation_to_moras(html_notation: str, expected: list[str]) -> None
 def test_entry_to_moras(
     entry: FormattedEntry, expected_hl: list[str], pitch_type: PitchType, devoiced_pos: list[int], nasal_pos: list[int]
 ) -> None:
+    """Dictionary entries convert to mora sequences with levels, pitch type, and flags."""
+
     def mora_text_to_str(mora_txt: list[str | Quark]) -> str:
         return "".join(mora_char_to_str(char) for char in mora_txt)
 
@@ -202,10 +206,17 @@ def test_entry_to_moras(
     assert all(SvgMoraFlag.nasal in moras.moras[pos].flags for pos in nasal_pos)
 
 
-def test_mora_flags2class_name() -> None:
-    assert mora_flags2class_name(SvgMoraFlag.nasal | SvgMoraFlag.devoiced) == "nasal devoiced"
-    assert mora_flags2class_name(SvgMoraFlag.nasal) == "nasal"
-    assert mora_flags2class_name(SvgMoraFlag.devoiced) == "devoiced"
+@pytest.mark.parametrize(
+    "flags, expected",
+    [
+        (SvgMoraFlag.nasal | SvgMoraFlag.devoiced, "nasal devoiced"),
+        (SvgMoraFlag.nasal, "nasal"),
+        (SvgMoraFlag.devoiced, "devoiced"),
+    ],
+)
+def test_mora_flags2class_name(flags: SvgMoraFlag, expected: str) -> None:
+    """Mora flags map to their CSS class names."""
+    assert mora_flags2class_name(flags) == expected
 
 
 @pytest.mark.parametrize(
@@ -220,4 +231,5 @@ def test_mora_flags2class_name() -> None:
     ],
 )
 def test_mora_is_multi_char(mora: Mora, expected: bool) -> None:
+    """Combination-kana moras count as multi-character; quarks do not widen a mora."""
     assert mora.is_multi_char() is expected

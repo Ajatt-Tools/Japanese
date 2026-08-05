@@ -8,6 +8,7 @@ from unittest.mock import create_autospec
 import pytest
 
 from japanese.helpers.profiles import PitchOutputFormat
+from japanese.pitch_accents.basic_types import PitchType
 from japanese.pitch_accents.common import AccentDict, FormattedEntry
 from japanese.pitch_accents.entry_to_svg import FormattedEntryToSvgAdapter
 from japanese.pitch_accents.format_entries import (
@@ -127,24 +128,6 @@ class TestUpdateHtml:
             # Default u_biq style: color is baked in.
             (HEIBAN_ENTRY, HTMLPitchPatternStyle.u_biq, HEIBAN_UBIQ),
             (ATAMADAKA_ENTRY, HTMLPitchPatternStyle.u_biq, ATAMADAKA_UBIQ),
-            # Color-coded style: heiban color from the default config.
-            (
-                HEIBAN_ENTRY,
-                HTMLPitchPatternStyle.u_biq_color_coded,
-                (
-                    '<span style="box-shadow: inset -2px -2px 0 0 #3366CC;">ボ</span>'
-                    '<span style="box-shadow: inset 0px 2px 0 0px #3366CC;">ク</span>'
-                ),
-            ),
-            # Color-coded style: atamadaka color from the default config.
-            (
-                ATAMADAKA_ENTRY,
-                HTMLPitchPatternStyle.u_biq_color_coded,
-                (
-                    '<span style="box-shadow: inset -2px 2px 0 0px red;">ボ</span>'
-                    '<span style="box-shadow: inset 0px -2px 0 0px red;">ク</span>'
-                ),
-            ),
             # javdejong style.
             (
                 HEIBAN_ENTRY,
@@ -163,6 +146,40 @@ class TestUpdateHtml:
         """The requested style and the entry's pitch color are both applied."""
         formatter = EntryFormatter(no_anki_config)
         assert formatter.update_html(entry, pitch_accent_style) == expected
+
+    @pytest.mark.parametrize(
+        "entry, pitch_type, expected_template",
+        [
+            # Color-coded style: the entry's pitch color is resolved from the config.
+            (
+                HEIBAN_ENTRY,
+                PitchType.heiban,
+                (
+                    '<span style="box-shadow: inset -2px -2px 0 0 {color};">ボ</span>'
+                    '<span style="box-shadow: inset 0px 2px 0 0px {color};">ク</span>'
+                ),
+            ),
+            (
+                ATAMADAKA_ENTRY,
+                PitchType.atamadaka,
+                (
+                    '<span style="box-shadow: inset -2px 2px 0 0px {color};">ボ</span>'
+                    '<span style="box-shadow: inset 0px -2px 0 0px {color};">ク</span>'
+                ),
+            ),
+        ],
+    )
+    def test_update_html_color_coded(
+        self,
+        no_anki_config: NoAnkiConfigView,
+        entry: FormattedEntry,
+        pitch_type: PitchType,
+        expected_template: str,
+    ) -> None:
+        """Color-coded spans use the pitch color configured for the entry's accent type."""
+        formatter = EntryFormatter(no_anki_config)
+        expected = expected_template.format(color=no_anki_config.pitch_color_codes.lookup_color(pitch_type))
+        assert formatter.update_html(entry, HTMLPitchPatternStyle.u_biq_color_coded) == expected
 
     def test_update_html_hiragana(self) -> None:
         """When output_hiragana is enabled, katakana inside spans is converted to hiragana."""
@@ -280,6 +297,15 @@ class TestFormatPronunciations:
         """Empty pronunciation mappings produce an empty output string."""
         assert EntryFormatter(no_anki_config).format_pronunciations({}, max_results=99) == ""
 
+    def test_words_with_empty_entries_are_skipped(self, no_anki_config: NoAnkiConfigView) -> None:
+        """Words whose entry list is empty are omitted from the output."""
+        formatter = EntryFormatter(no_anki_config)
+        assert formatter.format_pronunciations({"僕": []}, max_results=99, expr_sep="：") == ""
+        assert (
+            formatter.format_pronunciations({"僕": [], "学校": [GAKKOU_ENTRY]}, max_results=99, expr_sep="：")
+            == f"学校：{GAKKOU_UBIQ}"
+        )
+
     def test_svg_output_matches_adapter(self, no_anki_config: NoAnkiConfigView) -> None:
         """The svg branch of the internal dispatcher renders through the adapter."""
         formatter = EntryFormatter(no_anki_config)
@@ -323,6 +349,12 @@ class TestPronunciationsToJson:
         """Each styled entry maps to one mora sequence dict, limited by max_results."""
         formatter = EntryFormatter(no_anki_config)
         assert tuple(formatter.pronunciations_to_json(pronunciations, max_results=max_results)) == expected
+
+    def test_pronunciations_to_json_preserves_word_order(self, no_anki_config: NoAnkiConfigView) -> None:
+        """JSON sequences follow the insertion order of the pronunciation mapping."""
+        formatter = EntryFormatter(no_anki_config)
+        result = formatter.pronunciations_to_json({"学校": [GAKKOU_ENTRY], "僕": [HEIBAN_ENTRY]}, max_results=99)
+        assert [entry["raw_headword"] for entry in result] == ["学校", "僕"]
 
     def test_pronunciations_to_json_deduplicates_by_styled_html(self, no_anki_config: NoAnkiConfigView) -> None:
         """Entries with identical styled HTML collapse to one JSON mora sequence."""

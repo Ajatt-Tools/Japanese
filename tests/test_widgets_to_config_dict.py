@@ -17,6 +17,7 @@ from japanese.ajt_common.color_picker import ColorEditPicker
 from japanese.ajt_common.enum_select_combo import EnumSelectCombo
 from japanese.ajt_common.grab_key import ShortCutGrabButton
 from japanese.config_view import SvgGraphReadingFormat
+from japanese.pitch_accents.colors import SvgGraphClassName
 from japanese.widgets.addon_opts import (
     AJTPlainTextEdit,
     PxDoubleNarrowSpinBox,
@@ -29,6 +30,7 @@ from japanese.widgets.settings_form import SvgSettingsForm
 from japanese.widgets.svg_settings import (
     DEBOUNCE_UPDATE_VIEW_MS,
     SVG_SETTINGS_BODY_VERTICAL_PADDING,
+    SvgPitchColorCodesSettingsForm,
     SvgSettingsWidget,
 )
 from japanese.widgets.widgets_to_config_dict import (
@@ -193,7 +195,14 @@ class TestAsConfigDict:
 
 
 class TestSvgGraphNumerics:
+    """Verify that numerics() does not return boolean config keys.
+
+    bool is a subclass of int in Python, so a naive isinstance(value, (int, float))
+    check would incorrectly include booleans. This test guards against that regression.
+    """
+
     def test_numerics_exclude_boolean_keys(self, no_anki_config: NoAnkiConfigView) -> None:
+        """Boolean config keys are excluded from the numeric spinbox set."""
         numeric_keys = {item.cfg_key for item in no_anki_config.svg_graphs.numerics()}
         bool_keys = set(no_anki_config.svg_graphs.bool_keys())
         assert numeric_keys.isdisjoint(bool_keys)
@@ -356,3 +365,48 @@ class TestSvgSettingsWidget:
 
         assert widget._web_view.sizePolicy().horizontalPolicy() == QSizePolicy.Policy.Expanding
         assert widget._web_view.sizePolicy().verticalPolicy() == QSizePolicy.Policy.MinimumExpanding
+
+
+class TestSvgPitchColorCodesSettingsForm:
+    """The SVG color form builds one picker per SVG graph class and exports their colors."""
+
+    def test_one_picker_per_svg_graph_class(self, no_anki_config: NoAnkiConfigView) -> None:
+        """Every SVG graph class gets exactly one color picker."""
+        form = SvgPitchColorCodesSettingsForm(no_anki_config.svg_graph_colors)
+
+        assert set(form._widgets.__dict__) == {member.name for member in SvgGraphClassName}
+
+    def test_pickers_initialized_with_config_colors(self, no_anki_config: NoAnkiConfigView) -> None:
+        """Each picker is initialized with the configured color for its class."""
+        form = SvgPitchColorCodesSettingsForm(no_anki_config.svg_graph_colors)
+
+        assert {member.name: getattr(form._widgets, member.name).color_hex() for member in SvgGraphClassName} == {
+            member.name: no_anki_config.svg_graph_colors.lookup_color(member) for member in SvgGraphClassName
+        }
+
+    def test_svg_colors_as_dict_round_trips(self, no_anki_config: NoAnkiConfigView) -> None:
+        """svg_colors_as_dict exports the configured colors unchanged."""
+        widget = SvgSettingsWidget(no_anki_config)
+
+        assert widget.svg_colors_as_dict() == {
+            member.name: no_anki_config.svg_graph_colors.lookup_color(member) for member in SvgGraphClassName
+        }
+
+    def test_svg_settings_as_dict_round_trips(self, no_anki_config: NoAnkiConfigView) -> None:
+        """svg_settings_as_dict exports current SVG graph settings."""
+        widget = SvgSettingsWidget(no_anki_config)
+
+        assert widget.svg_settings_as_dict() == widget._form.as_dict()
+
+    @pytest.mark.parametrize("class_name, color", [(SvgGraphClassName.heiban, "#123456")])
+    def test_color_change_emits_opts_changed(
+        self, no_anki_config: NoAnkiConfigView, class_name: SvgGraphClassName, color: str
+    ) -> None:
+        """Changing a color picker emits opts_changed."""
+        form = SvgPitchColorCodesSettingsForm(no_anki_config.svg_graph_colors)
+        emissions: list[None] = []
+        qconnect(form.opts_changed, lambda: emissions.append(None))
+
+        getattr(form._widgets, class_name.name).set_color(color)
+
+        assert emissions == [None]

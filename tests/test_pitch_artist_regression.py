@@ -20,29 +20,15 @@ from japanese.pitch_artist.pitch_graph import (
 )
 from japanese.pitch_artist.split import ArtistMora, SplitAccent, split_accent
 from playground.utils import NoAnkiConfigView
-from tests.helpers import extract_group_class_names
+from tests.helpers import (
+    HEADLESS_SENTENCE,
+    NUM_EXPECTED_SEQUENCES,
+    extract_group_class_names,
+)
 
-# The canonical test sentences.
-HEADLESS_SENTENCE = """
-大物[おおもの];2 ; まで;1
-じんせい;1 | まで;1
-じんせい;1 ; まで;a-1
-つかう; , つかった;-
-稼[かせ]いで;k2. がっこう;
-がっこう;1. つくった;2.
-君[dきdみ]; dの 嘘[dうdそ];1 dを.
-自分[じぶん]; じゃ | できない;k2.
-ひとり;1-
-ひとり;2-
-ひとり;3-
-よねん; ぐらい;pa
-よねん; ぐらい;po1
-"""
-
-NUM_EXPECTED_SEQUENCES = 15
-RE_CIRCLE_TAG = re.compile(r"<circle")
-RE_LINE_TAG = re.compile(r"<line")
-RE_TEXT_TAG = re.compile(r"<text")
+RE_CIRCLE_TAG: typing.Final = re.compile(r"<circle")
+RE_LINE_TAG: typing.Final = re.compile(r"<line")
+RE_TEXT_TAG: typing.Final = re.compile(r"<text")
 
 
 class ExpectedSection(typing.NamedTuple):
@@ -66,7 +52,7 @@ class ExpectedSvgStructure(typing.NamedTuple):
 
 
 # Section-level reference data.
-EXPECTED_SEQUENCES: list[list[ExpectedSection]] = [
+EXPECTED_SEQUENCES: typing.Final[list[list[ExpectedSection]]] = [
     # seq 0: 大物[おおもの];2 ; まで;1
     [
         ExpectedSection("大物[おおもの]", "nakadaka", 2, False, 4, ["low", "high", "low", "low"]),
@@ -142,7 +128,7 @@ EXPECTED_SEQUENCES: list[list[ExpectedSection]] = [
 ]
 
 # Reference SVG structural properties.
-EXPECTED_SVG_STRUCTURE: list[ExpectedSvgStructure] = [
+EXPECTED_SVG_STRUCTURE: typing.Final[list[ExpectedSvgStructure]] = [
     ExpectedSvgStructure(
         6,
         5,
@@ -333,6 +319,10 @@ class TestSplitAccentExpanded:
         [
             # Keihan dialect
             ("h;hl", SplitAccent(is_particle=None, role="h", pitch=None, levels="hl", keihan=True)),
+            # Keihan: invalid multi-char roles are still tokenized with levels honored.
+            # Role validation happens later in determine_role_keihan(), which maps them to Role.unknown.
+            ("Lo;hh", SplitAccent(is_particle=None, role="Lo", pitch=None, levels="hh", keihan=True)),
+            ("zzzz;hh", SplitAccent(is_particle=None, role="zzzz", pitch=None, levels="hh", keihan=True)),
             # Tokyo: particle + role
             ("pa", SplitAccent(is_particle="p", role="a", pitch=None, keihan=False, levels=None)),
             # Tokyo: particle + role + pitch
@@ -415,9 +405,16 @@ class TestClassName:
             ("ぐらい;po1", SvgGraphClassName.odaka),
             ("ぐらい;p", SvgGraphClassName.particle),
             ("テスト", SvgGraphClassName.particle),
+            # A bare ";" with no role or pitch defaults to heiban.
+            ("せいかつ;", SvgGraphClassName.heiban),
             # Keihan roles resolve to their own class names.
             ("たべる;H;hh", SvgGraphClassName.keihan_heiban),
             ("たべる;K;hlh", SvgGraphClassName.keihan_kifuku),
+            # Invalid role letters render as unknown instead of raising ValueError.
+            ("テスト;z", SvgGraphClassName.unknown),
+            ("たべる;Z;hh", SvgGraphClassName.unknown),
+            ("たべる;Lo;hh", SvgGraphClassName.unknown),
+            ("テスト;zzzz;hh", SvgGraphClassName.unknown),
         ],
     )
     def test_class_name(
@@ -430,17 +427,10 @@ class TestClassName:
         assert section.class_name == expected
 
 
-class TestNumericsExcludesBooleans:
-    """Verify that numerics() does not return boolean config keys.
-
-    bool is a subclass of int in Python, so a naive isinstance(value, (int, float))
-    check would incorrectly include booleans. This test guards against that regression.
-    """
-
-    def test_bool_keys_not_in_numerics(self, no_anki_config: NoAnkiConfigView) -> None:
-        numeric_keys = {item.cfg_key for item in no_anki_config.svg_graphs.numerics()}
-        bool_keys = set(no_anki_config.svg_graphs.bool_keys())
-        assert numeric_keys.isdisjoint(bool_keys), f"Boolean keys found in numerics: {numeric_keys & bool_keys}"
+def test_every_renderable_role_has_graph_class_name() -> None:
+    """Every non-empty Pitch Artist role has a matching SVG graph class."""
+    renderable_roles = frozenset(role.name for role in Role) - {"empty"}
+    assert renderable_roles <= frozenset(class_name.name for class_name in SvgGraphClassName)
 
 
 # ======================================================================

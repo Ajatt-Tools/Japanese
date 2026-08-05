@@ -76,3 +76,13 @@ class TestSortPronunciations:
         """Pronunciations with None country are treated as unpreferred, never crash."""
         client = ForvoClient(self.CONFIG)
         assert [p.username for p in client.sort_pronunciations(scenario.pronunciations)] == scenario.expected_usernames
+
+    def test_preferred_usernames_beat_preferred_countries(self) -> None:
+        """A preferred username outranks a preferred country."""
+        client = ForvoClient(ForvoConfig(preferred_usernames=["alice"], preferred_countries=["japan"]))
+        pronunciations = [
+            make_pronunciation("bob", "Japan"),
+            make_pronunciation("alice", "Germany"),
+        ]
+
+        assert [p.username for p in client.sort_pronunciations(pronunciations)] == ["alice", "bob"]

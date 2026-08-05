@@ -6,9 +6,13 @@ import typing
 from collections.abc import Callable
 
 import pytest
+from aqt.qt import QApplication
 
+from japanese.config_view import LookupDialogPitchOutputFormat
 from japanese.lookup_dialog import ViewPitchAccentsDialog
 from japanese.pitch_accents.acc_dict_mgr_2 import AccentDictManager2
+from japanese.pitch_accents.common import FormattedEntry
+from japanese.pitch_accents.styles import HTMLPitchPatternStyle
 from japanese.widgets.raise_on_show_dialog import RaiseOnShowDialog
 from japanese.widgets.webview import NoAnkiSVGPreviewWebView
 from playground.utils import NoAnkiConfigView
@@ -16,7 +20,7 @@ from tests.conftest import (
     acc_dict_mgr,
     tmp_sqlite3_db_path,
 )
-from tests.helpers import make_accent_lookup
+from tests.helpers import make_accent_lookup, make_fresh_config
 
 # 僕 has 5 unique pitch notations in the bundled data
 # (ボク:0, ボク:1, シモベ:0, シモベ:3, ヤツガレ:0).
@@ -44,7 +48,7 @@ class OutsideAnkiScenario(typing.NamedTuple):
     operation: Callable[[NoAnkiConfigView], object]
 
 
-OUTSIDE_ANKI_SCENARIOS: dict[str, OutsideAnkiScenario] = {
+OUTSIDE_ANKI_SCENARIOS: typing.Final[dict[str, OutsideAnkiScenario]] = {
     # Without an injected AccentLookup, the dialog would need the Anki-only global factory.
     "construction_without_accent_lookup": OutsideAnkiScenario(
         operation=lambda cfg: ViewPitchAccentsDialog(cfg),
@@ -106,6 +110,28 @@ class TestViewPitchAccentsDialog:
         """The dialog and its formatter share one SVG adapter instance."""
         assert dialog._formatter._svg_maker is dialog._svg_maker
 
+    def test_html_style_falls_back_from_none(self, tmp_sqlite3_db_path: pathlib.Path) -> None:
+        """Lookup dialog replaces card-only 'none' HTML style with color-coded HTML."""
+        cfg = make_fresh_config()
+        cfg.pitch_accent["html_style"] = HTMLPitchPatternStyle.none.name
+        dialog = ViewPitchAccentsDialog(cfg, accent_lookup=make_accent_lookup(cfg), accent_db_path=tmp_sqlite3_db_path)
+
+        assert dialog._html_style() is HTMLPitchPatternStyle.u_biq_color_coded
+
+    @pytest.mark.parametrize("mode", [LookupDialogPitchOutputFormat.svg])
+    def test_get_notation_svg_branch(
+        self, tmp_sqlite3_db_path: pathlib.Path, mode: LookupDialogPitchOutputFormat
+    ) -> None:
+        """SVG lookup notation includes a graph and the pitch number marker."""
+        cfg = make_fresh_config()
+        entry = FormattedEntry("僕", "ボク", "<low_rise>ボ</low_rise><high>ク</high>", "0")
+        dialog = ViewPitchAccentsDialog(cfg, accent_lookup=make_accent_lookup(cfg), accent_db_path=tmp_sqlite3_db_path)
+
+        notation = dialog._get_notation(entry, mode)
+
+        assert notation.count('<svg class="ajt__pitch_svg"') == 1
+        assert notation.endswith(entry.pitch_number_html)
+
     def test_lookup_pronunciations(self, dialog: ViewPitchAccentsDialog) -> None:
         """A real lookup returns pronunciations grouped by headword."""
         dialog.lookup_pronunciations("僕")
@@ -124,6 +150,21 @@ class TestViewPitchAccentsDialog:
         """The rendered HTML repeats each block once per unique pitch notation."""
         dialog.lookup_pronunciations("僕")
         assert dialog._format_html_result().count(marker) == EXPECTED_BOKU_NOTATIONS
+
+    def test_copy_pronunciations_writes_clipboard(self, dialog: ViewPitchAccentsDialog, qapp: QApplication) -> None:
+        """Copying pronunciations writes the formatter output to the Qt clipboard."""
+        dialog.lookup_pronunciations("僕")
+        expected = dialog._formatter.format_pronunciations(
+            dialog._pronunciations,
+            sep_single="、",
+            sep_multi="<br>",
+            expr_sep="：",
+            max_results=99,
+        )
+
+        dialog._copy_pronunciations()
+
+        assert qapp.clipboard().text() == expected
 
     def test_show_smoke(self, dialog: ViewPitchAccentsDialog) -> None:
         """Showing the persistent dialog works outside Anki (offscreen)."""

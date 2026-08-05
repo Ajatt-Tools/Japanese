@@ -21,7 +21,11 @@ from japanese.pitch_accents.svg_components import (
     assemble_txt_content,
     lookup_component_color,
 )
-from japanese.pitch_accents.svg_graph_renderer import SvgGraphRenderer
+from japanese.pitch_accents.svg_graph_renderer import (
+    SvgGraphRenderer,
+    connector_css_class,
+    is_accented_particle,
+)
 from japanese.pitch_accents.svg_graph_types import (
     ConnectToPrevious,
     PitchLevel,
@@ -120,6 +124,7 @@ STARTS_WITH_TRAILING_MORA_SCENARIOS: typing.Final[dict[str, StartsWithTrailingMo
     [(entry, f"test_{idx}.svg") for idx, entry in enumerate(TEST_ENTRIES)],
 )
 def test_make_svg(no_anki_config: NoAnkiConfigView, formatted_entry: FormattedEntry, svg_file_name: str) -> None:
+    """Dictionary-entry SVG output matches the checked-in full SVG references."""
     maker = FormattedEntryToSvgAdapter(no_anki_config)
 
     reference_file_path = DATA_DIR / "formatted_entry_graphs" / svg_file_name
@@ -140,15 +145,10 @@ def test_dictionary_path_group_is_named_lines(
     assert [class_name for class_name in group_class_names if class_name == "paths"] == []
 
 
-@pytest.mark.parametrize(
-    "mora, expected_text",
-    [
-        (Mora(txt=["ア"], level=PitchLevel.high, flags=SvgMoraFlag.devoiced), "ア"),
-    ],
-)
-def test_renderer_make_text_element(no_anki_config: NoAnkiConfigView, mora: Mora, expected_text: str) -> None:
+def test_renderer_make_text_element(no_anki_config: NoAnkiConfigView) -> None:
     """Renderer text elements keep class attributes and formatted coordinates."""
     maker = SvgGraphRenderer(no_anki_config)
+    mora = Mora(txt=["ア"], level=PitchLevel.high, flags=SvgMoraFlag.devoiced)
     text = assemble_txt_content(
         mora,
         reading_format=no_anki_config.svg_graphs.reading_format,
@@ -161,12 +161,12 @@ def test_renderer_make_text_element(no_anki_config: NoAnkiConfigView, mora: Mora
         maker.make_text_element(
             text,
             pos=Point.new(x=1, y=2),
-            class_attr=append_class_name(mora.flags),
+            class_attr=append_class_name(SvgMoraFlag.devoiced),
             dx=3,
             text_color=expected_color,
         )
         == f'<text class="devoiced" fill="{expected_color}" font-size="{no_anki_config.svg_graphs.font_size:.1f}px" '
-        f'letter-spacing="{no_anki_config.svg_graphs.letter_spacing:.1f}px" x="1" y="2" dx="3">{expected_text}</text>'
+        f'letter-spacing="{no_anki_config.svg_graphs.letter_spacing:.1f}px" x="1" y="2" dx="3">ア</text>'
     )
 
 
@@ -189,6 +189,38 @@ def test_line_end_point_raises_before_end_is_set(no_anki_config: NoAnkiConfigVie
     """Line.end_point rejects incomplete lines."""
     with pytest.raises(ValueError):
         Line(no_anki_config, SvgGraphClassName.heiban).end_point
+
+
+def make_word(class_name: SvgGraphClassName, *, is_particle: bool) -> SvgGraphWord:
+    """Return a minimal one-mora graph word for connector class tests."""
+    return SvgGraphWord(
+        class_name=class_name,
+        moras=(SvgGraphMora(text="ア", level=PitchLevel.low),),
+        is_particle=is_particle,
+        connect_to_previous=ConnectToPrevious.weld,
+    )
+
+
+class TestConnectorCssClass:
+    """connector_css_class shares the accent class only for accented particles."""
+
+    @pytest.mark.parametrize(
+        "class_name, is_particle, expected_accented, expected_css_class",
+        [
+            (SvgGraphClassName.odaka, True, True, "connector particle odaka"),
+            (SvgGraphClassName.atamadaka, True, True, "connector particle atamadaka"),
+            (SvgGraphClassName.particle, True, False, "connector"),
+            (SvgGraphClassName.atamadaka, False, False, "connector"),
+            (SvgGraphClassName.heiban, False, False, "connector"),
+        ],
+    )
+    def test_connector_css_class(
+        self, class_name: SvgGraphClassName, is_particle: bool, expected_accented: bool, expected_css_class: str
+    ) -> None:
+        """Accented particles get a compound connector class; everything else stays neutral."""
+        word = make_word(class_name, is_particle=is_particle)
+        assert is_accented_particle(word) is expected_accented
+        assert connector_css_class(word) == expected_css_class
 
 
 def test_heiban_trailing_circle_has_fill_none(no_anki_config: NoAnkiConfigView) -> None:
@@ -298,36 +330,25 @@ def test_text_group_matches_text_visibility(
     assert svg.count('<g class="text">') == expected_text_group_count
 
 
-@pytest.mark.parametrize(
-    "formatted_entry, graph_horizontal_padding, size_unit, graph_height, expected_fragments",
-    [
-        (
-            TEST_ENTRIES[0],
-            50,
-            40,
-            80,
-            ('viewBox="0 0 350 210"', 'cx="90.000" cy="120.000"', 'cy="40.000"'),
-        ),
-    ],
-)
-def test_renderer_uses_mutated_options(
-    formatted_entry: FormattedEntry,
-    graph_horizontal_padding: int,
-    size_unit: int,
-    graph_height: int,
-    expected_fragments: tuple[str, str, str],
-) -> None:
+def test_renderer_uses_mutated_options() -> None:
     """Renderer geometry is computed from current options, not stale cached values."""
     no_anki_config = make_fresh_config()
     maker = FormattedEntryToSvgAdapter(no_anki_config)
-    before = maker.make_graph(formatted_entry)
+    before = maker.make_graph(TEST_ENTRIES[0])
     no_anki_config.svg_graphs.update({
-        "graph_horizontal_padding": graph_horizontal_padding,
-        "size_unit": size_unit,
-        "graph_height": graph_height,
+        "graph_horizontal_padding": 50,
+        "size_unit": 40,
+        "graph_height": 80,
     })
 
-    after = maker.make_graph(formatted_entry)
+    after = maker.make_graph(TEST_ENTRIES[0])
 
     assert before != after
-    assert all(fragment in after for fragment in expected_fragments)
+    # viewBox and the first circle appear once; the high-pitch y-coordinate appears once per high mora.
+    assert [
+        after.count(fragment) for fragment in ('viewBox="0 0 350 210"', 'cx="90.000" cy="120.000"', 'cy="40.000"')
+    ] == [
+        1,
+        1,
+        4,
+    ]

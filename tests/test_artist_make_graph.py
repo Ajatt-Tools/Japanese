@@ -8,12 +8,28 @@ import typing
 import pytest
 
 from japanese.helpers.misc import compact_seq
-from japanese.pitch_accents.colors import SvgGraphColorMode
+from japanese.pitch_accents.colors import SvgGraphClassName
+from japanese.pitch_accents.svg_components import (
+    SvgBlackAndWhiteRole,
+    lookup_component_color,
+)
 from japanese.pitch_artist.pitch_graph import SvgPitchArtistGraphMaker
 from playground.utils import NoAnkiConfigView
 from tests.consts import DATA_DIR
-from tests.helpers import extract_group_class_names, make_fresh_config
-from tests.test_pitch_artist_regression import HEADLESS_SENTENCE, NUM_EXPECTED_SEQUENCES
+from tests.helpers import (
+    HEADLESS_SENTENCE,
+    NUM_EXPECTED_SEQUENCES,
+    CirclePosition,
+    SvgRootDimensions,
+    extract_circles,
+    extract_group_class_names,
+    extract_svg_root_dimensions,
+    extract_text_labels,
+    extract_visible_height,
+    make_fresh_config,
+    make_svg_attributes_config,
+    render_first_graph,
+)
 
 # Circle Y-coordinates derived from default config:
 #   height_high = size_unit = 25   → y=25 means "high"
@@ -22,29 +38,16 @@ from tests.test_pitch_artist_regression import HEADLESS_SENTENCE, NUM_EXPECTED_S
 #   first = size_unit + graph_horizontal_padding = 25 + 6 = 31
 #   step  = x_step = 50  →  31, 81, 131, 181, ...
 
-HIGH = 25
-LOW = 65
+HIGH: typing.Final = 25
+LOW: typing.Final = 65
 
-RE_CIRCLE_POSITION = re.compile(r'cx="(?P<cx>[0-9.]+)" cy="(?P<cy>[0-9.]+)"')
-RE_TEXT_LABEL = re.compile(r"<text[^>]*>(?P<label>[^<]*)</text>")
-RE_SVG_ROOT_DIMENSIONS = re.compile(
-    r'viewBox="0 0 (?P<view_box_width>\d+) (?P<view_box_height>\d+)" height="(?P<visible_height>\d+)px"'
-)
-RE_EMPTY_GROUP = re.compile(r'<g(?: class="[^"]+")?></g>')
-RE_PARTICLE_ATAMADAKA_CIRCLE_GROUP = re.compile(r'<g class="particle atamadaka"><circle[^>]+>')
-RE_PARTICLE_CIRCLE_GROUP = re.compile(r'<g class="particle[^"]*"><circle[^>]+>')
-RE_CIRCLE = re.compile(r"<circle[^>]+>")
-RE_STROKE_DASHARRAY = re.compile(r'stroke-dasharray="')
-RE_LINE = re.compile(r"<line")
-RE_CONNECTOR_LINE_STROKE = re.compile(r'<g class="connector[^"]*"><line [^>]*stroke="(?P<stroke>[^"]+)"')
-
-
-class SvgRootDimensions(typing.NamedTuple):
-    """Integer dimensions declared on the root SVG element."""
-
-    view_box_width: int
-    view_box_height: int
-    visible_height: int
+RE_EMPTY_GROUP: typing.Final = re.compile(r'<g(?: class="[^"]+")?></g>')
+RE_PARTICLE_ATAMADAKA_CIRCLE_GROUP: typing.Final = re.compile(r'<g class="particle atamadaka"><circle[^>]+>')
+RE_PARTICLE_CIRCLE_GROUP: typing.Final = re.compile(r'<g class="particle[^"]*"><circle[^>]+>')
+RE_CIRCLE: typing.Final = re.compile(r"<circle[^>]+>")
+RE_STROKE_DASHARRAY: typing.Final = re.compile(r'stroke-dasharray="')
+RE_LINE: typing.Final = re.compile(r"<line")
+RE_CONNECTOR_LINE_STROKE: typing.Final = re.compile(r'<g class="connector[^"]*"><line [^>]*stroke="(?P<stroke>[^"]+)"')
 
 
 class ArtistGraphReference(typing.NamedTuple):
@@ -54,16 +57,9 @@ class ArtistGraphReference(typing.NamedTuple):
     svg_file_name: str
 
 
-ARTIST_GRAPH_REFERENCES = tuple(
+ARTIST_GRAPH_REFERENCES: typing.Final = tuple(
     ArtistGraphReference(index=index, svg_file_name=f"test_{index}.svg") for index in range(NUM_EXPECTED_SEQUENCES)
 )
-
-
-class CirclePosition(typing.NamedTuple):
-    """Integer circle center coordinates in SVG user units."""
-
-    x: int
-    y: int
 
 
 def make_artist_graphs(cfg: NoAnkiConfigView) -> list[str]:
@@ -79,35 +75,6 @@ def test_make_artist_svg(no_anki_config: NoAnkiConfigView, reference: ArtistGrap
     expected_graph = reference_file_path.read_text(encoding="utf-8").strip()
 
     assert make_artist_graphs(no_anki_config)[reference.index].strip() == expected_graph
-
-
-def extract_circles(svg: str) -> list[CirclePosition]:
-    """Extract (x, y) integer pairs from all <circle> elements in the SVG."""
-    return [
-        CirclePosition(x=int(float(match.group("cx"))), y=int(float(match.group("cy"))))
-        for match in RE_CIRCLE_POSITION.finditer(svg)
-    ]
-
-
-def extract_text_labels(svg: str) -> list[str]:
-    """Extract text content from all <text> elements in the SVG."""
-    return [match.group("label") for match in RE_TEXT_LABEL.finditer(svg)]
-
-
-def extract_svg_root_dimensions(svg: str) -> SvgRootDimensions:
-    """Extract integer root SVG dimensions from viewBox and height attributes."""
-    match = RE_SVG_ROOT_DIMENSIONS.search(svg)
-    assert match is not None, "integer root SVG dimensions not found"
-    return SvgRootDimensions(
-        view_box_width=int(match.group("view_box_width")),
-        view_box_height=int(match.group("view_box_height")),
-        visible_height=int(match.group("visible_height")),
-    )
-
-
-def extract_visible_height(svg: str) -> int:
-    """Extract the visible height (in pixels) from the SVG root element."""
-    return extract_svg_root_dimensions(svg).visible_height
 
 
 class TestCirclePositions:
@@ -163,6 +130,7 @@ class TestCirclePositions:
         notation: str,
         expected_positions: list[CirclePosition],
     ) -> None:
+        """Circle centers land at the expected (x, y) positions for each pitch pattern."""
         gen = SvgPitchArtistGraphMaker(no_anki_config)
         sequences = gen.make_sequences(notation)
         graphs = list(gen.make_graphs(sequences))
@@ -174,6 +142,7 @@ class TestSmallTsuSpecialCase:
     """ッ at j=1 inherits the low level from the previous mora."""
 
     def test_small_tsu_inherits_low(self, no_anki_config: NoAnkiConfigView) -> None:
+        """ッ at j=1 inherits the low level from the previous mora."""
         # がっこう;0: moras are ガ, ッ, コ, ウ.
         # ッ is at j=1 and section.levels[0] is low → ッ inherits low.
         # Without this rule, ッ would be high (heiban pitch 0).
@@ -203,6 +172,7 @@ class TestTextLabels:
         notation: str,
         expected_labels: list[str],
     ) -> None:
+        """The correct kana labels appear in <text> elements."""
         gen = SvgPitchArtistGraphMaker(no_anki_config)
         sequences = gen.make_sequences(notation)
         svg = list(gen.make_graphs(sequences))[0]
@@ -223,6 +193,7 @@ class TestSvgGroupNames:
     def test_path_group_is_named_lines(
         self, no_anki_config: NoAnkiConfigView, notation: str, expected_path_classes: list[str]
     ) -> None:
+        """The pitch-contour group keeps the shared 'lines' class name."""
         gen = SvgPitchArtistGraphMaker(no_anki_config)
         svg = list(gen.make_graphs(gen.make_sequences(notation)))[0]
         group_class_names = extract_group_class_names(svg)
@@ -246,12 +217,13 @@ class TestSvgGroupNames:
         assert RE_EMPTY_GROUP.findall(svg) == []
 
 
-class TestKeihanClassNames:
-    """Every renderable Keihan role resolves to an SvgGraphClassName without KeyError."""
+class TestRoleClassNames:
+    """Every renderable role resolves to its matching SVG class name."""
 
     @pytest.mark.parametrize(
         "notation, expected_class_name",
         [
+            # Keihan roles.
             ("たべる;H;hh", "keihan_heiban"),
             ("たべる;L;hl", "keihan_low_heiban"),
             ("たべる;A;hl", "keihan_atamadaka"),
@@ -259,45 +231,48 @@ class TestKeihanClassNames:
             ("たべる;M;hlh", "keihan_low_nakadaka"),
             ("たべる;O;hl", "keihan_low_odaka"),
             ("たべる;K;hlh", "keihan_kifuku"),
-        ],
-    )
-    def test_keihan_section_renders(
-        self, no_anki_config: NoAnkiConfigView, notation: str, expected_class_name: str
-    ) -> None:
-        """Each Keihan role notation renders groups with the matching keihan_* class name."""
-        gen = SvgPitchArtistGraphMaker(no_anki_config)
-        svg = list(gen.make_graphs(gen.make_sequences(notation)))[0]
-        group_class_names = extract_group_class_names(svg)
-        # The section class appears in the lines, circles, and text groups; dedup to compare.
-        assert compact_seq(name for name in group_class_names if name == expected_class_name) == (expected_class_name,)
-
-
-class TestSpecialRoleClassNames:
-    """Special Tokyo roles resolve to their matching SVG class names."""
-
-    @pytest.mark.parametrize(
-        "notation, expected_class_name",
-        [
+            # Special Tokyo roles.
             ("たべる;b", "black"),
             ("たべる;w", "white"),
             ("たべる;s", "setsubigo"),
         ],
     )
-    def test_special_role_section_renders(
+    def test_role_section_renders(
         self, no_anki_config: NoAnkiConfigView, notation: str, expected_class_name: str
     ) -> None:
-        """Each special role notation renders groups with the matching SVG class name."""
+        """Each role notation renders groups with the matching SVG class name."""
+        svg = render_first_graph(no_anki_config, notation)
+        group_class_names = extract_group_class_names(svg)
+        # The section class appears in the lines, circles, and text groups; dedup to compare.
+        assert compact_seq(name for name in group_class_names if name == expected_class_name) == (expected_class_name,)
+
+
+class TestUnknownRoleClassNames:
+    """Invalid role letters render with the unknown class instead of raising ValueError."""
+
+    @pytest.mark.parametrize(
+        "notation",
+        [
+            "テスト;z",
+            "たべる;Z;hh",
+            "たべる;Lo;hh",
+            "テスト;zzzz;hh",
+        ],
+    )
+    def test_invalid_role_renders_as_unknown(self, no_anki_config: NoAnkiConfigView, notation: str) -> None:
+        """Each invalid role notation renders groups with the unknown class name."""
         gen = SvgPitchArtistGraphMaker(no_anki_config)
         svg = list(gen.make_graphs(gen.make_sequences(notation)))[0]
         group_class_names = extract_group_class_names(svg)
-
-        assert compact_seq(name for name in group_class_names if name == expected_class_name) == (expected_class_name,)
+        # The section class appears in the lines, circles, and text groups; dedup to compare.
+        assert compact_seq(name for name in group_class_names if name == "unknown") == ("unknown",)
 
 
 class TestGhostParticle:
     """Ghost particle (-) draws an empty circle but produces no text element."""
 
     def test_ghost_has_circle_but_no_text(self, no_anki_config: NoAnkiConfigView) -> None:
+        """Ghost particle draws a trailing circle and line but no text element."""
         gen = SvgPitchArtistGraphMaker(no_anki_config)
         sequences = gen.make_sequences("ひとり;1-")
         svg = list(gen.make_graphs(sequences))[0]
@@ -314,6 +289,7 @@ class TestParticleCircleFallback:
     """Particle circles use an inline fill="none" fallback when CSS is not injected."""
 
     def test_particle_circles_have_fill_none(self, no_anki_config: NoAnkiConfigView) -> None:
+        """Particle circles are hollow (fill="none")."""
         gen = SvgPitchArtistGraphMaker(no_anki_config)
         sequences = gen.make_sequences("よねん; ぐらい;pa")
         svg = list(gen.make_graphs(sequences))[0]
@@ -323,6 +299,7 @@ class TestParticleCircleFallback:
         assert [circle.count('fill="none"') for circle in particle_circles] == [1]
 
     def test_normal_word_circles_remain_filled(self, no_anki_config: NoAnkiConfigView) -> None:
+        """Non-particle circles stay filled."""
         gen = SvgPitchArtistGraphMaker(no_anki_config)
         sequences = gen.make_sequences("がっこう;0")
         svg = list(gen.make_graphs(sequences))[0]
@@ -336,18 +313,18 @@ class TestParticleRoleColors:
     """Particles with an explicit pitch accent render in the accent's color; plain particles in the particle color."""
 
     @pytest.mark.parametrize(
-        "notation, expected_stroke",
+        "notation, class_name",
         [
             # Particle with explicit atamadaka accent: circles use the atamadaka color.
-            ("よねん; ぐらい;pa", "#e60000"),
+            ("よねん; ぐらい;pa", SvgGraphClassName.atamadaka),
             # Plain particle without a pitch number: circles use the particle color.
-            ("がっこう;0 は;p", "gray"),
+            ("がっこう;0 は;p", SvgGraphClassName.particle),
         ],
     )
-    def test_particle_circle_color_in_svg_attributes_mode(self, notation: str, expected_stroke: str) -> None:
+    def test_particle_circle_color_in_svg_attributes_mode(self, notation: str, class_name: SvgGraphClassName) -> None:
         """Circle stroke colors follow the section's role in SVG attributes mode."""
-        cfg = make_fresh_config()
-        cfg.svg_graphs["color_mode"] = SvgGraphColorMode.svg_attributes.name
+        cfg = make_svg_attributes_config()
+        expected_stroke = lookup_component_color(cfg, SvgBlackAndWhiteRole.word, class_name)
         gen = SvgPitchArtistGraphMaker(cfg)
         svg = list(gen.make_graphs(gen.make_sequences(notation)))[0]
 
@@ -359,15 +336,15 @@ class TestParticleRoleColors:
 
     def test_particle_connector_matches_accent_color(self) -> None:
         """The connector into an accented particle uses the accent's color, like the particle's circles."""
-        cfg = make_fresh_config()
-        cfg.svg_graphs["color_mode"] = SvgGraphColorMode.svg_attributes.name
+        cfg = make_svg_attributes_config()
+        expected_stroke = lookup_component_color(cfg, SvgBlackAndWhiteRole.word, SvgGraphClassName.odaka)
         gen = SvgPitchArtistGraphMaker(cfg)
         svg = list(gen.make_graphs(gen.make_sequences("きょう;1 は;po")))[0]
 
         # The connector into は;po carries the section's compound class and the odaka color.
-        assert svg.count('<g class="connector particle odaka"><line stroke="#00802b"') == 1
+        assert svg.count(f'<g class="connector particle odaka"><line stroke="{expected_stroke}"') == 1
         # The particle circle is hollow and odaka-colored.
-        assert svg.count('<g class="particle odaka"><circle fill="none" stroke="#00802b"') == 1
+        assert svg.count(f'<g class="particle odaka"><circle fill="none" stroke="{expected_stroke}"') == 1
 
 
 class TestNeutralConnectors:
@@ -388,8 +365,7 @@ class TestNeutralConnectors:
         self, notation: str, expected_connector_count: int, expected_dashed_count: int
     ) -> None:
         """Connectors into words and plain particles keep the neutral connector color."""
-        cfg = make_fresh_config()
-        cfg.svg_graphs["color_mode"] = SvgGraphColorMode.svg_attributes.name
+        cfg = make_svg_attributes_config()
         gen = SvgPitchArtistGraphMaker(cfg)
         svg = list(gen.make_graphs(gen.make_sequences(notation)))[0]
 
@@ -406,6 +382,7 @@ class TestDevoicedMora:
     """Devoiced mora text elements have class='devoiced' and get devoiced circle markers."""
 
     def test_devoiced_has_class_and_circle(self, no_anki_config: NoAnkiConfigView) -> None:
+        """Devoiced mora text gets class="devoiced" and dashed circle markers."""
         gen = SvgPitchArtistGraphMaker(no_anki_config)
         sequences = gen.make_sequences("君[dきdみ];1")
         svg = list(gen.make_graphs(sequences))[0]
@@ -420,6 +397,7 @@ class TestTapeConnector:
     """Tape connector lines have stroke-dasharray='4'."""
 
     def test_tape_has_dasharray(self, no_anki_config: NoAnkiConfigView) -> None:
+        """Tape connector lines use stroke-dasharray."""
         gen = SvgPitchArtistGraphMaker(no_anki_config)
         sequences = gen.make_sequences("大物[おおもの];2 ; まで;1")
         svg = list(gen.make_graphs(sequences))[0]
@@ -438,6 +416,7 @@ class TestTapeConnector:
     def test_leading_tape_has_no_connector(
         self, no_anki_config: NoAnkiConfigView, notation: str, expected_circles: int, expected_texts: int
     ) -> None:
+        """A leading tape creates no connector from nowhere."""
         gen = SvgPitchArtistGraphMaker(no_anki_config)
         sequences = gen.make_sequences(notation)
         svg = list(gen.make_graphs(sequences))[0]
@@ -472,6 +451,7 @@ class TestIncludeText:
         assert len(extract_text_labels(svg)) == expected_text_count
 
     def test_no_text_when_disabled(self) -> None:
+        """include_text=False omits text elements and shrinks the visible height."""
         cfg = make_fresh_config()
         cfg.svg_graphs["include_text"] = False
         gen = SvgPitchArtistGraphMaker(cfg)
@@ -486,6 +466,7 @@ class TestIncludeText:
         assert extract_visible_height(svg) == 64
 
     def test_text_present_when_enabled(self, no_anki_config: NoAnkiConfigView) -> None:
+        """include_text=True renders text labels at full height."""
         gen = SvgPitchArtistGraphMaker(no_anki_config)
         sequences = gen.make_sequences("がっこう;0")
         svg = list(gen.make_graphs(sequences))[0]
@@ -512,10 +493,12 @@ class TestEmptyInput:
     """Edge cases where make_graph returns None."""
 
     def test_empty_sequence_returns_none(self, no_anki_config: NoAnkiConfigView) -> None:
+        """An empty sequence produces no graph (None)."""
         gen = SvgPitchArtistGraphMaker(no_anki_config)
         assert gen.make_graph([]) is None
 
     def test_pipe_only_produces_no_graphs(self, no_anki_config: NoAnkiConfigView) -> None:
+        """A pipe-only input produces no graphs."""
         gen = SvgPitchArtistGraphMaker(no_anki_config)
         sequences = gen.make_sequences("|")
         graphs = list(gen.make_graphs(sequences))
@@ -526,6 +509,7 @@ class TestMultiWordConnector:
     """Connected words have a connector line group between them."""
 
     def test_connector_present(self, no_anki_config: NoAnkiConfigView) -> None:
+        """Connected words have a connector group between them."""
         gen = SvgPitchArtistGraphMaker(no_anki_config)
         sequences = gen.make_sequences("がっこう;1 つくった;2")
         svg = list(gen.make_graphs(sequences))[0]
@@ -535,6 +519,7 @@ class TestMultiWordConnector:
         ]
 
     def test_disconnected_words_have_no_connector(self, no_anki_config: NoAnkiConfigView) -> None:
+        """Pipe-disconnected words have no connector group."""
         gen = SvgPitchArtistGraphMaker(no_anki_config)
         sequences = gen.make_sequences("がっこう;1 | つくった;2")
         svg = list(gen.make_graphs(sequences))[0]

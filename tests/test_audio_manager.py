@@ -7,15 +7,15 @@ import typing
 
 import pytest
 
-from japanese.audio_manager.audio_source import AudioSource
+from japanese.audio_manager.audio_source import AudioSource, AudioSourceError
 from japanese.audio_manager.basic_types import NameUrl, NameUrlSet, TotalAudioStats
 from japanese.audio_manager.source_manager import AudioSourceManager
 from japanese.database.basic_types import InvalidSourceIndex
 from japanese.database.sqlite3_buddy import Sqlite3Buddy
-from japanese.helpers.audio_json_schema import SourceIndex
+from japanese.helpers.audio_json_schema import SourceIndex, SourceMeta
 from playground.run_audio_manager import NoAnkiAudioSourceManagerFactory
 from playground.utils import NoAnkiConfigView
-from tests.conftest import tmp_sqlite3_db_path
+from tests.conftest import tmp_db_connection, tmp_sqlite3_db_path
 from tests.consts import DATA_DIR
 
 REMOTE_SOURCE_URL: typing.Final[str] = "https://example.com/index.json"
@@ -39,6 +39,12 @@ def make_source_index(media_dir_abs: str | None = None) -> SourceIndex:
     if media_dir_abs is not None:
         data["meta"]["media_dir_abs"] = media_dir_abs
     return data
+
+
+def test_source_meta_required_and_optional_keys() -> None:
+    """SourceMeta keeps release-injected media_dir_abs optional without weakening required keys."""
+    assert SourceMeta.__required_keys__ == frozenset({"name", "year", "version", "media_dir"})
+    assert SourceMeta.__optional_keys__ == frozenset({"media_dir_abs"})
 
 
 def make_cached_source(
@@ -85,25 +91,25 @@ def init_factory(
     return factory
 
 
-def test_audio_stats(init_factory: NoAnkiAudioSourceManagerFactory) -> None:
+def test_audio_stats(init_factory: NoAnkiAudioSourceManagerFactory, tmp_db_connection: Sqlite3Buddy) -> None:
     session: AudioSourceManager
     stats: TotalAudioStats
 
-    with Sqlite3Buddy(init_factory.db_path) as db:
-        session = init_factory.request_new_session(db)
-        stats = session.total_stats()
-        assert stats.unique_files == 19438
-        assert stats.unique_headwords == 21569
-        assert len(stats.sources) == 1
-        assert stats.sources[0].num_files == 19438
-        assert stats.sources[0].num_headwords == 21569
-        assert len(list(session.search_word("ひらがな"))) == 3
+    session = init_factory.request_new_session(tmp_db_connection)
+    stats = session.total_stats()
+    assert stats.unique_files == 19438
+    assert stats.unique_headwords == 21569
+    assert len(stats.sources) == 1
+    assert stats.sources[0].num_files == 19438
+    assert stats.sources[0].num_headwords == 21569
+    assert len(list(session.search_word("ひらがな"))) == 3
 
 
-def test_get_sources(init_factory: NoAnkiAudioSourceManagerFactory, no_anki_config: NoAnkiConfigView) -> None:
-    with Sqlite3Buddy(init_factory.db_path) as db:
-        sources = db.get_cached_sources()
-        assert sources == [NameUrl(s.name, s.url) for s in no_anki_config.iter_audio_sources()]
+def test_get_sources(
+    init_factory: NoAnkiAudioSourceManagerFactory, no_anki_config: NoAnkiConfigView, tmp_db_connection: Sqlite3Buddy
+) -> None:
+    sources = tmp_db_connection.get_cached_sources()
+    assert sources == [NameUrl(s.name, s.url) for s in no_anki_config.iter_audio_sources()]
 
 
 class TestAudioSourceMediaDir:
@@ -121,7 +127,7 @@ class TestAudioSourceMediaDir:
     def test_resolves_media_dir(
         self,
         tmp_path: pathlib.Path,
-        tmp_sqlite3_db_path: pathlib.Path,
+        tmp_db_connection: Sqlite3Buddy,
         source_name: str,
         source_is_local: bool,
         media_dir_abs: str | None,
@@ -130,36 +136,54 @@ class TestAudioSourceMediaDir:
         source_url = make_source_url(tmp_path, source_is_local)
         if source_is_local:
             pathlib.Path(source_url).write_text("{}", encoding="utf-8")
-        with Sqlite3Buddy(tmp_sqlite3_db_path) as db:
-            source = make_cached_source(
-                db,
-                source_url=source_url,
-                media_dir_abs=make_media_dir_abs(tmp_path, media_dir_abs),
-                source_name=source_name,
-            )
-            assert source.media_dir == expected_media_dir(tmp_path, source_is_local, media_dir_abs)
+        source = make_cached_source(
+            tmp_db_connection,
+            source_url=source_url,
+            media_dir_abs=make_media_dir_abs(tmp_path, media_dir_abs),
+            source_name=source_name,
+        )
+        assert source.media_dir == expected_media_dir(tmp_path, source_is_local, media_dir_abs)
 
 
-def test_delete_cache(init_factory: NoAnkiAudioSourceManagerFactory) -> None:
-    with Sqlite3Buddy(init_factory.db_path) as db:
-        session = init_factory.request_new_session(db)
-        stats = session.total_stats()
-        assert len(stats.sources) == 1
-        test_source = db.get_source_by_name("TAAS-TEST-BAD")
-        assert test_source is None
-        test_source = db.get_source_by_name("TAAS-TEST")
-        assert test_source.name == "TAAS-TEST"
-        removed = session.remove_sources(NameUrlSet([test_source, NameUrl("TAAS-TEST-BAD", "")]))
-        assert removed == [test_source]
-        stats = session.total_stats()
-        assert len(stats.sources) == 0
-        assert stats.unique_files == 0
-        assert stats.unique_headwords == 0
+class TestAudioSourceErrors:
+    """AudioSource raises AudioSourceError when accessed before it is ready."""
+
+    def test_media_dir_raises_when_not_cached(self, tmp_db_connection: Sqlite3Buddy) -> None:
+        """Accessing media_dir on an uninitialized source raises AudioSourceError."""
+        source = AudioSource(name="MISSING", url=REMOTE_SOURCE_URL, enabled=True, db=tmp_db_connection)
+        with pytest.raises(AudioSourceError):
+            source.media_dir
+
+    def test_media_dir_raises_when_db_is_none(self) -> None:
+        """Accessing media_dir without a database raises AudioSourceError."""
+        source = AudioSource(name="TEST", url=REMOTE_SOURCE_URL, enabled=True, db=None)
+        with pytest.raises(AudioSourceError):
+            source.media_dir
+
+
+def test_delete_cache(init_factory: NoAnkiAudioSourceManagerFactory, tmp_db_connection: Sqlite3Buddy) -> None:
+    session = init_factory.request_new_session(tmp_db_connection)
+    stats = session.total_stats()
+    assert len(stats.sources) == 1
+    test_source = tmp_db_connection.get_source_by_name("TAAS-TEST-BAD")
+    assert test_source is None
+    test_source = tmp_db_connection.get_source_by_name("TAAS-TEST")
+    assert test_source.name == "TAAS-TEST"
+    removed = session.remove_sources(NameUrlSet([test_source, NameUrl("TAAS-TEST-BAD", "")]))
+    assert removed == [test_source]
+    stats = session.total_stats()
+    assert len(stats.sources) == 0
+    assert stats.unique_files == 0
+    assert stats.unique_headwords == 0
 
 
 def test_insert_bad_source(init_factory: NoAnkiAudioSourceManagerFactory) -> None:
     """
     Vandalize the source on purpose and test if the expected errors are raised.
+
+    Each insert uses a fresh connection: a failed insert_data() leaves its partial
+    work uncommitted, and only a new connection (rolled back on __exit__) guarantees
+    the next insert starts from a clean state.
     """
     taas_data: SourceIndex = json.loads(DATA_DIR.joinpath("taas_index.json").read_bytes())
     with pytest.raises(sqlite3.IntegrityError):

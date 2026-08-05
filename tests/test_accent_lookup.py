@@ -1,7 +1,8 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 import re
-from collections.abc import Iterable, Sequence
+from collections.abc import Sequence
+from itertools import pairwise
 
 import pytest
 
@@ -18,18 +19,6 @@ from tests.conftest import (
     tmp_db_connection,
 )
 from tests.helpers import make_accent_lookup
-
-try:
-    from itertools import pairwise
-except ImportError:
-    # python 3.9 doesn't have pairwise
-    def pairwise(iterable: Iterable[str]) -> Iterable[tuple[str, str]]:
-        # https://docs.python.org/3/library/itertools.html#itertools.pairwise
-        iterator = iter(iterable)
-        a = next(iterator, None)
-        for b in iterator:
-            yield a, b
-            a = b
 
 
 def furigana_to_word_seq(furigana_output: str) -> list[str]:
@@ -85,8 +74,7 @@ class TestAccDictLookup:
         expected: Sequence[str],
     ) -> None:
         result = lookup.with_new_buddy(tmp_db_connection).get_pronunciations(test_input)
-        for item in expected:
-            assert item in result
+        assert list(result) == list(expected)
 
     @pytest.mark.parametrize(
         "sentence, expected",

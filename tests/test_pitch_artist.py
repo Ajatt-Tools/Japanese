@@ -6,9 +6,7 @@ import pytest
 from japanese.pitch_artist.split import (
     ArtistMora,
     SectionParts,
-    SplitAccent,
     detach_ghost_particle,
-    split_accent,
     split_multiple_pitch_notations,
     split_section,
     split_to_moras,
@@ -29,16 +27,6 @@ def test_detach_ghost_particle(expression: str, expected: str) -> None:
 @pytest.mark.parametrize(
     "expression, expected",
     [
-        ("h;hl", SplitAccent(is_particle=None, role="h", pitch=None, levels="hl", keihan=True)),
-    ],
-)
-def test_split_accent(expression: str, expected: SplitAccent) -> None:
-    assert split_accent(expression) == expected
-
-
-@pytest.mark.parametrize(
-    "expression, expected",
-    [
         ("にほんご", ["に", "ほ", "ん", "ご"]),
         ("を", ["を"]),
         ("べんきょう", ["べ", "ん", "きょ", "う"]),
@@ -50,22 +38,14 @@ def test_split_to_moras(expression: str, expected: list[str]) -> None:
     assert split_to_moras(expression) == [ArtistMora.from_text(m) for m in expected]
 
 
-@pytest.mark.parametrize(
-    "expression, expected",
-    [
-        (
-            [["にほんご;1,2,3", "を", "べんきょう;0", "する;"], ["おまえ;0"]],
-            [
-                ["にほんご;1", "を", "べんきょう;0", "する;"],
-                ["にほんご;2", "を", "べんきょう;0", "する;"],
-                ["にほんご;3", "を", "べんきょう;0", "する;"],
-                ["おまえ;0"],
-            ],
-        ),
-    ],
-)
-def test_split_multiple_pitch_notations(expression: list[list[str]], expected: list[list[str]]) -> None:
-    assert split_multiple_pitch_notations(expression) == expected
+def test_split_multiple_pitch_notations() -> None:
+    """A section with comma-separated pitch notations expands into one sequence per notation."""
+    assert split_multiple_pitch_notations([["にほんご;1,2,3", "を", "べんきょう;0", "する;"], ["おまえ;0"]]) == [
+        ["にほんご;1", "を", "べんきょう;0", "する;"],
+        ["にほんご;2", "を", "べんきょう;0", "する;"],
+        ["にほんご;3", "を", "べんきょう;0", "する;"],
+        ["おまえ;0"],
+    ]
 
 
 @pytest.mark.parametrize(

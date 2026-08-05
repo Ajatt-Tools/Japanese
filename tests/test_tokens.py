@@ -3,25 +3,36 @@
 
 from collections.abc import Iterable, Sequence
 
+import pytest
+
 from japanese.helpers.tokens import Token, clean_furigana, tokenize
 
 
-def test_clean_furigana() -> None:
-    assert (
-        clean_furigana("手紙[てがみ]は、 男[おとこ]らしく 潔[いさぎよ]い<b>筆致[ひっち]</b>で 書[か]かれていた。")
-        == "手紙は、男らしく潔い<b>筆致</b>で書かれていた。"
-    )
-    assert (
-        clean_furigana("富竹[とみたけ]さん 今[いま] 扉[とびら]の 南京錠[なんきんじょう]いじってませんでした？")
-        == "富竹さん今扉の南京錠いじってませんでした？"
-    )
+@pytest.mark.parametrize(
+    "text, expected",
+    [
+        (
+            "手紙[てがみ]は、 男[おとこ]らしく 潔[いさぎよ]い<b>筆致[ひっち]</b>で 書[か]かれていた。",
+            "手紙は、男らしく潔い<b>筆致</b>で書かれていた。",
+        ),
+        (
+            "富竹[とみたけ]さん 今[いま] 扉[とびら]の 南京錠[なんきんじょう]いじってませんでした？",
+            "富竹さん今扉の南京錠いじってませんでした？",
+        ),
+    ],
+)
+def test_clean_furigana(text: str, expected: str) -> None:
+    """Furigana brackets and their readings are removed, keeping the base text."""
+    assert clean_furigana(text) == expected
 
 
 def describe_result(tokens: Iterable[Token]) -> Sequence[str]:
+    """Format tokens as ClassName(text) strings for comparison."""
     return tuple(f"{token.__class__.__name__}({token})" for token in tokens)
 
 
 def test_tokenize() -> None:
+    """Mixed HTML, media, and Japanese text split into the expected token sequence."""
     expr = (
         '<div>Lorem ipsum dolor sit amet, [sound:はな.mp3]<img src="はな.jpg"> '
         "consectetur adipiscing<br> elit <b>私達</b>は昨日ロンドンに着いた。おはよう。 Тест.</div>"
@@ -60,6 +71,7 @@ def test_tokenize() -> None:
 
 
 def test_counter_tokenize() -> None:
+    """A counter expression with a numeral splits into parseable tokens."""
     expr = "こうして３日間が始まった"
     expected = (
         "ParseableToken(こうして)",
@@ -70,4 +82,5 @@ def test_counter_tokenize() -> None:
 
 
 def test_empty_tokenize() -> None:
+    """Empty input produces no tokens."""
     assert list(tokenize("")) == list()
