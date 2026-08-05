@@ -171,7 +171,10 @@ class SplitAccent(NamedTuple):
 
 
 RE_SPLIT_ACCENT = re.compile(r"^(?P<is_particle>p)?(?P<role>[a-zA-Z])?(?P<pitch>-?\d)?$", flags=RE_FLAGS)
-RE_SPLIT_ACCENT_KEIHAN = re.compile(r"^(?P<role>[a-zA-Z]{1,2})[；;](?P<levels>[hlHL]+)$", flags=RE_FLAGS)
+# The Keihan regex is a permissive tokenizer: it accepts one or more role letters.
+# Role validation happens later at Role construction in determine_role_keihan();
+# invalid roles (e.g. "z", "Lo", "zzzz") render as Role.unknown instead of raising.
+RE_SPLIT_ACCENT_KEIHAN = re.compile(r"^(?P<role>[a-zA-Z]+)[；;](?P<levels>[hlHL]+)$", flags=RE_FLAGS)
 
 
 def split_accent(raw_accent: str) -> SplitAccent:

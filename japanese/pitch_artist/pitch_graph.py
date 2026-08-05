@@ -56,6 +56,9 @@ class Role(Enum):
     setsubigo = "s"
     empty = "e"
     particle = "p"
+    # Invalid role letters (e.g. ";z", ";Lo;hh") fall back to unknown
+    # and render in the gray unknown color instead of raising ValueError.
+    unknown = "u"
 
     keihan_heiban = "H"
     keihan_atamadaka = "A"
@@ -70,12 +73,15 @@ def determine_role_keihan(raw_role: str | None) -> Role:
     """Determine the Keihan dialect pitch role from a raw role character.
 
     Upper case letters are used for Keihan.
+    Invalid role letters fall back to Role.unknown instead of raising ValueError.
     """
     role = str(raw_role or Role.keihan_heiban.value)
-    try:
-        return Role(role.upper())
-    except ValueError:
-        return Role(role.lower())
+    for candidate in (role.upper(), role.lower()):
+        try:
+            return Role(candidate)
+        except ValueError:
+            continue
+    return Role.unknown
 
 
 def determine_levels_keihan(accent: SplitAccent, n_moras: int) -> list[PitchLevel]:
@@ -123,7 +129,11 @@ def determine_role_tokyo(sdict: SectionParts, n_moras: int, accent: SplitAccent)
     if not accent.role:
         return guess_role_from_pitch_num(n_moras, accent.pitch)
 
-    return Role(str(accent.role).lower())
+    try:
+        return Role(str(accent.role).lower())
+    except ValueError:
+        # Invalid role letters (e.g. ";z") render as unknown instead of raising.
+        return Role.unknown
 
 
 def is_empty_section(word: str) -> bool:
