@@ -96,6 +96,8 @@ class ForvoFilenameBuilder:
 RE_FIND_USERNAME = re.compile(r"Pronunciation by(?P<username>[^()]+)")
 RE_FIND_GENDER = re.compile(r"\((?P<gender>Male|Female)")
 RE_FIND_COUNTRY = re.compile(r"\((?:Male|Female) from (?P<country>[^()]+)")
+# Forvo's JavaScript Play() takes its file paths as positional arguments.
+RE_PLAY_ARG = re.compile(r"(?P<play_arg>[^',()]+)")
 
 
 def find_username(result: PageElement) -> str:
@@ -254,7 +256,7 @@ class ForvoClient:
         # Example: Play(3060224,'OTQyN...','OTQyN..',false,'Yy9wL2NwXzk0MjYzOTZfNzZfMzM1NDkxNS5tcDM=','Yy9wL...','h')
         # Match anything that isn't commas, parentheses or quotes to capture the function arguments
         # Regex will match something like ["Play", "3060224", ...]
-        play_args = re.findall(r"([^',()]+)", play)[1:]
+        play_args = RE_PLAY_ARG.findall(play)[1:]
 
         # Forvo has two locations for mp3, /audios/mp3 and just /mp3
         # /audios/mp3 is normalized and has the filename in the 5th argument of Play base64 encoded
