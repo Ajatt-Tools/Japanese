@@ -13,7 +13,7 @@ AJT_SVG_SETTINGS_CSS_FILE_NAME = "svg_settings.css"
 
 
 def head_content() -> str:
-    """Return the HTML <head> content with base CSS for the graph preview page."""
+    """Return the HTML <head> meta tags (viewport and charset) for preview pages."""
     return f"{META_VIEWPORT}{META_CHARSET}"
 
 

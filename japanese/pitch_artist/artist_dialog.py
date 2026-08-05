@@ -387,6 +387,7 @@ def add_settings_action(root_menu: QMenu) -> None:
 
 
 def add_pitch_arist_context_menu_item(editor_webview: AnkiWebView, menu: QMenu) -> None:
+    """Forward the context menu event to the persistent dialog, creating it lazily on first use."""
     get_pitch_artist_dialog().add_context_menu_item(editor_webview, menu)
 
 

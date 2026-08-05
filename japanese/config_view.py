@@ -516,7 +516,7 @@ class SvgGraphColorCodesConfigView(ConfigSubViewBase):
 
     def lookup_color(self, class_name: SvgGraphClassName) -> str:
         """
-        Same as __getitem__ but returns the unknown color if can't lookup.
+        Same as __getitem__ but returns the black color if the class can't be looked up.
         """
         try:
             return self[class_name]
@@ -525,8 +525,8 @@ class SvgGraphColorCodesConfigView(ConfigSubViewBase):
 
     def __getitem__(self, class_name: SvgGraphClassName) -> str:
         """
-        Input: pitch type, e.g. "heiban"
-        Output: pitch color defined by the user in the config file, e.g. "blue"
+        Input: SVG graph class name, e.g. "heiban"
+        Output: graph color defined by the user in the config file, e.g. "blue"
         """
         return super().__getitem__(class_name.name)
 

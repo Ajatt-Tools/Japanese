@@ -67,6 +67,7 @@ class SvgGraphRenderer:
     _cfg: JapaneseConfig
 
     def __init__(self, cfg: JapaneseConfig) -> None:
+        """Initialize the renderer with the add-on configuration."""
         self._cfg = cfg
 
     @property

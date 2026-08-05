@@ -109,7 +109,7 @@ class Line:
     _is_tape: bool
 
     def __init__(self, cfg: JapaneseConfig, class_name: SvgGraphClassName) -> None:
-        """Initialize an empty line with renderer options."""
+        """Initialize an empty line whose stroke color resolves from the given graph class."""
         self._cfg = cfg
         # Positions
         self._start = None
@@ -121,6 +121,7 @@ class Line:
 
     @property
     def end_point(self) -> Point:
+        """Return the line's end point, raising ValueError if it is not set."""
         if self._end:
             return self._end
         raise ValueError("End is not set.")

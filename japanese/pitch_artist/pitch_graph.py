@@ -200,12 +200,14 @@ class Section:
     word: str
 
     # 'p' marks a particle.
-    # For example, まで is an atamadaka particle,
-    # so rather than just representing it as gray dots with no fill,
-    # I would like to represent it as red dots with no fill.
+    # A particle without a pitch number (は;p) renders in the particle color
+    # (gray by default). A particle with an explicit pitch accent (まで;pa)
+    # renders in the accent's color (atamadaka is red by default),
+    # still as hollow dots with no fill.
     is_particle: bool
 
     # True if this section is a tape connector (dotted line between words).
+    # A tape is written as a bare ";" section, e.g. "が ; いい" tapes が to いい.
     # When two words are linked with a solid line, they are welded.
     # A dotted line means they are taped.
     is_tape: bool
@@ -378,7 +380,13 @@ def has_visible_section_before_tape(previous_sections: Sequence[Section]) -> boo
 
 
 def determine_connection_to_previous(section: Section, previous_sections: Sequence[Section]) -> ConnectToPrevious:
-    """Return how section connects to the previous rendered section."""
+    """Return how section connects to the previous rendered section.
+
+    Notation summary: a bare ";" section tapes the next word with a dashed
+    connector (e.g. "が ; いい"), while "|" and other separators break the
+    contour completely, producing no connector at all (e.g. "は | てんき").
+    Everything else welds adjacent words with a solid connector.
+    """
     if not previous_sections:
         return ConnectToPrevious.none
     previous: Section = previous_sections[-1]

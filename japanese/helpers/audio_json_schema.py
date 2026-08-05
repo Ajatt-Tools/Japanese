@@ -8,12 +8,16 @@ FileList = NewType("FileList", list[str])
 
 
 class FileInfo(TypedDict):
+    """Per-file pitch accent metadata in an audio source index."""
+
     kana_reading: str
     pitch_pattern: str | None
     pitch_number: str | None
 
 
 class SourceMetaRequired(TypedDict):
+    """Required metadata of an audio source index."""
+
     name: str
     year: int
     version: int
@@ -21,10 +25,18 @@ class SourceMetaRequired(TypedDict):
 
 
 class SourceMeta(SourceMetaRequired, total=False):
+    """Audio source metadata; media_dir_abs is optional.
+
+    media_dir_abs is injected only by release tooling for online (remote) sources.
+    typing.NotRequired is avoided because it is unavailable on the Python versions Anki supports.
+    """
+
     media_dir_abs: str
 
 
 class SourceIndex(TypedDict):
+    """Top-level schema of an audio source index.json file."""
+
     meta: SourceMeta
     headwords: dict[str, FileList]
     files: dict[str, FileInfo]

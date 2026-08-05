@@ -21,6 +21,7 @@ class FormattedEntryToSvgAdapter:
     _cfg: JapaneseConfig
 
     def __init__(self, cfg: JapaneseConfig) -> None:
+        """Initialize the adapter with the add-on configuration and a shared renderer."""
         self._cfg = cfg
         self._renderer = SvgGraphRenderer(cfg)
 

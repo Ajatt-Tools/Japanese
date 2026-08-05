@@ -41,6 +41,7 @@ class Mora:
 
     @property
     def is_trailing(self) -> bool:
+        """Return True if the mora is a trailing marker with no text."""
         if SvgMoraFlag.trailing in self.flags:
             assert not self.txt
             return True
@@ -60,6 +61,7 @@ class MoraSequence(typing.NamedTuple):
 
     @property
     def class_name(self) -> SvgGraphClassName:
+        """Return the SVG graph class matching the sequence's pitch type."""
         # Note: when a word is a compound with two accents, e.g. 二十四時間 with accents 二十(1) and 四時間(2),
         # class name will be "unknown".
         return SvgGraphClassName[self.pitch_type.name]

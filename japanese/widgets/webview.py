@@ -23,7 +23,10 @@ ZOOM_FACTOR_STEP = 0.1
 
 
 def get_css_file_refs(color_mode: SvgGraphColorMode, includes: Sequence[str]) -> list[str]:
-    """Return CSS files needed for the selected color mode."""
+    """
+    Return CSS files needed for the selected color mode.
+    Note: AnkiWebView.stdHtml() demands list[str] for its css parameter.
+    """
     match color_mode:
         case SvgGraphColorMode.css:
             return [*includes, ajt_pitch_graph_css()]
@@ -32,7 +35,10 @@ def get_css_file_refs(color_mode: SvgGraphColorMode, includes: Sequence[str]) ->
 
 
 def get_css_inline_styles(color_mode: SvgGraphColorMode, includes: Sequence[str]) -> Sequence[str]:
-    """Return inline CSS style tags needed for the selected color mode."""
+    """
+    Return inline CSS style tags needed for the selected color mode.
+    Note: the result is only joined into a string, so an immutable tuple is returned here.
+    """
     match color_mode:
         case SvgGraphColorMode.css:
             return *includes, graphs_inline_css_style_tag()

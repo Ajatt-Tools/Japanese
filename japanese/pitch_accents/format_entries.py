@@ -46,6 +46,7 @@ class EntryFormatter:
     _svg_maker: FormattedEntryToSvgAdapter
 
     def __init__(self, cfg: JapaneseConfig, *, svg_maker: FormattedEntryToSvgAdapter | None = None) -> None:
+        """Initialize the formatter, reusing the injected SVG adapter if one is provided."""
         self._cfg = cfg
         self._svg_maker = svg_maker or FormattedEntryToSvgAdapter(cfg)
 
@@ -88,9 +89,7 @@ class EntryFormatter:
         output_format: PitchOutputFormat,
         max_results: int,
     ) -> Sequence[str]:
-        """
-        Convert entries to HTML, sort and remove duplicates.
-        """
+        """Convert entries to HTML, sort and remove duplicates."""
         return compact_seq(self._get_notation(entry, output_format) for entry in sort_entries(entries))[:max_results]
 
     def pronunciations_to_json(
