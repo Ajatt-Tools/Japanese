@@ -386,7 +386,7 @@ def add_settings_action(root_menu: QMenu) -> None:
     root_menu.addAction(menu_action)
 
 
-def add_pitch_arist_context_menu_item(editor_webview: AnkiWebView, menu: QMenu) -> None:
+def add_pitch_artist_context_menu_item(editor_webview: AnkiWebView, menu: QMenu) -> None:
     """Forward the context menu event to the persistent dialog, creating it lazily on first use."""
     get_pitch_artist_dialog().add_context_menu_item(editor_webview, menu)
 
@@ -395,4 +395,4 @@ def init() -> None:
     """Initialize the Pitch Graph Artist menu entries and context menu hooks."""
     assert mw, "Anki should be running."
     add_settings_action(menu_root_entry())
-    gui_hooks.editor_will_show_context_menu.append(add_pitch_arist_context_menu_item)
+    gui_hooks.editor_will_show_context_menu.append(add_pitch_artist_context_menu_item)
