@@ -22,6 +22,7 @@ from .config_view import (
 )
 from .database.sqlite3_buddy import Sqlite3Buddy
 from .helpers.consts import ADDON_NAME
+from .helpers.debug_log import get_logger
 from .helpers.tokens import clean_furigana
 from .helpers.webview_utils import (
     AJT_WEBVIEW_CSS_FILE_NAME,
@@ -35,6 +36,8 @@ from .widgets.raise_on_show_dialog import RaiseOnShowDialog
 from .widgets.webview import SVGPreviewWebView, get_svg_preview_webview
 
 ACTION_NAME = "Pitch Accent lookup"
+
+logger = get_logger()
 
 
 def get_parent_widget(parent: QWidget | None) -> QWidget | None:
@@ -189,7 +192,7 @@ class ViewPitchAccentsDialog(RaiseOnShowDialog):
     def done(self, result: int) -> None:
         """Close the dialog and let Qt finalize the dialog result."""
         # https://doc.qt.io/qt-6/qdialog.html#done
-        print("closing AJT lookup window...")
+        logger.info("closing AJT lookup window...")
         super().done(result)
 
     def lookup_pronunciations(self, text: str, parent: QWidget | None = None) -> None:

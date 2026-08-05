@@ -1,6 +1,5 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
-import logging
 from collections.abc import Sequence
 from typing import Any, TypeAlias
 
@@ -8,6 +7,7 @@ from aqt import mw
 from aqt.qt import *
 from aqt.webview import AnkiWebView
 
+from ..helpers.debug_log import get_logger
 from ..helpers.webview_utils import (
     ajt_pitch_graph_css,
     graphs_inline_css_style_tag,
@@ -18,7 +18,7 @@ from ..helpers.webview_utils import (
 from ..pitch_accents.colors import SvgGraphColorMode
 from ..widgets.common import NoAnkiWebView
 
-logger = logging.getLogger(__name__)
+logger = get_logger()
 
 
 def get_css_file_refs(color_mode: SvgGraphColorMode, includes: Sequence[str]) -> list[str]:
