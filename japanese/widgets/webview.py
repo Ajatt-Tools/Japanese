@@ -19,6 +19,7 @@ from ..pitch_accents.colors import SvgGraphColorMode
 from ..widgets.common import NoAnkiWebView
 
 logger = get_logger()
+ZOOM_FACTOR_STEP = 0.1
 
 
 def get_css_file_refs(color_mode: SvgGraphColorMode, includes: Sequence[str]) -> list[str]:
@@ -39,7 +40,19 @@ def get_css_inline_styles(color_mode: SvgGraphColorMode, includes: Sequence[str]
             return (*includes,)
 
 
-class AnkiSVGPreviewWebView(AnkiWebView):
+class ZoomableWebViewMixin(QWebEngineView):
+    """Provide zoom_in/zoom_out methods for web views with setZoomFactor support."""
+
+    def zoom_in(self) -> None:
+        """Increase the zoom factor by one step."""
+        self.setZoomFactor(self.zoomFactor() + ZOOM_FACTOR_STEP)
+
+    def zoom_out(self) -> None:
+        """Decrease the zoom factor by one step."""
+        self.setZoomFactor(self.zoomFactor() - ZOOM_FACTOR_STEP)
+
+
+class AnkiSVGPreviewWebView(ZoomableWebViewMixin, AnkiWebView):
     """Web view for the pitch accent lookup dialog when Anki is running."""
 
     def __init__(self, action_name: str, css_file_names: Sequence[str], parent: QWidget | None) -> None:
@@ -56,16 +69,8 @@ class AnkiSVGPreviewWebView(AnkiWebView):
             ),
         )
 
-    def zoom_in(self) -> None:
-        """Increase the zoom factor by 0.1."""
-        self.setZoomFactor(self.zoomFactor() + 0.1)
 
-    def zoom_out(self) -> None:
-        """Decrease the zoom factor by 0.1."""
-        self.setZoomFactor(self.zoomFactor() - 0.1)
-
-
-class NoAnkiSVGPreviewWebView(NoAnkiWebView):
+class NoAnkiSVGPreviewWebView(ZoomableWebViewMixin, NoAnkiWebView):
     """Web view for the pitch accent lookup dialog in standalone runs (playground, tests)."""
 
     def __init__(self, css_file_names: Sequence[str], parent: QWidget | None):
@@ -86,14 +91,6 @@ class NoAnkiSVGPreviewWebView(NoAnkiWebView):
     def set_bridge_command(_func: Callable[[str], Any], _context: Any) -> None:
         """Do nothing; bridge commands are only available in Anki's web view."""
         logger.info("set_bridge_command not implemented.")
-
-    def zoom_in(self) -> None:
-        """Increase the zoom factor by 0.1."""
-        self.setZoomFactor(self.zoomFactor() + 0.1)
-
-    def zoom_out(self) -> None:
-        """Decrease the zoom factor by 0.1."""
-        self.setZoomFactor(self.zoomFactor() - 0.1)
 
 
 SVGPreviewWebView: TypeAlias = AnkiSVGPreviewWebView | NoAnkiSVGPreviewWebView
