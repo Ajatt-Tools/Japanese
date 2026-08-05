@@ -349,13 +349,6 @@ class AnkiAudioSearchDialog(AudioSearchDialog, AnkiSaveAndRestoreGeomDialog):
             return
 
         self._search_result_label.hide_count()
-
-        def search_on_forvo(_col) -> FullForvoResult:
-            """
-            Search and collect results from Forvo
-            """
-            return self._forvo_client.full_search(search_text)
-
         def set_search_results(results: FullForvoResult) -> None:
             self._table_widget.populate_with_results(results.files)
             self._search_result_label.set_count(results)
@@ -369,10 +362,15 @@ class AnkiAudioSearchDialog(AudioSearchDialog, AnkiSaveAndRestoreGeomDialog):
         (
             QueryOp(
                 parent=self,
-                op=search_on_forvo,
+                op=functools.partial(self._search_on_forvo, search_text=search_text),
                 success=set_search_results,
             )
             .failure(on_exception)
             .without_collection()
             .run_in_background()
         )
+
+    def _search_on_forvo(self, _col: object, *, search_text: str) -> FullForvoResult:
+        """Search and collect results from Forvo (QueryOp operation)."""
+        assert self._forvo_client, "Forvo client must be set."
+        return self._forvo_client.full_search(search_text)
