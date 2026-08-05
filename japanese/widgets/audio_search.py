@@ -37,11 +37,6 @@ if mw is None:
         return text  # noop
 
 
-class FileSaveResultsProtocol(typing.Protocol):
-    successes: list
-    fails: list
-
-
 class SearchBar(QWidget):
     """
     Combines a line edit and a search button.
