@@ -1,7 +1,10 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
-from collections.abc import Iterable
+import enum
+import typing
+from collections.abc import Callable, Iterable
 from types import SimpleNamespace
+from typing import TypeVar
 
 from aqt.qt import *
 
@@ -229,16 +232,31 @@ class PitchSettingsForm(MultiColumnSettingsForm):
         )
 
 
+EnumT = TypeVar("EnumT", bound=enum.Enum)
+
+
+class ColorLineEdit(typing.NamedTuple):
+    """A color picker widget keyed by its config option name."""
+
+    name: str
+    picker: ColorEditPicker
+
+
+def make_color_line_edits(enum_type: type[EnumT], lookup_color: Callable[[EnumT], str]) -> Iterable[ColorLineEdit]:
+    """Yield a color picker for every enum member, initialized with the looked-up color."""
+    for member in enum_type:
+        picker = ColorEditPicker()
+        picker.set_color(lookup_color(member))
+        yield ColorLineEdit(name=member.name, picker=picker)
+
+
 class PitchColorCodesSettingsForm(SettingsForm):
     _title: str = "Pitch Colors"
     _config: PitchColorCodesConfigView
 
-    def _make_color_line_edits(self) -> Iterable[tuple[str, ColorEditPicker]]:
+    def _make_color_line_edits(self) -> Iterable[ColorLineEdit]:
         assert self._config, "config must be set"
-        for pitch_type in PitchType:
-            picker = ColorEditPicker()
-            picker.set_color(self._config.lookup_color(pitch_type))
-            yield pitch_type.name, picker
+        return make_color_line_edits(PitchType, self._config.lookup_color)
 
     def _add_widgets(self) -> None:
         super()._add_widgets()
@@ -372,7 +390,6 @@ class ForvoSettingsForm(SettingsForm):
         self._widgets.preferred_countries.setToolTip("A comma-separated list of countries that will be sorted higher.")
 
 
-SvgOptValueType = type[Union[int, float]]
 SvgOptSpinbox = Union[PxNarrowSpinBox, PxDoubleNarrowSpinBox]
 
 

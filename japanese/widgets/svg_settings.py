@@ -4,7 +4,6 @@ from collections.abc import Iterable
 
 from aqt.qt import *
 
-from ..ajt_common.color_picker import ColorEditPicker
 from ..ajt_common.utils import q_emit
 from ..config_view import JapaneseConfig, SvgGraphColorCodesConfigView
 from ..helpers.webview_utils import (
@@ -15,8 +14,10 @@ from ..pitch_accents.common import FormattedEntry
 from ..pitch_accents.entry_to_svg import FormattedEntryToSvgAdapter
 from .settings_form import (
     AllowedConfigValues,
+    ColorLineEdit,
     MultiColumnSettingsForm,
     SvgSettingsForm,
+    make_color_line_edits,
 )
 from .webview import SVGPreviewWebView, get_svg_preview_webview
 from .widgets_to_config_dict import change_event
@@ -60,13 +61,10 @@ class SvgPitchColorCodesSettingsForm(MultiColumnSettingsForm):
 
     opts_changed = pyqtSignal()
 
-    def _make_color_line_edits(self) -> Iterable[tuple[str, ColorEditPicker]]:
+    def _make_color_line_edits(self) -> Iterable[ColorLineEdit]:
         """Yield color picker widgets for every SVG graph class."""
         assert self._config, "config must be set"
-        for pitch_type in SvgGraphClassName:
-            picker = ColorEditPicker()
-            picker.set_color(self._config.lookup_color(pitch_type))
-            yield pitch_type.name, picker
+        return make_color_line_edits(SvgGraphClassName, self._config.lookup_color)
 
     def _add_widgets(self) -> None:
         """Create color picker widgets and connect change signals."""
