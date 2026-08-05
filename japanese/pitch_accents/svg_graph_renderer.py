@@ -59,9 +59,14 @@ def wrap_content(graph: SvgGraph, content: RenderedGraphComponents) -> str:
     return "".join(content)
 
 
+def is_accented_particle(section: SvgGraphWord) -> bool:
+    """Return True for particles with an explicit pitch accent (e.g. は;po, ぐらい;pa)."""
+    return section.is_particle and section.class_name != SvgGraphClassName.particle
+
+
 def section_css_class(section: SvgGraphWord) -> str:
     """Return the CSS class string for a section, adding particle for compound particle roles."""
-    if section.is_particle and section.class_name != SvgGraphClassName.particle:
+    if is_accented_particle(section):
         return f"{SvgGraphClassName.particle.name} {section.class_name.name}"
     return section.class_name.name
 
