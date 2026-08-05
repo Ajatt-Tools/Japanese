@@ -222,6 +222,9 @@ class ForvoClient:
                 return sys.maxsize
 
         def country_key(pronunciation: ForvoPronunciation) -> int:
+            # Country may be None when the regex misses; treat such pronunciations as unpreferred.
+            if pronunciation.country is None:
+                return sys.maxsize
             try:
                 return self._config.preferred_countries.index(pronunciation.country.lower())
             except ValueError:
