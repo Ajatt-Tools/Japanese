@@ -45,11 +45,6 @@ def ajt_pitch_graph_css() -> str:
     return web_css_relpath(PITCH_GRAPH_CSS_FILE_NAME)
 
 
-def ajt_svg_settings_css() -> str:
-    """Return the web-exported path to the SVG settings preview CSS file."""
-    return web_css_relpath(AJT_SVG_SETTINGS_CSS_FILE_NAME)
-
-
 @functools.cache
 def inline_css_style_tag(css_file_name: str) -> str:
     """Return a <style> tag with the local CSS file inlined."""
@@ -60,13 +55,3 @@ def inline_css_style_tag(css_file_name: str) -> str:
 def graphs_inline_css_style_tag() -> str:
     """Return the CSS stylesheet for styling pitch accent SVG graphs."""
     return inline_css_style_tag(PITCH_GRAPH_CSS_FILE_NAME)
-
-
-def webview_inline_css_style_tag() -> str:
-    """Return the CSS stylesheet for styling AJT webview content."""
-    return inline_css_style_tag(AJT_WEBVIEW_CSS_FILE_NAME)
-
-
-def svg_settings_inline_css_style_tag() -> str:
-    """Return the CSS stylesheet for styling SVG settings previews."""
-    return inline_css_style_tag(AJT_SVG_SETTINGS_CSS_FILE_NAME)
