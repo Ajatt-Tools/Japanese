@@ -21,6 +21,8 @@ from .source_manager import normalize_filename
 # Config default values
 @dataclasses.dataclass
 class ForvoConfig:
+    """Forvo client configuration; preferred usernames/countries are lowercased on init."""
+
     enable_forvo_search: bool = True
     language: str = "ja"
     preferred_usernames: list[str] = dataclasses.field(default_factory=list)
@@ -54,12 +56,16 @@ def file_type(file: str) -> str:
 
 
 class ForvoGender(enum.Enum):
+    """Gender of a Forvo pronunciation's author, used in filenames."""
+
     male = "♂"
     female = "♀"
 
 
 @dataclasses.dataclass
 class ForvoPronunciation:
+    """One Forvo pronunciation result with optional author metadata."""
+
     word: str
     username: str
     audio_url: str
@@ -69,6 +75,8 @@ class ForvoPronunciation:
 
 @dataclasses.dataclass
 class ForvoFilenameBuilder:
+    """Build audio filenames from pronunciation metadata, honoring visibility settings."""
+
     show_gender: bool
     show_country: bool
 
@@ -102,6 +110,7 @@ def find_username(result: PageElement) -> str:
 
 
 def find_gender(result: PageElement) -> ForvoGender | None:
+    """Extract the author's gender from a Forvo result element, if present."""
     if match := re.search(RE_FIND_GENDER, result.get_text(strip=True)):
         # noinspection PyTypeChecker
         return ForvoGender[match.group("gender").strip().lower()]
@@ -109,12 +118,14 @@ def find_gender(result: PageElement) -> ForvoGender | None:
 
 
 def find_country(result: PageElement) -> str | None:
+    """Extract the author's country from a Forvo result element, if present."""
     if match := re.search(RE_FIND_COUNTRY, result.get_text(strip=True)):
         return match.group("country").strip()
     return None
 
 
 def audio_transcription_from_play_button(element: Tag) -> str:
+    """Return the pronounced word from a Forvo play button, filename-safe."""
     return re.sub(RE_SPACES, "_", element.text.strip().removesuffix("pronunciation").strip())
 
 
@@ -195,6 +206,7 @@ class ForvoClient:
         return response
 
     def find_pronunciations(self, results: Sequence[Tag], word: str) -> list[ForvoPronunciation]:
+        """Build pronunciation results from Forvo result elements for a word."""
         pronunciations: list[ForvoPronunciation] = []
         for result in results:
             pronunciation = ForvoPronunciation(
@@ -238,7 +250,7 @@ class ForvoClient:
 
     def _extract_url(self, element: Tag) -> str:
         play = element["onclick"]
-        # We are interested in Forvo's javascript Play function which takes in some parameters to play the audio
+        # We are interested in Forvo's JavaScript Play function which takes in some parameters to play the audio
         # Example: Play(3060224,'OTQyN...','OTQyN..',false,'Yy9wL2NwXzk0MjYzOTZfNzZfMzM1NDkxNS5tcDM=','Yy9wL...','h')
         # Match anything that isn't commas, parentheses or quotes to capture the function arguments
         # Regex will match something like ["Play", "3060224", ...]
