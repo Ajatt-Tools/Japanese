@@ -2,7 +2,6 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 import dataclasses
 import os
-from typing import Any, Optional, Union
 
 from ..database.sqlite3_buddy import Sqlite3Buddy
 from ..helpers.file_ops import file_exists
@@ -45,32 +44,27 @@ class AudioSource(AudioSourceConfig):
 
     @property
     def media_dir(self) -> str:
-        """Return the best available media directory for this source."""
-        # Release indexes may specify media_dir_abs as a remote media URL.
-        # For local/offline indexes, prefer an existing local media_dir beside index.json.
-        # Existing local media_dir_abs is still supported for custom source layouts.
+        """Return the media directory for this source.
+
+        media_dir_abs is returned verbatim when set: release tooling injects it
+        as a URL prefix into online indexes, and custom or unreleased sources
+        may set it to a local path. Offline indexes never contain it and fall
+        back to the media dir beside the source file.
+        """
+        # Meta can specify absolute path to the media dir,
+        # which will be used if set.
+        # Otherwise, fall back to relative path.
         self.raise_if_not_ready()
-        assert self.db
-
-        media_dir_abs = self.db.get_media_dir_abs(self.name)
-
-        if media_dir_abs and os.path.isdir(media_dir_abs):
+        assert self.db, "db must be set."
+        if media_dir_abs := self.db.get_media_dir_abs(self.name):
             return media_dir_abs
-
-        if self.is_local and os.path.isdir(local_media_dir := self._media_dir_rel_to_source()):
-            return local_media_dir
-
-        # Official release indexes may contain a remote media_dir_abs injected by release tooling.
-        if media_dir_abs:
-            return media_dir_abs
-
         # e.g. if self.url = "/path/to/taas/index.json" and media_dir = "media",
         # then join("/path/to/taas", "media") = "/path/to/taas/media"
         return self._media_dir_rel_to_source()
 
     def _media_dir_rel_to_source(self) -> str:
         """Return media_dir resolved relative to this source URL."""
-        assert self.db
+        assert self.db, "db must be set."
         return self.join_media_path(os.path.dirname(self.url), self.db.get_media_dir_rel(self.name))
 
     def join_media_path(self, *args: str) -> str:
@@ -91,12 +85,12 @@ class AudioSource(AudioSourceConfig):
     def original_url(self) -> str | None:
         """Return the source URL recorded when this source was initialized."""
         self.raise_if_not_ready()
-        assert self.db
+        assert self.db, "db must be set."
         return self.db.get_original_url(self.name)
 
     def update_original_url(self) -> None:
         """Store the current source URL as the initialized source URL."""
         # Remember where the file was downloaded from.
         self.raise_if_not_ready()
-        assert self.db
+        assert self.db, "db must be set."
         self.db.set_original_url(self.name, self.url)
