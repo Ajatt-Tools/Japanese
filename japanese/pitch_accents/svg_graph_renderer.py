@@ -71,6 +71,18 @@ def section_css_class(section: SvgGraphWord) -> str:
     return section.class_name.name
 
 
+def connector_css_class(section: SvgGraphWord) -> str:
+    """Return the CSS class string for the connector group leading into a section.
+
+    A connector into an accented particle shares the particle's accent class
+    so the accented particle and its incoming connector use one role color.
+    Connectors into words or plain particles keep the neutral connector class.
+    """
+    if is_accented_particle(section):
+        return f"{SvgGraphClassName.connector.name} {section_css_class(section)}"
+    return SvgGraphClassName.connector.name
+
+
 def attrs_circle(*, is_trailing: bool, is_particle: bool, circle_color: str) -> str:
     """Return SVG circle attributes for pitch points using an already-resolved color."""
     if is_trailing:
@@ -264,7 +276,7 @@ class SvgGraphRenderer:
         connector_svg = (
             make_group(
                 [connector.adjust_to_radius().draw()],
-                SvgGraphClassName.connector.name,
+                connector_css_class(section),
             )
             if connector.is_completed()
             else ""
