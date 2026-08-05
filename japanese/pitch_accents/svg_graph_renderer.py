@@ -211,7 +211,11 @@ class SvgGraphRenderer:
             content = self._make_pitch_artist_content(graph, start_pos)
         return self._make_sized_svg(graph, content)
 
-    def _start_connector(self, section: SvgGraphWord, pos: Point, class_name: SvgGraphClassName) -> Line:
+    def _start_connector(self, section: SvgGraphWord, pos: Point) -> Line:
+        # A connector into an accented particle shares the particle's role color
+        # so the particle circle and its incoming connector remain visually paired.
+        # Connectors into words or plain particles stay neutral.
+        class_name = section.class_name if is_accented_particle(section) else SvgGraphClassName.connector
         connector = Line(self._cfg, class_name).set_trailing(section.starts_with_trailing_mora)
         match section.connect_to_previous:
             case ConnectToPrevious.weld:
@@ -231,7 +235,7 @@ class SvgGraphRenderer:
         word_circles: list[str] = []
         text_moras: list[str] = []
         path = Path(self._cfg, section.class_name)
-        connector = self._start_connector(section, pos, SvgGraphClassName.connector)
+        connector = self._start_connector(section, pos)
         word_color = lookup_component_color(self._cfg, SvgBlackAndWhiteRole.word, section.class_name)
 
         for idx, mora in enumerate(section.moras):
