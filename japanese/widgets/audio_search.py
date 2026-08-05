@@ -31,12 +31,6 @@ from ..helpers.misc import strip_html_and_media
 from .audio_serach_result_label import AudioSearchResultLabel
 from .audio_sources import SourceEnableCheckbox
 
-if mw is None:
-
-    def strip_html_and_media(text: str) -> str:
-        return text  # noop
-
-
 TOOLTIP_ERROR_PERIOD_MS = 7000
 TOOLTIP_LOADING_PERIOD_MS = 2000
 
