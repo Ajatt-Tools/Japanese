@@ -351,23 +351,14 @@ class AnkiAudioSearchDialog(AudioSearchDialog, AnkiSaveAndRestoreGeomDialog):
             return
 
         self._search_result_label.hide_count()
-        def set_search_results(results: FullForvoResult) -> None:
-            self._table_widget.populate_with_results(results.files)
-            self._search_result_label.set_count(results)
-            self._search_lock.set_searching(False)
-
-        def on_exception(exception: Exception) -> None:
-            self._search_lock.set_searching(False)
-            self._search_result_label.set_error(exception)
-
         self._search_lock.set_searching(True)
         (
             QueryOp(
                 parent=self,
                 op=functools.partial(self._search_on_forvo, search_text=search_text),
-                success=set_search_results,
+                success=self._set_search_results,
             )
-            .failure(on_exception)
+            .failure(self._on_search_exception)
             .without_collection()
             .run_in_background()
         )
@@ -376,3 +367,14 @@ class AnkiAudioSearchDialog(AudioSearchDialog, AnkiSaveAndRestoreGeomDialog):
         """Search and collect results from Forvo (QueryOp operation)."""
         assert self._forvo_client, "Forvo client must be set."
         return self._forvo_client.full_search(search_text)
+
+    def _set_search_results(self, results: FullForvoResult) -> None:
+        """Populate the results table and clear the searching state."""
+        self._table_widget.populate_with_results(results.files)
+        self._search_result_label.set_count(results)
+        self._search_lock.set_searching(False)
+
+    def _on_search_exception(self, exception: Exception) -> None:
+        """Clear the searching state and show the search error."""
+        self._search_lock.set_searching(False)
+        self._search_result_label.set_error(exception)
