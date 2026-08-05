@@ -99,7 +99,7 @@ def lookup_component_color(cfg: JapaneseConfig, role: SvgBlackAndWhiteRole, clas
 
 
 def trail_color(cfg: JapaneseConfig) -> str:
-    """Resolve the color used for trailing lines and circles (odaka drop markers)."""
+    """Resolve the color used for trailing lines and circles."""
     return lookup_component_color(cfg, SvgBlackAndWhiteRole.trail, SvgGraphClassName.connector)
 
 
@@ -130,11 +130,6 @@ class Line:
         if self._end:
             return self._end
         raise ValueError("End is not set.")
-
-    @property
-    def is_trailing(self) -> bool:
-        """Return True if this line uses trailing-mora styling."""
-        return self._is_trailing
 
     def set_trailing(self, is_trailing: bool) -> "Line":
         """Set trailing styling and return self for chaining."""
