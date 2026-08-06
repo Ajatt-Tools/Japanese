@@ -156,20 +156,15 @@ class RemoveSpaces(ContextMenuAction):
         return re.sub(RE_SPACES, "", text)
 
 
-def add_editor_context_menu_items(webview: EditorWebView, menu: QMenu) -> None:
+def add_context_menu_items(webview: AnkiWebView, menu: QMenu) -> None:
+    """Add context menu actions, showing all editor actions when an editor is present."""
+    editor = getattr(webview, "editor", None)
     for Action in ContextMenuAction.subclasses:
-        if Action.enabled():
+        if Action.enabled() and (editor or Action.shown_when_not_editing):
             action: QAction = menu.addAction(str(Action.label))
-            qconnect(action.triggered, Action(editor=webview.editor))
-
-
-def add_webview_context_menu_items(webview: AnkiWebView, menu: QMenu) -> None:
-    for Action in ContextMenuAction.subclasses:
-        if Action.shown_when_not_editing and Action.enabled():
-            action: QAction = menu.addAction(str(Action.label))
-            qconnect(action.triggered, Action(webview=webview))
+            qconnect(action.triggered, Action(editor=editor, webview=webview))
 
 
 def init() -> None:
-    gui_hooks.editor_will_show_context_menu.append(add_editor_context_menu_items)
-    gui_hooks.webview_will_show_context_menu.append(add_webview_context_menu_items)
+    gui_hooks.editor_will_show_context_menu.append(add_context_menu_items)
+    gui_hooks.webview_will_show_context_menu.append(add_context_menu_items)

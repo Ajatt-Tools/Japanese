@@ -396,3 +396,4 @@ def init() -> None:
     assert mw, "Anki should be running."
     add_settings_action(menu_root_entry())
     gui_hooks.editor_will_show_context_menu.append(add_pitch_artist_context_menu_item)
+    gui_hooks.webview_will_show_context_menu.append(add_pitch_artist_context_menu_item)
