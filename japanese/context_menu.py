@@ -48,7 +48,9 @@ class ContextMenuAction(abc.ABC):
         self._fgen = fgen
         self._accent_db_path = accent_db_path
         self.editor = editor
-        self.webview = webview or editor.web
+        self.webview = webview or (editor.web if editor else None)
+        if not self.webview:
+            raise ValueError("webview or editor must be provided")
 
     def _parent_window(self) -> QWidget:
         if self.editor:
