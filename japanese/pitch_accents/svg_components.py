@@ -112,6 +112,7 @@ class Line:
     _cfg: JapaneseConfig
     _is_trailing: bool
     _is_tape: bool
+    _class_name: SvgGraphClassName
 
     def __init__(self, cfg: JapaneseConfig, class_name: SvgGraphClassName) -> None:
         """Initialize an empty line whose stroke color resolves from the given graph class."""
