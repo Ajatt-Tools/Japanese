@@ -21,6 +21,11 @@ from .helpers.regex import RE_SPACES
 from .mecab_controller.kana_conv import to_hiragana, to_katakana
 from .mecab_controller.unify_readings import literal_pronunciation
 
+NEW_EDITOR_PASTE_UNSUPPORTED = (
+    "Anki's new editor does not currently expose paste support for add-ons. "
+    "Please report this to Anki's developers if you want this action to work there."
+)
+
 
 class ContextMenuAction(abc.ABC):
     subclasses: list[type["ContextMenuAction"]] = []
@@ -89,7 +94,7 @@ class ContextMenuAction(abc.ABC):
         try:
             self.editor.doPaste(result, internal=True, extended=False)
         except AttributeError as ex:
-            show_warning(f"Anki's new editor does not support pasting: {ex}")
+            show_warning(f"{NEW_EDITOR_PASTE_UNSUPPORTED}\n\nDetails: {ex}")
 
     def __call__(self, *args, **kwargs) -> None:
         if sel_text := self.get_selected_text():
