@@ -158,7 +158,10 @@ class Line:
 
     def draw(self) -> str:
         """Render this completed line as SVG markup."""
+
+        # Require the line to be completed.
         assert self._start is not None and self._end is not None
+
         attrs: list[str] = []
         if self._is_tape:
             attrs.append(f'stroke-dasharray="{self._cfg.svg_graphs.stroke_dasharray}"')
@@ -176,7 +179,13 @@ class Line:
         return f'<line {" ".join(attrs)} />'
 
     def adjust_to_radius(self) -> "Line":
-        """Shorten this line so it touches circle edges instead of centers."""
+        """Return a new line shortened so it touches circle edges instead of centers.
+
+        The line is returned as a copy so draw() stays idempotent: adjusting in
+        place would shift the endpoints a second time if draw() were called again.
+        """
+
+        # Require the line to be completed.
         assert self._start is not None and self._end is not None
 
         r = self._cfg.svg_graphs.circle_radius
