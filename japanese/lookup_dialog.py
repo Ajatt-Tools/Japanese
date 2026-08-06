@@ -85,16 +85,21 @@ class ViewPitchAccentsDialog(RaiseOnShowDialog):
         self._accent_db_path = accent_db_path
         self._svg_maker = FormattedEntryToSvgAdapter(cfg)
         self._formatter = EntryFormatter(cfg, svg_maker=self._svg_maker)
-        self._web = get_svg_preview_webview(
+        self._web = self._make_web_view()
+        self._pronunciations = {}
+        self._setup_ui()
+        disable_help_button(self)
+
+    def _make_web_view(self) -> SVGPreviewWebView:
+        """Create the preview web view and register it for geometry save/restore."""
+        web = get_svg_preview_webview(
             self,
             action_name=ACTION_NAME,
             css_file_names=(AJT_WEBVIEW_CSS_FILE_NAME,),
         )
-        self._web.setProperty("url", QUrl("about:blank"))
-        self._web.setObjectName(self.name)
-        self._pronunciations = {}
-        self._setup_ui()
-        disable_help_button(self)
+        web.setProperty("url", QUrl("about:blank"))
+        web.setObjectName(self.name)
+        return web
 
     def _setup_ui(self) -> None:
         """Create the dialog layout and web view controls."""
