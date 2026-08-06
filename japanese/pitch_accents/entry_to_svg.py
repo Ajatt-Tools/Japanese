@@ -44,14 +44,14 @@ class FormattedEntryToSvgAdapter:
         """Convert a dictionary pitch entry to a normalized SVG graph."""
         seq = entry_to_moras(entry)
         return SvgGraph(
-            sections=[
+            sections=(
                 SvgGraphWord(
                     class_name=seq.class_name,
                     moras=tuple(self._mora_to_graph_mora(mora) for mora in seq.moras),
                     is_particle=False,
                     connect_to_previous=ConnectToPrevious.none,
-                )
-            ],
+                ),
+            ),
             outer_class_name=seq.class_name,
         )
 
