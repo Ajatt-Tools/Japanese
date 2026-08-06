@@ -6,6 +6,7 @@ from unittest.mock import create_autospec
 import pytest
 from aqt.editor import Editor
 
+import japanese.context_menu as context_menu
 from japanese.context_menu import RemoveSpaces
 from japanese.furigana.gen_furigana import FuriganaGen
 from tests.helpers import make_fresh_config
@@ -15,6 +16,13 @@ def make_editor_mock() -> Editor:
     """Return an editor mock with the web attribute used by ContextMenuAction."""
     editor = create_autospec(Editor, instance=True)
     editor.web = object()
+    return editor
+
+
+def make_new_editor_mock() -> Editor:
+    """Return an Editor-like mock that lacks doPaste, like Anki's new editor."""
+    editor = make_editor_mock()
+    del editor.doPaste
     return editor
 
 
@@ -60,3 +68,17 @@ class TestRemoveSpaces:
         action._try_paste_text(selected_text)
 
         editor.doPaste.assert_called_once_with(expected_paste, internal=True, extended=False)
+
+    def test_try_paste_text_warns_when_new_editor_has_no_do_paste(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """_try_paste_text shows a warning when Anki's new editor has no paste API."""
+        warnings: list[str] = []
+        monkeypatch.setattr(context_menu, "show_warning", warnings.append)
+        action = RemoveSpaces(
+            make_fresh_config(),
+            fgen=create_autospec(FuriganaGen, instance=True),
+            editor=make_new_editor_mock(),
+        )
+
+        action._try_paste_text("a b c")
+
+        assert "".join(warnings).startswith(context_menu.NEW_EDITOR_PASTE_UNSUPPORTED)
