@@ -5,7 +5,6 @@ import enum
 import functools
 import subprocess
 import typing
-from typing import cast
 
 from anki.sound import SoundOrVideoTag
 from anki.utils import no_bundled_libs
@@ -231,7 +230,7 @@ class AudioSearchDialog(QDialog):
             combo.setMinimumWidth(120)
             combo.setMaximumWidth(200)
             combo.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
-        cast(QDialog, self._search_bar).setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum)
+        self._search_bar.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum)
         return layout
 
     @property
