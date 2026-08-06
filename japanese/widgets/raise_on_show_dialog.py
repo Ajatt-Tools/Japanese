@@ -19,5 +19,11 @@ class RaiseOnShowDialog(AnkiSaveAndRestoreGeomDialog):
 
     def show(self) -> None:
         """Show the dialog and raise it above other windows."""
+        if self.isVisible():
+            # Already visible: just raise. Calling super().show() would re-run
+            # _restore_geom() and snap the dialog back to its saved position,
+            # discarding any move the user made while the dialog was open.
+            self.raise_()
+            return
         super().show()
         self.raise_()
