@@ -8,7 +8,7 @@ import aqt
 from aqt import gui_hooks
 from aqt.editor import Editor, EditorWebView
 from aqt.qt import *
-from aqt.utils import tooltip
+from aqt.utils import show_warning, tooltip
 from aqt.webview import AnkiWebView
 
 from .config_view import config_view as cfg
@@ -69,10 +69,17 @@ class ContextMenuAction(abc.ABC):
             return sel_text
         return None
 
+    def _try_paste_text(self, sel_text: str) -> None:
+        """Run the action and paste its result into the editor, skipping empty results."""
+        if (result := self.action(sel_text)) and self.editor:
+            try:
+                self.editor.doPaste(result, internal=True, extended=False)
+            except AttributeError:
+                show_warning("Anki's new editor does not support pasting.")
+
     def __call__(self, *args, **kwargs) -> None:
         if sel_text := self.get_selected_text():
-            if (result := self.action(sel_text)) is not None and self.editor is not None:
-                self.editor.doPaste(result, internal=True, extended=False)
+            self._try_paste_text(sel_text)
         else:
             tooltip("No text selected.")
 
