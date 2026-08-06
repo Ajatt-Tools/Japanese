@@ -17,9 +17,9 @@ from .audio import aud_src_mgr
 from .audio_manager.forvo_client import ForvoClient
 from .config_view import JapaneseConfig, ToolbarButtonConfig, get_global_config
 from .database.sqlite3_buddy import Sqlite3Buddy
+from .furigana.gen_furigana import FuriganaGen, get_global_furigana_generator
 from .helpers.profiles import TaskCaller
 from .helpers.tokens import clean_furigana
-from .reading import generate_furigana
 from .tasks import DoTasks
 from .widgets.anki_style import fix_default_anki_style
 from .widgets.audio_search import AnkiAudioSearchDialog
@@ -113,8 +113,9 @@ class EditorMenus:
 
     _cfg: JapaneseConfig
 
-    def __init__(self, cfg: JapaneseConfig) -> None:
+    def __init__(self, cfg: JapaneseConfig, fgen: FuriganaGen) -> None:
         self._cfg = cfg
+        self._fgen = fgen
 
     def _search_audio(self, editor: Editor) -> None:
         """Open the audio search dialog, insert selected audio tags, and trigger download."""
@@ -195,13 +196,13 @@ class EditorMenus:
             ),
             ToolbarButton(
                 id="furigana_button",
-                on_press=modify_field(generate_furigana),
+                on_press=modify_field(self._generate_furigana),
                 tip="Generate furigana in the field",
                 conf=self._cfg.toolbar.furigana_button,
             ),
             ToolbarButton(
                 id="hiragana_button",
-                on_press=modify_field(functools.partial(generate_furigana, full_hiragana=True)),
+                on_press=modify_field(functools.partial(self._generate_furigana, full_hiragana=True)),
                 tip="Reconvert the field as hiragana",
                 conf=self._cfg.toolbar.hiragana_button,
             ),
@@ -218,6 +219,14 @@ class EditorMenus:
                 conf=self._cfg.toolbar.audio_search_button,
             ),
         )
+
+    def _generate_furigana(self, src_text: str, full_hiragana: bool = False) -> str:
+        """Generate furigana for the source text using a temporary db connection."""
+        with Sqlite3Buddy() as db:
+            return self._fgen.with_new_buddy(db).generate_furigana(
+                src_text,
+                full_hiragana=full_hiragana,
+            )
 
     def add_toolbar_buttons(self, html_buttons: list[str], editor: Editor) -> None:
         """Register enabled toolbar buttons with the Anki editor."""
@@ -238,6 +247,8 @@ class EditorMenus:
 def init() -> None:
     """Create the EditorMenus instance and register it with Anki's editor hook."""
     assert mw, "Anki should be open."
-    cfg = get_global_config()
-    mw._ajt__japanese_editor_menus = menus = EditorMenus(cfg)
+    mw._ajt__japanese_editor_menus = menus = EditorMenus(
+        cfg=get_global_config(),
+        fgen=get_global_furigana_generator(),
+    )
     gui_hooks.editor_did_init_buttons.append(menus.add_toolbar_buttons)
