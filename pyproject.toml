@@ -42,7 +42,7 @@ dependencies = [
     "mypy>=1.0.0",
     "isort",
     "pytest",
-    "aqt>=26.5",
+    "aqt>=26.8",
     "pyupgrade",
     "beartype",
 ]
@@ -101,7 +101,7 @@ dependencies = [
     "pytest",
     "pytest-asyncio",
     "pytest-xdist",
-    "aqt>=26.5", # needed to run Anki addon tests
+    "aqt>=26.8", # needed to run Anki addon tests
     "beartype",
 ]
 system-packages = true
