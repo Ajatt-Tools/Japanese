@@ -28,18 +28,49 @@ EXPECTED_BOKU_NOTATIONS: typing.Final[int] = 5
 
 
 class RecordingRaiseOnShowDialog(RaiseOnShowDialog):
-    """RaiseOnShowDialog variant that records raise_ calls."""
+    """RaiseOnShowDialog variant that records raise_ and geometry-restore calls."""
 
     name: str = "ajt__recording_raise_on_show_dialog"
 
     def __init__(self) -> None:
-        """Initialize the dialog with a raise-call counter."""
-        super().__init__()
+        """Initialize the dialog with raise/restore counters.
+
+        The counters are set before super().__init__() because the parent
+        constructor already calls _restore_geom() once.
+        """
         self.raise_count = 0
+        self.restore_count = 0
+        super().__init__()
 
     def raise_(self) -> None:
         """Record that show() requested the dialog to be raised."""
         self.raise_count += 1
+
+    def _restore_geom(self) -> None:
+        """Record that the dialog geometry was restored."""
+        self.restore_count += 1
+
+
+class GetNotationScenario(typing.NamedTuple):
+    """Expected markers for one lookup notation output format."""
+
+    mode: LookupDialogPitchOutputFormat
+    expected_marker: str
+    absent_marker: str
+
+
+GET_NOTATION_SCENARIOS: typing.Final[dict[str, GetNotationScenario]] = {
+    "html": GetNotationScenario(
+        mode=LookupDialogPitchOutputFormat.html,
+        expected_marker='<span class="pitch_html">',
+        absent_marker='<svg class="ajt__pitch_svg"',
+    ),
+    "svg": GetNotationScenario(
+        mode=LookupDialogPitchOutputFormat.svg,
+        expected_marker='<svg class="ajt__pitch_svg"',
+        absent_marker='<span class="pitch_html">',
+    ),
+}
 
 
 class OutsideAnkiScenario(typing.NamedTuple):
@@ -102,6 +133,24 @@ class TestViewPitchAccentsDialog:
         assert dialog.raise_count == 1
         dialog.hide()
 
+    def test_show_when_visible_does_not_restore_geometry(self) -> None:
+        """Showing an already-visible dialog raises it without snapping back to the saved position.
+
+        __init__ restores geometry once, and the first show() restores it again.
+        A second show() while the dialog is still visible must not restore
+        geometry a third time, or the user's manual move would be discarded.
+        """
+        dialog = RecordingRaiseOnShowDialog()
+        dialog.show()
+        restores_after_first_show = dialog.restore_count
+
+        dialog.show()
+
+        assert dialog.isVisible() is True
+        assert dialog.raise_count == 2
+        assert dialog.restore_count == restores_after_first_show
+        dialog.hide()
+
     def test_webview_is_no_anki(self, dialog: ViewPitchAccentsDialog) -> None:
         """Outside Anki, the standalone web view with inlined CSS is selected."""
         assert isinstance(dialog._web, NoAnkiSVGPreviewWebView)
@@ -118,18 +167,17 @@ class TestViewPitchAccentsDialog:
 
         assert dialog._html_style() is HTMLPitchPatternStyle.u_biq_color_coded
 
-    @pytest.mark.parametrize("mode", [LookupDialogPitchOutputFormat.svg])
-    def test_get_notation_svg_branch(
-        self, tmp_sqlite3_db_path: pathlib.Path, mode: LookupDialogPitchOutputFormat
-    ) -> None:
-        """SVG lookup notation includes a graph and the pitch number marker."""
+    @pytest.mark.parametrize("scenario", GET_NOTATION_SCENARIOS.values(), ids=list(GET_NOTATION_SCENARIOS.keys()))
+    def test_get_notation_branches(self, tmp_sqlite3_db_path: pathlib.Path, scenario: GetNotationScenario) -> None:
+        """Each lookup notation mode emits its own marker and ends with the pitch number."""
         cfg = make_fresh_config()
         entry = FormattedEntry("僕", "ボク", "<low_rise>ボ</low_rise><high>ク</high>", "0")
         dialog = ViewPitchAccentsDialog(cfg, accent_lookup=make_accent_lookup(cfg), accent_db_path=tmp_sqlite3_db_path)
 
-        notation = dialog._get_notation(entry, mode)
+        notation = dialog._get_notation(entry, scenario.mode)
 
-        assert notation.count('<svg class="ajt__pitch_svg"') == 1
+        assert notation.count(scenario.expected_marker) == 1
+        assert notation.count(scenario.absent_marker) == 0
         assert notation.endswith(entry.pitch_number_html)
 
     def test_lookup_pronunciations(self, dialog: ViewPitchAccentsDialog) -> None:

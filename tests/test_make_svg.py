@@ -29,6 +29,7 @@ from japanese.pitch_accents.svg_graph_renderer import (
 from japanese.pitch_accents.svg_graph_types import (
     ConnectToPrevious,
     PitchLevel,
+    SvgGraph,
     SvgGraphMora,
     SvgGraphWord,
     SvgMoraFlag,
@@ -145,6 +146,31 @@ def test_dictionary_path_group_is_named_lines(
     assert [class_name for class_name in group_class_names if class_name == "paths"] == []
 
 
+def test_single_mora_artist_graph_omits_lines_group(no_anki_config: NoAnkiConfigView) -> None:
+    """A Pitch Artist graph of single-mora sections has circles/text but no lines group.
+
+    A single mora has no pitch contour (a line needs two points), so the
+    "lines" group is intentionally omitted while circles and text remain.
+    """
+    graph = SvgGraph(
+        sections=(
+            SvgGraphWord(
+                class_name=SvgGraphClassName.heiban,
+                moras=(SvgGraphMora(text="ア", level=PitchLevel.high),),
+                is_particle=False,
+                connect_to_previous=ConnectToPrevious.none,
+            ),
+        ),
+        outer_class_name=None,
+    )
+
+    svg = SvgGraphRenderer(no_anki_config).render_graph(graph)
+
+    assert '<g class="lines">' not in svg
+    assert '<g class="circles">' in svg
+    assert '<g class="text">' in svg
+
+
 def test_renderer_make_text_element(no_anki_config: NoAnkiConfigView) -> None:
     """Renderer text elements keep class attributes and formatted coordinates."""
     maker = SvgGraphRenderer(no_anki_config)
@@ -189,6 +215,14 @@ def test_line_end_point_raises_before_end_is_set(no_anki_config: NoAnkiConfigVie
     """Line.end_point rejects incomplete lines."""
     with pytest.raises(ValueError):
         Line(no_anki_config, SvgGraphClassName.heiban).end_point
+
+
+def test_line_adjust_to_radius_is_idempotent(no_anki_config: NoAnkiConfigView) -> None:
+    """adjust_to_radius returns a copy, so repeated draws do not shift endpoints twice."""
+    line = Line(no_anki_config, SvgGraphClassName.heiban).start_at(Point.new(x=0, y=0)).end_at(Point.new(x=10, y=0))
+
+    assert line.adjust_to_radius().draw() == line.adjust_to_radius().draw()
+    assert line.end_point == Point.new(x=10, y=0)
 
 
 def make_word(class_name: SvgGraphClassName, *, is_particle: bool) -> SvgGraphWord:

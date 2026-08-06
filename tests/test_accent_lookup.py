@@ -118,6 +118,8 @@ class TestAccDictLookup:
             ("足りなかったらなんか", ["足りなかったら", "なんか"]),
             # らっしゃる starts a new color unit after the て-form.
             ("鳴いてらっしゃった", ["鳴いて", "らっしゃった"]),
+            # いらっしゃる starts a new color unit after the て-form (DETACH_HEADWORDS).
+            ("鳴いていらっしゃった", ["鳴いて", "いらっしゃった"]),
         ],
     )
     def test_attach_rules(

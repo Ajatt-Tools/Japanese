@@ -8,7 +8,12 @@ import typing
 import pytest
 
 from japanese.audio_manager.audio_source import AudioSource, AudioSourceError
-from japanese.audio_manager.basic_types import NameUrl, NameUrlSet, TotalAudioStats
+from japanese.audio_manager.basic_types import (
+    AudioSourceConfig,
+    NameUrl,
+    NameUrlSet,
+    TotalAudioStats,
+)
 from japanese.audio_manager.source_manager import AudioSourceManager
 from japanese.database.basic_types import InvalidSourceIndex
 from japanese.database.sqlite3_buddy import Sqlite3Buddy
@@ -159,6 +164,38 @@ class TestAudioSourceErrors:
         source = AudioSource(name="TEST", url=REMOTE_SOURCE_URL, enabled=True, db=None)
         with pytest.raises(AudioSourceError):
             source.media_dir
+
+
+class TestAudioSourceDbBinding:
+    """AudioSource database binding helpers."""
+
+    def test_with_db_returns_distinct_copy(self, tmp_db_connection: Sqlite3Buddy) -> None:
+        """with_db returns a new AudioSource bound to the given db, leaving the original unchanged."""
+        source = make_cached_source(tmp_db_connection, source_url=REMOTE_SOURCE_URL)
+        rebound = source.with_db(None)
+
+        assert rebound is not source
+        assert rebound.db is None
+        assert rebound.name == source.name
+        assert rebound.url == source.url
+        assert source.db is tmp_db_connection
+
+    def test_from_cfg_constructs_and_binds(self, tmp_db_connection: Sqlite3Buddy) -> None:
+        """from_cfg builds an AudioSource from a config and binds it to the database."""
+        cfg = AudioSourceConfig(name="TEST", url=REMOTE_SOURCE_URL, enabled=True)
+        source = AudioSource.from_cfg(cfg, tmp_db_connection)
+
+        assert source.name == "TEST"
+        assert source.url == REMOTE_SOURCE_URL
+        assert source.enabled is True
+        assert source.db is tmp_db_connection
+
+    def test_original_url_round_trip(self, tmp_db_connection: Sqlite3Buddy) -> None:
+        """update_original_url stores the current url, which original_url reads back."""
+        source = make_cached_source(tmp_db_connection, source_url=REMOTE_SOURCE_URL)
+        source.update_original_url()
+
+        assert source.original_url == REMOTE_SOURCE_URL
 
 
 def test_delete_cache(init_factory: NoAnkiAudioSourceManagerFactory, tmp_db_connection: Sqlite3Buddy) -> None:
