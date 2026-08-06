@@ -102,8 +102,8 @@ class NoAnkiSVGPreviewWebView(ZoomableWebViewMixin, NoAnkiWebView):
 SVGPreviewWebView: TypeAlias = AnkiSVGPreviewWebView | NoAnkiSVGPreviewWebView
 
 
-def get_svg_preview_webview(parent: QWidget, css_file_names: Sequence[str], action_name: str) -> SVGPreviewWebView:
-    """Return the Anki or standalone web view for the lookup dialog."""
+def get_svg_preview_webview(parent: QWidget, *, css_file_names: Sequence[str], action_name: str) -> SVGPreviewWebView:
+    """Return the Anki or standalone web view for SVG preview dialogs."""
     if mw:
         return AnkiSVGPreviewWebView(action_name, css_file_names, parent)
     # Anki isn't running.

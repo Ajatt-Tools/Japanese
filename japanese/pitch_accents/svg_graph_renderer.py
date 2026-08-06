@@ -329,6 +329,10 @@ class SvgGraphRenderer:
             text.append(make_group([rendered.text], css_class))
             start_pos = rendered.pos
 
+        # A single-mora section has no contour line (a line needs two points),
+        # so its path markup is empty. If every section is single-mora, the
+        # "lines" group is omitted entirely while "circles"/"text" remain.
+        # This is intentional: there is simply no pitch contour to draw.
         return RenderedGraphComponents(
             lines=make_group(paths, SvgGroupName.lines.name),
             circles=make_group(circles, SvgGroupName.circles.name),

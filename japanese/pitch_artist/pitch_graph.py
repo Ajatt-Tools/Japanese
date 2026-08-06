@@ -434,12 +434,13 @@ def sections_to_graph(sequence: Sequence[Section]) -> SvgGraph:
         ):
             sections.append(graph_section)
         previous_sections.append(section)
-    return SvgGraph(sections=sections, outer_class_name=None)
+    return SvgGraph(sections=tuple(sections), outer_class_name=None)
 
 
 class SvgPitchArtistGraphMaker:
     """Parse Pitch Artist notation and render it as SVG pitch graphs."""
 
+    _cfg: JapaneseConfig
     _renderer: SvgGraphRenderer
 
     def __init__(self, cfg: JapaneseConfig) -> None:
