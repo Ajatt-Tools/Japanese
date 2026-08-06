@@ -90,6 +90,9 @@ def determine_levels_keihan(accent: SplitAccent, n_moras: int) -> list[PitchLeve
         return []
     assert isinstance(accent.levels, str), "levels should be str"
     levels_list = list(str(accent.levels).lower())
+    # The Keihan regex requires at least one level char, so this never triggers
+    # today; guard anyway so a future regex change cannot IndexError here.
+    assert levels_list, "keihan levels must be non-empty"
     levels_list += [levels_list[-1]] * (n_moras - len(levels_list))
     return [PitchLevel(c.lower()) for c in levels_list]  # construct pitch level from its value.
 
