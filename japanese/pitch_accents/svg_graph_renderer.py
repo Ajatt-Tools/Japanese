@@ -233,6 +233,16 @@ class SvgGraphRenderer:
                 pass
         return connector
 
+    def _render_mora_circle(self, mora: SvgGraphMora, pos: Point, *, section: SvgGraphWord, word_color: str) -> str:
+        """Render the pitch circle for one mora."""
+        # Note: is_particle is always False for FormattedEntry-derived sections.
+        return self.make_circle(
+            pos.replace(),
+            circle_color=self._circle_color_for_mora(is_trailing=mora.is_trailing, word_color=word_color),
+            is_trailing=mora.is_trailing,
+            is_particle=section.is_particle,
+        )
+
     def _render_section(self, section: SvgGraphWord, pos: Point) -> RenderedSection:
         """Render one section, starting at the given drawing position.
 
@@ -247,18 +257,7 @@ class SvgGraphRenderer:
 
         for idx, mora in enumerate(section.moras):
             pos = pos.replace(y=self.height_high if mora.level == PitchLevel.high else self.height_low)
-            # Note: is_particle is always False for FormattedEntry-derived sections.
-            word_circles.append(
-                self.make_circle(
-                    pos.replace(),
-                    circle_color=self._circle_color_for_mora(
-                        is_trailing=mora.is_trailing,
-                        word_color=word_color,
-                    ),
-                    is_trailing=mora.is_trailing,
-                    is_particle=section.is_particle,
-                )
-            )
+            word_circles.append(self._render_mora_circle(mora, pos, section=section, word_color=word_color))
             path.push(pos.replace(), is_trailing=mora.is_trailing)
             # Note: connectors are never used with FormattedEntry-derived sections.
             if idx == 0 and connector.is_unfinished():
