@@ -70,18 +70,20 @@ class ContextMenuAction(abc.ABC):
         return None
 
     def _try_paste_text(self, sel_text: str) -> None:
-        """Run the action and paste its result into the editor, skipping empty results."""
-        if (result := self.action(sel_text)) and self.editor:
-            try:
-                self.editor.doPaste(result, internal=True, extended=False)
-            except AttributeError as ex:
-                show_warning(f"Anki's new editor does not support pasting: {ex}")
+        """Run the action and paste its result into the editor unless the action returns None."""
+        result = self.action(sel_text)
+        if result is None or self.editor is None:
+            return
+        try:
+            self.editor.doPaste(result, internal=True, extended=False)
+        except AttributeError as ex:
+            show_warning(f"Anki's new editor does not support pasting: {ex}")
 
     def __call__(self, *args, **kwargs) -> None:
         if sel_text := self.get_selected_text():
             self._try_paste_text(sel_text)
         else:
-            tooltip("No text selected.")
+            tooltip("No text selected.", parent=self._parent_window())
 
 
 class GenerateFurigana(ContextMenuAction):
