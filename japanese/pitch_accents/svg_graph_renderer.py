@@ -243,6 +243,31 @@ class SvgGraphRenderer:
             is_particle=section.is_particle,
         )
 
+    def _render_mora_text(self, mora: SvgGraphMora, pos: Point, *, word_color: str) -> str:
+        """Render one mora's devoiced marker and/or kana text (may be empty)."""
+        parts: list[str] = []
+        if SvgMoraFlag.devoiced in mora.flags:
+            parts.append(
+                self.make_devoiced_circle(
+                    pos.replace(y=self.height_kana),
+                    multi_char=mora.is_multi_char,
+                    circle_color=word_color,
+                )
+            )
+        # If this mora is trailing (FormattedEntry path) or is a ghost particle (Pitch Artist path),
+        # then no text should be printed.
+        if not mora.is_text_hidden:
+            parts.append(
+                self.make_text_element(
+                    mora.text,
+                    pos=pos.replace(y=self.height_kana),
+                    class_attr=mora.class_attr,
+                    dx=self._cfg.svg_graphs.text_dx * mora.dx_units,
+                    text_color=word_color,
+                )
+            )
+        return "".join(parts)
+
     def _render_section(self, section: SvgGraphWord, pos: Point) -> RenderedSection:
         """Render one section, starting at the given drawing position.
 
@@ -262,26 +287,7 @@ class SvgGraphRenderer:
             # Note: connectors are never used with FormattedEntry-derived sections.
             if idx == 0 and connector.is_unfinished():
                 connector.end_at(pos.replace())
-            if SvgMoraFlag.devoiced in mora.flags:
-                text_moras.append(
-                    self.make_devoiced_circle(
-                        pos.replace(y=self.height_kana),
-                        multi_char=mora.is_multi_char,
-                        circle_color=word_color,
-                    )
-                )
-            # If this mora is trailing (FormattedEntry path) or is a ghost particle (Pitch Artist path),
-            # then no text should be printed.
-            if not mora.is_text_hidden:
-                text_moras.append(
-                    self.make_text_element(
-                        mora.text,
-                        pos=pos.replace(y=self.height_kana),
-                        class_attr=mora.class_attr,
-                        dx=self._cfg.svg_graphs.text_dx * mora.dx_units,
-                        text_color=word_color,
-                    )
-                )
+            text_moras.append(self._render_mora_text(mora, pos, word_color=word_color))
             pos = pos.shift_by(x=self._cfg.svg_graphs.x_step)
 
         # Note: connectors are never used with FormattedEntry-derived sections.
