@@ -20,6 +20,7 @@ from .svg_graph_types import (
     ConnectToPrevious,
     PitchLevel,
     SvgGraph,
+    SvgGraphMora,
     SvgGraphWord,
     SvgMoraFlag,
 )
@@ -140,11 +141,30 @@ class SvgGraphRenderer:
             return trail_color(self._cfg)
         return word_color
 
+    def _make_devoiced_circle_multi(self, pos: Point, *, circle_color: str) -> str:
+        """Render a dashed rounded rect around a multi-character devoiced mora."""
+        font_size = self._cfg.svg_graphs.font_size
+        r = self._cfg.svg_graphs.devoiced_circle_radius
+        pos = pos.shift_by(
+            x=-font_size / 2 - self._cfg.svg_graphs.devoiced_rectangle_padding + self._cfg.svg_graphs.text_dx,
+            y=-font_size / 2 - r + self._cfg.svg_graphs.devoiced_circle_dy,
+        )
+        width = font_size * 2 + self._cfg.svg_graphs.devoiced_rectangle_padding * 2
+        height = r * 2
+        return (
+            f'<rect class="devoiced" fill="none" stroke="{circle_color}" x="{pos.x:.0f}" y="{pos.y:.0f}" '
+            f'width="{width:.0f}" height="{height:.0f}" '
+            f'stroke-width="{self._cfg.svg_graphs.devoiced_circle_width:.2f}" rx="{r:.2f}" '
+            f'stroke-dasharray="{self._cfg.svg_graphs.devoiced_stroke_dasharray}" />'
+        )
+
     def make_devoiced_circle(self, pos: Point, *, multi_char: bool, circle_color: str) -> str:
         """
         Create a dashed circle around devoiced mora text.
         If multi_char is true, widen the circle. This is needed if the mora consists of two characters.
         """
+        if multi_char:
+            return self._make_devoiced_circle_multi(pos, circle_color=circle_color)
         font_size = self._cfg.svg_graphs.font_size
         stroke_width = self._cfg.svg_graphs.devoiced_circle_width
         r = self._cfg.svg_graphs.devoiced_circle_radius
@@ -158,19 +178,6 @@ class SvgGraphRenderer:
             return (
                 f'<circle class="devoiced" fill="none" stroke="{circle_color}" cx="{pos.x:.0f}" cy="{pos.y:.0f}" '
                 f'stroke-width="{stroke_width:.2f}" r="{r:.2f}" '
-                f'stroke-dasharray="{dasharray}" />'
-            )
-        else:
-            pos = pos.shift_by(
-                x=-font_size / 2 - self._cfg.svg_graphs.devoiced_rectangle_padding + self._cfg.svg_graphs.text_dx,
-                y=-font_size / 2 - r + self._cfg.svg_graphs.devoiced_circle_dy,
-            )
-            width = self._cfg.svg_graphs.font_size * 2 + self._cfg.svg_graphs.devoiced_rectangle_padding * 2
-            height = r * 2
-            return (
-                f'<rect class="devoiced" fill="none" stroke="{circle_color}" x="{pos.x:.0f}" y="{pos.y:.0f}" '
-                f'width="{width:.0f}" height="{height:.0f}" '
-                f'stroke-width="{stroke_width:.2f}" rx="{r:.2f}" '
                 f'stroke-dasharray="{dasharray}" />'
             )
 
