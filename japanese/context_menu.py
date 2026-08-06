@@ -2,6 +2,7 @@
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 import abc
+import pathlib
 import re
 
 import aqt
@@ -12,12 +13,13 @@ from aqt.utils import show_warning, tooltip
 from aqt.webview import AnkiWebView
 
 from .config_view import JapaneseConfig, get_global_config
+from .database.sqlite3_buddy import Sqlite3Buddy
+from .furigana.gen_furigana import FuriganaGen, get_global_furigana_generator
 from .helpers.goldendict_lookups import GD_PROGRAM_NAME, lookup_goldendict
 from .helpers.half_kata import to_half_width_katakana
 from .helpers.regex import RE_SPACES
 from .mecab_controller.kana_conv import to_hiragana, to_katakana
 from .mecab_controller.unify_readings import literal_pronunciation
-from .reading import generate_furigana
 
 
 class ContextMenuAction(abc.ABC):
@@ -28,8 +30,18 @@ class ContextMenuAction(abc.ABC):
         super().__init_subclass__(**kwargs)
         cls.subclasses.append(cls)
 
-    def __init__(self, cfg: JapaneseConfig, editor: Editor | None = None, webview: AnkiWebView | None = None) -> None:
+    def __init__(
+        self,
+        cfg: JapaneseConfig,
+        *,
+        fgen: FuriganaGen,
+        editor: Editor | None = None,
+        webview: AnkiWebView | None = None,
+        accent_db_path: pathlib.Path | None = None,
+    ) -> None:
         self._cfg = cfg
+        self._fgen = fgen
+        self._accent_db_path = accent_db_path
         self.editor = editor
         self.webview = webview or editor.web
 
@@ -89,7 +101,10 @@ class ContextMenuAction(abc.ABC):
 class GenerateFurigana(ContextMenuAction):
     key = "generate_furigana"
     label = "Furigana for selection"
-    action = staticmethod(generate_furigana)
+
+    def action(self, text: str) -> str:
+        with Sqlite3Buddy(self._accent_db_path) as db:
+            return self._fgen.with_new_buddy(db).generate_furigana(text)
 
 
 class ToKatakana(ContextMenuAction):
@@ -141,7 +156,8 @@ class BrowserSearch(ContextMenuAction):
         Paste selected text into the Browser's search bar and perform search.
         """
         if not search_text:
-            return tooltip("Empty selection.", parent=self._parent_window())
+            tooltip("Empty selection.", parent=self._parent_window())
+            return
         browser = aqt.dialogs.open("Browser", aqt.mw)  # browser requires mw (AnkiQt) to be passed as parent
         browser.activateWindow()
         browser.search_for(search_text)
@@ -159,20 +175,21 @@ class RemoveSpaces(ContextMenuAction):
 
 
 class ContextMenuItems:
-    def __init__(self, cfg: JapaneseConfig) -> None:
+    def __init__(self, cfg: JapaneseConfig, fgen: FuriganaGen) -> None:
         self._cfg = cfg
+        self._fgen = fgen
 
     def add_context_menu_items(self, webview: AnkiWebView, menu: QMenu) -> None:
         """Add context menu actions, showing all editor actions when an editor is present."""
         editor = getattr(webview, "editor", None)
         for Action in ContextMenuAction.subclasses:
-            instance = Action(self._cfg, editor=editor, webview=webview)
+            instance = Action(self._cfg, fgen=self._fgen, editor=editor, webview=webview)
             if instance.is_enabled() and (editor or instance.shown_when_not_editing):
                 action: QAction = menu.addAction(str(instance.label))
                 qconnect(action.triggered, instance)
 
 
 def init() -> None:
-    menus = ContextMenuItems(cfg=get_global_config())
+    menus = ContextMenuItems(cfg=get_global_config(), fgen=get_global_furigana_generator())
     gui_hooks.editor_will_show_context_menu.append(menus.add_context_menu_items)
     gui_hooks.webview_will_show_context_menu.append(menus.add_context_menu_items)
