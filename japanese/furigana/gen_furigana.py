@@ -1,10 +1,10 @@
 # Copyright: Ajatt-Tools and contributors; https://github.com/Ajatt-Tools
 # License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
-import dataclasses
+import functools
 from collections.abc import Callable, Hashable, Iterable, Sequence
-from typing import Optional, TypeVar
+from typing import TypeVar
 
-from ..config_view import FuriganaConfigView, JapaneseConfig
+from ..config_view import FuriganaConfigView, JapaneseConfig, get_global_config
 from ..database.sqlite3_buddy import Sqlite3Buddy
 from ..helpers.common_kana import adjust_to_inflection
 from ..helpers.consts import LONG_VOWEL_MARK
@@ -15,7 +15,11 @@ from ..mecab_controller import MecabController, format_output, is_kana_str, to_h
 from ..mecab_controller.basic_types import Inflection, MecabParsedToken, PartOfSpeech
 from ..mecab_controller.unify_readings import literal_pronunciation as pr
 from ..mecab_controller.unify_readings import unify_repr
-from ..pitch_accents.accent_lookup import AccentLookup
+from ..pitch_accents.accent_lookup import (
+    AccentLookup,
+    get_global_accent_lookup,
+    get_global_mecab,
+)
 from ..pitch_accents.basic_types import AccDbParsedToken, PitchAccentEntry
 from ..pitch_accents.common import FormattedEntry
 from .color_code_wrapper import ColorCodeWrapper
@@ -268,3 +272,12 @@ class FuriganaGen:
     def iter_accents(self, word: str) -> Iterable[FormattedEntry]:
         if word in (accents := self._lookup.get_pronunciations(word, recurse=False)):
             yield from accents[word]
+
+
+@functools.cache
+def get_global_furigana_generator() -> FuriganaGen:
+    return FuriganaGen(
+        cfg=get_global_config(),
+        lookup=get_global_accent_lookup(),
+        mecab=get_global_mecab(),
+    )
