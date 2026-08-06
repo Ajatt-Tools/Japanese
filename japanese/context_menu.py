@@ -74,8 +74,8 @@ class ContextMenuAction(abc.ABC):
         if (result := self.action(sel_text)) and self.editor:
             try:
                 self.editor.doPaste(result, internal=True, extended=False)
-            except AttributeError:
-                show_warning("Anki's new editor does not support pasting.")
+            except AttributeError as ex:
+                show_warning(f"Anki's new editor does not support pasting: {ex}")
 
     def __call__(self, *args, **kwargs) -> None:
         if sel_text := self.get_selected_text():
