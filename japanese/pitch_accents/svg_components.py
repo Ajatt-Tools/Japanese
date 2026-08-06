@@ -198,16 +198,21 @@ class Line:
         offset_x = r * cos
 
         if self._start.y == self._end.y:
-            self._start = self._start.shift_by(x=r)
-            self._end = self._end.shift_by(x=-r)
+            start = self._start.shift_by(x=r)
+            end = self._end.shift_by(x=-r)
         elif self._start.y > self._end.y:
-            self._start = self._start.shift_by(x=offset_x, y=-offset_y)
-            self._end = self._end.shift_by(x=-offset_x, y=offset_y)
-        elif self._start.y < self._end.y:
-            self._start = self._start.shift_by(x=offset_x, y=offset_y)
-            self._end = self._end.shift_by(x=-offset_x, y=-offset_y)
+            start = self._start.shift_by(x=offset_x, y=-offset_y)
+            end = self._end.shift_by(x=-offset_x, y=offset_y)
+        else:
+            start = self._start.shift_by(x=offset_x, y=offset_y)
+            end = self._end.shift_by(x=-offset_x, y=-offset_y)
 
-        return self
+        return (
+            type(self)(self._cfg, self._class_name)
+            .set_trailing(self._is_trailing)
+            .start_at(start, tape=self._is_tape)
+            .end_at(end)
+        )
 
 
 class Path:
