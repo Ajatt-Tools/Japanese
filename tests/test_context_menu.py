@@ -5,9 +5,10 @@ from unittest.mock import create_autospec
 
 import pytest
 from aqt.editor import Editor
+from aqt.webview import AnkiWebView
 
 import japanese.context_menu as context_menu
-from japanese.context_menu import RemoveSpaces
+from japanese.context_menu import ContextMenuAction, RemoveSpaces
 from japanese.furigana.gen_furigana import FuriganaGen
 from tests.helpers import make_fresh_config
 
@@ -15,7 +16,7 @@ from tests.helpers import make_fresh_config
 def make_editor_mock() -> Editor:
     """Return an editor mock with the web attribute used by ContextMenuAction."""
     editor = create_autospec(Editor, instance=True)
-    editor.web = object()
+    editor.web = create_autospec(AnkiWebView, instance=True)
     return editor
 
 
@@ -24,6 +25,20 @@ def make_new_editor_mock() -> Editor:
     editor = make_editor_mock()
     del editor.doPaste
     return editor
+
+
+class RaisesAttributeError(ContextMenuAction):
+    """Context menu action that raises AttributeError before paste is attempted."""
+
+    key = "remove_spaces"
+    label = "Raises AttributeError"
+
+    def action(self, text: str) -> str:
+        """Raise AttributeError from action code, not from editor.doPaste."""
+        raise AttributeError("action failed")
+
+
+ContextMenuAction.subclasses.remove(RaisesAttributeError)
 
 
 class TestRemoveSpaces:
@@ -82,3 +97,25 @@ class TestRemoveSpaces:
         action._try_paste_text("a b c")
 
         assert "".join(warnings).startswith(context_menu.NEW_EDITOR_PASTE_UNSUPPORTED)
+
+    def test_init_requires_editor_or_webview(self) -> None:
+        """Context menu actions fail early when neither webview nor editor is provided."""
+        with pytest.raises(ValueError, match="webview or editor must be provided"):
+            RemoveSpaces(make_fresh_config(), fgen=create_autospec(FuriganaGen, instance=True))
+
+    def test_action_attribute_error_is_not_reported_as_editor_paste_failure(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """AttributeError from action() propagates instead of becoming a new-editor warning."""
+        warnings: list[str] = []
+        monkeypatch.setattr(context_menu, "show_warning", warnings.append)
+        action = RaisesAttributeError(
+            make_fresh_config(),
+            fgen=create_autospec(FuriganaGen, instance=True),
+            editor=make_editor_mock(),
+        )
+
+        with pytest.raises(AttributeError, match="action failed"):
+            action._try_paste_text("a b c")
+
+        assert warnings == []
