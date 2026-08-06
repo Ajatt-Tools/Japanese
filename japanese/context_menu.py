@@ -110,6 +110,7 @@ class GenerateFurigana(ContextMenuAction):
     label = "Furigana for selection"
 
     def action(self, text: str) -> str:
+        """Generate furigana for the source text using a temporary db connection."""
         with Sqlite3Buddy(self._accent_db_path) as db:
             return self._fgen.with_new_buddy(db).generate_furigana(text)
 

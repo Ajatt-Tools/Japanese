@@ -276,6 +276,7 @@ class FuriganaGen:
 
 @functools.cache
 def get_global_furigana_generator() -> FuriganaGen:
+    """Return the cached FuriganaGen instance for Anki sessions."""
     return FuriganaGen(
         cfg=get_global_config(),
         lookup=get_global_accent_lookup(),
