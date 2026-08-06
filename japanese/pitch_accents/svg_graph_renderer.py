@@ -141,6 +141,20 @@ class SvgGraphRenderer:
             return trail_color(self._cfg)
         return word_color
 
+    def _make_devoiced_circle_single(self, pos: Point, *, circle_color: str) -> str:
+        """Render a dashed circle around a single-character devoiced mora."""
+        font_size = self._cfg.svg_graphs.font_size
+        pos = pos.shift_by(
+            x=font_size / 2 + self._cfg.svg_graphs.text_dx,
+            y=-font_size / 2 + self._cfg.svg_graphs.devoiced_circle_dy,
+        )
+        return (
+            f'<circle class="devoiced" fill="none" stroke="{circle_color}" cx="{pos.x:.0f}" cy="{pos.y:.0f}" '
+            f'stroke-width="{self._cfg.svg_graphs.devoiced_circle_width:.2f}" '
+            f'r="{self._cfg.svg_graphs.devoiced_circle_radius:.2f}" '
+            f'stroke-dasharray="{self._cfg.svg_graphs.devoiced_stroke_dasharray}" />'
+        )
+
     def _make_devoiced_circle_multi(self, pos: Point, *, circle_color: str) -> str:
         """Render a dashed rounded rect around a multi-character devoiced mora."""
         font_size = self._cfg.svg_graphs.font_size
@@ -165,21 +179,7 @@ class SvgGraphRenderer:
         """
         if multi_char:
             return self._make_devoiced_circle_multi(pos, circle_color=circle_color)
-        font_size = self._cfg.svg_graphs.font_size
-        stroke_width = self._cfg.svg_graphs.devoiced_circle_width
-        r = self._cfg.svg_graphs.devoiced_circle_radius
-        dasharray = self._cfg.svg_graphs.devoiced_stroke_dasharray
-
-        if not multi_char:
-            pos = pos.shift_by(
-                x=font_size / 2 + self._cfg.svg_graphs.text_dx,
-                y=-font_size / 2 + self._cfg.svg_graphs.devoiced_circle_dy,
-            )
-            return (
-                f'<circle class="devoiced" fill="none" stroke="{circle_color}" cx="{pos.x:.0f}" cy="{pos.y:.0f}" '
-                f'stroke-width="{stroke_width:.2f}" r="{r:.2f}" '
-                f'stroke-dasharray="{dasharray}" />'
-            )
+        return self._make_devoiced_circle_single(pos, circle_color=circle_color)
 
     def make_text_element(self, text: str, *, pos: Point, class_attr: str, dx: int, text_color: str) -> str:
         """Create an SVG text element from preformatted text content and class attributes."""
