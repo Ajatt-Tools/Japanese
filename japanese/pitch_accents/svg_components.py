@@ -220,6 +220,7 @@ class Path:
 
     _cfg: JapaneseConfig
     _lines: list[Line]
+    _class_name: SvgGraphClassName
 
     def __init__(self, cfg: JapaneseConfig, class_name: SvgGraphClassName) -> None:
         """Initialize an empty pitch-contour path."""
