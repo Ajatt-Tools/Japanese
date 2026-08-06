@@ -6,12 +6,12 @@ import re
 
 import aqt
 from aqt import gui_hooks
-from aqt.editor import Editor, EditorWebView
+from aqt.editor import Editor
 from aqt.qt import *
 from aqt.utils import show_warning, tooltip
 from aqt.webview import AnkiWebView
 
-from .config_view import config_view as cfg
+from .config_view import JapaneseConfig, get_global_config
 from .helpers.goldendict_lookups import GD_PROGRAM_NAME, lookup_goldendict
 from .helpers.half_kata import to_half_width_katakana
 from .helpers.regex import RE_SPACES
@@ -28,7 +28,8 @@ class ContextMenuAction(abc.ABC):
         super().__init_subclass__(**kwargs)
         cls.subclasses.append(cls)
 
-    def __init__(self, editor: Editor | None = None, webview: AnkiWebView | None = None) -> None:
+    def __init__(self, cfg: JapaneseConfig, editor: Editor | None = None, webview: AnkiWebView | None = None) -> None:
+        self._cfg = cfg
         self.editor = editor
         self.webview = webview or editor.web
 
@@ -39,9 +40,8 @@ class ContextMenuAction(abc.ABC):
             return self.webview.window() or aqt.mw
         raise RuntimeError("Parent should be passed to instance.")
 
-    @classmethod
-    def enabled(cls) -> bool:
-        return cfg.context_menu.get(cls.key)
+    def is_enabled(self) -> bool:
+        return self._cfg.context_menu.get(self.key)
 
     @property
     @abc.abstractmethod
@@ -156,15 +156,21 @@ class RemoveSpaces(ContextMenuAction):
         return re.sub(RE_SPACES, "", text)
 
 
-def add_context_menu_items(webview: AnkiWebView, menu: QMenu) -> None:
-    """Add context menu actions, showing all editor actions when an editor is present."""
-    editor = getattr(webview, "editor", None)
-    for Action in ContextMenuAction.subclasses:
-        if Action.enabled() and (editor or Action.shown_when_not_editing):
-            action: QAction = menu.addAction(str(Action.label))
-            qconnect(action.triggered, Action(editor=editor, webview=webview))
+class ContextMenuItems:
+    def __init__(self, cfg: JapaneseConfig) -> None:
+        self._cfg = cfg
+
+    def add_context_menu_items(self, webview: AnkiWebView, menu: QMenu) -> None:
+        """Add context menu actions, showing all editor actions when an editor is present."""
+        editor = getattr(webview, "editor", None)
+        for Action in ContextMenuAction.subclasses:
+            instance = Action(self._cfg, editor=editor, webview=webview)
+            if instance.is_enabled() and (editor or instance.shown_when_not_editing):
+                action: QAction = menu.addAction(str(instance.label))
+                qconnect(action.triggered, instance)
 
 
 def init() -> None:
-    gui_hooks.editor_will_show_context_menu.append(add_context_menu_items)
-    gui_hooks.webview_will_show_context_menu.append(add_context_menu_items)
+    menus = ContextMenuItems(cfg=get_global_config())
+    gui_hooks.editor_will_show_context_menu.append(menus.add_context_menu_items)
+    gui_hooks.webview_will_show_context_menu.append(menus.add_context_menu_items)
