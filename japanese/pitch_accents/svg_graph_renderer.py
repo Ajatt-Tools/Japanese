@@ -93,6 +93,16 @@ def attrs_circle(*, is_trailing: bool, is_particle: bool, circle_color: str) -> 
     return f'fill="{circle_color}" stroke="{circle_color}"'
 
 
+def finalize_connector(connector: Line, section: SvgGraphWord) -> str:
+    """
+    Draw the connector group if it was completed, else return empty markup.
+    Note: connectors are never used with FormattedEntry-derived sections.
+    """
+    if not connector.is_completed():
+        return ""
+    return make_group([connector.adjust_to_radius().draw()], connector_css_class(section))
+
+
 class SvgGraphRenderer:
     """Render normalized pitch graph data as SVG markup."""
 
@@ -290,18 +300,12 @@ class SvgGraphRenderer:
             text_moras.append(self._render_mora_text(mora, pos, word_color=word_color))
             pos = pos.shift_by(x=self._cfg.svg_graphs.x_step)
 
-        # Note: connectors are never used with FormattedEntry-derived sections.
-        connector_svg = (
-            make_group(
-                [connector.adjust_to_radius().draw()],
-                connector_css_class(section),
-            )
-            if connector.is_completed()
-            else ""
-        )
-
         return RenderedSection(
-            path=path.draw(), circles="".join(word_circles), text="".join(text_moras), connector=connector_svg, pos=pos
+            path=path.draw(),
+            circles="".join(word_circles),
+            text="".join(text_moras),
+            connector=finalize_connector(connector, section),
+            pos=pos,
         )
 
     def _make_pitch_artist_content(self, graph: SvgGraph, start_pos: Point) -> RenderedGraphComponents:
