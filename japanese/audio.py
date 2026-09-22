@@ -5,6 +5,7 @@ import collections
 import concurrent.futures
 import itertools
 import pathlib
+import unicodedata
 from collections.abc import Collection, Iterable, Sequence
 from concurrent.futures import Future
 from typing import Any, Callable, Optional
@@ -33,9 +34,57 @@ from .mecab_controller.unify_readings import literal_pronunciation as pr
 from .reading import mecab
 
 
+def _media_filenames(col: anki.collection.Collection) -> tuple[str, ...]:
+    """Return filenames currently present in Anki's media directory."""
+    try:
+        return tuple(path.name for path in pathlib.Path(col.media.dir()).iterdir() if path.is_file())
+    except OSError:
+        return ()
+
+
+def _normalized_filename(filename: str) -> str:
+    """Normalize only for lookup; never rewrite a filename based on this value."""
+    return unicodedata.normalize("NFC", filename).casefold()
+
+
+def existing_media_filename(
+    col: anki.collection.Collection,
+    desired_filename: str,
+    *,
+    media_filenames: Optional[Collection[str]] = None,
+) -> Optional[str]:
+    """
+    Return the exact on-disk filename if an equivalent media file already exists.
+
+    This handles case-only filename differences on both case-sensitive and
+    case-insensitive filesystems, while preferring an exact match when present.
+    """
+    filenames = tuple(media_filenames) if media_filenames is not None else _media_filenames(col)
+
+    if desired_filename in filenames:
+        return desired_filename
+
+    normalized_desired = _normalized_filename(desired_filename)
+    matches = [name for name in filenames if _normalized_filename(name) == normalized_desired]
+    if len(matches) == 1:
+        return matches[0]
+
+    return None
+
+
 def only_missing(col: anki.collection.Collection, files: Collection[FileUrlData]):
     """Returns files that aren't present in the collection already."""
-    return (file for file in files if not col.media.have(file.desired_filename))
+    media_filenames = _media_filenames(col)
+    return (
+        file
+        for file in files
+        if existing_media_filename(
+            col,
+            file.desired_filename,
+            media_filenames=media_filenames,
+        )
+        is None
+    )
 
 
 def iter_tokens(src_text: str) -> Iterable[ParseableToken]:
@@ -51,11 +100,32 @@ def iter_mecab_variants(token: MecabParsedToken) -> Iterable[str]:
         yield to_hiragana(token.katakana_reading)
 
 
-def format_audio_tags(hits: Collection[FileUrlData]):
+def format_audio_tags(
+    hits: Collection[FileUrlData],
+    col: Optional[anki.collection.Collection] = None,
+):
     """
     Create [sound:filename.ext] tags that Anki understands.
+
+    If the file is already present, use its exact on-disk filename. For newly
+    downloaded files, save_files() will report Anki's final filename and the
+    note will be corrected asynchronously if Anki renamed it.
     """
-    return cfg.audio_settings.tag_separator.join(f"[sound:{hit.desired_filename}]" for hit in hits)
+    media_filenames = _media_filenames(col) if col is not None else ()
+
+    def filename_for(hit: FileUrlData) -> str:
+        if col is None:
+            return hit.desired_filename
+        return (
+            existing_media_filename(
+                col,
+                hit.desired_filename,
+                media_filenames=media_filenames,
+            )
+            or hit.desired_filename
+        )
+
+    return cfg.audio_settings.tag_separator.join(f"[sound:{filename_for(hit)}]" for hit in hits)
 
 
 def sorted_files(hits: Iterable[FileUrlData]):

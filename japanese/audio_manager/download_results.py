@@ -13,6 +13,7 @@ from .basic_types import AudioManagerException, FileUrlData
 class DownloadedData(NamedTuple):
     desired_filename: str
     data: bytes
+    saved_filename: Optional[str] = None
 
 
 class FileSaveResults(NamedTuple):
@@ -41,7 +42,11 @@ def format_report_successes_msg(successes: list[DownloadedData]) -> str:
     buffer = io.StringIO()
     buffer.write(f"<b>Added {len(successes)} files to the collection.</b><ol>")
     for file in successes:
-        buffer.write(f"<li>{file.desired_filename}</li>")
+        saved_filename = file.saved_filename or file.desired_filename
+        if saved_filename == file.desired_filename:
+            buffer.write(f"<li>{saved_filename}</li>")
+        else:
+            buffer.write(f"<li>{file.desired_filename} → {saved_filename}</li>")
     buffer.write("</ol>")
     return buffer.getvalue()
 
@@ -70,12 +75,11 @@ def save_files(
             results.fails.append(ex)
         else:
             assert mw, "Anki should be running."
-            # TODO: write_data() returns possibly-renamed filename. React if file gets renamed.
-            mw.col.media.write_data(
+            saved_filename = mw.col.media.write_data(
                 desired_fname=result.desired_filename,
                 data=result.data,
             )
-            results.successes.append(result)
+            results.successes.append(result._replace(saved_filename=saved_filename))
     if on_finish:
         on_finish(results)
     return results
