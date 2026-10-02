@@ -66,6 +66,7 @@ class DoTask:
         self._task = task
         self._caller = caller
         self._db = db
+        self._note: Optional[Note] = None
 
     def _generate_text(self, src_text: str) -> str:
         raise NotImplementedError()
@@ -135,16 +136,44 @@ class AddAudio(DoTask, task_type=ProfileAudio):
                 on_finish=self._report_results,
             )
         )
-        return format_audio_tags(search_results)
+        return format_audio_tags(search_results, mw.col)
 
     def _report_results(self, r: FileSaveResults):
         """
-        Show a tooltip with audio download results.
+        Correct sound tags if Anki renamed a media file, then show the download report.
         """
+        self._fix_renamed_audio(r)
+
         if not self._caller.cfg.audio_download_report:
             return
         if txt := format_report_results_msg(r):
             return tooltip(txt, period=7000, y_offset=calc_tooltip_offset(len(r.successes) + len(r.fails)))
+
+    def _fix_renamed_audio(self, r: FileSaveResults) -> None:
+        if self._note is None:
+            return
+
+        field_name = self._task.destination
+        old_text = self._note[field_name]
+        new_text = old_text
+
+        for file in r.successes:
+            saved_filename = file.saved_filename or file.desired_filename
+            if saved_filename == file.desired_filename:
+                continue
+
+            old_tag = f"[sound:{file.desired_filename}]"
+            new_tag = f"[sound:{saved_filename}]"
+            new_text = new_text.replace(old_tag, new_tag)
+
+        if new_text == old_text:
+            return
+
+        self._note[field_name] = new_text
+
+        assert mw
+        if self._note.id:
+            mw.col.update_note(self._note)
 
 
 def html_to_media_line(txt: str) -> str:
@@ -193,11 +222,13 @@ class DoTasks:
             changed = True
 
         if self._can_fill_destination(task) and (src_text := self._src_text(task)):
-            self._note[task.destination] = DoTask(
+            do_task = DoTask(
                 task,
                 self._caller,
                 db,
-            ).run(
+            )
+            do_task._note = self._note
+            self._note[task.destination] = do_task.run(
                 src_text,
                 self._note[task.destination],
             )
